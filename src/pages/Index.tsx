@@ -16,14 +16,14 @@ const Index = () => {
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-welp-tertiary to-welp-primary text-white py-16 md:py-24">
+        <section className="bg-[#ea384c] text-white py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl font-bold mb-4">Welp!</h1>
               <p className="text-xl md:text-2xl mb-8">Review your customers. Because businesses are people too.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link to="/signup">
-                  <Button className="bg-white text-welp-primary hover:bg-gray-100 font-bold py-3 px-6 rounded-full">
+                  <Button className="bg-white text-[#ea384c] hover:bg-gray-100 font-bold py-3 px-6 rounded-full">
                     Get Started
                   </Button>
                 </Link>

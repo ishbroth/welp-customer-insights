@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-3 welp-gradient text-transparent bg-clip-text">
+            <h3 className="text-xl font-bold mb-3 text-[#ea384c]">
               Welp!
             </h3>
             <p className="text-gray-300 text-sm">
@@ -52,7 +52,7 @@ const Footer = () => {
             © {currentYear} Welp! All rights reserved.
           </p>
           <div className="mt-4 md:mt-0">
-            <Link to="/admin" className="text-gray-400 text-xs hover:text-welp-primary transition-colors">
+            <Link to="/admin" className="text-gray-400 text-xs hover:text-[#ea384c] transition-colors">
               Admin Sign-in
             </Link>
           </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,7 @@ const Header = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-3xl font-bold welp-gradient text-transparent bg-clip-text">
+              <span className="text-3xl font-bold text-[#ea384c] bg-transparent">
                 Welp!
               </span>
             </Link>
@@ -46,18 +45,18 @@ const Header = () => {
             <nav className="flex items-center space-x-4">
               <Link 
                 to="/search" 
-                className="text-welp-dark hover:text-welp-primary transition-colors flex items-center"
+                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
               >
                 <Search className="mr-1 h-4 w-4" /> Search
               </Link>
               <Link
                 to="/login"
-                className="text-welp-dark hover:text-welp-primary transition-colors flex items-center"
+                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
               >
                 <User className="mr-1 h-4 w-4" /> Login
               </Link>
               <Link to="/signup">
-                <Button className="welp-button">Sign Up</Button>
+                <Button className="bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 w-full">Sign Up</Button>
               </Link>
             </nav>
           )}
@@ -69,20 +68,20 @@ const Header = () => {
             <nav className="flex flex-col space-y-3">
               <Link
                 to="/search"
-                className="text-welp-dark hover:text-welp-primary transition-colors flex items-center py-2"
+                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
                 onClick={toggleMenu}
               >
                 <Search className="mr-2 h-4 w-4" /> Search
               </Link>
               <Link
                 to="/login"
-                className="text-welp-dark hover:text-welp-primary transition-colors flex items-center py-2"
+                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
                 onClick={toggleMenu}
               >
                 <User className="mr-2 h-4 w-4" /> Login
               </Link>
               <Link to="/signup" onClick={toggleMenu}>
-                <Button className="welp-button w-full">Sign Up</Button>
+                <Button className="bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 w-full">Sign Up</Button>
               </Link>
             </nav>
           </div>
