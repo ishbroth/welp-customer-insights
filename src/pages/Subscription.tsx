@@ -19,7 +19,7 @@ const Subscription = () => {
     setTimeout(() => {
       toast({
         title: "Subscription Active",
-        description: "Thank you for subscribing! You now have full access to Welp!",
+        description: "Thank you for subscribing! You now have full access to Welp.",
       });
       setIsProcessing(false);
       
@@ -36,7 +36,7 @@ const Subscription = () => {
       <main className="flex-grow py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold text-center mb-3">Welp! Subscription</h1>
+            <h1 className="text-4xl font-bold text-center mb-3">Welp. Subscription</h1>
             <p className="text-center text-xl mb-10 text-gray-600">
               Access the full customer database and make informed business decisions
             </p>
@@ -143,7 +143,7 @@ const Subscription = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">How does the subscription work?</h3>
                   <p className="text-gray-600">
-                    Your subscription gives you full access to the Welp! customer database, including detailed reviews 
+                    Your subscription gives you full access to the Welp. customer database, including detailed reviews 
                     and ratings from other businesses. Subscriptions are billed monthly and can be canceled at any time.
                   </p>
                 </div>

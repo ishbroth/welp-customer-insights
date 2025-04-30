@@ -33,7 +33,7 @@ const Login = () => {
       // For demo purposes, automatically login without validation
       toast({
         title: "Logged In",
-        description: "Welcome back to Welp!",
+        description: "Welcome back to Welp.",
       });
       
       setIsLoading(false);
@@ -53,7 +53,7 @@ const Login = () => {
       <main className="flex-grow py-12">
         <div className="container mx-auto px-4">
           <Card className="max-w-md mx-auto p-6">
-            <h1 className="text-3xl font-bold text-center mb-6">Log In to Welp!</h1>
+            <h1 className="text-3xl font-bold text-center mb-6">Log In to Welp.</h1>
             
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">

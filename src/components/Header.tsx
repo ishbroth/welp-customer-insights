@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ const Header = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <span className="text-3xl font-bold text-[#ea384c] bg-transparent">
-                Welp!
+                Welp.
               </span>
             </Link>
             <span className="hidden md:block ml-2 text-sm text-welp-gray italic">

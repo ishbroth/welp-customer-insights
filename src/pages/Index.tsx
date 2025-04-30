@@ -19,7 +19,7 @@ const Index = () => {
         <section className="bg-[#ea384c] text-white py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">Welp!</h1>
+              <h1 className="text-4xl md:text-6xl font-bold mb-4">Welp.</h1>
               <p className="text-xl md:text-2xl mb-8">Review your customers. Because businesses are people too.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link to="/signup">
@@ -108,7 +108,7 @@ const Index = () => {
         {/* Features Section */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">How Welp! Works</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">How Welp. Works</h2>
             
             <div className="grid md:grid-cols-3 gap-8">
               <div className="welp-card text-center">
@@ -153,7 +153,7 @@ const Index = () => {
               <div className="welp-card">
                 <div className="mb-4 text-welp-primary">"</div>
                 <p className="mb-4 text-gray-700">
-                  Welp! has transformed how I choose clients. Now I can see which customers are worth taking on and which ones to avoid. It's saved me thousands in potential losses.
+                  Welp. has transformed how I choose clients. Now I can see which customers are worth taking on and which ones to avoid. It's saved me thousands in potential losses.
                 </p>
                 <div className="font-bold">John D.</div>
                 <div className="text-sm text-gray-500">Plumber, Portland OR</div>
@@ -162,7 +162,7 @@ const Index = () => {
               <div className="welp-card">
                 <div className="mb-4 text-welp-primary">"</div>
                 <p className="mb-4 text-gray-700">
-                  Before Welp!, I had no way to warn other businesses about problem customers. Now we have a community that shares valuable insights to protect each other.
+                  Before Welp., I had no way to warn other businesses about problem customers. Now we have a community that shares valuable insights to protect each other.
                 </p>
                 <div className="font-bold">Sarah M.</div>
                 <div className="text-sm text-gray-500">Restaurant Owner, Chicago IL</div>
@@ -171,7 +171,7 @@ const Index = () => {
               <div className="welp-card">
                 <div className="mb-4 text-welp-primary">"</div>
                 <p className="mb-4 text-gray-700">
-                  I used to waste time with clients who never intended to pay. Thanks to Welp!, I can now screen potential clients and focus on those who value my services.
+                  I used to waste time with clients who never intended to pay. Thanks to Welp., I can now screen potential clients and focus on those who value my services.
                 </p>
                 <div className="font-bold">Michael T.</div>
                 <div className="text-sm text-gray-500">Lawyer, Austin TX</div>
@@ -193,7 +193,7 @@ const Index = () => {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-6">Ready to take control?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Join thousands of business owners who use Welp! to make informed decisions about their customers.
+              Join thousands of business owners who use Welp. to make informed decisions about their customers.
             </p>
             <Link to="/signup">
               <Button className="bg-white text-welp-primary hover:bg-gray-100 font-bold py-3 px-8 rounded-full text-lg">

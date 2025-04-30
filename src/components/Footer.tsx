@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-3 text-[#ea384c]">
-              Welp!
+              Welp.
             </h3>
             <p className="text-gray-300 text-sm">
               Review your customers. <br />
@@ -21,7 +21,7 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-3">About</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li><Link to="/about" className="hover:text-welp-primary transition-colors">About Welp!</Link></li>
+              <li><Link to="/about" className="hover:text-welp-primary transition-colors">About Welp.</Link></li>
               <li><Link to="/how-it-works" className="hover:text-welp-primary transition-colors">How It Works</Link></li>
               <li><Link to="/pricing" className="hover:text-welp-primary transition-colors">Pricing</Link></li>
             </ul>
@@ -49,7 +49,7 @@ const Footer = () => {
         
         <div className="mt-8 pt-4 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © {currentYear} Welp! All rights reserved.
+            © {currentYear} Welp. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0">
             <Link to="/admin" className="text-gray-400 text-xs hover:text-[#ea384c] transition-colors">
