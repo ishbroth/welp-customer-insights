@@ -17,7 +17,7 @@ const About = () => {
           </p>
           
           <p className="mb-4 text-lg">
-            Welp, now you have the ability to do so, with Welp.
+            Welp, now you can, with Welp!
           </p>
           
           <p className="mb-4 text-lg">
