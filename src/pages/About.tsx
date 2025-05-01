@@ -17,13 +17,13 @@ const About = () => {
           </p>
           
           <p className="mb-4 text-lg">
-            Welp, now you can, with Welp!
+            Welp...now you can, with Welp!
           </p>
           
           <p className="mb-4 text-lg">
-            Rate your customers 1 to 5 stars and write them a review that shows how much you appreciated their business. 
-            By doing so, you help other business owners screen for quality customers, and you help quality customers 
-            stay at the top of your priorities.
+            Businesses from dentists to plumbers to pizza joints can rate your customers 1 to 5 stars and write them a review 
+            that shows how much you appreciated their business. By doing so, you help other business owners screen for quality 
+            customers, and you help quality customers get the recognition they deserve.
           </p>
         </div>
       </main>
