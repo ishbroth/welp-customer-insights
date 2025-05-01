@@ -17,6 +17,7 @@ const mockCustomers = [
     lastName: "Smith",
     phone: "555-123-4567",
     address: "123 Main St, Anytown",
+    city: "Anytown",
     zipCode: "12345",
     averageRating: 4.3,
     totalReviews: 8,
@@ -28,6 +29,7 @@ const mockCustomers = [
     lastName: "Jones",
     phone: "555-987-6543",
     address: "456 Oak Ave, Somewhere",
+    city: "Somewhere",
     zipCode: "67890",
     averageRating: 2.1,
     totalReviews: 12,
@@ -39,6 +41,7 @@ const mockCustomers = [
     lastName: "Johnson",
     phone: "555-456-7890",
     address: "789 Pine Rd, Nowhere",
+    city: "Nowhere",
     zipCode: "34567",
     averageRating: 3.7,
     totalReviews: 5,
@@ -92,6 +95,8 @@ const SearchResults = () => {
   const firstName = searchParams.get("firstName") || "";
   const phone = searchParams.get("phone") || "";
   const address = searchParams.get("address") || "";
+  const city = searchParams.get("city") || "";
+  const zipCode = searchParams.get("zipCode") || "";
 
   useEffect(() => {
     // Simulate API call to search for customers
@@ -104,14 +109,16 @@ const SearchResults = () => {
         const firstNameMatch = firstName ? customer.firstName.toLowerCase().includes(firstName.toLowerCase()) : true;
         const phoneMatch = phone ? customer.phone.includes(phone) : true;
         const addressMatch = address ? customer.address.toLowerCase().includes(address.toLowerCase()) : true;
+        const cityMatch = city ? customer.city.toLowerCase().includes(city.toLowerCase()) : true;
+        const zipCodeMatch = zipCode ? customer.zipCode.includes(zipCode) : true;
         
-        return lastNameMatch && firstNameMatch && phoneMatch && addressMatch;
+        return lastNameMatch && firstNameMatch && phoneMatch && addressMatch && cityMatch && zipCodeMatch;
       });
       
       setCustomers(filteredCustomers);
       setIsLoading(false);
     }, 1000);
-  }, [lastName, firstName, phone, address]);
+  }, [lastName, firstName, phone, address, city, zipCode]);
 
   const handleSelectCustomer = (customer: any) => {
     setSelectedCustomer(customer);
