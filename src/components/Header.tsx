@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X, User, Search } from "lucide-react";
+import { Menu, X, User, Search, Edit } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,6 +50,12 @@ const Header = () => {
               >
                 <Search className="mr-1 h-4 w-4" /> Search
               </Link>
+              <Link 
+                to="/review/new" 
+                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+              >
+                <Edit className="mr-1 h-4 w-4" /> Post Review
+              </Link>
               <Link
                 to="/login"
                 className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
@@ -73,6 +79,13 @@ const Header = () => {
                 onClick={toggleMenu}
               >
                 <Search className="mr-2 h-4 w-4" /> Search
+              </Link>
+              <Link
+                to="/review/new"
+                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
+                onClick={toggleMenu}
+              >
+                <Edit className="mr-2 h-4 w-4" /> Post Review
               </Link>
               <Link
                 to="/login"
