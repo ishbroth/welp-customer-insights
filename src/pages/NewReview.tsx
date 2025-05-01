@@ -13,14 +13,16 @@ import { Star } from "lucide-react";
 const mockCustomers = [
   {
     id: "1",
-    name: "John Smith",
+    firstName: "John",
+    lastName: "Smith",
     phone: "555-123-4567",
     address: "123 Main St, Anytown",
     zipCode: "12345"
   },
   {
     id: "2",
-    name: "Sarah Jones",
+    firstName: "Sarah",
+    lastName: "Jones",
     phone: "555-987-6543", 
     address: "456 Oak Ave, Somewhere",
     zipCode: "67890"
@@ -37,7 +39,8 @@ const NewReview = () => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [customerName, setCustomerName] = useState("");
+  const [customerFirstName, setCustomerFirstName] = useState("");
+  const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
@@ -52,7 +55,8 @@ const NewReview = () => {
         const foundCustomer = mockCustomers.find(c => c.id === customerId);
         if (foundCustomer) {
           setCustomer(foundCustomer);
-          setCustomerName(foundCustomer.name);
+          setCustomerFirstName(foundCustomer.firstName);
+          setCustomerLastName(foundCustomer.lastName);
           setCustomerPhone(foundCustomer.phone);
           setCustomerAddress(foundCustomer.address);
           setCustomerZipCode(foundCustomer.zipCode);
@@ -114,16 +118,29 @@ const NewReview = () => {
                   <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Customer Information</h2>
                     
-                    <div>
-                      <label htmlFor="customerName" className="block text-sm font-medium mb-1">Customer Name</label>
-                      <Input
-                        id="customerName"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        className="welp-input"
-                        disabled={!isNewCustomer && !!customer}
-                        required
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
+                        <Input
+                          id="customerLastName"
+                          value={customerLastName}
+                          onChange={(e) => setCustomerLastName(e.target.value)}
+                          className="welp-input"
+                          disabled={!isNewCustomer && !!customer}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
+                        <Input
+                          id="customerFirstName"
+                          value={customerFirstName}
+                          onChange={(e) => setCustomerFirstName(e.target.value)}
+                          className="welp-input"
+                          disabled={!isNewCustomer && !!customer}
+                          required
+                        />
+                      </div>
                     </div>
                     
                     <div>
