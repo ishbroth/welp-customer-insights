@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -196,7 +197,7 @@ const SearchResults = () => {
                     <p className="mb-4">
                       Get full access to customer reviews and protect your business from problematic customers.
                     </p>
-                    <Link to="/pricing">
+                    <Link to="/subscription">
                       <Button className="bg-white text-welp-primary hover:bg-gray-100">
                         View Subscription Options
                       </Button>
