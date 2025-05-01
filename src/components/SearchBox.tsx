@@ -12,13 +12,14 @@ interface SearchBoxProps {
 
 const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/search?name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}`);
+    navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}`);
   };
 
   return (
@@ -33,11 +34,20 @@ const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
         <div className="space-y-3">
           <Input
             type="text"
-            placeholder="Customer Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             className="welp-input"
-            required={!phone && !address}
+            required={!firstName && !phone && !address}
+          />
+          
+          <Input
+            type="text"
+            placeholder="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="welp-input"
+            required={!lastName && !phone && !address}
           />
           
           <Input
@@ -46,7 +56,7 @@ const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="welp-input"
-            required={!name && !address}
+            required={!lastName && !firstName && !address}
           />
           
           <Input
@@ -55,7 +65,7 @@ const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             className="welp-input"
-            required={!name && !phone}
+            required={!lastName && !firstName && !phone}
           />
         </div>
         

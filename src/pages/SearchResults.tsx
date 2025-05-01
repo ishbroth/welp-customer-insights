@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -14,7 +13,8 @@ import StarRating from "@/components/StarRating";
 const mockCustomers = [
   {
     id: "1",
-    name: "John Smith",
+    firstName: "John",
+    lastName: "Smith",
     phone: "555-123-4567",
     address: "123 Main St, Anytown",
     zipCode: "12345",
@@ -24,7 +24,8 @@ const mockCustomers = [
   },
   {
     id: "2",
-    name: "Sarah Jones",
+    firstName: "Sarah",
+    lastName: "Jones",
     phone: "555-987-6543",
     address: "456 Oak Ave, Somewhere",
     zipCode: "67890",
@@ -34,7 +35,8 @@ const mockCustomers = [
   },
   {
     id: "3",
-    name: "Mike Johnson",
+    firstName: "Mike",
+    lastName: "Johnson",
     phone: "555-456-7890",
     address: "789 Pine Rd, Nowhere",
     zipCode: "34567",
@@ -86,7 +88,8 @@ const SearchResults = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   // Extract search parameters
-  const name = searchParams.get("name") || "";
+  const lastName = searchParams.get("lastName") || "";
+  const firstName = searchParams.get("firstName") || "";
   const phone = searchParams.get("phone") || "";
   const address = searchParams.get("address") || "";
 
@@ -97,17 +100,18 @@ const SearchResults = () => {
     setTimeout(() => {
       // Filter mock customers based on search params
       const filteredCustomers = mockCustomers.filter(customer => {
-        const nameMatch = name ? customer.name.toLowerCase().includes(name.toLowerCase()) : true;
+        const lastNameMatch = lastName ? customer.lastName.toLowerCase().includes(lastName.toLowerCase()) : true;
+        const firstNameMatch = firstName ? customer.firstName.toLowerCase().includes(firstName.toLowerCase()) : true;
         const phoneMatch = phone ? customer.phone.includes(phone) : true;
         const addressMatch = address ? customer.address.toLowerCase().includes(address.toLowerCase()) : true;
         
-        return nameMatch && phoneMatch && addressMatch;
+        return lastNameMatch && firstNameMatch && phoneMatch && addressMatch;
       });
       
       setCustomers(filteredCustomers);
       setIsLoading(false);
     }, 1000);
-  }, [name, phone, address]);
+  }, [lastName, firstName, phone, address]);
 
   const handleSelectCustomer = (customer: any) => {
     setSelectedCustomer(customer);
@@ -151,7 +155,7 @@ const SearchResults = () => {
                           onClick={() => handleSelectCustomer(customer)}
                           className={`p-3 border rounded-md cursor-pointer transition-colors ${selectedCustomer?.id === customer.id ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
                         >
-                          <div className="font-semibold">{customer.name}</div>
+                          <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
                           <div className="text-sm text-gray-600">{customer.address}</div>
                           <div className="flex justify-between items-center mt-1">
                             <div className="flex items-center">
@@ -197,7 +201,7 @@ const SearchResults = () => {
                   <Card className="p-6 mb-6">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h2 className="text-2xl font-bold">{selectedCustomer.name}</h2>
+                        <h2 className="text-2xl font-bold">{selectedCustomer.lastName}, {selectedCustomer.firstName}</h2>
                         <p className="text-gray-600">{selectedCustomer.address}</p>
                         <p className="text-gray-600">{selectedCustomer.phone}</p>
                         
