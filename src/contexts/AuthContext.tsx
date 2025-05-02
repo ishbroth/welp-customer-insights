@@ -1,0 +1,59 @@
+
+import { createContext, useContext, useState, ReactNode } from "react";
+import { User, mockUsers } from "@/data/mockUsers";
+
+interface AuthContextType {
+  currentUser: User | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem("currentUser");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Mock authentication - in a real app, we'd verify credentials with a backend
+    const user = mockUsers.find(user => user.email === email);
+    
+    if (user) {
+      setCurrentUser(user);
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      return true;
+    }
+    
+    return false;
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("currentUser");
+  };
+
+  const value = {
+    currentUser,
+    login,
+    logout
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

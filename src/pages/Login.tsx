@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -13,8 +14,10 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -28,23 +31,31 @@ const Login = () => {
     
     setIsLoading(true);
     
-    // Simulate API login call
-    setTimeout(() => {
-      // For demo purposes, automatically login without validation
-      toast({
-        title: "Logged In",
-        description: "Welcome back to Welp.",
-      });
+    try {
+      const success = await login(email, password);
       
-      setIsLoading(false);
-      
-      // Redirect based on email type (just for demo)
-      if (email.toLowerCase().includes("business")) {
-        window.location.href = "/business-dashboard";
+      if (success) {
+        toast({
+          title: "Logged In",
+          description: "Welcome back to Welp.",
+        });
+        navigate("/profile");
       } else {
-        window.location.href = "/customer-dashboard";
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password. Try business@example.com with any password.",
+          variant: "destructive",
+        });
       }
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,7 +80,7 @@ const Login = () => {
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Hint: Include "business" in email to log in as a business owner
+                    Hint: Use business@example.com to log in
                   </p>
                 </div>
                 
@@ -88,6 +99,9 @@ const Login = () => {
                     className="welp-input"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Any password will work for demo
+                  </p>
                 </div>
                 
                 <Button
