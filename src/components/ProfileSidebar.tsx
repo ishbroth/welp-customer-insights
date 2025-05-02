@@ -60,6 +60,13 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 Profile
               </Link>
               <Link 
+                to="/profile/edit" 
+                className="flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 text-gray-700"
+              >
+                <Settings className="mr-3 h-5 w-5 text-gray-500" />
+                Edit Profile
+              </Link>
+              <Link 
                 to="/profile/reviews" 
                 className="flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 text-gray-700"
               >
@@ -79,13 +86,6 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
               >
                 <Bell className="mr-3 h-5 w-5 text-gray-500" />
                 Notifications
-              </Link>
-              <Link 
-                to="/profile/settings" 
-                className="flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 text-gray-700"
-              >
-                <Settings className="mr-3 h-5 w-5 text-gray-500" />
-                Settings
               </Link>
             </nav>
           </div>

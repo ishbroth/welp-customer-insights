@@ -6,6 +6,7 @@ interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateProfile: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -45,10 +46,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("currentUser");
   };
 
+  const updateProfile = (updates: Partial<User>) => {
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...updates };
+      setCurrentUser(updatedUser);
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     currentUser,
     login,
-    logout
+    logout,
+    updateProfile
   };
 
   return (

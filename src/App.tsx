@@ -14,6 +14,7 @@ import Subscription from "./pages/Subscription";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
+import ProfileEdit from "./pages/ProfileEdit";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,11 @@ const AppRoutes = () => {
       <Route path="/profile" element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile/edit" element={
+        <ProtectedRoute>
+          <ProfileEdit />
         </ProtectedRoute>
       } />
       
