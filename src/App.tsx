@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
 import NotificationsPage from "./pages/NotificationsPage";
+import BillingPage from "./pages/BillingPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,11 @@ const AppRoutes = () => {
       <Route path="/profile/notifications" element={
         <ProtectedRoute>
           <NotificationsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile/billing" element={
+        <ProtectedRoute>
+          <BillingPage />
         </ProtectedRoute>
       } />
       
