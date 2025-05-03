@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,6 +68,12 @@ const ProfilePage = () => {
           customerId: user.id
         }))
       ) : [];
+
+  // Function to get the first sentence of a text
+  const getFirstSentence = (content) => {
+    const match = content.match(/^.*?[.!?](?:\s|$)/);
+    return match ? match[0] : `${content.substring(0, 80)}...`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -248,7 +253,12 @@ const ProfilePage = () => {
                             <TableCell>
                               <div>
                                 <p className="font-semibold">{review.title}</p>
-                                <p className="text-sm text-gray-600">{review.content}</p>
+                                <p className="text-sm text-gray-600">
+                                  {getFirstSentence(review.content)}
+                                  <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
+                                    Show more
+                                  </Link>
+                                </p>
                               </div>
                             </TableCell>
                             <TableCell>{review.date}</TableCell>
@@ -278,7 +288,7 @@ const ProfilePage = () => {
                 </Card>
               )}
               
-              {/* Reviews section */}
+              {/* Reviews section for business owners and admins */}
               {currentUser?.type !== "customer" && (
                 <div>
                   <div className="flex justify-between items-center mb-4">
@@ -286,7 +296,7 @@ const ProfilePage = () => {
                       {currentUser?.type === "admin" ? "All Customer Reviews" : "Your Customer Reviews"}
                     </h2>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to="/profile/reviews">
+                      <Link to={currentUser?.type === "business" ? "/profile/business-reviews" : "/profile/reviews"}>
                         See All
                       </Link>
                     </Button>
@@ -294,7 +304,7 @@ const ProfilePage = () => {
                   
                   <div className="space-y-4">
                     {(currentUser?.type === "admin" ? allReviews : businessReviews)?.length > 0 ? (
-                      (currentUser?.type === "admin" ? allReviews : businessReviews).map((review) => (
+                      (currentUser?.type === "admin" ? allReviews : businessReviews).slice(0, 3).map((review) => (
                         <Card key={review.id} className="p-4">
                           <div className="flex justify-between">
                             <h3 className="font-medium">Customer: {review.customerName}</h3>
@@ -303,13 +313,31 @@ const ProfilePage = () => {
                           {currentUser?.type === "admin" && (
                             <p className="text-sm text-gray-500 mt-1">Reviewed by: {review.reviewerName}</p>
                           )}
-                          <p className="text-gray-600 mt-2">{review.content}</p>
+                          <p className="text-gray-600 mt-2">
+                            {getFirstSentence(review.content)}
+                            <Link 
+                              to={currentUser?.type === "business" ? "/profile/business-reviews" : "/profile/reviews"}
+                              className="text-welp-primary ml-1 hover:underline"
+                            >
+                              Show more
+                            </Link>
+                          </p>
                           <div className="flex justify-between items-center mt-4">
                             <span className="text-sm text-gray-500">{review.date}</span>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
+                            {currentUser?.type === "business" && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                asChild
+                              >
+                                <Link to={`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`}
+                                  state={{ reviewData: review, isEditing: true }}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Link>
+                              </Button>
+                            )}
                           </div>
                         </Card>
                       ))

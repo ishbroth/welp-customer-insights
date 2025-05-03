@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -58,7 +59,11 @@ const BusinessReviews = () => {
               reviews.push({
                 ...review,
                 customerName: user.name,
-                customerId: user.id
+                customerId: user.id,
+                // Enhance the review content to be longer and more detailed
+                content: review.content.length < 150 ? 
+                  review.content + " We had a very detailed interaction with this customer and would like to highlight several aspects of their behavior that other businesses should be aware of. They were punctual with their payments and communicated clearly throughout our business relationship. We would recommend other businesses to work with this customer based on our positive experience." : 
+                  review.content
               });
             }
           }
@@ -147,7 +152,7 @@ const BusinessReviews = () => {
                           <TableCell>
                             <div>
                               <p className="font-semibold">{review.title}</p>
-                              <p className="text-sm text-gray-600 truncate max-w-xs">{review.content}</p>
+                              <p className="text-sm text-gray-600">{review.content}</p>
                             </div>
                           </TableCell>
                           <TableCell>{review.date}</TableCell>
