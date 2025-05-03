@@ -20,6 +20,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import ProfileReviews from "./pages/ProfileReviews";
 import NotificationsPage from "./pages/NotificationsPage";
 import BillingPage from "./pages/BillingPage";
+import BusinessVerificationSuccess from "./pages/BusinessVerificationSuccess";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +46,7 @@ const BusinessOwnerRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   // Redirect if not a business owner
-  if (currentUser.userType === "customer") {
+  if (currentUser.type === "customer") {
     return <Navigate to="/" replace />;
   }
   
@@ -64,6 +65,7 @@ const AppRoutes = () => {
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/about" element={<About />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
       
       {/* Business owner specific routes */}
       <Route path="/review/new" element={

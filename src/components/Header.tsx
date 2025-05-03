@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   // Determine if current user is a business owner (not a customer)
-  const isBusinessOwner = currentUser?.userType === "business" || !currentUser?.userType;
+  const isBusinessOwner = currentUser?.type === "business" || currentUser?.type === "admin";
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   

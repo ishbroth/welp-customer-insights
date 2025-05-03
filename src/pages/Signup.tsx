@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
+import { verifyBusinessId } from "@/utils/businessVerification";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialAccountType = searchParams.get("type") === "customer" ? "customer" : "business";
   const [accountType, setAccountType] = useState<"business" | "customer">(initialAccountType);
@@ -48,31 +50,35 @@ const Signup = () => {
     setIsPhoneVerified(false);
   }, [accountType]);
 
-  const handleBusinessVerification = (e: React.FormEvent) => {
+  const handleBusinessVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
     setVerificationError("");
     
-    // Simulate API verification call
-    setTimeout(() => {
-      // For demo purposes, only succeed verification for specific inputs
-      if (businessName.toLowerCase().includes("acme") || businessName.toLowerCase().includes("pete")) {
-        // Mock verification data from business database lookup
+    try {
+      // Use the business verification utility with mock data
+      const result = await verifyBusinessId(licenseNumber);
+      
+      if (result.verified) {
         setVerificationData({
           name: businessName,
           address: businessAddress,
           phone: businessPhone,
           licenseStatus: "Active",
-          licenseType: businessName.toLowerCase().includes("plumbing") ? "Plumbing Contractor" : "General Business",
-          licenseExpiration: "2025-12-31"
+          licenseType: result.details?.type || "General Business",
+          licenseExpiration: result.details?.expirationDate || "2025-12-31"
         });
         setVerificationError("");
       } else {
         setVerificationData(null);
-        setVerificationError("We couldn't verify your business. Please check your information and try again.");
+        setVerificationError(result.message || "We couldn't verify your business. Please check your information and try again.");
       }
+    } catch (error) {
+      setVerificationError("An error occurred during verification. Please try again.");
+      console.error("Verification error:", error);
+    } finally {
       setIsVerifying(false);
-    }, 2000);
+    }
   };
 
   const handleSendVerificationText = () => {
@@ -100,15 +106,28 @@ const Signup = () => {
   };
 
   const handleCreateAccount = () => {
-    toast({
-      title: "Account Created",
-      description: `Your ${accountType} account has been created successfully! Redirecting to your dashboard...`,
-    });
-    
-    // In a real app, we would redirect to dashboard or login page
-    setTimeout(() => {
-      window.location.href = `/${accountType}-dashboard`;
-    }, 2000);
+    if (accountType === "business") {
+      // For business accounts, redirect to the verification success page
+      toast({
+        title: "Account Created",
+        description: "Your business account has been created successfully!",
+      });
+      
+      // Simulate account creation
+      setTimeout(() => {
+        navigate("/business-verification-success");
+      }, 1000);
+    } else {
+      // For customer accounts, use the existing flow
+      toast({
+        title: "Account Created",
+        description: "Your customer account has been created successfully! Redirecting to your dashboard...",
+      });
+      
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    }
   };
 
   return (
