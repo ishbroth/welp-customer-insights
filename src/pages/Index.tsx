@@ -82,7 +82,7 @@ const Index = () => {
                   <div className="welp-card">
                     <h2 className="text-2xl font-bold mb-4 text-center">Customer Portal</h2>
                     <p className="text-center mb-6">
-                      View and respond to reviews about you from businesses you've interacted with.
+                      Keep on top of your reputation, and stand out as a preferred customer. Search here using your name, an address or phone number that a business owner may have used to review you. You can then choose to create an account to view the full review and respond with your sentiments to the business owner!
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Link to="/login" className="flex-1">
