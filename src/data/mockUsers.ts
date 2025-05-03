@@ -40,7 +40,7 @@ export const mockUsers: User[] = [
   },
   {
     id: "3",
-    name: "Customer User",
+    name: "Emma Johnson",
     email: "customer@example.com",
     type: "customer",
     avatar: "/placeholder.svg",

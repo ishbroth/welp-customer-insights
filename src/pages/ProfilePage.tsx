@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import StarRating from "@/components/StarRating";
 import { Edit, Search, Settings, Shield } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const ProfilePage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,6 +51,11 @@ const ProfilePage = () => {
       
       return reviews;
     })() : [];
+
+  // Get reviews about the current customer user
+  const customerReviews = currentUser?.type === "customer" ? 
+    // Find all reviews about this customer
+    currentUser.reviews || [] : [];
 
   // All reviews for admin view
   const allReviews = currentUser?.type === "admin" ? 
@@ -80,6 +92,8 @@ const ProfilePage = () => {
                   <p className="text-gray-600">
                     {currentUser?.type === "admin" 
                       ? "Administrator access - You can manage all aspects of the application"
+                      : currentUser?.type === "customer"
+                      ? "View what businesses are saying about you"
                       : "Manage your profile and customer reviews"}
                   </p>
                 </div>
@@ -140,57 +154,103 @@ const ProfilePage = () => {
                 </Card>
               )}
               
+              {/* Customer Reviews Section - for customers only */}
+              {currentUser?.type === "customer" && customerReviews.length > 0 && (
+                <Card className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">What Businesses Say About You</h2>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Business</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Feedback</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {customerReviews.map((review) => (
+                        <TableRow key={review.id}>
+                          <TableCell className="font-medium">{review.reviewerName}</TableCell>
+                          <TableCell><StarRating rating={review.rating} /></TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-semibold">{review.title}</p>
+                              <p className="text-sm text-gray-600">{review.content}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{review.date}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              )}
+              
+              {/* No reviews message for customers */}
+              {currentUser?.type === "customer" && customerReviews.length === 0 && (
+                <Card className="p-6 text-center">
+                  <p className="text-gray-500 mb-4">
+                    No businesses have written reviews about you yet.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    As you interact with more businesses on our platform, reviews will appear here.
+                  </p>
+                </Card>
+              )}
+              
               {/* Reviews section */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">
-                    {currentUser?.type === "admin" ? "All Customer Reviews" : "Your Customer Reviews"}
-                  </h2>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to="/profile/reviews">
-                      See All
-                    </Link>
-                  </Button>
-                </div>
-                
-                <div className="space-y-4">
-                  {(currentUser?.type === "admin" ? allReviews : businessReviews)?.length > 0 ? (
-                    (currentUser?.type === "admin" ? allReviews : businessReviews).map((review) => (
-                      <Card key={review.id} className="p-4">
-                        <div className="flex justify-between">
-                          <h3 className="font-medium">Customer: {review.customerName}</h3>
-                          <StarRating rating={review.rating} />
-                        </div>
-                        {currentUser?.type === "admin" && (
-                          <p className="text-sm text-gray-500 mt-1">Reviewed by: {review.reviewerName}</p>
-                        )}
-                        <p className="text-gray-600 mt-2">{review.content}</p>
-                        <div className="flex justify-between items-center mt-4">
-                          <span className="text-sm text-gray-500">{review.date}</span>
-                          <Button variant="ghost" size="sm">
+              {currentUser?.type !== "customer" && (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      {currentUser?.type === "admin" ? "All Customer Reviews" : "Your Customer Reviews"}
+                    </h2>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/profile/reviews">
+                        See All
+                      </Link>
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {(currentUser?.type === "admin" ? allReviews : businessReviews)?.length > 0 ? (
+                      (currentUser?.type === "admin" ? allReviews : businessReviews).map((review) => (
+                        <Card key={review.id} className="p-4">
+                          <div className="flex justify-between">
+                            <h3 className="font-medium">Customer: {review.customerName}</h3>
+                            <StarRating rating={review.rating} />
+                          </div>
+                          {currentUser?.type === "admin" && (
+                            <p className="text-sm text-gray-500 mt-1">Reviewed by: {review.reviewerName}</p>
+                          )}
+                          <p className="text-gray-600 mt-2">{review.content}</p>
+                          <div className="flex justify-between items-center mt-4">
+                            <span className="text-sm text-gray-500">{review.date}</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                          </div>
+                        </Card>
+                      ))
+                    ) : (
+                      <Card className="p-6 text-center">
+                        <p className="text-gray-500">
+                          {currentUser?.type === "admin" 
+                            ? "No customer reviews available in the system."
+                            : "You haven't written any customer reviews yet."}
+                        </p>
+                        <Button className="mt-4" asChild>
+                          <Link to="/review/new">
                             <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </Button>
-                        </div>
+                            Write Your First Customer Review
+                          </Link>
+                        </Button>
                       </Card>
-                    ))
-                  ) : (
-                    <Card className="p-6 text-center">
-                      <p className="text-gray-500">
-                        {currentUser?.type === "admin" 
-                          ? "No customer reviews available in the system."
-                          : "You haven't written any customer reviews yet."}
-                      </p>
-                      <Button className="mt-4" asChild>
-                        <Link to="/review/new">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Write Your First Customer Review
-                        </Link>
-                      </Button>
-                    </Card>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </main>
