@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -41,6 +42,8 @@ const Signup = () => {
   const [verificationError, setVerificationError] = useState("");
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
+  const [mockCodeSent, setMockCodeSent] = useState(false);
+  const [mockVerificationCode] = useState("123456"); // Mock code for demo purposes
 
   useEffect(() => {
     // Reset form and steps when account type changes
@@ -48,7 +51,29 @@ const Signup = () => {
     setVerificationData(null);
     setVerificationError("");
     setIsPhoneVerified(false);
+    setMockCodeSent(false);
   }, [accountType]);
+
+  // Auto-fill mock verification code after a delay when code is sent
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (mockCodeSent) {
+      timer = setTimeout(() => {
+        setVerificationCode(mockVerificationCode);
+        // Auto-verify after filling in the code
+        setTimeout(() => {
+          setIsPhoneVerified(true);
+          toast({
+            title: "Phone Verified",
+            description: "Your phone number has been verified successfully.",
+          });
+        }, 1000);
+      }, 1500);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [mockCodeSent, mockVerificationCode, toast]);
 
   const handleBusinessVerification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +107,7 @@ const Signup = () => {
   };
 
   const handleSendVerificationText = () => {
+    setMockCodeSent(true);
     toast({
       title: "Verification Text Sent",
       description: `A verification code has been sent to ${accountType === "business" ? businessPhone : customerPhone}`,
@@ -308,27 +334,36 @@ const Signup = () => {
                               <strong>{businessPhone}</strong>
                             </p>
                             
-                            {!verificationCode && (
+                            {!mockCodeSent ? (
                               <Button 
                                 onClick={handleSendVerificationText}
                                 className="welp-button"
                               >
                                 Send Verification Text
                               </Button>
-                            )}
-                            
-                            {verificationCode || (
-                              <div className="flex space-x-2 mt-3">
-                                <Input
-                                  placeholder="Enter 6-digit code"
-                                  value={verificationCode}
-                                  onChange={(e) => setVerificationCode(e.target.value)}
-                                  className="welp-input"
-                                  maxLength={6}
-                                />
+                            ) : (
+                              <div className="space-y-3">
+                                <p className="text-sm text-green-600">Code sent! Enter the 6-digit code below:</p>
+                                <div className="flex justify-center mb-4">
+                                  <InputOTP 
+                                    maxLength={6} 
+                                    value={verificationCode} 
+                                    onChange={setVerificationCode}
+                                  >
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={0} />
+                                      <InputOTPSlot index={1} />
+                                      <InputOTPSlot index={2} />
+                                      <InputOTPSlot index={3} />
+                                      <InputOTPSlot index={4} />
+                                      <InputOTPSlot index={5} />
+                                    </InputOTPGroup>
+                                  </InputOTP>
+                                </div>
                                 <Button 
                                   onClick={handleVerifyCode}
-                                  className="welp-button"
+                                  className="welp-button w-full"
+                                  disabled={verificationCode.length !== 6}
                                 >
                                   Verify
                                 </Button>
@@ -448,27 +483,36 @@ const Signup = () => {
                           <strong>{customerPhone || "(Not provided)"}</strong>
                         </p>
                         
-                        {!verificationCode && customerPhone && (
+                        {!mockCodeSent && customerPhone ? (
                           <Button 
                             onClick={handleSendVerificationText}
                             className="welp-button"
                           >
                             Send Verification Text
                           </Button>
-                        )}
-                        
-                        {verificationCode || (
-                          <div className="flex space-x-2 mt-3">
-                            <Input
-                              placeholder="Enter 6-digit code"
-                              value={verificationCode}
-                              onChange={(e) => setVerificationCode(e.target.value)}
-                              className="welp-input"
-                              maxLength={6}
-                            />
+                        ) : customerPhone && (
+                          <div className="space-y-3">
+                            <p className="text-sm text-green-600">Code sent! Enter the 6-digit code below:</p>
+                            <div className="flex justify-center mb-4">
+                              <InputOTP 
+                                maxLength={6} 
+                                value={verificationCode} 
+                                onChange={setVerificationCode}
+                              >
+                                <InputOTPGroup>
+                                  <InputOTPSlot index={0} />
+                                  <InputOTPSlot index={1} />
+                                  <InputOTPSlot index={2} />
+                                  <InputOTPSlot index={3} />
+                                  <InputOTPSlot index={4} />
+                                  <InputOTPSlot index={5} />
+                                </InputOTPGroup>
+                              </InputOTP>
+                            </div>
                             <Button 
                               onClick={handleVerifyCode}
-                              className="welp-button"
+                              className="welp-button w-full"
+                              disabled={verificationCode.length !== 6}
                             >
                               Verify
                             </Button>
