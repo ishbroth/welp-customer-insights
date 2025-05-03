@@ -14,6 +14,9 @@ const Header = () => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Determine if current user is a business owner (not a customer)
+  const isBusinessOwner = currentUser?.userType === "business" || !currentUser?.userType;
+
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
   const handleLogout = () => {
@@ -60,12 +63,16 @@ const Header = () => {
               >
                 <Search className="mr-1 h-4 w-4" /> Search
               </Link>
-              <Link 
-                to="/review/new" 
-                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
-              >
-                <Edit className="mr-1 h-4 w-4" /> Post Review
-              </Link>
+              
+              {/* Only show Post Review for business owners */}
+              {isBusinessOwner && (
+                <Link 
+                  to="/review/new" 
+                  className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                >
+                  <Edit className="mr-1 h-4 w-4" /> Post Review
+                </Link>
+              )}
               
               {currentUser ? (
                 <div className="flex items-center space-x-4">
@@ -115,13 +122,17 @@ const Header = () => {
               >
                 <Search className="mr-2 h-4 w-4" /> Search
               </Link>
-              <Link
-                to="/review/new"
-                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
-                onClick={toggleMenu}
-              >
-                <Edit className="mr-2 h-4 w-4" /> Post Review
-              </Link>
+              
+              {/* Only show Post Review for business owners on mobile too */}
+              {isBusinessOwner && (
+                <Link
+                  to="/review/new"
+                  className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
+                  onClick={toggleMenu}
+                >
+                  <Edit className="mr-2 h-4 w-4" /> Post Review
+                </Link>
+              )}
               
               {currentUser ? (
                 <>

@@ -35,6 +35,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Business owner route component that allows access only for business owners
+const BusinessOwnerRoute = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser } = useAuth();
+  
+  // Redirect to login if not logged in
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Redirect if not a business owner
+  if (currentUser.userType === "customer") {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // Routes component that uses the AuthContext
 const AppRoutes = () => {
   return (
@@ -43,11 +60,17 @@ const AppRoutes = () => {
       <Route path="/search" element={<SearchResults />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/review/new" element={<NewReview />} />
       <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/about" element={<About />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
+      
+      {/* Business owner specific routes */}
+      <Route path="/review/new" element={
+        <BusinessOwnerRoute>
+          <NewReview />
+        </BusinessOwnerRoute>
+      } />
       
       {/* Protected routes */}
       <Route path="/profile" element={
