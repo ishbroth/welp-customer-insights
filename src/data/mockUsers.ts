@@ -6,6 +6,12 @@ export interface User {
   type: "business" | "customer" | "admin";
   avatar?: string;
   businessId?: string;
+  bio?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   reviews?: Review[];
 }
 
@@ -29,6 +35,11 @@ export const mockUsers: User[] = [
     type: "business",
     avatar: "/placeholder.svg",
     businessId: "LIC123456",
+    phone: "(555) 123-4567",
+    address: "123 Business Ave",
+    city: "San Francisco",
+    state: "CA",
+    zipCode: "94105",
   },
   {
     id: "2",
@@ -37,6 +48,11 @@ export const mockUsers: User[] = [
     type: "business",
     avatar: "/placeholder.svg",
     businessId: "12-3456789",
+    phone: "(555) 987-6543",
+    address: "456 Restaurant Rd",
+    city: "Los Angeles",
+    state: "CA",
+    zipCode: "90001",
   },
   {
     id: "3",
@@ -44,6 +60,12 @@ export const mockUsers: User[] = [
     email: "customer@example.com",
     type: "customer",
     avatar: "/placeholder.svg",
+    bio: "Frequent shopper and food enthusiast",
+    phone: "(555) 555-1234",
+    address: "789 Customer St",
+    city: "Portland",
+    state: "OR",
+    zipCode: "97201",
     reviews: [
       {
         id: "101",
@@ -73,6 +95,12 @@ export const mockUsers: User[] = [
     email: "john@example.com",
     type: "customer",
     avatar: "/placeholder.svg",
+    bio: "Tech professional and casual diner",
+    phone: "(555) 444-3333",
+    address: "101 Main St",
+    city: "Seattle",
+    state: "WA",
+    zipCode: "98101",
     reviews: [
       {
         id: "103",
@@ -92,5 +120,10 @@ export const mockUsers: User[] = [
     email: "admin@welp.com",
     type: "admin",
     avatar: "/placeholder.svg",
+    phone: "(555) 999-8888",
+    address: "42 Admin Plaza",
+    city: "Austin",
+    state: "TX",
+    zipCode: "78701",
   }
 ];
