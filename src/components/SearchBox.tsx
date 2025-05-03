@@ -8,9 +8,16 @@ import { Search } from "lucide-react";
 interface SearchBoxProps {
   className?: string;
   simplified?: boolean;
+  onSearch?: (searchParams: Record<string, string>) => void;
+  buttonText?: string;
 }
 
-const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
+const SearchBox = ({ 
+  className, 
+  simplified = false, 
+  onSearch,
+  buttonText = "Search"
+}: SearchBoxProps) => {
   const navigate = useNavigate();
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -21,7 +28,23 @@ const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}&zipCode=${encodeURIComponent(zipCode)}`);
+    
+    const searchParams = {
+      lastName,
+      firstName,
+      phone,
+      address,
+      city,
+      zipCode
+    };
+    
+    if (onSearch) {
+      // Use the custom search handler if provided
+      onSearch(searchParams);
+    } else {
+      // Default behavior - navigate to search results page
+      navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}&zipCode=${encodeURIComponent(zipCode)}`);
+    }
   };
 
   return (
@@ -91,7 +114,7 @@ const SearchBox = ({ className, simplified = false }: SearchBoxProps) => {
         
         <Button type="submit" className="welp-button w-full flex items-center justify-center">
           <Search className="mr-2 h-4 w-4" />
-          Search
+          {buttonText}
         </Button>
       </form>
     </div>

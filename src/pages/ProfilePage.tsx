@@ -1,11 +1,11 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import SearchBox from "@/components/SearchBox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/table";
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const { currentUser } = useAuth();
   
   // Get reviews created by the current business user about customers
@@ -75,6 +75,16 @@ const ProfilePage = () => {
   const getFirstSentence = (content) => {
     const match = content.match(/^.*?[.!?](?:\s|$)/);
     return match ? match[0] : `${content.substring(0, 80)}...`;
+  };
+
+  // Handle search in "Rate a Customer" section
+  const handleCustomerSearch = (searchParams: Record<string, string>) => {
+    const queryString = Object.entries(searchParams)
+      .filter(([_, value]) => value.trim() !== '')
+      .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
+      .join('&');
+      
+    navigate(`/search?${queryString}`);
   };
 
   return (
@@ -287,24 +297,11 @@ const ProfilePage = () => {
                   <p className="text-gray-600 mb-6">
                     Search for customers to review and help other businesses make informed decisions.
                   </p>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input 
-                      type="text"
-                      placeholder="Search for customers..."
-                      className="pl-10"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <Button variant="default" asChild>
-                      <Link to="/review/new">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Write a Review
-                      </Link>
-                    </Button>
-                  </div>
+                  <SearchBox 
+                    simplified={true} 
+                    onSearch={handleCustomerSearch}
+                    buttonText="Find Customer"
+                  />
                 </Card>
               )}
               
