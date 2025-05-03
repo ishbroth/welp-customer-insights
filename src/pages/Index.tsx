@@ -27,7 +27,7 @@ const Index = () => {
                     Get Started
                   </Button>
                 </Link>
-                <Link to="/how-it-works">
+                <Link to="/about">
                   <Button variant="outline" className="border-white text-[#ea384c] hover:bg-white/10 hover:text-white font-bold py-3 px-6 rounded-full">
                     Learn More
                   </Button>
