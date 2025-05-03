@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { Bell, BellRing } from "lucide-react";
+import { Bell, BellRing, ThumbsUp, MessageCircle } from "lucide-react";
 
 const NotificationsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,6 +21,7 @@ const NotificationsPage = () => {
     newReviews: true,
     reviewResponses: true,
     reviewLikes: false,
+    reviewReactions: true,
     emailNotifications: true,
     pushNotifications: false,
   });
@@ -84,9 +85,23 @@ const NotificationsPage = () => {
                       <Separator />
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <Label htmlFor="reviewLikes">Review Likes</Label>
+                          <Label htmlFor="reviewReactions">Review Reactions</Label>
                           <p className="text-sm text-muted-foreground">
-                            Get notified when someone likes a review you wrote
+                            Get notified when customers or other businesses react to your reviews
+                          </p>
+                        </div>
+                        <Switch 
+                          id="reviewReactions" 
+                          checked={notificationPrefs.reviewReactions}
+                          onCheckedChange={() => handleToggleChange("reviewReactions")}
+                        />
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="reviewLikes">Review Responses</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Get notified when customers respond to your reviews
                           </p>
                         </div>
                         <Switch 

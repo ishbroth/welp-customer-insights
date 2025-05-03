@@ -24,6 +24,12 @@ export interface Review {
   reviewerName: string;
   reviewerAvatar?: string;
   date: string;
+  reactions?: {
+    like: string[];
+    funny: string[];
+    useful: string[];
+    ohNo: string[];
+  };
 }
 
 // Mock users for testing
@@ -70,22 +76,34 @@ export const mockUsers: User[] = [
       {
         id: "101",
         title: "Great customer",
-        content: "Emma was very polite and respectful to our staff. Always welcome!",
+        content: "Emma was very polite and respectful to our staff. Always welcome! She was pleasant to interact with and communicated her needs clearly. We appreciate customers like Emma who understand the challenges of running a small business and treat staff with respect. She also left the store tidy and followed all of our policies.",
         rating: 5,
         reviewerId: "1",
         reviewerName: "Business Owner",
         reviewerAvatar: "/placeholder.svg",
-        date: "2023-04-15"
+        date: "2023-04-15",
+        reactions: {
+          like: ["2", "4"],
+          funny: [],
+          useful: ["2"],
+          ohNo: []
+        }
       },
       {
         id: "102",
         title: "Decent experience",
-        content: "Customer was a bit demanding but overall reasonable.",
+        content: "Customer was a bit demanding but overall reasonable. Despite having some specific requests that were challenging to accommodate, Emma remained polite throughout our interaction. She did ask for several substitutions to our standard menu items, which slowed down service for other customers, but she was understanding when explained our limitations. Would serve again but would appreciate more flexibility.",
         rating: 4,
         reviewerId: "2",
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
-        date: "2023-05-20"
+        date: "2023-05-20",
+        reactions: {
+          like: ["1"],
+          funny: [],
+          useful: ["1", "5"],
+          ohNo: []
+        }
       }
     ]
   },
@@ -105,12 +123,18 @@ export const mockUsers: User[] = [
       {
         id: "103",
         title: "Difficult customer",
-        content: "Was rude to staff and made unreasonable demands.",
+        content: "Was rude to staff and made unreasonable demands. This customer repeatedly ignored our policies despite clear explanations. He raised his voice when told that certain requests could not be accommodated, causing discomfort to other customers. He also complained about pricing that was clearly listed in our menu and demanded discounts without justification. We would prefer not to serve this customer again based on this experience.",
         rating: 2,
         reviewerId: "1", 
         reviewerName: "Business Owner",
         reviewerAvatar: "/placeholder.svg",
-        date: "2023-03-10"
+        date: "2023-03-10",
+        reactions: {
+          like: [],
+          funny: [],
+          useful: ["2"],
+          ohNo: ["4"]
+        }
       }
     ]
   },

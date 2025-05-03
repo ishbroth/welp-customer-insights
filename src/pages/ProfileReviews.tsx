@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import StarRating from "@/components/StarRating";
+import ReviewReactions from "@/components/ReviewReactions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +24,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Eye, Lock } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,8 +34,11 @@ const ProfileReviews = () => {
   const { toast } = useToast();
   
   // Get reviews about the current customer user
-  const customerReviews = currentUser?.type === "customer" && currentUser?.reviews 
-    ? currentUser.reviews : [];
+  const [customerReviews, setCustomerReviews] = useState(() => {
+    return currentUser?.type === "customer" && currentUser?.reviews 
+      ? [...currentUser.reviews]  // Create a copy to avoid mutating the original
+      : [];
+  });
   
   // Pagination settings
   const reviewsPerPage = 5;
@@ -70,6 +74,36 @@ const ProfileReviews = () => {
 
   const isReviewUnlocked = (reviewId: string): boolean => {
     return unlockedReviews.includes(reviewId);
+  };
+
+  // Handle toggling reactions
+  const handleReactionToggle = (reviewId: string, reactionType: string) => {
+    setCustomerReviews(prevReviews => 
+      prevReviews.map(review => {
+        if (review.id === reviewId) {
+          const userId = currentUser?.id || "";
+          const hasReacted = review.reactions?.[reactionType]?.includes(userId);
+          
+          const updatedReactions = { 
+            ...review.reactions,
+            [reactionType]: hasReacted
+              ? (review.reactions?.[reactionType] || []).filter(id => id !== userId)
+              : [...(review.reactions?.[reactionType] || []), userId]
+          };
+          
+          // Show notification toast for the customer
+          if (!hasReacted) {
+            toast({
+              title: `You reacted with "${reactionType}"`,
+              description: `to the review by ${review.reviewerName}`,
+            });
+          }
+          
+          return { ...review, reactions: updatedReactions };
+        }
+        return review;
+      })
+    );
   };
 
   return (
@@ -120,6 +154,17 @@ const ProfileReviews = () => {
                           <div className="mt-2 text-sm text-green-600 flex items-center">
                             <Eye className="h-4 w-4 mr-1" />
                             Full review unlocked
+                          </div>
+                          
+                          {/* Reactions for unlocked reviews */}
+                          <div className="mt-4 border-t pt-3">
+                            <div className="text-sm text-gray-500 mb-1">React to this review:</div>
+                            <ReviewReactions 
+                              reviewId={review.id}
+                              customerId={currentUser?.id || ""}
+                              reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
+                              onReactionToggle={handleReactionToggle}
+                            />
                           </div>
                         </div>
                       ) : (

@@ -6,10 +6,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import StarRating from "@/components/StarRating";
+import ReviewReactions from "@/components/ReviewReactions";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -41,26 +42,23 @@ const BusinessReviews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Get reviews created by the current business user about customers
-  const businessReviews = currentUser?.type === "business" ? 
-    // Find all customer users who have reviews from this business
-    // Then extract those specific reviews
-    (() => {
-      // This is a temporary array to hold all reviews by this business
-      const reviews = [];
-      
-      // Go through all customers in mockUsers who have reviews
+  // State to hold a working copy of reviews (with changes to reactions)
+  const [workingReviews, setWorkingReviews] = useState(() => {
+    // Initialize working reviews from mock data
+    const reviews = [];
+    
+    if (currentUser?.type === "business") {
       for (const user of mockUsers) {
         if (user.type === "customer" && user.reviews) {
-          // Go through each review of this customer
           for (const review of user.reviews) {
-            // Check if the review was written by the current business
             if (review.reviewerId === currentUser.id) {
               reviews.push({
                 ...review,
                 customerName: user.name,
                 customerId: user.id,
-                // Enhance the review content to be longer and more detailed
+                // Ensure reactions exist
+                reactions: review.reactions || { like: [], funny: [], useful: [], ohNo: [] },
+                // Enhance content if needed
                 content: review.content.length < 150 ? 
                   review.content + " We had a very detailed interaction with this customer and would like to highlight several aspects of their behavior that other businesses should be aware of. They were punctual with their payments and communicated clearly throughout our business relationship. We would recommend other businesses to work with this customer based on our positive experience." : 
                   review.content
@@ -69,16 +67,17 @@ const BusinessReviews = () => {
           }
         }
       }
-      
-      return reviews;
-    })() : [];
+    }
+    
+    return reviews;
+  });
 
   // Pagination settings
   const reviewsPerPage = 5;
-  const totalPages = Math.ceil(businessReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil(workingReviews.length / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-  const currentReviews = businessReviews.slice(indexOfFirstReview, indexOfLastReview);
+  const currentReviews = workingReviews.slice(indexOfFirstReview, indexOfLastReview);
 
   const handleEditReview = (review) => {
     // Navigate to the NewReview page with the review data
@@ -88,6 +87,36 @@ const BusinessReviews = () => {
         isEditing: true
       }
     });
+  };
+
+  // Handle toggling reactions
+  const handleReactionToggle = (reviewId: string, reactionType: string) => {
+    setWorkingReviews(prevReviews => 
+      prevReviews.map(review => {
+        if (review.id === reviewId) {
+          const userId = currentUser?.id || "";
+          const hasReacted = review.reactions?.[reactionType]?.includes(userId);
+          
+          const updatedReactions = { 
+            ...review.reactions,
+            [reactionType]: hasReacted
+              ? review.reactions[reactionType].filter(id => id !== userId)
+              : [...(review.reactions[reactionType] || []), userId]
+          };
+          
+          // Show notification toast for the business owner
+          if (!hasReacted) {
+            toast({
+              title: "Reaction added",
+              description: `You added a ${reactionType} reaction to your review of ${review.customerName}`,
+            });
+          }
+          
+          return { ...review, reactions: updatedReactions };
+        }
+        return review;
+      })
+    );
   };
 
   return (
@@ -108,7 +137,7 @@ const BusinessReviews = () => {
             <div className="flex justify-between mb-6">
               <div>
                 <span className="text-gray-600">
-                  {businessReviews.length} {businessReviews.length === 1 ? 'review' : 'reviews'} total
+                  {workingReviews.length} {workingReviews.length === 1 ? 'review' : 'reviews'} total
                 </span>
               </div>
               <Button asChild>
@@ -119,7 +148,7 @@ const BusinessReviews = () => {
               </Button>
             </div>
             
-            {businessReviews.length === 0 ? (
+            {workingReviews.length === 0 ? (
               <Card className="p-6 text-center">
                 <p className="text-gray-500 mb-4">
                   You haven't written any customer reviews yet.
@@ -133,44 +162,46 @@ const BusinessReviews = () => {
               </Card>
             ) : (
               <div className="space-y-6">
-                <Card>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Review</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {currentReviews.map((review) => (
-                        <TableRow key={review.id}>
-                          <TableCell className="font-medium">{review.customerName}</TableCell>
-                          <TableCell><StarRating rating={review.rating} /></TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-semibold">{review.title}</p>
-                              <p className="text-sm text-gray-600">{review.content}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{review.date}</TableCell>
-                          <TableCell>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleEditReview(review)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
+                {currentReviews.map((review) => (
+                  <Card key={review.id} className="overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-xl">{review.customerName}</CardTitle>
+                        <StarRating rating={review.rating} />
+                      </div>
+                      <p className="text-sm text-gray-500">{review.date}</p>
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="mb-2">
+                        <h3 className="font-medium">{review.title}</h3>
+                      </div>
+                      <p className="text-gray-700">{review.content}</p>
+                      
+                      {/* Review reactions */}
+                      <div className="mt-4 border-t pt-3">
+                        <div className="text-sm text-gray-500 mb-2">Reactions to your review:</div>
+                        <ReviewReactions 
+                          reviewId={review.id}
+                          customerId={review.customerId}
+                          reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
+                          onReactionToggle={handleReactionToggle}
+                        />
+                      </div>
+                    </CardContent>
+                    
+                    <CardFooter className="bg-gray-50 flex justify-end">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditReview(review)}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
                 
                 {totalPages > 1 && (
                   <Pagination className="mt-6">
