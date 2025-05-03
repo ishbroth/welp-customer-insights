@@ -13,6 +13,7 @@ import NewReview from "./pages/NewReview";
 import ReviewSuccess from "./pages/ReviewSuccess";
 import Subscription from "./pages/Subscription";
 import About from "./pages/About";
+import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -46,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/about" element={<About />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
       
       {/* Protected routes */}
       <Route path="/profile" element={
