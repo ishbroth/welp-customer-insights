@@ -3,7 +3,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  type: "business" | "customer";
+  type: "business" | "customer" | "admin";
   avatar?: string;
   businessId?: string;
   reviews?: Review[];
@@ -85,5 +85,12 @@ export const mockUsers: User[] = [
         date: "2023-03-10"
       }
     ]
+  },
+  {
+    id: "5",
+    name: "Admin User",
+    email: "admin@welp.com",
+    type: "admin",
+    avatar: "/placeholder.svg",
   }
 ];

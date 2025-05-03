@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User, mockUsers } from "@/data/mockUsers";
 
 interface AuthContextType {
@@ -24,6 +24,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedUser = localStorage.getItem("currentUser");
     return savedUser ? JSON.parse(savedUser) : null;
   });
+
+  // Auto-login as admin on first load if no user is logged in
+  useEffect(() => {
+    if (!currentUser) {
+      const adminUser = mockUsers.find(user => user.type === "admin");
+      if (adminUser) {
+        setCurrentUser(adminUser);
+        localStorage.setItem("currentUser", JSON.stringify(adminUser));
+        console.log("Auto-logged in as admin:", adminUser.name);
+      }
+    }
+  }, [currentUser]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Simulate API call delay

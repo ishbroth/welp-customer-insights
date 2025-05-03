@@ -18,10 +18,11 @@ import ProfileEdit from "./pages/ProfileEdit";
 
 const queryClient = new QueryClient();
 
-// Protected route component
+// Protected route component that allows admin access
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { currentUser } = useAuth();
   
+  // Allow access if user is logged in or is an admin
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
