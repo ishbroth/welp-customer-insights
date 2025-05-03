@@ -140,6 +140,9 @@ const ProfileEdit = () => {
     });
   };
 
+  // Check if user is a business type
+  const isBusinessAccount = currentUser?.type === "business";
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -192,9 +195,9 @@ const ProfileEdit = () => {
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Business name</FormLabel>
+                              <FormLabel>{isBusinessAccount ? "Business name" : "Name"}</FormLabel>
                               <FormControl>
-                                <Input placeholder="Your business name" {...field} />
+                                <Input placeholder={isBusinessAccount ? "Your business name" : "Your name"} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -215,40 +218,43 @@ const ProfileEdit = () => {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="businessId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>License Number / EIN</FormLabel>
-                              <div className="flex gap-2">
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Enter your business license or EIN" 
-                                    {...field} 
-                                    className="flex-grow"
-                                  />
-                                </FormControl>
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  onClick={handleVerifyBusinessId}
-                                  disabled={!businessId || isVerifying}
-                                >
-                                  <Search className="mr-2 h-4 w-4" />
-                                  {isVerifying ? "Verifying..." : "Verify"}
-                                </Button>
-                              </div>
-                              {verificationStatus === 'verified' && (
-                                <p className="text-sm text-green-600 mt-1">Business ID verified successfully</p>
-                              )}
-                              {verificationStatus === 'failed' && (
-                                <p className="text-sm text-red-600 mt-1">Business ID verification failed</p>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* Only render businessId field for business accounts */}
+                        {isBusinessAccount && (
+                          <FormField
+                            control={form.control}
+                            name="businessId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>License Number / EIN</FormLabel>
+                                <div className="flex gap-2">
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Enter your business license or EIN" 
+                                      {...field} 
+                                      className="flex-grow"
+                                    />
+                                  </FormControl>
+                                  <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    onClick={handleVerifyBusinessId}
+                                    disabled={!businessId || isVerifying}
+                                  >
+                                    <Search className="mr-2 h-4 w-4" />
+                                    {isVerifying ? "Verifying..." : "Verify"}
+                                  </Button>
+                                </div>
+                                {verificationStatus === 'verified' && (
+                                  <p className="text-sm text-green-600 mt-1">Business ID verified successfully</p>
+                                )}
+                                {verificationStatus === 'failed' && (
+                                  <p className="text-sm text-red-600 mt-1">Business ID verification failed</p>
+                                )}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                         
                         <FormField
                           control={form.control}
