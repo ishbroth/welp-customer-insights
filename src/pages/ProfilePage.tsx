@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +9,7 @@ import ProfileSidebar from "@/components/ProfileSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import StarRating from "@/components/StarRating";
 import { Edit, MapPin, Phone, Search, Settings, Shield, User as UserIcon } from "lucide-react";
 import {
@@ -86,22 +88,33 @@ const ProfilePage = () => {
             <div className="grid grid-cols-1 gap-8">
               {/* Welcome section */}
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">
-                    Welcome, {currentUser?.name}
-                    {currentUser?.type === "admin" && (
-                      <span className="inline-flex items-center ml-2 text-lg bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md">
-                        <Shield className="h-4 w-4 mr-1" /> Administrator
-                      </span>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 border-2 border-white shadow-md">
+                    {currentUser?.avatar ? (
+                      <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                    ) : (
+                      <AvatarFallback className="text-xl bg-welp-primary text-white">
+                        {currentUser?.name?.[0] || "U"}
+                      </AvatarFallback>
                     )}
-                  </h1>
-                  <p className="text-gray-600">
-                    {currentUser?.type === "admin" 
-                      ? "Administrator access - You can manage all aspects of the application"
-                      : currentUser?.type === "customer"
-                      ? "View what businesses are saying about you"
-                      : "Manage your profile and customer reviews"}
-                  </p>
+                  </Avatar>
+                  <div>
+                    <h1 className="text-3xl font-bold mb-2">
+                      Welcome, {currentUser?.name}
+                      {currentUser?.type === "admin" && (
+                        <span className="inline-flex items-center ml-2 text-lg bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md">
+                          <Shield className="h-4 w-4 mr-1" /> Administrator
+                        </span>
+                      )}
+                    </h1>
+                    <p className="text-gray-600">
+                      {currentUser?.type === "admin" 
+                        ? "Administrator access - You can manage all aspects of the application"
+                        : currentUser?.type === "customer"
+                        ? "View what businesses are saying about you"
+                        : "Manage your profile and customer reviews"}
+                    </p>
+                  </div>
                 </div>
                 <Button className="mt-4 md:mt-0" asChild>
                   <Link to="/profile/edit">
@@ -129,6 +142,78 @@ const ProfilePage = () => {
                       <Link to="/subscription">Manage Subscriptions</Link>
                     </Button>
                   </div>
+                </Card>
+              )}
+
+              {/* Business Owner Profile Card - for business owners only */}
+              {currentUser?.type === "business" && (
+                <Card className="p-6">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl font-semibold">Business Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <UserIcon className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-500">Business Name</p>
+                            <p className="font-medium">{currentUser?.name}</p>
+                          </div>
+                        </div>
+                        {currentUser?.businessId && (
+                          <div className="flex items-center gap-3 mb-4">
+                            <Shield className="h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="text-sm text-gray-500">Business ID</p>
+                              <p className="font-medium">{currentUser?.businessId}</p>
+                            </div>
+                          </div>
+                        )}
+                        {currentUser?.phone && (
+                          <div className="flex items-center gap-3 mb-4">
+                            <Phone className="h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="text-sm text-gray-500">Phone Number</p>
+                              <p className="font-medium">{currentUser?.phone}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        {(currentUser?.address || currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
+                          <div className="flex items-center gap-3 mb-4">
+                            <MapPin className="h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="text-sm text-gray-500">Address</p>
+                              {currentUser?.address && (
+                                <p className="font-medium">{currentUser.address}</p>
+                              )}
+                              {(currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
+                                <p className="font-medium">
+                                  {currentUser?.city}{currentUser?.city && currentUser?.state ? ', ' : ''}{currentUser?.state} {currentUser?.zipCode}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {currentUser?.bio && (
+                          <div className="mt-4">
+                            <p className="text-sm text-gray-500 mb-1">About Business</p>
+                            <p>{currentUser.bio}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/profile/edit">
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Business Information
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
                 </Card>
               )}
 
