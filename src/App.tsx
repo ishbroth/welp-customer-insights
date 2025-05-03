@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
 import ProfileReviews from "./pages/ProfileReviews";
+import BusinessReviews from "./pages/BusinessReviews";
 import NotificationsPage from "./pages/NotificationsPage";
 import BillingPage from "./pages/BillingPage";
 import BusinessVerificationSuccess from "./pages/BusinessVerificationSuccess";
@@ -71,6 +71,12 @@ const AppRoutes = () => {
       <Route path="/review/new" element={
         <BusinessOwnerRoute>
           <NewReview />
+        </BusinessOwnerRoute>
+      } />
+      
+      <Route path="/profile/business-reviews" element={
+        <BusinessOwnerRoute>
+          <BusinessReviews />
         </BusinessOwnerRoute>
       } />
       

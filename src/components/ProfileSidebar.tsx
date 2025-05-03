@@ -21,6 +21,8 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   const { currentUser, logout } = useAuth();
   const location = useLocation();
   
+  const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
+  
   return (
     <>
       <div className="md:hidden flex items-center p-4">
@@ -64,6 +66,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 <User className="mr-3 h-5 w-5 text-gray-500" />
                 Profile
               </Link>
+              
               <Link 
                 to="/profile/edit" 
                 className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
@@ -75,17 +78,34 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 <Settings className="mr-3 h-5 w-5 text-gray-500" />
                 Edit Profile
               </Link>
-              <Link 
-                to="/profile/reviews" 
-                className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
-                  location.pathname === "/profile/reviews" 
-                  ? "bg-gray-100 text-primary" 
-                  : "text-gray-700"
-                }`}
-              >
-                <FileText className="mr-3 h-5 w-5 text-gray-500" />
-                My Reviews
-              </Link>
+              
+              {/* Show business reviews for business users, and personal reviews for customers */}
+              {isBusinessAccount ? (
+                <Link 
+                  to="/profile/business-reviews" 
+                  className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
+                    location.pathname === "/profile/business-reviews" 
+                    ? "bg-gray-100 text-primary" 
+                    : "text-gray-700"
+                  }`}
+                >
+                  <FileText className="mr-3 h-5 w-5 text-gray-500" />
+                  My Reviews
+                </Link>
+              ) : (
+                <Link 
+                  to="/profile/reviews" 
+                  className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
+                    location.pathname === "/profile/reviews" 
+                    ? "bg-gray-100 text-primary" 
+                    : "text-gray-700"
+                  }`}
+                >
+                  <FileText className="mr-3 h-5 w-5 text-gray-500" />
+                  My Reviews
+                </Link>
+              )}
+              
               <Link 
                 to="/profile/billing" 
                 className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
@@ -97,6 +117,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 <CreditCard className="mr-3 h-5 w-5 text-gray-500" />
                 Billing
               </Link>
+              
               <Link 
                 to="/profile/notifications" 
                 className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
