@@ -219,34 +219,50 @@ const ProfilePage = () => {
               )}
               
               {/* Customer Reviews Section - for customers only */}
-              {currentUser?.type === "customer" && customerReviews.length > 0 && (
+              {currentUser?.type === "customer" && (
                 <Card className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">What Businesses Say About You</h2>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Business</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Feedback</TableHead>
-                        <TableHead>Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {customerReviews.map((review) => (
-                        <TableRow key={review.id}>
-                          <TableCell className="font-medium">{review.reviewerName}</TableCell>
-                          <TableCell><StarRating rating={review.rating} /></TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-semibold">{review.title}</p>
-                              <p className="text-sm text-gray-600">{review.content}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>{review.date}</TableCell>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">What Businesses Say About You</h2>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/profile/reviews">
+                        See All Reviews
+                      </Link>
+                    </Button>
+                  </div>
+                  
+                  {customerReviews.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Business</TableHead>
+                          <TableHead>Rating</TableHead>
+                          <TableHead>Feedback</TableHead>
+                          <TableHead>Date</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {customerReviews.slice(0, 3).map((review) => (
+                          <TableRow key={review.id}>
+                            <TableCell className="font-medium">{review.reviewerName}</TableCell>
+                            <TableCell><StarRating rating={review.rating} /></TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-semibold">{review.title}</p>
+                                <p className="text-sm text-gray-600">{review.content}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>{review.date}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center p-4">
+                      <p className="text-gray-500">
+                        No businesses have written reviews about you yet.
+                      </p>
+                    </div>
+                  )}
                 </Card>
               )}
               

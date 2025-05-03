@@ -16,6 +16,7 @@ import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
+import ProfileReviews from "./pages/ProfileReviews";
 import NotificationsPage from "./pages/NotificationsPage";
 import BillingPage from "./pages/BillingPage";
 
@@ -55,6 +56,11 @@ const AppRoutes = () => {
       <Route path="/profile/edit" element={
         <ProtectedRoute>
           <ProfileEdit />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile/reviews" element={
+        <ProtectedRoute>
+          <ProfileReviews />
         </ProtectedRoute>
       } />
       <Route path="/profile/notifications" element={
