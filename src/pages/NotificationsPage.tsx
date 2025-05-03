@@ -18,10 +18,10 @@ const NotificationsPage = () => {
   
   // Notification preferences state
   const [notificationPrefs, setNotificationPrefs] = useState({
-    newReviews: true,
-    reviewResponses: true,
-    reviewLikes: false,
     reviewReactions: true,
+    customerResponses: true,
+    newReviews: true, // For customers only
+    reviewResponses: true, // For customers only
     emailNotifications: true,
     pushNotifications: false,
   });
@@ -71,20 +71,6 @@ const NotificationsPage = () => {
                     <>
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <Label htmlFor="newReviews">New Customer Reviews</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Get notified when you receive new reviews from customers
-                          </p>
-                        </div>
-                        <Switch 
-                          id="newReviews" 
-                          checked={notificationPrefs.newReviews}
-                          onCheckedChange={() => handleToggleChange("newReviews")}
-                        />
-                      </div>
-                      <Separator />
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
                           <Label htmlFor="reviewReactions">Review Reactions</Label>
                           <p className="text-sm text-muted-foreground">
                             Get notified when customers or other businesses react to your reviews
@@ -99,15 +85,15 @@ const NotificationsPage = () => {
                       <Separator />
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                          <Label htmlFor="reviewLikes">Review Responses</Label>
+                          <Label htmlFor="customerResponses">Customer Responses</Label>
                           <p className="text-sm text-muted-foreground">
-                            Get notified when customers respond to your reviews
+                            Get notified when customers respond to your reviews about them
                           </p>
                         </div>
                         <Switch 
-                          id="reviewLikes" 
-                          checked={notificationPrefs.reviewLikes}
-                          onCheckedChange={() => handleToggleChange("reviewLikes")}
+                          id="customerResponses" 
+                          checked={notificationPrefs.customerResponses}
+                          onCheckedChange={() => handleToggleChange("customerResponses")}
                         />
                       </div>
                     </>
