@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -7,7 +6,7 @@ import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import StarRating from "@/components/StarRating";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -39,6 +38,7 @@ const BusinessReviews = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Get reviews created by the current business user about customers
   const businessReviews = currentUser?.type === "business" ? 
@@ -75,13 +75,14 @@ const BusinessReviews = () => {
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
   const currentReviews = businessReviews.slice(indexOfFirstReview, indexOfLastReview);
 
-  const handleEditReview = (reviewId: string) => {
-    toast({
-      title: "Edit review",
-      description: "This would take you to edit the review with ID: " + reviewId,
-      duration: 3000,
+  const handleEditReview = (review) => {
+    // Navigate to the NewReview page with the review data
+    navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
+      state: {
+        reviewData: review,
+        isEditing: true
+      }
     });
-    // In a real app, this would navigate to an edit page with the review ID
   };
 
   return (
@@ -154,7 +155,7 @@ const BusinessReviews = () => {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => handleEditReview(review.id)}
+                              onClick={() => handleEditReview(review)}
                             >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit

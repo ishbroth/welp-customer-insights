@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -31,14 +32,20 @@ const mockCustomers = [
 const NewReview = () => {
   const [searchParams] = useSearchParams();
   const customerId = searchParams.get("customerId");
+  const isEditing = searchParams.get("edit") === "true";
+  const reviewId = searchParams.get("reviewId");
+  
+  const location = useLocation();
+  const reviewData = location.state?.reviewData;
+  
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(isEditing && reviewData ? reviewData.rating : 0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState(isEditing && reviewData ? reviewData.content : "");
   const [customerFirstName, setCustomerFirstName] = useState("");
   const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -48,6 +55,13 @@ const NewReview = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
+    // Handle pre-filling data if we're editing
+    if (isEditing && reviewData) {
+      // Pre-fill review content and rating
+      setRating(reviewData.rating);
+      setComment(reviewData.content);
+    }
+    
     if (customerId) {
       // Simulate API call to get customer details
       setIsLoading(true);
@@ -69,7 +83,7 @@ const NewReview = () => {
       setIsNewCustomer(true);
       setIsLoading(false);
     }
-  }, [customerId]);
+  }, [customerId, isEditing, reviewData]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,8 +102,10 @@ const NewReview = () => {
     // Simulate API call to submit review
     setTimeout(() => {
       toast({
-        title: "Review Submitted",
-        description: "Your customer review has been successfully submitted.",
+        title: isEditing ? "Review Updated" : "Review Submitted",
+        description: isEditing 
+          ? "Your customer review has been successfully updated." 
+          : "Your customer review has been successfully submitted.",
       });
       
       setIsSubmitting(false);
@@ -105,7 +121,9 @@ const NewReview = () => {
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6">Write a Customer Review</h1>
+            <h1 className="text-3xl font-bold mb-6">
+              {isEditing ? "Edit Customer Review" : "Write a Customer Review"}
+            </h1>
             
             {isLoading ? (
               <div className="text-center py-10">Loading...</div>
@@ -231,7 +249,9 @@ const NewReview = () => {
                       className="welp-button w-full"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Submitting..." : "Submit Review"}
+                      {isSubmitting ? 
+                        (isEditing ? "Updating..." : "Submitting...") : 
+                        (isEditing ? "Update Review" : "Submit Review")}
                     </Button>
                   </div>
                 </div>
