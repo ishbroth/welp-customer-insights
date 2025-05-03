@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockReviews } from "@/data/mockUsers";
+import { User } from "@/data/mockUsers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -17,8 +17,40 @@ const ProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentUser } = useAuth();
   
-  // Get reviews created by the current business user
-  const businessReviews = mockReviews.filter(review => review.businessId === currentUser?.id);
+  // Get reviews created by the current business user about customers
+  // We need to filter reviews from customers that were created by the current business
+  const businessReviews = currentUser?.type === "business" ? 
+    // Find all customer users who have reviews from this business
+    // Then extract those specific reviews
+    (() => {
+      // This is a temporary array to hold all reviews by this business
+      const reviews = [];
+      
+      // Go through all customers in mockUsers who have reviews
+      if (currentUser) {
+        for (const user of Object.values(currentUser) as any[]) {
+          if (user && Array.isArray(user)) {
+            for (const item of user) {
+              if (item && typeof item === 'object' && 'reviews' in item && Array.isArray(item.reviews)) {
+                // Go through each review of this customer
+                for (const review of item.reviews) {
+                  // Check if the review was written by the current business
+                  if (review.reviewerId === currentUser.id) {
+                    reviews.push({
+                      ...review,
+                      customerName: item.name,
+                      customerId: item.id
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      return reviews;
+    })() : [];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -36,7 +68,7 @@ const ProfilePage = () => {
                   <p className="text-gray-600">Manage your profile and customer reviews</p>
                 </div>
                 <Button className="mt-4 md:mt-0" asChild>
-                  <Link to="/profile/settings">
+                  <Link to="/profile/edit">
                     <Settings className="mr-2 h-4 w-4" />
                     Edit Profile
                   </Link>
@@ -81,7 +113,7 @@ const ProfilePage = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  {businessReviews.length > 0 ? (
+                  {businessReviews && businessReviews.length > 0 ? (
                     businessReviews.map((review) => (
                       <Card key={review.id} className="p-4">
                         <div className="flex justify-between">

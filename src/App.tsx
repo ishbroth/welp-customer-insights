@@ -29,6 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Routes component that uses the AuthContext
 const AppRoutes = () => {
   return (
     <Routes>
@@ -58,6 +59,7 @@ const AppRoutes = () => {
   );
 };
 
+// App component with proper provider nesting
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
