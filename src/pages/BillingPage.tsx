@@ -32,12 +32,12 @@ const BillingPage = () => {
   // Mock transactions based on user type
   const mockTransactions = currentUser?.type === "business" 
     ? [
-        { id: "t123", date: "2024-04-22", amount: "$49.99", description: "Business Pro Plan - Monthly" },
-        { id: "t122", date: "2024-03-22", amount: "$49.99", description: "Business Pro Plan - Monthly" },
-        { id: "t121", date: "2024-02-22", amount: "$49.99", description: "Business Pro Plan - Monthly" },
-        { id: "t120", date: "2024-01-22", amount: "$49.99", description: "Business Pro Plan - Monthly" },
-        { id: "t119", date: "2023-12-22", amount: "$49.99", description: "Business Pro Plan - Monthly" },
-        { id: "t118", date: "2023-11-22", amount: "$49.99", description: "Business Pro Plan - Monthly" }
+        { id: "t123", date: "2024-04-22", amount: "$19.95", description: "Business Pro Plan - Monthly" },
+        { id: "t122", date: "2024-03-22", amount: "$19.95", description: "Business Pro Plan - Monthly" },
+        { id: "t121", date: "2024-02-22", amount: "$19.95", description: "Business Pro Plan - Monthly" },
+        { id: "t120", date: "2024-01-22", amount: "$19.95", description: "Business Pro Plan - Monthly" },
+        { id: "t119", date: "2023-12-22", amount: "$19.95", description: "Business Pro Plan - Monthly" },
+        { id: "t118", date: "2023-11-22", amount: "$19.95", description: "Business Pro Plan - Monthly" }
       ]
     : [
         { id: "t234", date: "2024-04-15", amount: "$9.99", description: "Premium Customer Plan - Monthly" },
@@ -120,7 +120,7 @@ const BillingPage = () => {
                       {currentUser?.type === "business" ? "Business Pro Plan" : "Premium Customer Plan"}
                     </p>
                     <p className="text-gray-600">
-                      {currentUser?.type === "business" ? "$49.99/month" : "$9.99/month"}
+                      {currentUser?.type === "business" ? "$19.95/month" : "$9.99/month"}
                     </p>
                     <p className="text-sm text-gray-500 mt-2">Next billing date: May 15, 2024</p>
                   </div>

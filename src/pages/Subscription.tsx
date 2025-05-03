@@ -94,7 +94,7 @@ const Subscription = () => {
                 
                 <div className="text-center mb-6">
                   <h2 className="text-2xl font-bold">Premium</h2>
-                  <div className="text-3xl font-bold mt-4">$19.99<span className="text-base font-normal">/month</span></div>
+                  <div className="text-3xl font-bold mt-4">$19.95<span className="text-base font-normal">/month</span></div>
                   <div className="text-sm text-gray-500">Full Access</div>
                 </div>
                 
