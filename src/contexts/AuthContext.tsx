@@ -25,18 +25,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // Auto-login as admin on first load if no user is logged in
-  useEffect(() => {
-    if (!currentUser) {
-      const adminUser = mockUsers.find(user => user.type === "admin");
-      if (adminUser) {
-        setCurrentUser(adminUser);
-        localStorage.setItem("currentUser", JSON.stringify(adminUser));
-        console.log("Auto-logged in as admin:", adminUser.name);
-      }
-    }
-  }, [currentUser]);
-
   const login = async (email: string, password: string): Promise<boolean> => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));

@@ -24,8 +24,8 @@ export interface Review {
 export const mockUsers: User[] = [
   {
     id: "1",
-    name: "Alex's Restaurant",
-    email: "alex@example.com",
+    name: "Business Owner",
+    email: "business@example.com",
     type: "business",
     avatar: "/placeholder.svg",
     businessId: "LIC123456",
@@ -40,8 +40,8 @@ export const mockUsers: User[] = [
   },
   {
     id: "3",
-    name: "Emma Johnson",
-    email: "emma@example.com",
+    name: "Customer User",
+    email: "customer@example.com",
     type: "customer",
     avatar: "/placeholder.svg",
     reviews: [
@@ -51,7 +51,7 @@ export const mockUsers: User[] = [
         content: "Emma was very polite and respectful to our staff. Always welcome!",
         rating: 5,
         reviewerId: "1",
-        reviewerName: "Alex's Restaurant",
+        reviewerName: "Business Owner",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-04-15"
       },
@@ -80,7 +80,7 @@ export const mockUsers: User[] = [
         content: "Was rude to staff and made unreasonable demands.",
         rating: 2,
         reviewerId: "1", 
-        reviewerName: "Alex's Restaurant",
+        reviewerName: "Business Owner",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-03-10"
       }

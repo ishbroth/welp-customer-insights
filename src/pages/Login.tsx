@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -43,7 +44,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password. Try business@example.com with any password.",
+          description: "Invalid email. Please use one of the test accounts.",
           variant: "destructive",
         });
       }
@@ -66,6 +67,20 @@ const Login = () => {
           <Card className="max-w-md mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-6">Log In to Welp.</h1>
             
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
+              <div className="flex items-start">
+                <AlertCircle className="text-yellow-600 mr-2 mt-0.5" size={16} />
+                <div>
+                  <h3 className="font-semibold text-yellow-800">Available Test Accounts</h3>
+                  <p className="text-sm text-yellow-700">
+                    <strong>Business owner:</strong> business@example.com<br />
+                    <strong>Customer:</strong> customer@example.com
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">Any password will work</p>
+                </div>
+              </div>
+            </div>
+            
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -79,9 +94,6 @@ const Login = () => {
                     className="welp-input"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Hint: Use business@example.com to log in
-                  </p>
                 </div>
                 
                 <div>
@@ -99,9 +111,6 @@ const Login = () => {
                     className="welp-input"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Any password will work for demo
-                  </p>
                 </div>
                 
                 <Button
