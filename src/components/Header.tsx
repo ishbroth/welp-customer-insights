@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, User, Search, Edit, LogOut } from "lucide-react";
+import { Menu, X, User, Search, Edit, LogOut, LogIn } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Header = () => {
@@ -93,7 +93,7 @@ const Header = () => {
                     to="/login"
                     className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
                   >
-                    <User className="mr-1 h-4 w-4" /> Login
+                    <LogIn className="mr-1 h-4 w-4" /> Login
                   </Link>
                   <Link to="/signup">
                     <Button className="bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 w-full">Sign Up</Button>
@@ -147,7 +147,7 @@ const Header = () => {
                     className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
                     onClick={toggleMenu}
                   >
-                    <User className="mr-2 h-4 w-4" /> Login
+                    <LogIn className="mr-2 h-4 w-4" /> Login
                   </Link>
                   <Link to="/signup" onClick={toggleMenu}>
                     <Button className="bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 w-full">Sign Up</Button>
