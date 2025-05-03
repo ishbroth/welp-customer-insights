@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +8,6 @@ import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import StarRating from "@/components/StarRating";
 import { Edit, Search, Settings } from "lucide-react";
@@ -17,8 +17,8 @@ const ProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { currentUser } = useAuth();
   
-  // Get reviews for current user
-  const userReviews = mockReviews.filter(review => review.userId === currentUser?.id);
+  // Get reviews created by the current business user
+  const businessReviews = mockReviews.filter(review => review.businessId === currentUser?.id);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -33,7 +33,7 @@ const ProfilePage = () => {
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold mb-2">Welcome, {currentUser?.name}</h1>
-                  <p className="text-gray-600">Manage your profile and reviews</p>
+                  <p className="text-gray-600">Manage your profile and customer reviews</p>
                 </div>
                 <Button className="mt-4 md:mt-0" asChild>
                   <Link to="/profile/settings">
@@ -45,15 +45,15 @@ const ProfilePage = () => {
               
               {/* Search section */}
               <Card className="p-6 bg-gradient-to-r from-welp-primary/10 to-welp-primary/5">
-                <h2 className="text-xl font-semibold mb-4">Share Your Experience</h2>
+                <h2 className="text-xl font-semibold mb-4">Rate a Customer</h2>
                 <p className="text-gray-600 mb-6">
-                  Search for businesses to review or add to your watchlist.
+                  Search for customers to review and help other businesses make informed decisions.
                 </p>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <Input 
                     type="text"
-                    placeholder="Search for businesses..."
+                    placeholder="Search for customers..."
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -72,7 +72,7 @@ const ProfilePage = () => {
               {/* Reviews section */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Your Reviews</h2>
+                  <h2 className="text-xl font-semibold">Your Customer Reviews</h2>
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/profile/reviews">
                       See All
@@ -81,11 +81,11 @@ const ProfilePage = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  {userReviews.length > 0 ? (
-                    userReviews.map((review) => (
+                  {businessReviews.length > 0 ? (
+                    businessReviews.map((review) => (
                       <Card key={review.id} className="p-4">
                         <div className="flex justify-between">
-                          <h3 className="font-medium">{review.businessName}</h3>
+                          <h3 className="font-medium">Customer: {review.customerName}</h3>
                           <StarRating rating={review.rating} />
                         </div>
                         <p className="text-gray-600 mt-2">{review.content}</p>
@@ -100,11 +100,11 @@ const ProfilePage = () => {
                     ))
                   ) : (
                     <Card className="p-6 text-center">
-                      <p className="text-gray-500">You haven't written any reviews yet.</p>
+                      <p className="text-gray-500">You haven't written any customer reviews yet.</p>
                       <Button className="mt-4" asChild>
                         <Link to="/review/new">
                           <Edit className="mr-2 h-4 w-4" />
-                          Write Your First Review
+                          Write Your First Customer Review
                         </Link>
                       </Button>
                     </Card>

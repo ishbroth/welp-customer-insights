@@ -9,11 +9,13 @@ export interface User {
 
 export interface Review {
   id: string;
-  businessName: string;
+  businessId: string;
+  customerId: string;
+  customerName: string;
   rating: number;
   content: string;
   date: string;
-  userId: string;
+  businessName: string;
 }
 
 export const mockUsers: User[] = [
@@ -35,26 +37,32 @@ export const mockUsers: User[] = [
 export const mockReviews: Review[] = [
   {
     id: "1",
-    businessName: "Cafe Delight",
-    rating: 4,
-    content: "Great coffee and atmosphere. Highly recommended for meetings.",
+    businessId: "1",
+    customerId: "c1",
+    customerName: "Sarah Johnson",
+    rating: 2,
+    content: "This customer was constantly late for appointments and had unreasonable demands. Changed requirements multiple times after work had begun and complained about pricing despite agreeing beforehand.",
     date: "2025-04-20",
-    userId: "1"
+    businessName: "Cafe Delight"
   },
   {
     id: "2",
-    businessName: "Tech Solutions Inc",
+    businessId: "1",
+    customerId: "c2",
+    customerName: "Mike Peterson",
     rating: 5,
-    content: "Excellent customer service and technical support. They helped me solve my IT issues quickly.",
+    content: "Excellent customer! Always prompt with payments, clear with requirements, and respectful of our staff. A pleasure to work with and highly recommended to other businesses.",
     date: "2025-04-15",
-    userId: "1"
+    businessName: "Tech Solutions Inc"
   },
   {
     id: "3",
-    businessName: "Downtown Fitness",
+    businessId: "1",
+    customerId: "c3",
+    customerName: "Emma Wilson",
     rating: 3,
-    content: "Good equipment but gets crowded during peak hours. Could use more space.",
+    content: "Average customer experience. Communication was sometimes unclear and payment was delayed once. However, they were polite and eventually resolved all issues.",
     date: "2025-03-25",
-    userId: "1"
+    businessName: "Downtown Fitness"
   }
 ];
