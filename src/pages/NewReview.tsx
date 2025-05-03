@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ const NewReview = () => {
   const [searchParams] = useSearchParams();
   const customerId = searchParams.get("customerId");
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,10 +94,8 @@ const NewReview = () => {
       
       setIsSubmitting(false);
       
-      // In a real app, we would redirect to a confirmation page or customer page
-      setTimeout(() => {
-        window.location.href = "/business-dashboard";
-      }, 2000);
+      // Navigate to success page
+      navigate("/review/success");
     }, 1500);
   };
 

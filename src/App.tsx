@@ -10,6 +10,7 @@ import SearchResults from "./pages/SearchResults";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NewReview from "./pages/NewReview";
+import ReviewSuccess from "./pages/ReviewSuccess";
 import Subscription from "./pages/Subscription";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/review/new" element={<NewReview />} />
+      <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/about" element={<About />} />
       
