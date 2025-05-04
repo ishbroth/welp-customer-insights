@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import Signup from "./pages/Signup";
 import NewReview from "./pages/NewReview";
 import ReviewSuccess from "./pages/ReviewSuccess";
 import Subscription from "./pages/Subscription";
+import OneTimeReviewAccess from "./pages/OneTimeReviewAccess";
 import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
@@ -63,6 +65,7 @@ const AppRoutes = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
+      <Route path="/one-time-review" element={<OneTimeReviewAccess />} />
       <Route path="/about" element={<About />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />

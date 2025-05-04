@@ -1,5 +1,6 @@
+
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
@@ -9,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Lock } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { mockUsers, User, Review } from "@/data/mockUsers";
+import { useToast } from "@/hooks/use-toast";
 
 // Transform mock users into the format expected by the search results page
 const transformMockUsers = () => {
@@ -47,6 +49,8 @@ const SearchResults = () => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Extract search parameters
   const lastName = searchParams.get("lastName") || "";
@@ -107,6 +111,31 @@ const SearchResults = () => {
         setReviews([]);
       }
     }, 500);
+  };
+  
+  // Function to get just the first sentence of a review
+  const getFirstSentence = (text: string) => {
+    if (!text) return "";
+    
+    // Match for common sentence endings (., !, ?) followed by a space or end of string
+    const match = text.match(/^.*?[.!?](?:\s|$)/);
+    
+    if (match && match[0]) {
+      return match[0].trim();
+    }
+    
+    // If no sentence ending found, return first 100 characters
+    return text.length > 100 ? text.substring(0, 100) + "..." : text;
+  };
+  
+  const handleBuyFullReview = (reviewId: string) => {
+    toast({
+      title: "Redirecting to payment",
+      description: "You'll be redirected to the payment page to access the full review.",
+    });
+    
+    // In a real app, redirect to a payment page with the reviewId
+    navigate(`/subscription?reviewId=${reviewId}&oneTime=true`);
   };
 
   return (
@@ -222,9 +251,34 @@ const SearchResults = () => {
                   ) : reviews.length > 0 ? (
                     <div>
                       <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
-                      {reviews.map(review => (
-                        <ReviewCard key={review.id} review={review} />
-                      ))}
+                      {reviews.map(review => {
+                        // For non-subscribers, create a modified review for the ReviewCard
+                        if (!isSubscribed) {
+                          const partialReview = {
+                            ...review,
+                            comment: getFirstSentence(review.comment)
+                          };
+                          
+                          return (
+                            <div key={review.id} className="mb-4">
+                              <ReviewCard review={partialReview} showResponse={false} />
+                              <div className="mt-2 flex justify-end">
+                                <Button 
+                                  variant="outline" 
+                                  className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
+                                  onClick={() => handleBuyFullReview(review.id)}
+                                >
+                                  <Lock className="w-4 h-4 mr-2" />
+                                  See Full Review for $3
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        // For subscribers, show the full review
+                        return <ReviewCard key={review.id} review={review} />;
+                      })}
                     </div>
                   ) : (
                     <Card className="p-6 text-center">
