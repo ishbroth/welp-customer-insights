@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,6 +76,17 @@ const ProfilePage = () => {
   const getFirstSentence = (content) => {
     const match = content.match(/^.*?[.!?](?:\s|$)/);
     return match ? match[0] : `${content.substring(0, 80)}...`;
+  };
+  
+  // Function to get the first five words for customer accounts
+  const getFirstFiveWords = (text: string): string => {
+    if (!text) return "";
+    
+    // Split the text into words and take the first 5
+    const words = text.split(/\s+/);
+    const firstFiveWords = words.slice(0, 5).join(" ");
+    
+    return `${firstFiveWords}...`;
   };
 
   // Handle search in "Rate a Customer" section
@@ -384,7 +396,7 @@ const ProfilePage = () => {
                               <div>
                                 <p className="font-semibold">{review.title}</p>
                                 <p className="text-sm text-gray-600">
-                                  {getFirstSentence(review.content)}
+                                  {getFirstFiveWords(review.content)}
                                   <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
                                     Show more
                                   </Link>

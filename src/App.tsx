@@ -55,12 +55,28 @@ const BusinessOwnerRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Business owner or admin route component
+const BusinessOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser } = useAuth();
+  
+  // Redirect to login if not logged in
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Redirect if not a business owner or admin
+  if (currentUser.type === "customer") {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // Routes component that uses the AuthContext
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
-      <Route path="/search" element={<SearchResults />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/review/success" element={<ReviewSuccess />} />
@@ -69,6 +85,13 @@ const AppRoutes = () => {
       <Route path="/about" element={<About />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
+      
+      {/* Search page restricted to business owners and admins */}
+      <Route path="/search" element={
+        <BusinessOrAdminRoute>
+          <SearchResults />
+        </BusinessOrAdminRoute>
+      } />
       
       {/* Business owner specific routes */}
       <Route path="/review/new" element={
