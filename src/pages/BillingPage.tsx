@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, Eye, Plus } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { CreditCard, Eye, Plus, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +21,7 @@ const BillingPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useAuth();
   const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [isProcessingCancel, setIsProcessingCancel] = useState(false);
 
   // Mock payment method
   const [paymentMethod, setPaymentMethod] = useState({
@@ -90,6 +92,21 @@ const BillingPage = () => {
     });
   };
 
+  // Handle subscription cancellation
+  const handleCancelSubscription = () => {
+    setIsProcessingCancel(true);
+    
+    // Simulate API call to cancel subscription
+    setTimeout(() => {
+      setIsProcessingCancel(false);
+      
+      // Show success message
+      toast("Subscription cancelled", {
+        description: "Your subscription has been cancelled successfully. You will still have access until the end of your current billing period.",
+      });
+    }, 1500);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -123,6 +140,38 @@ const BillingPage = () => {
                       {currentUser?.type === "business" ? "$19.95/month" : "$9.99/month"}
                     </p>
                     <p className="text-sm text-gray-500 mt-2">Next billing date: May 15, 2024</p>
+                    
+                    <div className="mt-4 flex items-center justify-between">
+                      <Button variant="outline" size="sm">Change Plan</Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            Cancel Subscription
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertCircle className="h-5 w-5 text-destructive" />
+                              Cancel Subscription?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={handleCancelSubscription}
+                              disabled={isProcessingCancel}
+                            >
+                              {isProcessingCancel ? "Processing..." : "Yes, Cancel Subscription"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
