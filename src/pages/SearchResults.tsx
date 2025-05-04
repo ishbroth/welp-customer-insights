@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -130,13 +131,32 @@ const SearchResults = () => {
   };
   
   const handleBuyFullReview = (reviewId: string) => {
+    if (!currentUser) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to access the full review.",
+      });
+      navigate(`/login?redirect=/search`);
+      return;
+    }
+    
     toast({
       title: "Redirecting to payment",
       description: "You'll be redirected to the payment page to access the full review.",
     });
     
-    // Redirect directly to one-time payment page instead of subscription
+    // Redirect directly to one-time payment page
     navigate(`/one-time-review?reviewId=${reviewId}`);
+  };
+
+  // Check if user has access to the full review
+  const hasFullAccess = (reviewId: string) => {
+    // If the user is logged in and has a subscription, they have access
+    if (currentUser && isSubscribed) return true;
+    
+    // Check if the user has paid for one-time access to this specific review
+    const hasOneTimeAccess = localStorage.getItem(`review_access_${reviewId}`) === "true";
+    return hasOneTimeAccess;
   };
 
   return (
@@ -214,7 +234,7 @@ const SearchResults = () => {
                   </div>
                 </Card>
                 
-                {/* Only show subscription card if user is logged in */}
+                {/* Only show subscription card if user is logged in but hasn't subscribed */}
                 {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed ? (
                   <Card className="p-6 mb-6 border-2 border-welp-primary">
                     <div className="flex items-center">
@@ -222,7 +242,7 @@ const SearchResults = () => {
                       <div>
                         <h3 className="text-xl font-bold mb-1">Subscribe to See Full Reviews</h3>
                         <p className="text-gray-600 mb-4">
-                          You've found information on this customer, but you need a subscription to see the detailed reviews.
+                          You've found information on this customer, but you need a subscription to see all detailed reviews.
                         </p>
                         <Link to="/subscription">
                           <Button className="welp-button">Subscribe for $19.99/month</Button>
@@ -234,8 +254,11 @@ const SearchResults = () => {
                   <div>
                     <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
                     {reviews.map(review => {
-                      // For non-subscribers or non-logged in users, create a modified review for the ReviewCard
-                      if (!isSubscribed) {
+                      // Check if user has access to the full review
+                      const hasAccess = hasFullAccess(review.id);
+                      
+                      if (!hasAccess) {
+                        // For users without access, create a modified review with just the first sentence
                         const partialReview = {
                           ...review,
                           comment: getFirstSentence(review.comment)
@@ -251,14 +274,14 @@ const SearchResults = () => {
                                 onClick={() => handleBuyFullReview(review.id)}
                               >
                                 <Lock className="w-4 h-4 mr-2" />
-                                See Full Review for $3
+                                {currentUser ? "See Full Review for $3" : "Show More"}
                               </Button>
                             </div>
                           </div>
                         );
                       }
                       
-                      // For subscribers, show the full review
+                      // For users with access, show the full review
                       return <ReviewCard key={review.id} review={review} />;
                     })}
                   </div>

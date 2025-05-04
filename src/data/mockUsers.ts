@@ -91,9 +91,9 @@ export const mockUsers: User[] = [
       },
       {
         id: "102",
-        title: "Decent experience",
-        content: "Customer was a bit demanding but overall reasonable. Despite having some specific requests that were challenging to accommodate, Emma remained polite throughout our interaction. She did ask for several substitutions to our standard menu items, which slowed down service for other customers, but she was understanding when explained our limitations. Would serve again but would appreciate more flexibility.",
-        rating: 4,
+        title: "Problematic customer",
+        content: "Customer was extremely difficult and created numerous problems during their visit. They arrived 30 minutes late for their reservation and still expected immediate seating despite our restaurant being fully booked. When asked to wait, they became hostile and started loudly complaining in front of other customers. During their meal, they sent back dishes multiple times claiming they were 'inedible' despite other customers enjoying the same items. They demanded free replacements and additional complimentary items, creating a scene when we explained our policies. They were rude to our waitstaff, making personal remarks about their appearance and service quality. At the end of their meal, they disputed charges on perfectly prepared items and threatened to leave negative reviews if we didn't provide a significant discount. We had to comp several items just to defuse the situation. Other customers were visibly uncomfortable due to their behavior. We would strongly advise other establishments to be cautious with this customer.",
+        rating: 1,
         reviewerId: "2",
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
@@ -123,7 +123,7 @@ export const mockUsers: User[] = [
       {
         id: "103",
         title: "Difficult customer",
-        content: "Was rude to staff and made unreasonable demands. This customer repeatedly ignored our policies despite clear explanations. He raised his voice when told that certain requests could not be accommodated, causing discomfort to other customers. He also complained about pricing that was clearly listed in our menu and demanded discounts without justification. We would prefer not to serve this customer again based on this experience.",
+        content: "Was rude to staff and made unreasonable demands. This customer repeatedly ignored our policies despite clear explanations. He raised his voice when told that certain requests could not be accommodated, causing discomfort to other customers. He also complained about pricing that was clearly listed in our menu and demanded discounts without justification. He would prefer not to serve this customer again based on this experience.",
         rating: 2,
         reviewerId: "1", 
         reviewerName: "Business Owner",
