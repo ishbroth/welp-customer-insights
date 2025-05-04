@@ -61,6 +61,9 @@ const Index = () => {
                     <p className="text-center mb-6">
                       Rate and review your customers, access our customer database, and make informed business decisions.
                     </p>
+                    <p className="text-center mb-6">
+                      Help build a supportive community of business owners by highlighting standout customers. Rate your customers 1 to 5 stars and detail your interaction with them. Search for customers before you do business with them and gain valuable insights from other businesses' experiences.
+                    </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Link to="/login" className="flex-1">
                         <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
