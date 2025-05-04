@@ -86,12 +86,8 @@ const AppRoutes = () => {
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
       
-      {/* Search page restricted to business owners and admins */}
-      <Route path="/search" element={
-        <BusinessOrAdminRoute>
-          <SearchResults />
-        </BusinessOrAdminRoute>
-      } />
+      {/* Search page is now accessible to all users */}
+      <Route path="/search" element={<SearchResults />} />
       
       {/* Business owner specific routes */}
       <Route path="/review/new" element={

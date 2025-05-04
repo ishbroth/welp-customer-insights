@@ -16,6 +16,9 @@ const Header = () => {
 
   // Determine if current user is a business owner (not a customer)
   const isBusinessOwner = currentUser?.type === "business" || currentUser?.type === "admin";
+  
+  // Show search for non-logged in users or business owners
+  const showSearch = !currentUser || isBusinessOwner;
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
@@ -57,8 +60,8 @@ const Header = () => {
             </div>
           ) : (
             <nav className="flex items-center space-x-4">
-              {/* Only show Search link for business owners or non-logged in users */}
-              {(!currentUser || isBusinessOwner) && (
+              {/* Show search link for non-logged in users or business owners */}
+              {showSearch && (
                 <Link 
                   to="/search" 
                   className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
@@ -118,8 +121,8 @@ const Header = () => {
         {isMobile && isMenuOpen && (
           <div className="mt-4 py-2 border-t border-gray-200">
             <nav className="flex flex-col space-y-3">
-              {/* Only show Search link in mobile menu for business owners or non-logged in users */}
-              {(!currentUser || isBusinessOwner) && (
+              {/* Show search link for non-logged in users or business owners on mobile too */}
+              {showSearch && (
                 <Link
                   to="/search"
                   className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"

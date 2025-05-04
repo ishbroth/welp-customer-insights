@@ -153,6 +153,9 @@ const SearchResults = () => {
     navigate(`/one-time-review?reviewId=${reviewId}`);
   };
 
+  // Non-logged in users and customers who haven't subscribed only see truncated reviews
+  const shouldShowLimitedReview = !currentUser || (currentUser?.type === "customer") || (!isSubscribed && currentUser?.type !== "admin");
+
   // Check if user has access to the full review
   const hasFullAccess = (reviewId: string) => {
     // If the user is logged in and has a subscription, they have access
@@ -228,18 +231,33 @@ const SearchResults = () => {
                       </div>
                     </div>
                     
-                    {currentUser && (
+                    {currentUser && currentUser.type === "business" && (
                       <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
                         <Button className="welp-button">
                           Write a Review
                         </Button>
                       </Link>
                     )}
+                    
+                    {!currentUser && (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Link to={`/signup?type=business`}>
+                          <Button variant="outline" className="border-welp-primary text-welp-primary hover:bg-welp-primary/10">
+                            Sign Up
+                          </Button>
+                        </Link>
+                        <Link to={`/login`}>
+                          <Button className="welp-button">
+                            Login
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </Card>
                 
                 {/* Only show subscription card if user is logged in but hasn't subscribed */}
-                {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed ? (
+                {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed && currentUser.type === "business" ? (
                   <Card className="p-6 mb-6 border-2 border-welp-primary">
                     <div className="flex items-center">
                       <Lock className="text-welp-primary mr-4 h-12 w-12" />
@@ -258,11 +276,9 @@ const SearchResults = () => {
                   <div>
                     <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
                     {reviews.map(review => {
-                      // Check if user has access to the full review
-                      const hasAccess = hasFullAccess(review.id);
-                      
-                      if (!hasAccess) {
-                        // For users without access, create a modified review with just the first 5 words
+                      // For non-logged in users or those without subscription, always show limited version
+                      if (shouldShowLimitedReview && !hasFullAccess(review.id)) {
+                        // Create a modified review with just the first 5 words
                         const partialReview = {
                           ...review,
                           comment: getFirstFiveWords(review.comment)
@@ -272,14 +288,26 @@ const SearchResults = () => {
                           <div key={review.id} className="mb-4">
                             <ReviewCard review={partialReview} showResponse={false} />
                             <div className="mt-2 flex justify-end">
-                              <Button 
-                                variant="outline" 
-                                className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
-                                onClick={() => handleBuyFullReview(review.id)}
-                              >
-                                <Lock className="w-4 h-4 mr-2" />
-                                {currentUser ? "See Full Review for $3" : "Show More"}
-                              </Button>
+                              {currentUser ? (
+                                <Button 
+                                  variant="outline" 
+                                  className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
+                                  onClick={() => handleBuyFullReview(review.id)}
+                                >
+                                  <Lock className="w-4 h-4 mr-2" />
+                                  See Full Review for $3
+                                </Button>
+                              ) : (
+                                <Link to="/login">
+                                  <Button 
+                                    variant="outline" 
+                                    className="border-welp-primary text-welp-primary hover:bg-welp-primary/10"
+                                  >
+                                    <Lock className="w-4 h-4 mr-2" />
+                                    Login to See Full Review
+                                  </Button>
+                                </Link>
+                              )}
                             </div>
                           </div>
                         );
@@ -293,11 +321,11 @@ const SearchResults = () => {
                   <Card className="p-6 text-center">
                     <h3 className="text-xl font-bold mb-2">No Reviews Yet</h3>
                     <p className="text-gray-600 mb-4">
-                      {currentUser ? 
+                      {currentUser && currentUser.type === "business" ? 
                         "Be the first to review this customer and help other businesses." : 
                         "No reviews are available for this customer yet."}
                     </p>
-                    {currentUser && (
+                    {currentUser && currentUser.type === "business" && (
                       <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
                         <Button className="welp-button">
                           Write a Review
