@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/pagination";
 import { Eye, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +33,7 @@ const ProfileReviews = () => {
   const [unlockedReviews, setUnlockedReviews] = useState<string[]>([]);
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Get reviews about the current customer user
   const [customerReviews, setCustomerReviews] = useState(() => {
@@ -66,14 +68,25 @@ const ProfileReviews = () => {
     }, 2000);
   };
   
-  const getFirstSentence = (content: string): string => {
-    // Match the first sentence ending with a period, question mark, or exclamation mark
-    const match = content.match(/^.*?[.!?](?:\s|$)/);
-    return match ? match[0] : `${content.substring(0, 80)}...`;
+  // Function to get just the first 5 words of a review
+  const getFirstFiveWords = (text: string): string => {
+    if (!text) return "";
+    
+    // Split the text into words and take the first 5
+    const words = text.split(/\s+/);
+    const firstFiveWords = words.slice(0, 5).join(" ");
+    
+    return `${firstFiveWords}...`;
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
     return unlockedReviews.includes(reviewId);
+  };
+
+  // Check if user has subscription
+  const hasSubscription = (): boolean => {
+    // This is a mock implementation - in a real app, this would check against a subscription service
+    return false; // For demo purposes, always return false to show the purchase flow
   };
 
   // Handle toggling reactions
@@ -148,7 +161,7 @@ const ProfileReviews = () => {
                         <h3 className="font-medium">{review.title}</h3>
                       </div>
                       
-                      {isReviewUnlocked(review.id) ? (
+                      {isReviewUnlocked(review.id) || hasSubscription() ? (
                         <div>
                           <p className="text-gray-700">{review.content}</p>
                           <div className="mt-2 text-sm text-green-600 flex items-center">
@@ -169,7 +182,7 @@ const ProfileReviews = () => {
                         </div>
                       ) : (
                         <div>
-                          <p className="text-gray-700">{getFirstSentence(review.content)}</p>
+                          <p className="text-gray-700">{getFirstFiveWords(review.content)}</p>
                           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center text-gray-600">
