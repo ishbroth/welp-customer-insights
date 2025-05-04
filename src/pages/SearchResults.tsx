@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -9,79 +8,37 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Lock } from "lucide-react";
 import StarRating from "@/components/StarRating";
+import { mockUsers, User, Review } from "@/data/mockUsers";
 
-// Mock customer data and reviews for demonstration
-const mockCustomers = [
-  {
-    id: "1",
-    firstName: "John",
-    lastName: "Smith",
-    phone: "555-123-4567",
-    address: "123 Main St, Anytown",
-    city: "Anytown",
-    zipCode: "12345",
-    averageRating: 4.3,
-    totalReviews: 8,
-    isSubscriptionNeeded: true
-  },
-  {
-    id: "2",
-    firstName: "Sarah",
-    lastName: "Jones",
-    phone: "555-987-6543",
-    address: "456 Oak Ave, Somewhere",
-    city: "Somewhere",
-    zipCode: "67890",
-    averageRating: 2.1,
-    totalReviews: 12,
-    isSubscriptionNeeded: false
-  },
-  {
-    id: "3",
-    firstName: "Mike",
-    lastName: "Johnson",
-    phone: "555-456-7890",
-    address: "789 Pine Rd, Nowhere",
-    city: "Nowhere",
-    zipCode: "34567",
-    averageRating: 3.7,
-    totalReviews: 5,
-    isSubscriptionNeeded: true
-  }
-];
-
-const mockReviews = [
-  {
-    id: "101",
-    businessName: "Pete's Plumbing",
-    businessId: "b1",
-    customerName: "Sarah Jones",
-    rating: 2,
-    comment: "Customer was very difficult to work with. Changed requirements multiple times and complained about the price even though it was agreed upon beforehand. Took over 60 days to make payment despite numerous reminders.",
-    createdAt: "2023-12-10T15:30:00Z",
-    location: "Chicago, IL"
-  },
-  {
-    id: "102",
-    businessName: "Tasty Bites Restaurant",
-    businessId: "b2",
-    customerName: "Sarah Jones",
-    rating: 1,
-    comment: "This customer was extremely rude to our wait staff. Left a mess on the table and tried to leave without paying. When confronted, they claimed the food was bad, despite eating everything. Would not recommend serving this individual.",
-    createdAt: "2024-01-05T18:45:00Z",
-    location: "Chicago, IL"
-  },
-  {
-    id: "103",
-    businessName: "Quick Fix Auto",
-    businessId: "b3",
-    customerName: "Sarah Jones",
-    rating: 3,
-    comment: "Customer was on time for their appointment and communicated well. However, they disputed legitimate charges for parts that needed replacement. Eventually paid after showing them the old parts.",
-    createdAt: "2024-02-20T11:15:00Z",
-    location: "Chicago, IL"
-  }
-];
+// Transform mock users into the format expected by the search results page
+const transformMockUsers = () => {
+  return mockUsers
+    .filter(user => user.type === "customer")
+    .map(user => {
+      // Split name into first and last name (assuming format is "First Last")
+      const nameParts = user.name.split(' ');
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : user.name;
+      
+      // Calculate average rating if the user has reviews
+      const totalReviews = user.reviews?.length || 0;
+      const totalRating = user.reviews?.reduce((sum, review) => sum + review.rating, 0) || 0;
+      const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+      
+      return {
+        id: user.id,
+        firstName,
+        lastName,
+        phone: user.phone || "",
+        address: user.address || "",
+        city: user.city || "",
+        zipCode: user.zipCode || "",
+        averageRating,
+        totalReviews,
+        isSubscriptionNeeded: Math.random() > 0.5 // Randomly determine if subscription is needed for demo
+      };
+    });
+};
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -100,10 +57,13 @@ const SearchResults = () => {
   const zipCode = searchParams.get("zipCode") || "";
 
   useEffect(() => {
-    // Simulate API call to search for customers
+    // Simulate API call to search for customers with the real mock data
     setIsLoading(true);
     
     setTimeout(() => {
+      // Get our transformed mock users
+      const mockCustomers = transformMockUsers();
+      
       // Filter mock customers based on search params
       const filteredCustomers = mockCustomers.filter(customer => {
         const lastNameMatch = lastName ? customer.lastName.toLowerCase().includes(lastName.toLowerCase()) : true;
@@ -126,8 +86,23 @@ const SearchResults = () => {
     
     // Simulate API call to fetch reviews for this customer
     setTimeout(() => {
-      if (customer.id === "2") { // Only show reviews for Sarah Jones in our demo
-        setReviews(mockReviews);
+      // Find the original user data from mockUsers
+      const userData = mockUsers.find(user => user.id === customer.id);
+      
+      if (userData?.reviews?.length) {
+        // Map user reviews to the format expected by ReviewCard
+        const mappedReviews = userData.reviews.map(review => ({
+          id: review.id,
+          businessName: review.reviewerName,
+          businessId: review.reviewerId,
+          customerName: userData.name,
+          rating: review.rating,
+          comment: review.content,
+          createdAt: review.date,
+          location: userData.city ? `${userData.city}, ${userData.state}` : "Unknown Location"
+        }));
+        
+        setReviews(mappedReviews);
       } else {
         setReviews([]);
       }
