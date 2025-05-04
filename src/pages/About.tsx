@@ -1,6 +1,7 @@
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { Link } from "react-router-dom";
 
 const About = () => {
   return (
@@ -25,6 +26,16 @@ const About = () => {
             that shows how much you appreciated their business. By doing so, you help other business owners screen for quality 
             customers, and you help quality customers get the recognition they deserve.
           </p>
+          
+          <div className="mt-8">
+            <Link to="/how-it-works" className="text-[#ea384c] font-medium hover:underline inline-flex items-center">
+              Learn more about how Welp works
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg>
+            </Link>
+          </div>
         </div>
       </main>
       
