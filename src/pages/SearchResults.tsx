@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -115,19 +114,15 @@ const SearchResults = () => {
     }, 500);
   };
   
-  // Function to get just the first sentence of a review
-  const getFirstSentence = (text: string) => {
+  // Function to get just the first 5 words of a review
+  const getFirstFiveWords = (text: string) => {
     if (!text) return "";
     
-    // Match for common sentence endings (., !, ?) followed by a space or end of string
-    const match = text.match(/^.*?[.!?](?:\s|$)/);
+    // Split the text into words and take the first 5
+    const words = text.split(/\s+/);
+    const firstFiveWords = words.slice(0, 5).join(" ");
     
-    if (match && match[0]) {
-      return match[0].trim();
-    }
-    
-    // If no sentence ending found, return first 100 characters
-    return text.length > 100 ? text.substring(0, 100) + "..." : text;
+    return `${firstFiveWords}...`;
   };
   
   const handleBuyFullReview = (reviewId: string) => {
@@ -258,10 +253,10 @@ const SearchResults = () => {
                       const hasAccess = hasFullAccess(review.id);
                       
                       if (!hasAccess) {
-                        // For users without access, create a modified review with just the first sentence
+                        // For users without access, create a modified review with just the first 5 words
                         const partialReview = {
                           ...review,
-                          comment: getFirstSentence(review.comment)
+                          comment: getFirstFiveWords(review.comment)
                         };
                         
                         return (
