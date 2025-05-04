@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -134,7 +135,7 @@ const SearchResults = () => {
     return `${firstFiveWords}...`;
   };
   
-  const handleBuyFullReview = (reviewId: string) => {
+  const handleBuyFullReview = (customerId: string) => {
     if (!currentUser) {
       toast({
         title: "Sign in required",
@@ -146,23 +147,23 @@ const SearchResults = () => {
     
     toast({
       title: "Redirecting to payment",
-      description: "You'll be redirected to the payment page to access the full review.",
+      description: "You'll be redirected to the payment page to access all reviews for this customer.",
     });
     
-    // Redirect directly to one-time payment page
-    navigate(`/one-time-review?reviewId=${reviewId}`);
+    // Redirect directly to one-time payment page with customerId instead of reviewId
+    navigate(`/one-time-review?customerId=${customerId}`);
   };
 
   // Non-logged in users and customers who haven't subscribed only see truncated reviews
   const shouldShowLimitedReview = !currentUser || (currentUser?.type === "customer") || (!isSubscribed && currentUser?.type !== "admin");
 
-  // Check if user has access to the full review
-  const hasFullAccess = (reviewId: string) => {
+  // Check if user has access to the customer's full reviews
+  const hasFullAccess = (customerId: string) => {
     // If the user is logged in and has a subscription, they have access
     if (currentUser && isSubscribed) return true;
     
-    // Check if the user has paid for one-time access to this specific review
-    const hasOneTimeAccess = localStorage.getItem(`review_access_${reviewId}`) === "true";
+    // Check if the user has paid for one-time access to this specific customer
+    const hasOneTimeAccess = localStorage.getItem(`customer_access_${customerId}`) === "true";
     return hasOneTimeAccess;
   };
 
@@ -267,7 +268,7 @@ const SearchResults = () => {
                 </Card>
                 
                 {/* Only show subscription card if user is logged in but hasn't subscribed */}
-                {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed && currentUser.type === "business" ? (
+                {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed && currentUser.type === "business" && !hasFullAccess(selectedCustomer.id) ? (
                   <Card className="p-6 mb-6 border-2 border-welp-primary">
                     <div className="flex items-center">
                       <Lock className="text-welp-primary mr-4 h-12 w-12" />
@@ -276,9 +277,19 @@ const SearchResults = () => {
                         <p className="text-gray-600 mb-4">
                           You've found information on this customer, but you need a subscription to see all detailed reviews.
                         </p>
-                        <Link to="/subscription">
-                          <Button className="welp-button">Subscribe for $19.99/month</Button>
-                        </Link>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button 
+                            className="welp-button"
+                            onClick={() => handleBuyFullReview(selectedCustomer.id)}
+                          >
+                            Pay $3.00 for this customer
+                          </Button>
+                          <Link to="/subscription">
+                            <Button variant="outline" className="border-welp-primary text-welp-primary hover:bg-welp-primary/10">
+                              Subscribe for $19.99/month
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -286,8 +297,11 @@ const SearchResults = () => {
                   <div>
                     <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
                     {reviews.map(review => {
-                      // For non-logged in users or those without subscription, always show limited version
-                      if (shouldShowLimitedReview && !hasFullAccess(review.id)) {
+                      // Check if the user has access to full reviews for this customer
+                      const hasAccess = hasFullAccess(selectedCustomer.id);
+                      
+                      // For non-logged in users or those without subscription or one-time access, show limited version
+                      if (shouldShowLimitedReview && !hasAccess) {
                         // Create a modified review with just the first 5 words
                         const partialReview = {
                           ...review,
@@ -302,10 +316,10 @@ const SearchResults = () => {
                                 <Button 
                                   variant="outline" 
                                   className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
-                                  onClick={() => handleBuyFullReview(review.id)}
+                                  onClick={() => handleBuyFullReview(selectedCustomer.id)}
                                 >
                                   <Lock className="w-4 h-4 mr-2" />
-                                  See Full Review for $3
+                                  See All Reviews for $3
                                 </Button>
                               ) : (
                                 <Link to="/login">
@@ -314,7 +328,7 @@ const SearchResults = () => {
                                     className="border-welp-primary text-welp-primary hover:bg-welp-primary/10"
                                   >
                                     <Lock className="w-4 h-4 mr-2" />
-                                    Login to See Full Review
+                                    Login to See Full Reviews
                                   </Button>
                                 </Link>
                               )}

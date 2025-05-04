@@ -10,16 +10,16 @@ import { Lock } from "lucide-react";
 
 const OneTimeReviewAccess = () => {
   const [searchParams] = useSearchParams();
-  const reviewId = searchParams.get("reviewId");
+  const customerId = searchParams.get("customerId");
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    if (!reviewId) {
+    if (!customerId) {
       navigate("/search");
     }
-  }, [reviewId, navigate]);
+  }, [customerId, navigate]);
 
   const handlePayment = () => {
     setIsProcessing(true);
@@ -31,11 +31,11 @@ const OneTimeReviewAccess = () => {
       // Simulate successful payment
       toast({
         title: "Payment Successful",
-        description: "You now have access to the full review.",
+        description: "You now have access to all reviews for this customer.",
       });
       
       // In a real app, we would store this information in the database
-      localStorage.setItem(`review_access_${reviewId}`, "true");
+      localStorage.setItem(`customer_access_${customerId}`, "true");
       
       // Navigate back to search results
       navigate(-1);
@@ -53,11 +53,11 @@ const OneTimeReviewAccess = () => {
                 <CardTitle className="text-2xl font-bold">
                   <div className="flex items-center">
                     <Lock className="w-6 h-6 mr-2 text-welp-primary" />
-                    Unlock Full Review
+                    Unlock All Customer Reviews
                   </div>
                 </CardTitle>
                 <CardDescription>
-                  Access the complete review content with a one-time payment
+                  Access all reviews for this customer with a one-time payment
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -67,15 +67,15 @@ const OneTimeReviewAccess = () => {
                     <ul className="space-y-2">
                       <li className="flex items-start">
                         <span className="text-green-500 mr-2">✓</span>
+                        All reviews for this specific customer
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
                         Full review details and comments
                       </li>
                       <li className="flex items-start">
                         <span className="text-green-500 mr-2">✓</span>
-                        Incidents and specific issues reported
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-green-500 mr-2">✓</span>
-                        Recommendations from other businesses
+                        Incidents and specific issues reported by other businesses
                       </li>
                     </ul>
                   </div>
