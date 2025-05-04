@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -62,7 +61,7 @@ const HowItWorks = () => {
                     </li>
                     <li className="flex">
                       <span className="font-semibold mr-2">•</span>
-                      <span>Pay a one-time access fee to view reviews of a single customer</span>
+                      <span>Pay a one-time access fee to view reviews</span>
                     </li>
                   </ul>
                   <Link to="/signup?type=business">
