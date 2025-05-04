@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -145,168 +144,143 @@ const SearchResults = () => {
       <Header />
       <main className="flex-grow">
         <div className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Search Column */}
-            <div className="md:col-span-1">
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Refine Your Search</h2>
-                <SearchBox />
-                
-                {isLoading ? (
-                  <div className="text-center py-8">Loading...</div>
-                ) : customers.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">No customers found matching your search.</p>
-                    <p className="text-sm">Try adjusting your search criteria or <Link to="/add-customer" className="text-welp-primary hover:underline">add a new customer</Link>.</p>
-                  </div>
-                ) : (
-                  <div className="mt-6">
-                    <h3 className="font-semibold mb-2">Search Results ({customers.length})</h3>
-                    <div className="space-y-3">
-                      {customers.map(customer => (
-                        <div 
-                          key={customer.id}
-                          onClick={() => handleSelectCustomer(customer)}
-                          className={`p-3 border rounded-md cursor-pointer transition-colors ${selectedCustomer?.id === customer.id ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
-                        >
-                          <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
-                          <div className="text-sm text-gray-600">{customer.address}</div>
-                          <div className="flex justify-between items-center mt-1">
-                            <div className="flex items-center">
-                              <StarRating rating={Math.round(customer.averageRating)} size="sm" />
-                              <span className="ml-2 text-sm text-gray-500">
-                                ({customer.averageRating.toFixed(1)})
-                              </span>
-                            </div>
-                            <span className="text-xs text-gray-500">
-                              {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
+          {/* Modified layout - making search column full width */}
+          <div className="max-w-4xl mx-auto">
+            <Card className="p-6 mb-8">
+              <SearchBox />
+              
+              {isLoading ? (
+                <div className="text-center py-8">Loading...</div>
+              ) : customers.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No customers found matching your search.</p>
+                  <p className="text-sm">Try adjusting your search criteria or <Link to="/add-customer" className="text-welp-primary hover:underline">add a new customer</Link>.</p>
+                </div>
+              ) : (
+                <div className="mt-6">
+                  <h3 className="font-semibold mb-2">Search Results ({customers.length})</h3>
+                  <div className="space-y-3">
+                    {customers.map(customer => (
+                      <div 
+                        key={customer.id}
+                        onClick={() => handleSelectCustomer(customer)}
+                        className={`p-3 border rounded-md cursor-pointer transition-colors ${selectedCustomer?.id === customer.id ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
+                      >
+                        <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
+                        <div className="text-sm text-gray-600">{customer.address}</div>
+                        <div className="flex justify-between items-center mt-1">
+                          <div className="flex items-center">
+                            <StarRating rating={Math.round(customer.averageRating)} size="sm" />
+                            <span className="ml-2 text-sm text-gray-500">
+                              ({customer.averageRating.toFixed(1)})
                             </span>
                           </div>
+                          <span className="text-xs text-gray-500">
+                            {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </Card>
-            </div>
+                </div>
+              )}
+            </Card>
             
-            {/* Results Column */}
-            <div className="md:col-span-2">
-              {!selectedCustomer ? (
-                <Card className="p-8 text-center">
-                  <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
-                  <p className="text-gray-600 mb-6">
-                    Select a customer from the search results to view their reviews.
-                  </p>
-                  <div className="welp-gradient rounded-lg p-6 text-white">
-                    <h3 className="text-xl font-bold mb-2">Welcome to Welp!</h3>
-                    <p className="mb-4">
-                      Search and view basic information about customers. Detailed reviews are available for a small fee.
-                    </p>
+            {/* Selected customer details and reviews */}
+            {selectedCustomer && (
+              <div>
+                <Card className="p-6 mb-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className="text-2xl font-bold">{selectedCustomer.lastName}, {selectedCustomer.firstName}</h2>
+                      <p className="text-gray-600">{selectedCustomer.address}</p>
+                      <p className="text-gray-600">{selectedCustomer.phone}</p>
+                      
+                      <div className="flex items-center mt-2">
+                        <StarRating rating={Math.round(selectedCustomer.averageRating)} />
+                        <span className="ml-2 text-gray-700">
+                          {selectedCustomer.averageRating.toFixed(1)} ({selectedCustomer.totalReviews} {selectedCustomer.totalReviews === 1 ? 'review' : 'reviews'})
+                        </span>
+                      </div>
+                    </div>
+                    
                     {currentUser && (
-                      <Link to="/subscription">
-                        <Button className="bg-white text-welp-primary hover:bg-gray-100">
-                          View Subscription Options
+                      <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
+                        <Button className="welp-button">
+                          Write a Review
                         </Button>
                       </Link>
                     )}
                   </div>
                 </Card>
-              ) : (
-                <div>
-                  <Card className="p-6 mb-6">
-                    <div className="flex justify-between items-start">
+                
+                {/* Only show subscription card if user is logged in */}
+                {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed ? (
+                  <Card className="p-6 mb-6 border-2 border-welp-primary">
+                    <div className="flex items-center">
+                      <Lock className="text-welp-primary mr-4 h-12 w-12" />
                       <div>
-                        <h2 className="text-2xl font-bold">{selectedCustomer.lastName}, {selectedCustomer.firstName}</h2>
-                        <p className="text-gray-600">{selectedCustomer.address}</p>
-                        <p className="text-gray-600">{selectedCustomer.phone}</p>
-                        
-                        <div className="flex items-center mt-2">
-                          <StarRating rating={Math.round(selectedCustomer.averageRating)} />
-                          <span className="ml-2 text-gray-700">
-                            {selectedCustomer.averageRating.toFixed(1)} ({selectedCustomer.totalReviews} {selectedCustomer.totalReviews === 1 ? 'review' : 'reviews'})
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {currentUser && (
-                        <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
-                          <Button className="welp-button">
-                            Write a Review
-                          </Button>
+                        <h3 className="text-xl font-bold mb-1">Subscribe to See Full Reviews</h3>
+                        <p className="text-gray-600 mb-4">
+                          You've found information on this customer, but you need a subscription to see the detailed reviews.
+                        </p>
+                        <Link to="/subscription">
+                          <Button className="welp-button">Subscribe for $19.99/month</Button>
                         </Link>
-                      )}
+                      </div>
                     </div>
                   </Card>
-                  
-                  {/* Only show subscription card if user is logged in */}
-                  {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed ? (
-                    <Card className="p-6 mb-6 border-2 border-welp-primary">
-                      <div className="flex items-center">
-                        <Lock className="text-welp-primary mr-4 h-12 w-12" />
-                        <div>
-                          <h3 className="text-xl font-bold mb-1">Subscribe to See Full Reviews</h3>
-                          <p className="text-gray-600 mb-4">
-                            You've found information on this customer, but you need a subscription to see the detailed reviews.
-                          </p>
-                          <Link to="/subscription">
-                            <Button className="welp-button">Subscribe for $19.99/month</Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </Card>
-                  ) : reviews.length > 0 ? (
-                    <div>
-                      <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
-                      {reviews.map(review => {
-                        // For non-subscribers or non-logged in users, create a modified review for the ReviewCard
-                        if (!isSubscribed) {
-                          const partialReview = {
-                            ...review,
-                            comment: getFirstSentence(review.comment)
-                          };
-                          
-                          return (
-                            <div key={review.id} className="mb-4">
-                              <ReviewCard review={partialReview} showResponse={false} />
-                              <div className="mt-2 flex justify-end">
-                                <Button 
-                                  variant="outline" 
-                                  className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
-                                  onClick={() => handleBuyFullReview(review.id)}
-                                >
-                                  <Lock className="w-4 h-4 mr-2" />
-                                  See Full Review for $3
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        }
+                ) : reviews.length > 0 ? (
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
+                    {reviews.map(review => {
+                      // For non-subscribers or non-logged in users, create a modified review for the ReviewCard
+                      if (!isSubscribed) {
+                        const partialReview = {
+                          ...review,
+                          comment: getFirstSentence(review.comment)
+                        };
                         
-                        // For subscribers, show the full review
-                        return <ReviewCard key={review.id} review={review} />;
-                      })}
-                    </div>
-                  ) : (
-                    <Card className="p-6 text-center">
-                      <h3 className="text-xl font-bold mb-2">No Reviews Yet</h3>
-                      <p className="text-gray-600 mb-4">
-                        {currentUser ? 
-                          "Be the first to review this customer and help other businesses." : 
-                          "No reviews are available for this customer yet."}
-                      </p>
-                      {currentUser && (
-                        <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
-                          <Button className="welp-button">
-                            Write a Review
-                          </Button>
-                        </Link>
-                      )}
-                    </Card>
-                  )}
-                </div>
-              )}
-            </div>
+                        return (
+                          <div key={review.id} className="mb-4">
+                            <ReviewCard review={partialReview} showResponse={false} />
+                            <div className="mt-2 flex justify-end">
+                              <Button 
+                                variant="outline" 
+                                className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
+                                onClick={() => handleBuyFullReview(review.id)}
+                              >
+                                <Lock className="w-4 h-4 mr-2" />
+                                See Full Review for $3
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // For subscribers, show the full review
+                      return <ReviewCard key={review.id} review={review} />;
+                    })}
+                  </div>
+                ) : (
+                  <Card className="p-6 text-center">
+                    <h3 className="text-xl font-bold mb-2">No Reviews Yet</h3>
+                    <p className="text-gray-600 mb-4">
+                      {currentUser ? 
+                        "Be the first to review this customer and help other businesses." : 
+                        "No reviews are available for this customer yet."}
+                    </p>
+                    {currentUser && (
+                      <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
+                        <Button className="welp-button">
+                          Write a Review
+                        </Button>
+                      </Link>
+                    )}
+                  </Card>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
