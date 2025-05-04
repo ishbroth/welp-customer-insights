@@ -84,11 +84,11 @@ const HowItWorks = () => {
                     </li>
                     <li className="flex">
                       <span className="font-semibold mr-2">•</span>
-                      <span>Respond to business reviews</span>
+                      <span>Purchase access to full reviews</span>
                     </li>
                     <li className="flex">
                       <span className="font-semibold mr-2">•</span>
-                      <span>Purchase access to full reviews</span>
+                      <span>Respond to business reviews</span>
                     </li>
                     <li className="flex">
                       <span className="font-semibold mr-2">•</span>
