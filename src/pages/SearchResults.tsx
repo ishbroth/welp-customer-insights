@@ -11,6 +11,7 @@ import { Lock } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { mockUsers, User, Review } from "@/data/mockUsers";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Transform mock users into the format expected by the search results page
 const transformMockUsers = () => {
@@ -51,6 +52,7 @@ const SearchResults = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser } = useAuth();
 
   // Extract search parameters
   const lastName = searchParams.get("lastName") || "";
@@ -134,8 +136,8 @@ const SearchResults = () => {
       description: "You'll be redirected to the payment page to access the full review.",
     });
     
-    // In a real app, redirect to a payment page with the reviewId
-    navigate(`/subscription?reviewId=${reviewId}&oneTime=true`);
+    // Redirect directly to one-time payment page instead of subscription
+    navigate(`/one-time-review?reviewId=${reviewId}`);
   };
 
   return (
@@ -197,15 +199,17 @@ const SearchResults = () => {
                     Select a customer from the search results to view their reviews.
                   </p>
                   <div className="welp-gradient rounded-lg p-6 text-white">
-                    <h3 className="text-xl font-bold mb-2">Why Subscribe to Welp!</h3>
+                    <h3 className="text-xl font-bold mb-2">Welcome to Welp!</h3>
                     <p className="mb-4">
-                      Get full access to customer reviews and protect your business from problematic customers.
+                      Search and view basic information about customers. Detailed reviews are available for a small fee.
                     </p>
-                    <Link to="/subscription">
-                      <Button className="bg-white text-welp-primary hover:bg-gray-100">
-                        View Subscription Options
-                      </Button>
-                    </Link>
+                    {currentUser && (
+                      <Link to="/subscription">
+                        <Button className="bg-white text-welp-primary hover:bg-gray-100">
+                          View Subscription Options
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </Card>
               ) : (
@@ -225,15 +229,18 @@ const SearchResults = () => {
                         </div>
                       </div>
                       
-                      <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
-                        <Button className="welp-button">
-                          Write a Review
-                        </Button>
-                      </Link>
+                      {currentUser && (
+                        <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
+                          <Button className="welp-button">
+                            Write a Review
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </Card>
                   
-                  {selectedCustomer.isSubscriptionNeeded && !isSubscribed ? (
+                  {/* Only show subscription card if user is logged in */}
+                  {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed ? (
                     <Card className="p-6 mb-6 border-2 border-welp-primary">
                       <div className="flex items-center">
                         <Lock className="text-welp-primary mr-4 h-12 w-12" />
@@ -252,7 +259,7 @@ const SearchResults = () => {
                     <div>
                       <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
                       {reviews.map(review => {
-                        // For non-subscribers, create a modified review for the ReviewCard
+                        // For non-subscribers or non-logged in users, create a modified review for the ReviewCard
                         if (!isSubscribed) {
                           const partialReview = {
                             ...review,
@@ -284,13 +291,17 @@ const SearchResults = () => {
                     <Card className="p-6 text-center">
                       <h3 className="text-xl font-bold mb-2">No Reviews Yet</h3>
                       <p className="text-gray-600 mb-4">
-                        Be the first to review this customer and help other businesses.
+                        {currentUser ? 
+                          "Be the first to review this customer and help other businesses." : 
+                          "No reviews are available for this customer yet."}
                       </p>
-                      <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
-                        <Button className="welp-button">
-                          Write a Review
-                        </Button>
-                      </Link>
+                      {currentUser && (
+                        <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
+                          <Button className="welp-button">
+                            Write a Review
+                          </Button>
+                        </Link>
+                      )}
                     </Card>
                   )}
                 </div>
