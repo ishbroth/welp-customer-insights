@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -96,16 +97,24 @@ const SearchResults = () => {
       
       if (userData?.reviews?.length) {
         // Map user reviews to the format expected by ReviewCard
-        const mappedReviews = userData.reviews.map(review => ({
-          id: review.id,
-          businessName: review.reviewerName,
-          businessId: review.reviewerId,
-          customerName: userData.name,
-          rating: review.rating,
-          comment: review.content,
-          createdAt: review.date,
-          location: userData.city ? `${userData.city}, ${userData.state}` : "Unknown Location"
-        }));
+        const mappedReviews = userData.reviews.map(review => {
+          // Find the reviewer data from mockUsers to get address/city
+          const reviewerData = mockUsers.find(user => user.id === review.reviewerId);
+          
+          return {
+            id: review.id,
+            businessName: review.reviewerName,
+            businessId: review.reviewerId,
+            customerName: userData.name,
+            rating: review.rating,
+            comment: review.content,
+            createdAt: review.date,
+            location: userData.city ? `${userData.city}, ${userData.state}` : "Unknown Location",
+            // Add address and city from the reviewer (business owner) if available
+            address: reviewerData?.address || "",
+            city: reviewerData?.city || ""
+          };
+        });
         
         setReviews(mappedReviews);
       } else {

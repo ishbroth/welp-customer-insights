@@ -15,6 +15,8 @@ interface ReviewCardProps {
     comment: string;
     createdAt: string;
     location: string;
+    address?: string;
+    city?: string;
   };
   showResponse?: boolean;
 }
@@ -37,13 +39,31 @@ const ReviewCard = ({ review, showResponse = false }: ReviewCardProps) => {
     }, 1000);
   };
 
+  // Format the location info including business address when available
+  const formattedLocation = () => {
+    const locationParts = [];
+    
+    // Add address if available
+    if (review.address) {
+      locationParts.push(review.address);
+    }
+    
+    // Add city if available
+    if (review.city) {
+      locationParts.push(review.city);
+    }
+    
+    // If we have address or city info, use it; otherwise fall back to the location property
+    return locationParts.length > 0 ? locationParts.join(", ") : review.location;
+  };
+
   return (
     <Card className="mb-4 overflow-hidden">
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
             <div className="font-bold text-lg">{review.businessName}</div>
-            <div className="text-sm text-gray-500">{review.location}</div>
+            <div className="text-sm text-gray-500">{formattedLocation()}</div>
           </div>
           <StarRating rating={review.rating} size="md" />
         </div>
