@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -56,12 +57,15 @@ const Header = () => {
             </div>
           ) : (
             <nav className="flex items-center space-x-4">
-              <Link 
-                to="/search" 
-                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
-              >
-                <Search className="mr-1 h-4 w-4" /> Search
-              </Link>
+              {/* Only show Search link for business owners or non-logged in users */}
+              {(!currentUser || isBusinessOwner) && (
+                <Link 
+                  to="/search" 
+                  className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                >
+                  <Search className="mr-1 h-4 w-4" /> Search
+                </Link>
+              )}
               
               {/* Only show Post Review for business owners */}
               {isBusinessOwner && (
@@ -114,13 +118,16 @@ const Header = () => {
         {isMobile && isMenuOpen && (
           <div className="mt-4 py-2 border-t border-gray-200">
             <nav className="flex flex-col space-y-3">
-              <Link
-                to="/search"
-                className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
-                onClick={toggleMenu}
-              >
-                <Search className="mr-2 h-4 w-4" /> Search
-              </Link>
+              {/* Only show Search link in mobile menu for business owners or non-logged in users */}
+              {(!currentUser || isBusinessOwner) && (
+                <Link
+                  to="/search"
+                  className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
+                  onClick={toggleMenu}
+                >
+                  <Search className="mr-2 h-4 w-4" /> Search
+                </Link>
+              )}
               
               {/* Only show Post Review for business owners on mobile too */}
               {isBusinessOwner && (
