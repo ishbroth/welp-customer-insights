@@ -57,11 +57,11 @@ const HowItWorks = () => {
                     </li>
                     <li className="flex">
                       <span className="font-semibold mr-2">•</span>
-                      <span>Subscribe for unlimited access to reviews</span>
+                      <span>Pay a one-time access fee to view reviews</span>
                     </li>
                     <li className="flex">
                       <span className="font-semibold mr-2">•</span>
-                      <span>Pay a one-time access fee to view reviews</span>
+                      <span>Subscribe for unlimited access to reviews</span>
                     </li>
                   </ul>
                   <Link to="/signup?type=business">
