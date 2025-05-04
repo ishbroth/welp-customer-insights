@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -35,6 +34,7 @@ const transformMockUsers = () => {
         phone: user.phone || "",
         address: user.address || "",
         city: user.city || "",
+        state: user.state || "",
         zipCode: user.zipCode || "",
         averageRating,
         totalReviews,
@@ -195,6 +195,11 @@ const SearchResults = () => {
                       >
                         <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
                         <div className="text-sm text-gray-600">{customer.address}</div>
+                        <div className="text-sm text-gray-600">
+                          {customer.city && customer.state ? `${customer.city}, ${customer.state}` : 
+                           customer.city ? customer.city :
+                           customer.state ? customer.state : "Location not available"}
+                        </div>
                         <div className="flex justify-between items-center mt-1">
                           <div className="flex items-center">
                             <StarRating rating={Math.round(customer.averageRating)} size="sm" />
@@ -221,6 +226,11 @@ const SearchResults = () => {
                     <div>
                       <h2 className="text-2xl font-bold">{selectedCustomer.lastName}, {selectedCustomer.firstName}</h2>
                       <p className="text-gray-600">{selectedCustomer.address}</p>
+                      <p className="text-gray-600">
+                        {selectedCustomer.city && selectedCustomer.state ? `${selectedCustomer.city}, ${selectedCustomer.state}` : 
+                         selectedCustomer.city ? selectedCustomer.city :
+                         selectedCustomer.state ? selectedCustomer.state : ""}
+                      </p>
                       <p className="text-gray-600">{selectedCustomer.phone}</p>
                       
                       <div className="flex items-center mt-2">
