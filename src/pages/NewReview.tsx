@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -35,6 +34,14 @@ const NewReview = () => {
   const isEditing = searchParams.get("edit") === "true";
   const reviewId = searchParams.get("reviewId");
   
+  // Get search parameters for pre-filling the form
+  const searchParamFirstName = searchParams.get("firstName") || "";
+  const searchParamLastName = searchParams.get("lastName") || "";
+  const searchParamPhone = searchParams.get("phone") || "";
+  const searchParamAddress = searchParams.get("address") || "";
+  const searchParamCity = searchParams.get("city") || "";
+  const searchParamZipCode = searchParams.get("zipCode") || "";
+  
   const location = useLocation();
   const reviewData = location.state?.reviewData;
   
@@ -46,11 +53,12 @@ const NewReview = () => {
   const [rating, setRating] = useState(isEditing && reviewData ? reviewData.rating : 0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState(isEditing && reviewData ? reviewData.content : "");
-  const [customerFirstName, setCustomerFirstName] = useState("");
-  const [customerLastName, setCustomerLastName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
-  const [customerZipCode, setCustomerZipCode] = useState("");
+  const [customerFirstName, setCustomerFirstName] = useState(searchParamFirstName);
+  const [customerLastName, setCustomerLastName] = useState(searchParamLastName);
+  const [customerPhone, setCustomerPhone] = useState(searchParamPhone);
+  const [customerAddress, setCustomerAddress] = useState(searchParamAddress);
+  const [customerCity, setCustomerCity] = useState(searchParamCity);
+  const [customerZipCode, setCustomerZipCode] = useState(searchParamZipCode);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -176,6 +184,17 @@ const NewReview = () => {
                         id="customerAddress"
                         value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
+                        className="welp-input"
+                        disabled={!isNewCustomer && !!customer}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
+                      <Input
+                        id="customerCity"
+                        value={customerCity}
+                        onChange={(e) => setCustomerCity(e.target.value)}
                         className="welp-input"
                         disabled={!isNewCustomer && !!customer}
                       />

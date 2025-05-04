@@ -79,12 +79,60 @@ const ProfilePage = () => {
 
   // Handle search in "Rate a Customer" section
   const handleCustomerSearch = (searchParams: Record<string, string>) => {
-    const queryString = Object.entries(searchParams)
-      .filter(([_, value]) => value.trim() !== '')
-      .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
-      .join('&');
+    // Filter out empty values
+    const filteredParams = Object.fromEntries(
+      Object.entries(searchParams).filter(([_, value]) => value.trim() !== '')
+    );
+    
+    // Check if any search parameters were provided
+    if (Object.keys(filteredParams).length === 0) {
+      // If no parameters, just go to the new review page
+      navigate('/review/new');
+      return;
+    }
+    
+    // First simulate a search to check if customer exists
+    const customersFound = mockUsers.filter(user => {
+      if (user.type !== 'customer') return false;
       
-    navigate(`/search?${queryString}`);
+      // Check for matches on each provided parameter
+      return Object.entries(filteredParams).every(([key, value]) => {
+        const searchValue = value.toLowerCase();
+        
+        switch(key) {
+          case 'firstName':
+            return user.name?.toLowerCase().includes(searchValue);
+          case 'lastName':
+            return user.name?.toLowerCase().includes(searchValue);
+          case 'phone':
+            return user.phone?.toLowerCase().includes(searchValue);
+          case 'address':
+            return user.address?.toLowerCase().includes(searchValue);
+          case 'city':
+            return user.city?.toLowerCase().includes(searchValue);
+          case 'zipCode':
+            return user.zipCode?.toLowerCase().includes(searchValue);
+          default:
+            return false;
+        }
+      });
+    });
+    
+    if (customersFound.length > 0) {
+      // Customers found - go to search results page
+      const queryString = Object.entries(filteredParams)
+        .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
+        .join('&');
+        
+      navigate(`/search?${queryString}`);
+    } else {
+      // No customers found - go to new review page with search parameters
+      const queryString = Object.entries(filteredParams)
+        .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
+        .join('&');
+        
+      navigate(`/review/new?${queryString}`);
+    }
   };
 
   return (
