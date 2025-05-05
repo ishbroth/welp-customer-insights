@@ -247,7 +247,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                 </div>
                 <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
                 
-                {/* Show reply button for business owners with subscription */}
+                {/* Check if has subscription AND it's not the business's own response */}
                 {hasSubscription && resp.authorId !== currentUser?.id && (
                   <div className="mt-2 flex justify-end">
                     <Button 

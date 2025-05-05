@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -5,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
@@ -30,18 +31,27 @@ const BusinessReviews = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  // Simulate subscription status (in a real app, this would come from the auth context or API)
+  const location = useLocation();
+  // Simulate subscription status from URL query or localStorage
   const [hasSubscription, setHasSubscription] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
-  // Check URL params for subscription status (for demo purposes)
+  // Check URL params for subscription status and store in localStorage
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("subscribed") === "true") {
       setHasSubscription(true);
+      // Store subscription status in localStorage
+      localStorage.setItem("hasSubscription", "true");
+    } else {
+      // Check localStorage for subscription status on initial load
+      const storedSubscription = localStorage.getItem("hasSubscription");
+      if (storedSubscription === "true") {
+        setHasSubscription(true);
+      }
     }
-  }, []);
+  }, [location]);
   
   // State to hold a working copy of reviews (with changes to reactions)
   const [workingReviews, setWorkingReviews] = useState(() => {
@@ -80,6 +90,7 @@ const BusinessReviews = () => {
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
   const currentReviews = workingReviews.slice(indexOfFirstReview, indexOfLastReview);
 
+  // Function to handle editing a review
   const handleEditReview = (review) => {
     // Navigate to the NewReview page with the review data
     navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
@@ -90,11 +101,13 @@ const BusinessReviews = () => {
     });
   };
 
+  // Function to open delete dialog
   const openDeleteDialog = (reviewId: string) => {
     setReviewToDelete(reviewId);
     setDeleteDialogOpen(true);
   };
 
+  // Function to handle deleting a review
   const handleDeleteReview = () => {
     if (!reviewToDelete) return;
 
