@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import OneTimeReviewAccess from "./pages/OneTimeReviewAccess";
 import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
 import FAQ from "./pages/FAQ";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -88,6 +88,7 @@ const AppRoutes = () => {
       <Route path="/about" element={<About />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/privacy" element={<Privacy />} />
       
       {/* Search page is now accessible to all users */}
       <Route path="/search" element={<SearchResults />} />
