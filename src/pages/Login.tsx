@@ -15,7 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +52,28 @@ const Login = () => {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const success = await loginWithGoogle();
+      if (success) {
+        toast({
+          title: "Logged In",
+          description: "Welcome back to Welp.",
+        });
+        navigate("/profile");
+      }
+    } catch (error) {
+      toast({
+        title: "Google Login Failed",
+        description: "Could not log in with Google. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -134,10 +156,19 @@ const Login = () => {
                 Log in with
               </p>
               <div className="flex justify-center space-x-4">
-                <Button variant="outline" className="w-full flex items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-center"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                >
                   Google
                 </Button>
-                <Button variant="outline" className="w-full flex items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-center"
+                  disabled={true}
+                >
                   Apple
                 </Button>
               </div>
