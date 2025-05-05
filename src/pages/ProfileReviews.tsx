@@ -27,6 +27,7 @@ import {
 import { Eye, Lock, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { formatDistance } from "date-fns";
 
 interface ReviewResponse {
   id: string;
@@ -106,13 +107,7 @@ const ProfileReviews = () => {
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
-    return unlockedReviews.includes(reviewId) || hasSubscription();
-  };
-
-  // Check if user has subscription
-  const hasSubscription = (): boolean => {
-    // This is a mock implementation - in a real app, this would check against a subscription service
-    return false; // For demo purposes, always return false to show the purchase flow
+    return unlockedReviews.includes(reviewId) || hasSubscription;
   };
 
   // Handle toggling reactions
@@ -281,7 +276,7 @@ const ProfileReviews = () => {
                         <h3 className="font-medium">{review.title}</h3>
                       </div>
                       
-                      {isReviewUnlocked(review.id) || hasSubscription() ? (
+                      {isReviewUnlocked(review.id) ? (
                         <div>
                           <p className="text-gray-700">{review.content}</p>
                           <div className="mt-2 text-sm text-green-600 flex items-center">
@@ -304,7 +299,7 @@ const ProfileReviews = () => {
                           {review.responses && review.responses.length > 0 && (
                             <div className="mt-4 pt-3 border-t">
                               <h4 className="text-md font-semibold mb-2">Responses</h4>
-                              {review.responses.map((response, idx) => (
+                              {review.responses.map((response) => (
                                 <div key={response.id} className="bg-gray-50 p-3 rounded-md mb-3">
                                   <div className="flex justify-between items-center mb-1">
                                     <span className="font-medium">{response.authorName}</span>
