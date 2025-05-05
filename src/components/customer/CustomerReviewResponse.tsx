@@ -23,13 +23,13 @@ interface CustomerReviewResponseProps {
 
 const CustomerReviewResponse = ({ 
   reviewId, 
-  responses, 
+  responses = [], // Provide default empty array to prevent undefined issues
   hasSubscription 
 }: CustomerReviewResponseProps) => {
   const [expandedResponseForm, setExpandedResponseForm] = useState(false);
   const [responseContent, setResponseContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responsesList, setResponsesList] = useState<ReviewResponse[]>(responses);
+  const [responsesList, setResponsesList] = useState<ReviewResponse[]>(responses || []);
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
