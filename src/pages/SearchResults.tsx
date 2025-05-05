@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -183,7 +182,7 @@ const SearchResults = () => {
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">No customers found matching your search.</p>
                   <p className="text-sm mb-4">Try adjusting your search criteria or add a new customer.</p>
-                  <Link to="/add-customer" className="inline-block">
+                  <Link to="/review/new" className="inline-block">
                     <Button className="welp-button flex items-center gap-2">
                       <UserPlus className="h-4 w-4" />
                       Add New Customer
