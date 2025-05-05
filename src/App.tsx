@@ -16,6 +16,7 @@ import Subscription from "./pages/Subscription";
 import OneTimeReviewAccess from "./pages/OneTimeReviewAccess";
 import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -86,7 +87,7 @@ const AppRoutes = () => {
       <Route path="/one-time-review" element={<OneTimeReviewAccess />} />
       <Route path="/about" element={<About />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
-      <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
+      <Route path="/faq" element={<FAQ />} />
       
       {/* Search page is now accessible to all users */}
       <Route path="/search" element={<SearchResults />} />
