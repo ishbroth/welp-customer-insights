@@ -59,20 +59,20 @@ const SearchBox = ({
         <div className="space-y-3">
           <Input
             type="text"
-            placeholder="Last Name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="welp-input"
-            required={!firstName && !phone && !address && !city && !zipCode}
-          />
-          
-          <Input
-            type="text"
             placeholder="First Name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="welp-input"
             required={!lastName && !phone && !address && !city && !zipCode}
+          />
+          
+          <Input
+            type="text"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="welp-input"
+            required={!firstName && !phone && !address && !city && !zipCode}
           />
           
           <Input
