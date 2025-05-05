@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Star, ThumbsUp, MessageSquare, Quote } from "lucide-react";
+import Header from "@/components/Header";
 
 // Mock success stories from users
 const successStories = [
@@ -50,82 +50,85 @@ const successStories = [
 
 const SuccessStories = () => {
   return (
-    <div className="container mx-auto py-12 px-4 md:px-6">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-welp-primary mb-4">Success Stories</h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Discover how businesses are transforming their customer relationships with Welp's business-owner review platform.
-        </p>
-      </div>
+    <>
+      <Header />
+      <div className="container mx-auto py-12 px-4 md:px-6">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-welp-primary mb-4">Success Stories</h1>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Discover how businesses are transforming their customer relationships with Welp's business-owner review platform.
+          </p>
+        </div>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {successStories.map((story) => (
-          <Card key={story.id} className="border-welp-light transition-all hover:shadow-md">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl">{story.name}</CardTitle>
-                  <p className="text-sm text-gray-500">{story.title}</p>
-                </div>
-                <div className="flex text-yellow-500">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-5 w-5 ${
-                        i < story.rating ? "fill-yellow-500 text-yellow-500" : "text-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Collapsible className="space-y-2">
-                <div className="flex items-start space-x-4">
-                  <Quote className="h-5 w-5 text-welp-primary flex-shrink-0 mt-1" />
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {successStories.map((story) => (
+            <Card key={story.id} className="border-welp-light transition-all hover:shadow-md">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-700 line-clamp-3">{story.quote.substring(0, 150)}...</p>
-                    <CollapsibleTrigger className="flex items-center text-welp-primary text-sm pt-2 hover:underline">
-                      Read more <ChevronDown className="h-4 w-4 ml-1" />
-                    </CollapsibleTrigger>
+                    <CardTitle className="text-xl">{story.name}</CardTitle>
+                    <p className="text-sm text-gray-500">{story.title}</p>
+                  </div>
+                  <div className="flex text-yellow-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-5 w-5 ${
+                          i < story.rating ? "fill-yellow-500 text-yellow-500" : "text-gray-300"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
-                <CollapsibleContent>
-                  <div className="pl-9 text-gray-700">{story.quote.substring(150)}</div>
-                </CollapsibleContent>
-              </Collapsible>
-              <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
-                {story.position}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="mt-16 text-center">
-        <h2 className="text-2xl font-semibold text-welp-primary mb-6">Join Thousands of Satisfied Business Owners</h2>
-        <div className="flex flex-wrap justify-center gap-6 mb-8">
-          <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
-            <ThumbsUp className="h-5 w-5 text-welp-primary mr-2" />
-            <span className="font-medium">95% Satisfaction Rate</span>
-          </div>
-          <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
-            <MessageSquare className="h-5 w-5 text-welp-primary mr-2" />
-            <span className="font-medium">10,000+ Active Businesses</span>
-          </div>
-          <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
-            <Star className="h-5 w-5 text-welp-primary mr-2" />
-            <span className="font-medium">4.8/5 Average Rating</span>
-          </div>
+              </CardHeader>
+              <CardContent>
+                <Collapsible className="space-y-2">
+                  <div className="flex items-start space-x-4">
+                    <Quote className="h-5 w-5 text-welp-primary flex-shrink-0 mt-1" />
+                    <div>
+                      <p className="text-gray-700 line-clamp-3">{story.quote.substring(0, 150)}...</p>
+                      <CollapsibleTrigger className="flex items-center text-welp-primary text-sm pt-2 hover:underline">
+                        Read more <ChevronDown className="h-4 w-4 ml-1" />
+                      </CollapsibleTrigger>
+                    </div>
+                  </div>
+                  <CollapsibleContent>
+                    <div className="pl-9 text-gray-700">{story.quote.substring(150)}</div>
+                  </CollapsibleContent>
+                </Collapsible>
+                <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+                  {story.position}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <a 
-          href="/signup" 
-          className="inline-block bg-welp-primary hover:bg-welp-tertiary text-white font-medium px-8 py-3 rounded-lg transition-colors"
-        >
-          Subscribe Now!
-        </a>
+
+        <div className="mt-16 text-center">
+          <h2 className="text-2xl font-semibold text-welp-primary mb-6">Join Thousands of Satisfied Business Owners</h2>
+          <div className="flex flex-wrap justify-center gap-6 mb-8">
+            <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
+              <ThumbsUp className="h-5 w-5 text-welp-primary mr-2" />
+              <span className="font-medium">95% Satisfaction Rate</span>
+            </div>
+            <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
+              <MessageSquare className="h-5 w-5 text-welp-primary mr-2" />
+              <span className="font-medium">10,000+ Active Businesses</span>
+            </div>
+            <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
+              <Star className="h-5 w-5 text-welp-primary mr-2" />
+              <span className="font-medium">4.8/5 Average Rating</span>
+            </div>
+          </div>
+          <a 
+            href="/signup" 
+            className="inline-block bg-welp-primary hover:bg-welp-tertiary text-white font-medium px-8 py-3 rounded-lg transition-colors"
+          >
+            Subscribe Now!
+          </a>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
