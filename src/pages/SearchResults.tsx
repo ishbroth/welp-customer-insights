@@ -7,7 +7,7 @@ import SearchBox from "@/components/SearchBox";
 import ReviewCard from "@/components/ReviewCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Lock } from "lucide-react";
+import { Lock, UserPlus } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { mockUsers, User, Review } from "@/data/mockUsers";
 import { useToast } from "@/hooks/use-toast";
@@ -182,7 +182,13 @@ const SearchResults = () => {
               ) : customers.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">No customers found matching your search.</p>
-                  <p className="text-sm">Try adjusting your search criteria or <Link to="/add-customer" className="text-welp-primary hover:underline">add a new customer</Link>.</p>
+                  <p className="text-sm mb-4">Try adjusting your search criteria or add a new customer.</p>
+                  <Link to="/add-customer" className="inline-block">
+                    <Button className="welp-button flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Add New Customer
+                    </Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="mt-6">
