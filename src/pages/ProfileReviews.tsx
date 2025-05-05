@@ -27,7 +27,23 @@ const ProfileReviews = () => {
     if (urlParams.get("subscribed") === "true") {
       setHasSubscription(true);
     }
-  }, []);
+    
+    // Load unlocked reviews from localStorage
+    const loadUnlockedReviews = () => {
+      const unlocked: string[] = [];
+      if (currentUser?.type === "customer" && currentUser?.reviews) {
+        for (const review of currentUser.reviews) {
+          const isUnlocked = localStorage.getItem(`review_access_${review.id}`) === "true";
+          if (isUnlocked) {
+            unlocked.push(review.id);
+          }
+        }
+      }
+      setUnlockedReviews(unlocked);
+    };
+    
+    loadUnlockedReviews();
+  }, [currentUser]);
   
   // Get reviews about the current customer user
   const [customerReviews, setCustomerReviews] = useState(() => {
@@ -54,15 +70,8 @@ const ProfileReviews = () => {
       duration: 2000,
     });
     
-    // Simulate successful purchase after 2 seconds
-    setTimeout(() => {
-      setUnlockedReviews(prev => [...prev, reviewId]);
-      toast({
-        title: "Purchase successful!",
-        description: "You now have access to the full review.",
-        duration: 3000,
-      });
-    }, 2000);
+    // Navigate to the one-time review access page
+    navigate(`/one-time-review?customerId=${currentUser?.id}&reviewId=${reviewId}`);
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
@@ -110,7 +119,8 @@ const ProfileReviews = () => {
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">My Reviews</h1>
               <p className="text-gray-600">
-                See what businesses have said about you. Purchase full access to reviews for $3 each.
+                See what businesses have said about you. Purchase full access to reviews for $3 each,
+                or subscribe for unlimited access.
               </p>
             </div>
             

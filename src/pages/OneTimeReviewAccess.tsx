@@ -11,6 +11,7 @@ import { Lock } from "lucide-react";
 const OneTimeReviewAccess = () => {
   const [searchParams] = useSearchParams();
   const customerId = searchParams.get("customerId");
+  const reviewId = searchParams.get("reviewId");
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -20,6 +21,10 @@ const OneTimeReviewAccess = () => {
       navigate("/search");
     }
   }, [customerId, navigate]);
+
+  const handleSubscription = () => {
+    navigate("/subscription");
+  };
 
   const handlePayment = () => {
     setIsProcessing(true);
@@ -31,11 +36,17 @@ const OneTimeReviewAccess = () => {
       // Simulate successful payment
       toast({
         title: "Payment Successful",
-        description: "You now have access to all reviews for this customer.",
+        description: reviewId 
+          ? "You now have access to this review and can respond once."
+          : "You now have access to all reviews for this customer.",
       });
       
       // In a real app, we would store this information in the database
-      localStorage.setItem(`customer_access_${customerId}`, "true");
+      if (reviewId) {
+        localStorage.setItem(`review_access_${reviewId}`, "true");
+      } else {
+        localStorage.setItem(`customer_access_${customerId}`, "true");
+      }
       
       // Navigate back to search results
       navigate(-1);
@@ -53,29 +64,70 @@ const OneTimeReviewAccess = () => {
                 <CardTitle className="text-2xl font-bold">
                   <div className="flex items-center">
                     <Lock className="w-6 h-6 mr-2 text-welp-primary" />
-                    Unlock All Customer Reviews
+                    {reviewId ? "Unlock Review Response" : "Unlock All Customer Reviews"}
                   </div>
                 </CardTitle>
                 <CardDescription>
-                  Access all reviews for this customer with a one-time payment
+                  {reviewId 
+                    ? "Respond to business feedback with a one-time payment" 
+                    : "Access all reviews for this customer with a one-time payment"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
+                  {/* Subscription Option (Highlighted) */}
+                  <div className="p-4 bg-welp-primary/5 rounded-lg border border-welp-primary relative">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-welp-primary text-white px-4 py-1 rounded-full text-xs font-bold">
+                      RECOMMENDED
+                    </div>
+                    <h3 className="font-medium mb-2 text-welp-primary">Get unlimited access with a subscription:</h3>
+                    <ul className="space-y-2 mb-4">
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        Unlimited access to all reviews about you
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        Respond to all reviews without additional fees
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        Unlimited responses to business replies
+                      </li>
+                    </ul>
+                    <Button 
+                      className="w-full welp-button"
+                      onClick={handleSubscription}
+                    >
+                      Subscribe for $9.95/month
+                    </Button>
+                  </div>
+                  
+                  {/* One-time Option */}
                   <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <h3 className="font-medium mb-2">One-time access includes:</h3>
                     <ul className="space-y-2">
                       <li className="flex items-start">
                         <span className="text-green-500 mr-2">✓</span>
-                        All reviews for this specific customer
+                        {reviewId 
+                          ? "Ability to respond once to business feedback" 
+                          : "All reviews for this specific customer"}
                       </li>
                       <li className="flex items-start">
                         <span className="text-green-500 mr-2">✓</span>
                         Full review details and comments
                       </li>
+                      {!reviewId && (
+                        <li className="flex items-start">
+                          <span className="text-green-500 mr-2">✓</span>
+                          Incidents and specific issues reported by other businesses
+                        </li>
+                      )}
                       <li className="flex items-start">
-                        <span className="text-green-500 mr-2">✓</span>
-                        Incidents and specific issues reported by other businesses
+                        <span className="text-red-500 mr-2">✗</span>
+                        <span className="text-gray-500">
+                          You'll need to pay again to respond to any future business replies
+                        </span>
                       </li>
                     </ul>
                   </div>
@@ -87,7 +139,8 @@ const OneTimeReviewAccess = () => {
                   
                   <div className="space-y-4">
                     <Button 
-                      className="w-full welp-button"
+                      className="w-full"
+                      variant="outline"
                       disabled={isProcessing}
                       onClick={handlePayment}
                     >
