@@ -172,64 +172,13 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           <p className="text-gray-700 whitespace-pre-line">{review.comment}</p>
         </div>
         
-        <div className="text-sm text-gray-500 flex justify-between items-center">
+        <div className="text-sm text-gray-500">
           <span>
             {formatDistance(new Date(review.createdAt), new Date(), {
               addSuffix: true,
             })}
           </span>
-          
-          {showResponse && (
-            <Button 
-              variant="outline"
-              onClick={() => {
-                if (!hasSubscription) {
-                  setShowSubscriptionMessage(true);
-                  setTimeout(() => setShowSubscriptionMessage(false), 3000);
-                  return;
-                }
-                setIsResponseVisible(!isResponseVisible);
-              }}
-              className="text-welp-primary hover:text-welp-secondary"
-            >
-              {isResponseVisible ? "Cancel" : "Respond"}
-            </Button>
-          )}
         </div>
-        
-        {showSubscriptionMessage && !hasSubscription && (
-          <div className="mt-3 p-3 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
-            <p className="text-sm">
-              You need a Premium subscription to respond to reviews. 
-              <a href="/subscription" className="ml-1 underline font-medium">Upgrade now</a>
-            </p>
-          </div>
-        )}
-
-        {isResponseVisible && (
-          <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
-            <Textarea
-              value={response}
-              onChange={(e) => setResponse(e.target.value)}
-              placeholder="Write your response to this review..."
-              className="w-full p-3 border rounded-md min-h-[100px] focus:ring-2 focus:ring-welp-primary focus:border-transparent"
-              maxLength={1500}
-              required
-            />
-            <div className="flex justify-between items-center mt-2">
-              <div className="text-xs text-gray-500">
-                {response.length}/1500 characters
-              </div>
-              <Button 
-                type="submit" 
-                className="welp-button" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Response"}
-              </Button>
-            </div>
-          </form>
-        )}
         
         {/* Display existing responses with ability to reply */}
         {responses.length > 0 && (
@@ -307,6 +256,60 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
               </div>
             ))}
           </div>
+        )}
+        
+        {/* Moved respond button to after the responses section */}
+        {showResponse && (
+          <div className="mt-4 flex justify-end">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (!hasSubscription) {
+                  setShowSubscriptionMessage(true);
+                  setTimeout(() => setShowSubscriptionMessage(false), 3000);
+                  return;
+                }
+                setIsResponseVisible(!isResponseVisible);
+              }}
+              className="text-welp-primary hover:text-welp-secondary"
+            >
+              {isResponseVisible ? "Cancel" : "Respond"}
+            </Button>
+          </div>
+        )}
+        
+        {showSubscriptionMessage && !hasSubscription && (
+          <div className="mt-3 p-3 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
+            <p className="text-sm">
+              You need a Premium subscription to respond to reviews. 
+              <a href="/subscription" className="ml-1 underline font-medium">Upgrade now</a>
+            </p>
+          </div>
+        )}
+
+        {isResponseVisible && (
+          <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
+            <Textarea
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              placeholder="Write your response to this review..."
+              className="w-full p-3 border rounded-md min-h-[100px] focus:ring-2 focus:ring-welp-primary focus:border-transparent"
+              maxLength={1500}
+              required
+            />
+            <div className="flex justify-between items-center mt-2">
+              <div className="text-xs text-gray-500">
+                {response.length}/1500 characters
+              </div>
+              <Button 
+                type="submit" 
+                className="welp-button" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Response"}
+              </Button>
+            </div>
+          </form>
         )}
       </div>
     </Card>
