@@ -91,8 +91,8 @@ const CustomerReviewCard = ({
     <>
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-xl">{review.reviewerName}</CardTitle>
+          <div className="flex items-center">
+            <CardTitle className="text-xl mr-2">{review.reviewerName}</CardTitle>
             <StarRating rating={review.rating} />
           </div>
           <p className="text-sm text-gray-500">

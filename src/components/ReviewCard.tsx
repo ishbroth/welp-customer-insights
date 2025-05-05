@@ -105,11 +105,11 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     <Card className="mb-4 overflow-hidden">
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
-          <div>
+          <div className="flex items-center gap-2">
             <div className="font-bold text-lg">{review.businessName}</div>
-            <div className="text-sm text-gray-500">{formattedLocation()}</div>
+            <StarRating rating={review.rating} size="md" />
           </div>
-          <StarRating rating={review.rating} size="md" />
+          <div className="text-sm text-gray-500">{formattedLocation()}</div>
         </div>
         
         <div className="mb-4">
