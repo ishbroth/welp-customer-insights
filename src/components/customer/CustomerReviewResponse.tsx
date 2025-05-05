@@ -3,10 +3,20 @@ import { useState } from "react";
 import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Lock } from "lucide-react";
+import { MessageSquare, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ReviewResponse {
   id: string;
@@ -33,6 +43,11 @@ const CustomerReviewResponse = ({
   const [responseContent, setResponseContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responsesList, setResponsesList] = useState<ReviewResponse[]>(responses || []);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingResponseId, setDeletingResponseId] = useState<string | null>(null);
+  
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -60,7 +75,7 @@ const CustomerReviewResponse = ({
   
   const unreadResponsesCount = getUnreadResponses();
   
-  // Toggle response form visibility
+  // Toggle response form visibility for new responses
   const toggleResponseForm = () => {
     if (!hasSubscription && !isOneTimeUnlocked) {
       toast({
@@ -82,10 +97,63 @@ const CustomerReviewResponse = ({
       return;
     }
     
+    // Reset form state
+    setIsEditing(false);
+    setEditingResponseId(null);
+    setResponseContent("");
     setExpandedResponseForm(!expandedResponseForm);
   };
   
-  // Handle response submission
+  // Handle edit button click
+  const handleEditClick = (response: ReviewResponse) => {
+    if (!hasSubscription && !isOneTimeUnlocked) {
+      toast({
+        title: "Edit Requires Access",
+        description: "You need either a subscription or one-time access to edit your response.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsEditing(true);
+    setEditingResponseId(response.id);
+    setResponseContent(response.content);
+    setExpandedResponseForm(true);
+  };
+  
+  // Handle delete button click
+  const handleDeleteClick = (responseId: string) => {
+    if (!hasSubscription && !isOneTimeUnlocked) {
+      toast({
+        title: "Delete Requires Access",
+        description: "You need either a subscription or one-time access to delete your response.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setDeletingResponseId(responseId);
+    setDeleteDialogOpen(true);
+  };
+  
+  // Handle delete confirmation
+  const confirmDelete = () => {
+    if (!deletingResponseId) return;
+    
+    // Remove the response from the list
+    setResponsesList(prev => prev.filter(response => response.id !== deletingResponseId));
+    
+    // Reset state
+    setDeleteDialogOpen(false);
+    setDeletingResponseId(null);
+    
+    toast({
+      title: "Response Deleted",
+      description: "Your response has been deleted successfully."
+    });
+  };
+  
+  // Handle response submission (new or edit)
   const handleResponseSubmit = () => {
     if (!hasSubscription && !isOneTimeUnlocked) {
       toast({
@@ -96,8 +164,8 @@ const CustomerReviewResponse = ({
       return;
     }
     
-    // Check for one-time unlocked users who already responded
-    if (isOneTimeUnlocked && !hasSubscription && userHasResponded) {
+    // Check for one-time unlocked users who already responded (only for new responses)
+    if (!isEditing && isOneTimeUnlocked && !hasSubscription && userHasResponded) {
       toast({
         title: "Additional Payment Required",
         description: "You've already used your one-time response. Please subscribe or purchase another one-time access.",
@@ -120,31 +188,47 @@ const CustomerReviewResponse = ({
     
     // Simulate API call
     setTimeout(() => {
-      // Create new response object
-      const newResponse: ReviewResponse = {
-        id: `resp-${Date.now()}`,
-        authorId: currentUser?.id || "",
-        authorName: currentUser?.name || "Customer",
-        content: responseContent,
-        createdAt: new Date().toISOString()
-      };
-      
-      // Add response to the list
-      setResponsesList(prev => [...prev, newResponse]);
+      if (isEditing && editingResponseId) {
+        // Update existing response
+        setResponsesList(prev => prev.map(response => 
+          response.id === editingResponseId ? 
+          { ...response, content: responseContent } : 
+          response
+        ));
+        
+        toast({
+          title: "Response Updated",
+          description: "Your response has been updated successfully!"
+        });
+      } else {
+        // Create new response
+        const newResponse: ReviewResponse = {
+          id: `resp-${Date.now()}`,
+          authorId: currentUser?.id || "",
+          authorName: currentUser?.name || "Customer",
+          content: responseContent,
+          createdAt: new Date().toISOString()
+        };
+        
+        // Add response to the list
+        setResponsesList(prev => [...prev, newResponse]);
+        
+        toast({
+          title: "Response Submitted",
+          description: "Your response has been added successfully!"
+        });
+      }
       
       // Reset form state
       setResponseContent("");
       setExpandedResponseForm(false);
       setIsSubmitting(false);
-      
-      toast({
-        title: "Response Submitted",
-        description: "Your response has been added successfully!"
-      });
+      setIsEditing(false);
+      setEditingResponseId(null);
     }, 1000);
   };
 
-  // If no responses and not expanded form, don't render anything
+  // If no responses and not expanded form, show Add Response button
   if (responsesList.length === 0 && !expandedResponseForm) {
     return (
       <div className="mt-4 pt-3 border-t">
@@ -179,6 +263,30 @@ const CustomerReviewResponse = ({
                 </span>
               </div>
               <p className="text-gray-700 text-sm">{response.content}</p>
+              
+              {/* Show Edit/Delete buttons for user's own responses */}
+              {response.authorId === currentUser?.id && (
+                <div className="flex gap-2 mt-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center text-gray-600 h-8"
+                    onClick={() => handleEditClick(response)}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50 h-8"
+                    onClick={() => handleDeleteClick(response.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
           
@@ -219,20 +327,22 @@ const CustomerReviewResponse = ({
         </>
       )}
       
-      {/* Button to show response form */}
-      <div className="mt-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-welp-primary hover:bg-welp-primary/10"
-          onClick={toggleResponseForm}
-        >
-          <MessageSquare className="h-4 w-4 mr-2" />
-          {expandedResponseForm ? "Cancel" : "Add Response"}
-        </Button>
-      </div>
+      {/* Button to show response form (only if the user hasn't responded yet) */}
+      {(!userHasResponded || (hasSubscription && !expandedResponseForm)) && (
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-welp-primary hover:bg-welp-primary/10"
+            onClick={toggleResponseForm}
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            {expandedResponseForm ? "Cancel" : "Add Response"}
+          </Button>
+        </div>
+      )}
       
-      {/* Response form */}
+      {/* Response form (for both new responses and editing) */}
       {expandedResponseForm && (
         <div className="mt-3">
           <Textarea
@@ -244,14 +354,48 @@ const CustomerReviewResponse = ({
           <div className="flex justify-end">
             <Button
               size="sm"
+              variant="outline"
+              className="mr-2"
+              onClick={() => {
+                setExpandedResponseForm(false);
+                setIsEditing(false);
+                setEditingResponseId(null);
+                setResponseContent("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
               onClick={handleResponseSubmit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit Response"}
+              {isSubmitting ? "Submitting..." : isEditing ? "Update Response" : "Submit Response"}
             </Button>
           </div>
         </div>
       )}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Response</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this response? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
