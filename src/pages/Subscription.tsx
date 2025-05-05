@@ -64,16 +64,12 @@ const Subscription = () => {
                     <span>View customer star ratings</span>
                   </li>
                   <li className="flex items-start">
+                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                    <span>Pay fees to access full reviews</span>
+                  </li>
+                  <li className="flex items-start">
                     <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
                     <span className="text-gray-500">Access to full review content</span>
-                  </li>
-                  <li className="flex items-start">
-                    <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
-                    <span className="text-gray-500">Advanced customer search filters</span>
-                  </li>
-                  <li className="flex items-start">
-                    <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
-                    <span className="text-gray-500">Business analytics dashboard</span>
                   </li>
                 </ul>
                 
