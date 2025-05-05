@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Star, ThumbsUp, MessageSquare, Quote } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 // Mock success stories from users
 const successStories = [
@@ -128,6 +129,7 @@ const SuccessStories = () => {
           </a>
         </div>
       </div>
+      <Footer />
     </>
   );
 };
