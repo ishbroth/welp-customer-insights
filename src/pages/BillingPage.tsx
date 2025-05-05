@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { CreditCard, Eye, Plus, AlertCircle } from "lucide-react";
+import { CreditCard, Eye, Plus, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,10 @@ const BillingPage = () => {
   const { currentUser } = useAuth();
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [isProcessingCancel, setIsProcessingCancel] = useState(false);
+  const [isProcessingRenew, setIsProcessingRenew] = useState(false);
+  
+  // Mock subscription status - in a real app, this would come from your backend
+  const [isSubscriptionCancelled, setIsSubscriptionCancelled] = useState(false);
 
   // Mock payment method
   const [paymentMethod, setPaymentMethod] = useState({
@@ -99,10 +103,27 @@ const BillingPage = () => {
     // Simulate API call to cancel subscription
     setTimeout(() => {
       setIsProcessingCancel(false);
+      setIsSubscriptionCancelled(true);
       
       // Show success message
       toast("Subscription cancelled", {
         description: "Your subscription has been cancelled successfully. You will still have access until the end of your current billing period.",
+      });
+    }, 1500);
+  };
+
+  // Handle subscription renewal
+  const handleRenewSubscription = () => {
+    setIsProcessingRenew(true);
+    
+    // Simulate API call to renew subscription
+    setTimeout(() => {
+      setIsProcessingRenew(false);
+      setIsSubscriptionCancelled(false);
+      
+      // Show success message
+      toast("Subscription renewed", {
+        description: "Your subscription has been renewed successfully. Your billing cycle will resume at the end of your current period.",
       });
     }, 1500);
   };
@@ -142,33 +163,69 @@ const BillingPage = () => {
                     <p className="text-sm text-gray-500 mt-2">Next billing date: May 15, 2024</p>
                     
                     <div className="mt-4 flex items-center justify-end">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            Cancel Subscription
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2">
-                              <AlertCircle className="h-5 w-5 text-destructive" />
-                              Cancel Subscription?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={handleCancelSubscription}
-                              disabled={isProcessingCancel}
+                      {isSubscriptionCancelled ? (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="default" 
+                              className="bg-green-600 hover:bg-green-700" 
+                              size="sm"
                             >
-                              {isProcessingCancel ? "Processing..." : "Yes, Cancel Subscription"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Renew Subscription
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2">
+                                <RefreshCw className="h-5 w-5 text-green-600" />
+                                Renew Subscription?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Would you like to renew your subscription? Your billing cycle will resume at the end of your current period.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleRenewSubscription}
+                                disabled={isProcessingRenew}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {isProcessingRenew ? "Processing..." : "Yes, Renew Subscription"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      ) : (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              Cancel Subscription
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-destructive" />
+                                Cancel Subscription?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleCancelSubscription}
+                                disabled={isProcessingCancel}
+                              >
+                                {isProcessingCancel ? "Processing..." : "Yes, Cancel Subscription"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
                 </CardContent>
