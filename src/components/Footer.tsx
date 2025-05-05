@@ -23,7 +23,6 @@ const Footer = () => {
             <ul className="space-y-2 text-gray-300 text-sm">
               <li><Link to="/about" className="hover:text-welp-primary transition-colors">About Welp.</Link></li>
               <li><Link to="/how-it-works" className="hover:text-welp-primary transition-colors">How It Works</Link></li>
-              <li><Link to="/pricing" className="hover:text-welp-primary transition-colors">Pricing</Link></li>
             </ul>
           </div>
           
