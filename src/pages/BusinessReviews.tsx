@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -167,6 +166,7 @@ const BusinessReviews = () => {
               </p>
             </div>
             
+            {/* Only show subscription banner if user doesn't have a subscription */}
             {!hasSubscription && <SubscriptionBanner type="business" />}
             
             <div className="flex justify-between mb-6">

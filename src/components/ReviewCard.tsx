@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -211,7 +210,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                   </div>
                 )}
                 
-                {/* Reply form */}
+                {/* Reply form - Only visible when subscribed */}
                 {replyToResponseId === resp.id && (
                   <div className="mt-2 pl-4 border-l-2 border-gray-200">
                     <Textarea
@@ -258,7 +257,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
-        {/* Moved respond button to after the responses section */}
+        {/* Respond button - always shown when showResponse is true, but functionality depends on subscription */}
         {showResponse && (
           <div className="mt-4 flex justify-end">
             <Button 
@@ -278,6 +277,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
+        {/* Subscription message - only shown when user is not subscribed and tries to respond */}
         {showSubscriptionMessage && !hasSubscription && (
           <div className="mt-3 p-3 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
             <p className="text-sm">
@@ -287,6 +287,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
 
+        {/* Response form - only shown when user is subscribed and clicks respond */}
         {isResponseVisible && (
           <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
             <Textarea
