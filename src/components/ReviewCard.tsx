@@ -7,6 +7,7 @@ import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { MessageSquare } from "lucide-react";
 
 interface ReviewResponse {
   id: string;
@@ -14,6 +15,7 @@ interface ReviewResponse {
   authorName: string;
   content: string;
   createdAt: string;
+  replies?: ReviewResponse[];
 }
 
 interface ReviewCardProps {
@@ -41,6 +43,8 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responses, setResponses] = useState<ReviewResponse[]>(review.responses || []);
   const [showSubscriptionMessage, setShowSubscriptionMessage] = useState(false);
+  const [replyToResponseId, setReplyToResponseId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
   const { currentUser } = useAuth();
   const { toast } = useToast();
   
@@ -65,7 +69,8 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         authorId: currentUser?.id || "",
         authorName: currentUser?.name || "Business Owner",
         content: response,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        replies: []
       };
       
       // Add response to the list
@@ -81,6 +86,57 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         description: "Your response has been added successfully!"
       });
     }, 1000);
+  };
+
+  // Function to handle replying to a customer response
+  const handleSubmitReply = (responseId: string) => {
+    if (!hasSubscription) {
+      toast({
+        title: "Subscription required",
+        description: "You need a premium subscription to reply to customers.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!replyContent.trim()) {
+      toast({
+        title: "Empty reply",
+        description: "Please write something before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Create new reply
+    const newReply = {
+      id: `reply-${Date.now()}`,
+      authorId: currentUser?.id || "",
+      authorName: currentUser?.name || "Business Owner",
+      content: replyContent,
+      createdAt: new Date().toISOString()
+    };
+
+    // Add reply to the appropriate response
+    setResponses(prev => prev.map(resp => {
+      if (resp.id === responseId) {
+        return {
+          ...resp,
+          replies: [...(resp.replies || []), newReply]
+        };
+      }
+      return resp;
+    }));
+
+    // Reset state
+    setReplyToResponseId(null);
+    setReplyContent("");
+
+    // Show success toast
+    toast({
+      title: "Reply submitted",
+      description: "Your reply has been added successfully!"
+    });
   };
 
   // Format the location info including business address when available
@@ -175,7 +231,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </form>
         )}
         
-        {/* Display existing responses */}
+        {/* Display existing responses with ability to reply */}
         {responses.length > 0 && (
           <div className="mt-4 border-t pt-4">
             <h4 className="text-md font-semibold mb-3">Responses</h4>
@@ -190,6 +246,64 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                   </span>
                 </div>
                 <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
+                
+                {/* Show reply button for business owners with subscription */}
+                {hasSubscription && resp.authorId !== currentUser?.id && (
+                  <div className="mt-2 flex justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-welp-primary hover:bg-welp-primary/10 h-8 px-2 py-1"
+                      onClick={() => setReplyToResponseId(replyToResponseId === resp.id ? null : resp.id)}
+                    >
+                      <MessageSquare className="h-3 w-3 mr-1" />
+                      {replyToResponseId === resp.id ? "Cancel" : "Reply"}
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Reply form */}
+                {replyToResponseId === resp.id && (
+                  <div className="mt-2 pl-4 border-l-2 border-gray-200">
+                    <Textarea
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      placeholder="Write your reply..."
+                      className="w-full p-2 text-sm min-h-[80px]"
+                      maxLength={1000}
+                    />
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="text-xs text-gray-500">
+                        {replyContent.length}/1000 characters
+                      </div>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleSubmitReply(resp.id)}
+                      >
+                        Send Reply
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Display replies to this response */}
+                {resp.replies && resp.replies.length > 0 && (
+                  <div className="mt-3 pl-4 border-l-2 border-gray-200">
+                    {resp.replies.map(reply => (
+                      <div key={reply.id} className="bg-white p-2 rounded-md mb-2 border border-gray-100">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium text-xs">{reply.authorName}</span>
+                          <span className="text-xs text-gray-500">
+                            {formatDistance(new Date(reply.createdAt), new Date(), {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 text-xs">{reply.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
