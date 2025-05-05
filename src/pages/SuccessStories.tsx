@@ -122,7 +122,7 @@ const SuccessStories = () => {
           href="/signup" 
           className="inline-block bg-welp-primary hover:bg-welp-tertiary text-white font-medium px-8 py-3 rounded-lg transition-colors"
         >
-          Start Your Free Trial Today
+          Subscribe Now!
         </a>
       </div>
     </div>
