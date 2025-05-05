@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, loginWithApple } = useAuth();
   const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +73,28 @@ const Login = () => {
       toast({
         title: "Google Login Failed",
         description: "Could not log in with Google. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const success = await loginWithApple();
+      if (success) {
+        toast({
+          title: "Logged In",
+          description: "Welcome back to Welp.",
+        });
+        navigate("/profile");
+      }
+    } catch (error) {
+      toast({
+        title: "Apple Login Failed",
+        description: "Could not log in with Apple. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -167,7 +188,8 @@ const Login = () => {
                 <Button 
                   variant="outline" 
                   className="w-full flex items-center justify-center"
-                  disabled={true}
+                  onClick={handleAppleLogin}
+                  disabled={isLoading}
                 >
                   Apple
                 </Button>

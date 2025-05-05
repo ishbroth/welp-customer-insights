@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User, mockUsers } from "@/data/mockUsers";
 
@@ -7,6 +6,7 @@ interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
+  loginWithApple: () => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
 }
@@ -60,6 +60,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
+  const loginWithApple = async (): Promise<boolean> => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock Apple authentication - sign in as business owner
+    const businessUser = mockUsers.find(user => user.email === "business@example.com");
+    
+    if (businessUser) {
+      setCurrentUser(businessUser);
+      localStorage.setItem("currentUser", JSON.stringify(businessUser));
+      return true;
+    }
+    
+    return false;
+  };
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
@@ -77,6 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     currentUser,
     login,
     loginWithGoogle,
+    loginWithApple,
     logout,
     updateProfile
   };
