@@ -183,5 +183,115 @@ export const mockUsers: User[] = [
     city: "Austin",
     state: "TX",
     zipCode: "78701",
+  },
+  // New mock users in San Diego
+  {
+    id: "6",
+    name: "Peter Parker",
+    email: "parker@example.com",
+    type: "customer",
+    avatar: "/placeholder.svg",
+    bio: "Freelance photographer and occasional customer",
+    phone: "(619) 555-1212",
+    address: "123 Spider Ave",
+    city: "San Diego",
+    state: "CA",
+    zipCode: "92101",
+    reviews: [
+      {
+        id: "104",
+        title: "Good customer but always late",
+        content: "Peter is generally a pleasant customer who is respectful to staff and pays his bills on time. However, he is chronically late for appointments and often has to reschedule at the last minute. He's always very apologetic and offers reasonable explanations, though it does impact our scheduling. Despite this, his friendly demeanor and understanding attitude make him a welcome customer. He tips well and recommends our services to friends.",
+        rating: 4,
+        reviewerId: "2", // Written by Bob's Bistro
+        reviewerName: "Bob's Bistro",
+        reviewerAvatar: "/placeholder.svg",
+        date: "2023-07-14",
+        reactions: {
+          like: [],
+          funny: ["1"],
+          useful: ["5"],
+          ohNo: []
+        }
+      }
+    ]
+  },
+  {
+    id: "7",
+    name: "Def Jeff",
+    email: "jeff@example.com",
+    type: "customer",
+    avatar: "/placeholder.svg",
+    bio: "Music enthusiast and regular patron",
+    phone: "(619) 555-6789",
+    address: "456 Rhythm Road",
+    city: "San Diego",
+    state: "CA",
+    zipCode: "92109",
+    reviews: [
+      {
+        id: "105",
+        title: "Exceptional customer",
+        content: "Jeff is one of our favorite customers. Always polite, patient, and respectful of our staff and other customers. He's very understanding when we're busy and never complains about wait times. Jeff is the kind of customer that makes running a business worthwhile - he offers constructive feedback rather than complaints and is genuinely interested in the success of our establishment. He's consistent about paying his bills promptly and has referred several friends to us who have also become regular customers.",
+        rating: 5,
+        reviewerId: "2", // Written by Bob's Bistro
+        reviewerName: "Bob's Bistro",
+        reviewerAvatar: "/placeholder.svg",
+        date: "2023-08-22",
+        reactions: {
+          like: ["1"],
+          funny: [],
+          useful: ["5"],
+          ohNo: []
+        }
+      },
+      {
+        id: "106",
+        title: "Difficult to satisfy",
+        content: "While Jeff is generally polite, he has very specific preferences that can be challenging to accommodate. He often makes special requests that go beyond our standard offerings and seems disappointed when we can't meet his exact specifications. During busy hours, this can put strain on our kitchen staff. On the positive side, he is never rude about it and accepts our limitations when explained clearly. He tips averagely but is not particularly generous considering the extra attention he requires.",
+        rating: 3,
+        reviewerId: "2", // Written by Bob's Bistro
+        reviewerName: "Bob's Bistro",
+        reviewerAvatar: "/placeholder.svg",
+        date: "2023-09-05",
+        reactions: {
+          like: [],
+          funny: [],
+          useful: ["1"],
+          ohNo: []
+        }
+      }
+    ]
+  },
+  {
+    id: "8",
+    name: "Alice Wonderland",
+    email: "alice@example.com",
+    type: "customer",
+    avatar: "/placeholder.svg",
+    bio: "Adventure seeker and curious customer",
+    phone: "(619) 555-4321",
+    address: "789 Rabbit Hole Lane",
+    city: "San Diego",
+    state: "CA",
+    zipCode: "92103",
+    reviews: [
+      {
+        id: "107",
+        title: "Unpredictable customer",
+        content: "Alice is a customer who can be quite unpredictable. Some days she's incredibly pleasant and engaging, other times she seems distracted and makes unusual requests. She has a tendency to change her mind frequently during service, which can create challenges for our staff. Despite this, she's never rude and always apologizes for any inconvenience. She has an interesting perspective on our products and has actually provided some innovative suggestions that we've implemented. While she can be somewhat demanding, her enthusiasm is contagious and she's generous with tips.",
+        rating: 4,
+        reviewerId: "2", // Written by Bob's Bistro
+        reviewerName: "Bob's Bistro",
+        reviewerAvatar: "/placeholder.svg",
+        date: "2023-10-10",
+        reactions: {
+          like: [],
+          funny: ["1", "5"],
+          useful: [],
+          ohNo: []
+        }
+      }
+    ]
   }
 ];
