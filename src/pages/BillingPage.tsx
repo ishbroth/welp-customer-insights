@@ -141,9 +141,7 @@ const BillingPage = () => {
                     </p>
                     <p className="text-sm text-gray-500 mt-2">Next billing date: May 15, 2024</p>
                     
-                    <div className="mt-4 flex items-center justify-between">
-                      <Button variant="outline" size="sm">Change Plan</Button>
-                      
+                    <div className="mt-4 flex items-center justify-end">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" size="sm">
