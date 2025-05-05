@@ -21,6 +21,7 @@ const Terms = () => {
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto prose prose-lg">
+              
               <p>These Terms of Service (which, together with the Business Terms below, are the "Terms") are effective immediately for users accessing or using the Service without an Account or those registering Accounts on or after July 10, 2024 and will become effective August 31, 2024 for users with pre-existing Accounts. To review the previous terms, please click <a href="#" className="text-[#ea384c]">here</a>.</p>
 
               <div className="bg-gray-100 p-4 my-6 border-l-4 border-[#ea384c]">
