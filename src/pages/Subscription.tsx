@@ -69,7 +69,7 @@ const Subscription = () => {
                   </li>
                   <li className="flex items-start">
                     <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
-                    <span className="text-gray-500">Access to full review content</span>
+                    <span className="text-gray-500">Unlimited access to full review content</span>
                   </li>
                 </ul>
                 
