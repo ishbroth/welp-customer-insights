@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +53,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   // Log subscription status for debugging
   console.log("ReviewCard - hasSubscription:", hasSubscription);
   console.log("ReviewCard - canRespond:", canRespond);
+  console.log("ReviewCard - localStorage subscription:", localStorage.getItem("hasSubscription"));
 
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -33,23 +32,26 @@ const BusinessReviews = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize subscription status from localStorage
+  // Initialize subscription status from localStorage with immediate URL parameter check
   const [hasSubscription, setHasSubscription] = useState(() => {
+    // Check URL parameters first during initial load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("subscribed") === "true") {
+      localStorage.setItem("hasSubscription", "true");
+      return true;
+    }
     return localStorage.getItem("hasSubscription") === "true";
   });
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
-  // Check URL params for subscription status and store in localStorage
+  // Monitor URL parameters for subscription changes
   useEffect(() => {
-    // Force refresh hasSubscription from localStorage on component mount and URL changes
-    const storedValue = localStorage.getItem("hasSubscription") === "true";
-    setHasSubscription(storedValue);
-    
-    // Also check URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
+    // Check URL parameters
+    const urlParams = new URLSearchParams(location.search);
     if (urlParams.get("subscribed") === "true") {
+      console.log("Setting subscription to true from URL parameter");
       setHasSubscription(true);
       localStorage.setItem("hasSubscription", "true");
     }
@@ -155,8 +157,9 @@ const BusinessReviews = () => {
   };
 
   // Log the current subscription status to help with debugging
-  console.log("Current subscription status:", hasSubscription);
-  console.log("localStorage value:", localStorage.getItem("hasSubscription"));
+  console.log("BusinessReviews - Current subscription status:", hasSubscription);
+  console.log("BusinessReviews - localStorage value:", localStorage.getItem("hasSubscription"));
+  console.log("BusinessReviews - URL subscribed param:", new URLSearchParams(location.search).get("subscribed"));
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -33,6 +33,10 @@ const Subscription = () => {
     
     // Simulate payment processing
     setTimeout(() => {
+      // Set subscription in localStorage immediately
+      localStorage.setItem("hasSubscription", "true");
+      console.log("Subscription - Set localStorage hasSubscription to true");
+      
       toast({
         title: "Subscription Active",
         description: "Thank you for subscribing! You now have full access to Welp.",
@@ -46,7 +50,7 @@ const Subscription = () => {
           window.location.href = "/profile/reviews?subscribed=true";
         } else {
           // For businesses, redirect to their profile page instead of business-dashboard
-          window.location.href = "/profile?subscribed=true";
+          window.location.href = "/profile/business-reviews?subscribed=true";
         }
       }, 2000);
     }, 2000);
