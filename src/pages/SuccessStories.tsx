@@ -34,7 +34,7 @@ const successStories = [
     id: 4,
     name: "David Chen",
     title: "Hotel Manager, Miami",
-    quote: "I was skeptical about yet another review platform, but Welp is different. The two-way review system creates accountability for everyone involved. We've seen a notable decrease in unreasonable demands and an increase in constructive feedback. The analytics dashboard helps us track improvement over time, and we've used these insights to train our staff better. Our customer satisfaction metrics have never been higher, and problem guests are down by over 40%.",
+    quote: "I was skeptical about yet another review platform, but Welp is different. The business-owner review system creates accountability for everyone involved. We've seen a notable decrease in unreasonable demands and an increase in constructive feedback. The analytics dashboard helps us track improvement over time, and we've used these insights to train our staff better. Our customer satisfaction metrics have never been higher, and problem guests are down by over 40%.",
     rating: 4,
     position: "Operations Manager at Oceanview Resort"
   },
@@ -54,7 +54,7 @@ const SuccessStories = () => {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-welp-primary mb-4">Success Stories</h1>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Discover how businesses are transforming their customer relationships with Welp's two-way review platform.
+          Discover how businesses are transforming their customer relationships with Welp's business-owner review platform.
         </p>
       </div>
 
