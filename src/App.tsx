@@ -26,6 +26,7 @@ import BusinessReviews from "./pages/BusinessReviews";
 import NotificationsPage from "./pages/NotificationsPage";
 import BillingPage from "./pages/BillingPage";
 import BusinessVerificationSuccess from "./pages/BusinessVerificationSuccess";
+import SuccessStories from "./pages/SuccessStories";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const AppRoutes = () => {
       <Route path="/faq" element={<FAQ />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/success-stories" element={<SuccessStories />} />
       
       {/* Search page is now accessible to all users */}
       <Route path="/search" element={<SearchResults />} />
