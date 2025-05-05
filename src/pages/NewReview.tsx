@@ -77,8 +77,8 @@ const NewReview = () => {
         const foundCustomer = mockCustomers.find(c => c.id === customerId);
         if (foundCustomer) {
           setCustomer(foundCustomer);
-          setCustomerFirstName(foundCustomer.firstName);
           setCustomerLastName(foundCustomer.lastName);
+          setCustomerFirstName(foundCustomer.firstName);
           setCustomerPhone(foundCustomer.phone);
           setCustomerAddress(foundCustomer.address);
           setCustomerZipCode(foundCustomer.zipCode);
@@ -144,22 +144,22 @@ const NewReview = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
+                        <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
                         <Input
-                          id="customerLastName"
-                          value={customerLastName}
-                          onChange={(e) => setCustomerLastName(e.target.value)}
+                          id="customerFirstName"
+                          value={customerFirstName}
+                          onChange={(e) => setCustomerFirstName(e.target.value)}
                           className="welp-input"
                           disabled={!isNewCustomer && !!customer}
                           required
                         />
                       </div>
                       <div>
-                        <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
+                        <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
                         <Input
-                          id="customerFirstName"
-                          value={customerFirstName}
-                          onChange={(e) => setCustomerFirstName(e.target.value)}
+                          id="customerLastName"
+                          value={customerLastName}
+                          onChange={(e) => setCustomerLastName(e.target.value)}
                           className="welp-input"
                           disabled={!isNewCustomer && !!customer}
                           required
