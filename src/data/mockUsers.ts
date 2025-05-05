@@ -15,6 +15,14 @@ export interface User {
   reviews?: Review[];
 }
 
+export interface ReviewResponse {
+  id: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface Review {
   id: string;
   title: string;
@@ -30,6 +38,7 @@ export interface Review {
     useful: string[];
     ohNo: string[];
   };
+  responses?: ReviewResponse[];
 }
 
 // Mock users for testing
@@ -87,7 +96,23 @@ export const mockUsers: User[] = [
           funny: [],
           useful: ["2"],
           ohNo: []
-        }
+        },
+        responses: [
+          {
+            id: "resp-101-1",
+            authorId: "3",
+            authorName: "Emma Johnson",
+            content: "Thank you for your kind words! I really enjoyed shopping at your store and appreciate the excellent service your team provided.",
+            createdAt: "2023-04-18T14:22:00Z"
+          },
+          {
+            id: "resp-101-2",
+            authorId: "1",
+            authorName: "Business Owner",
+            content: "You're welcome anytime, Emma! We look forward to seeing you again soon.",
+            createdAt: "2023-04-19T09:15:00Z"
+          }
+        ]
       },
       {
         id: "102",
@@ -134,7 +159,16 @@ export const mockUsers: User[] = [
           funny: [],
           useful: ["2"],
           ohNo: ["4"]
-        }
+        },
+        responses: [
+          {
+            id: "resp-103-1",
+            authorId: "4",
+            authorName: "John Smith",
+            content: "I strongly disagree with this review. The service was extremely poor, and the staff was not helpful at all. I'll be taking my business elsewhere.",
+            createdAt: "2023-03-12T10:30:00Z"
+          }
+        ]
       }
     ]
   },

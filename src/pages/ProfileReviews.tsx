@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Review, mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
@@ -8,6 +8,7 @@ import ProfileSidebar from "@/components/ProfileSidebar";
 import StarRating from "@/components/StarRating";
 import ReviewReactions from "@/components/ReviewReactions";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -23,9 +24,17 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Eye, Lock } from "lucide-react";
+import { Eye, Lock, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+interface ReviewResponse {
+  id: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
 
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,10 +44,27 @@ const ProfileReviews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  // For simulating customer subscription status
+  const [hasSubscription, setHasSubscription] = useState(false);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("subscribed") === "true") {
+      setHasSubscription(true);
+    }
+  }, []);
+  
+  // Track expanded response form state
+  const [expandedResponseForms, setExpandedResponseForms] = useState<Record<string, boolean>>({});
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
+  
   // Get reviews about the current customer user
   const [customerReviews, setCustomerReviews] = useState(() => {
     return currentUser?.type === "customer" && currentUser?.reviews 
-      ? [...currentUser.reviews]  // Create a copy to avoid mutating the original
+      ? [...currentUser.reviews].map(review => ({
+          ...review,
+          responses: review.responses || []
+        }))
       : [];
   });
   
@@ -80,7 +106,7 @@ const ProfileReviews = () => {
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
-    return unlockedReviews.includes(reviewId);
+    return unlockedReviews.includes(reviewId) || hasSubscription();
   };
 
   // Check if user has subscription
@@ -119,6 +145,82 @@ const ProfileReviews = () => {
     );
   };
 
+  // Toggle response form visibility
+  const toggleResponseForm = (reviewId: string) => {
+    if (!hasSubscription) {
+      toast({
+        title: "Subscription Required",
+        description: "You need a Premium subscription to respond to business reviews.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setExpandedResponseForms(prev => ({
+      ...prev,
+      [reviewId]: !prev[reviewId]
+    }));
+  };
+  
+  // Handle response submission
+  const handleResponseSubmit = (reviewId: string) => {
+    if (!hasSubscription) {
+      toast({
+        title: "Subscription Required",
+        description: "You need a Premium subscription to respond to business reviews.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const responseContent = responses[reviewId];
+    if (!responseContent?.trim()) {
+      toast({
+        title: "Empty Response",
+        description: "Please write a response before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(prev => ({ ...prev, [reviewId]: true }));
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Create new response object
+      const newResponse: ReviewResponse = {
+        id: `resp-${Date.now()}`,
+        authorId: currentUser?.id || "",
+        authorName: currentUser?.name || "Customer",
+        content: responseContent,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Add response to the review
+      setCustomerReviews(prevReviews => 
+        prevReviews.map(review => {
+          if (review.id === reviewId) {
+            return {
+              ...review,
+              responses: [...(review.responses || []), newResponse]
+            };
+          }
+          return review;
+        })
+      );
+      
+      // Reset form state
+      setResponses(prev => ({ ...prev, [reviewId]: "" }));
+      setExpandedResponseForms(prev => ({ ...prev, [reviewId]: false }));
+      setIsSubmitting(prev => ({ ...prev, [reviewId]: false }));
+      
+      toast({
+        title: "Response Submitted",
+        description: "Your response has been added successfully!"
+      });
+    }, 1000);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -133,6 +235,24 @@ const ProfileReviews = () => {
                 See what businesses have said about you. Purchase full access to reviews for $3 each.
               </p>
             </div>
+            
+            {!hasSubscription && (
+              <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-800">Unlock Premium Features</h3>
+                      <p className="text-sm text-blue-700">
+                        Subscribe to respond to business reviews and access all content instantly.
+                      </p>
+                    </div>
+                    <Button className="mt-3 md:mt-0" asChild>
+                      <Link to="/subscription">View Plans</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             {customerReviews.length === 0 ? (
               <Card className="p-6 text-center">
@@ -179,6 +299,63 @@ const ProfileReviews = () => {
                               onReactionToggle={handleReactionToggle}
                             />
                           </div>
+                          
+                          {/* Show responses if they exist */}
+                          {review.responses && review.responses.length > 0 && (
+                            <div className="mt-4 pt-3 border-t">
+                              <h4 className="text-md font-semibold mb-2">Responses</h4>
+                              {review.responses.map((response, idx) => (
+                                <div key={response.id} className="bg-gray-50 p-3 rounded-md mb-3">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="font-medium">{response.authorName}</span>
+                                    <span className="text-xs text-gray-500">
+                                      {formatDistance(new Date(response.createdAt), new Date(), {
+                                        addSuffix: true,
+                                      })}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 text-sm">{response.content}</p>
+                                </div>
+                              ))}
+                              
+                              {/* Button to show response form */}
+                              <div className="mt-3">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-welp-primary hover:bg-welp-primary/10"
+                                  onClick={() => toggleResponseForm(review.id)}
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-2" />
+                                  {expandedResponseForms[review.id] ? "Cancel" : "Add Response"}
+                                </Button>
+                              </div>
+                              
+                              {/* Response form */}
+                              {expandedResponseForms[review.id] && (
+                                <div className="mt-3">
+                                  <Textarea
+                                    value={responses[review.id] || ""}
+                                    onChange={(e) => setResponses(prev => ({
+                                      ...prev,
+                                      [review.id]: e.target.value
+                                    }))}
+                                    placeholder="Write your response..."
+                                    className="w-full mb-2"
+                                  />
+                                  <div className="flex justify-end">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleResponseSubmit(review.id)}
+                                      disabled={isSubmitting[review.id]}
+                                    >
+                                      {isSubmitting[review.id] ? "Submitting..." : "Submit Response"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div>

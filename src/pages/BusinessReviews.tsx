@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import StarRating from "@/components/StarRating";
 import ReviewReactions from "@/components/ReviewReactions";
+import ReviewCard from "@/components/ReviewCard";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit } from "lucide-react";
@@ -26,14 +27,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,6 +34,16 @@ const BusinessReviews = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  // Simulate subscription status (in a real app, this would come from the auth context or API)
+  const [hasSubscription, setHasSubscription] = useState(false);
+  
+  // Check URL params for subscription status (for demo purposes)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("subscribed") === "true") {
+      setHasSubscription(true);
+    }
+  }, []);
   
   // State to hold a working copy of reviews (with changes to reactions)
   const [workingReviews, setWorkingReviews] = useState(() => {
@@ -127,12 +130,30 @@ const BusinessReviews = () => {
         
         <main className="flex-1 p-6">
           <div className="container mx-auto">
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">My Customer Reviews</h1>
               <p className="text-gray-600">
                 Manage the reviews you've written about customers.
               </p>
             </div>
+            
+            {!hasSubscription && (
+              <Card className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-amber-800">Upgrade to Premium</h3>
+                      <p className="text-sm text-amber-700">
+                        Subscribe to respond to customer feedback and access all reviews.
+                      </p>
+                    </div>
+                    <Button className="mt-3 md:mt-0" asChild>
+                      <Link to="/subscription">View Plans</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             <div className="flex justify-between mb-6">
               <div>
@@ -190,7 +211,7 @@ const BusinessReviews = () => {
                       </div>
                     </CardContent>
                     
-                    <CardFooter className="bg-gray-50 flex justify-end">
+                    <CardFooter className="bg-gray-50 flex justify-between">
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -199,6 +220,29 @@ const BusinessReviews = () => {
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
                       </Button>
+                      
+                      {hasSubscription ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-welp-primary hover:text-welp-secondary"
+                          onClick={() => {
+                            navigate(`/customer/${review.customerId}?reviewId=${review.id}&showResponse=true`);
+                          }}
+                        >
+                          Respond to Feedback
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          asChild
+                        >
+                          <Link to="/subscription">
+                            Upgrade to Respond
+                          </Link>
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 ))}
