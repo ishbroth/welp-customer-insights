@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -6,13 +7,23 @@ import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import SubscriptionBanner from "@/components/subscription/SubscriptionBanner";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ReviewCard from "@/components/ReviewCard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,6 +33,8 @@ const BusinessReviews = () => {
   const navigate = useNavigate();
   // Simulate subscription status (in a real app, this would come from the auth context or API)
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
   // Check URL params for subscription status (for demo purposes)
   useEffect(() => {
@@ -76,6 +89,25 @@ const BusinessReviews = () => {
         isEditing: true
       }
     });
+  };
+
+  const openDeleteDialog = (reviewId: string) => {
+    setReviewToDelete(reviewId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteReview = () => {
+    if (!reviewToDelete) return;
+
+    setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
+    
+    toast({
+      title: "Review deleted",
+      description: "Your review has been successfully deleted.",
+    });
+    
+    setDeleteDialogOpen(false);
+    setReviewToDelete(null);
   };
 
   // Handle toggling reactions
@@ -144,23 +176,43 @@ const BusinessReviews = () => {
             ) : (
               <div className="space-y-6">
                 {currentReviews.map((review) => (
-                  <ReviewCard 
-                    key={review.id}
-                    review={{
-                      id: review.id,
-                      businessName: review.customerName,
-                      businessId: review.customerId,
-                      customerName: currentUser?.name || "",
-                      customerId: currentUser?.id,
-                      rating: review.rating,
-                      comment: review.content,
-                      createdAt: review.date,
-                      location: "",
-                      responses: review.responses
-                    }}
-                    showResponse={true}
-                    hasSubscription={hasSubscription}
-                  />
+                  <div key={review.id} className="relative">
+                    <ReviewCard 
+                      key={review.id}
+                      review={{
+                        id: review.id,
+                        businessName: review.customerName,
+                        businessId: review.customerId,
+                        customerName: currentUser?.name || "",
+                        customerId: currentUser?.id,
+                        rating: review.rating,
+                        comment: review.content,
+                        createdAt: review.date,
+                        location: "",
+                        responses: review.responses
+                      }}
+                      showResponse={true}
+                      hasSubscription={hasSubscription}
+                    />
+                    <div className="absolute top-4 right-4 flex space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleEditReview(review)}
+                        className="bg-white hover:bg-gray-100"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => openDeleteDialog(review.id)}
+                        className="bg-white hover:bg-gray-100 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
                 
                 <ReviewPagination 
@@ -174,6 +226,27 @@ const BusinessReviews = () => {
         </main>
       </div>
       <Footer />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this review? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteReview}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
