@@ -22,7 +22,7 @@ const Privacy = () => {
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto prose prose-lg">
-              <p>This Privacy Policy describes our policies on the collection, use, and disclosure of information about you in connection with your use of our services, including those offered through our websites, communications (e.g., emails, phone calls, and texts), and mobile applications (collectively, the "Service"). The terms "we", "us", and "Yelp" refer to: (i) Yelp Inc., a Delaware corporation with its headquarters in San Francisco, California, unless you are a European Resident; or (ii) Yelp Ireland Ltd., a limited liability company established and resident under the laws of the Republic of Ireland, if you are a European Resident. "European Resident" means a resident of a country in the European Economic Area ("EEA"), United Kingdom or Switzerland.</p>
+              <p>This Privacy Policy describes our policies on the collection, use, and disclosure of information about you in connection with your use of our services, including those offered through our websites, communications (e.g., emails, phone calls, and texts), and mobile applications (collectively, the "Service"). The terms "we", "us", and "Welp" refer to: (i) Welp Inc., a Delaware corporation with its headquarters in San Francisco, California, unless you are a European Resident; or (ii) Welp Ireland Ltd., a limited liability company established and resident under the laws of the Republic of Ireland, if you are a European Resident. "European Resident" means a resident of a country in the European Economic Area ("EEA"), United Kingdom or Switzerland.</p>
 
               <p>When you use the Service, you consent to our collection, use, and disclosure of information about you as described in this Privacy Policy. We may translate this Privacy Policy into other languages for your convenience. Nevertheless, any inconsistencies among the different versions will be resolved in favor of the English version available here.</p>
 
@@ -54,25 +54,38 @@ const Privacy = () => {
               <p>Other users may be able to identify you, or associate you with your account, if you include personal information in the content you post publicly.</p>
               
               <h2 id="data-retention" className="text-2xl font-bold mt-8 mb-4">DATA RETENTION AND ACCOUNT TERMINATION</h2>
-              <p>Information on how to close your account is available here. We will remove certain public posts from view and/or dissociate them from your account profile, but we may retain information about you for the purposes authorized under this Privacy Policy unless prohibited by law.</p>
+              <p>Information on how to close your account is available here. We will remove certain public posts from view and/or dissociate them from your account profile, but we may retain information about you for the purposes authorized under this Privacy Policy unless prohibited by law. Welp retains information for as long as reasonably necessary for the purposes for which it was collected, or as otherwise permitted or required by law.</p>
               
               <h2 id="children" className="text-2xl font-bold mt-8 mb-4">CHILDREN</h2>
-              <p>The Service is intended for general audiences and is not directed to children under 13. We do not knowingly collect personal information from children under 13.</p>
+              <p>The Service is intended for general audiences and is not directed to children under 13. We do not knowingly collect personal information from children under 13. Although use of Welp by children is unlikely, if you become aware that a child has provided us with personal information without parental consent, please contact us here.</p>
               
               <h2 id="security" className="text-2xl font-bold mt-8 mb-4">SECURITY</h2>
               <p>We use various safeguards to protect the personal information submitted to us, both during transmission and after we receive it. However, no method of transmission over the Internet or via mobile device, or method of electronic storage, is 100% secure.</p>
               
               <h2 id="contact" className="text-2xl font-bold mt-8 mb-4">CONTACT INFORMATION</h2>
               <p>You may contact us online concerning our Privacy Policy, or write to us at the following addresses:</p>
+              <p>If you are not a European Resident:</p>
+              <p>
+                Welp, Attn: Data Privacy Manager<br />
+                350 Mission St., 10th Floor<br />
+                San Francisco, California 94105
+              </p>
+              <p>If you are a European Resident:</p>
+              <p>
+                Welp Ireland Ltd. Attn: Data Privacy Manager<br />
+                70 Sir John Rogerson's Quay<br />
+                Dublin 2, Ireland.
+              </p>
+              <p>If you are a European Resident then you can also contact our Data Protection Officer ("DPO") by emailing dataprotection@welp.com and putting "Attention DPO" in the subject line.</p>
               
               <h2 id="modifications" className="text-2xl font-bold mt-8 mb-4">MODIFICATIONS TO THIS PRIVACY POLICY</h2>
               <p>We may modify this Privacy Policy from time to time. The most current version of the Privacy Policy will govern our collection, use, and disclosure of information about you and will be located here.</p>
               
               <h2 id="us-rights" className="text-2xl font-bold mt-8 mb-4">US: YOUR PRIVACY RIGHTS</h2>
-              <p>Yelp does not sell your personal information and will not do so in the future without providing you with notice and an opportunity to opt-out of such sale as required by law.</p>
+              <p>Welp does not sell your personal information and will not do so in the future without providing you with notice and an opportunity to opt-out of such sale as required by law.</p>
               
               <h2 id="eu-rights" className="text-2xl font-bold mt-8 mb-4">EUROPEAN RESIDENTS: YOUR PRIVACY RIGHTS AND INTERNATIONAL DATA TRANSFER</h2>
-              <p>If you are a European Resident, you have the right to access your personal data, and the right to request that we correct, update, or delete your personal data.</p>
+              <p>If you are a European Resident, you have the right to access your personal data, and the right to request that we correct, update, or delete your personal data. Please note that if you are a resident of the EEA or Switzerland, the "data controller" responsible for protecting your personal data related to the Service is Welp Ireland Ltd., a limited liability company established and resident under the laws of the Republic of Ireland. If you are a resident of the United Kingdom, the "data controller" responsible for protecting your personal data relating to the Service is Welp UK Ltd., a limited liability company established and resident under the laws of the United Kingdom.</p>
             </div>
           </div>
         </section>
@@ -83,4 +96,3 @@ const Privacy = () => {
 };
 
 export default Privacy;
-
