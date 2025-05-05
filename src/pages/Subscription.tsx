@@ -45,8 +45,8 @@ const Subscription = () => {
           // For customers, redirect to their reviews page
           window.location.href = "/profile/reviews?subscribed=true";
         } else {
-          // For businesses, redirect to business dashboard
-          window.location.href = "/business-dashboard?subscribed=true";
+          // For businesses, redirect to their profile page instead of business-dashboard
+          window.location.href = "/profile?subscribed=true";
         }
       }, 2000);
     }, 2000);
