@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +48,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   const { currentUser } = useAuth();
   const { toast } = useToast();
   
+  // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
 
   const handleSubmitResponse = (e: React.FormEvent) => {

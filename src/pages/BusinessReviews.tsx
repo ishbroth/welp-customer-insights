@@ -31,8 +31,10 @@ const BusinessReviews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  // Simulate subscription status from URL query or localStorage
-  const [hasSubscription, setHasSubscription] = useState(false);
+  // Subscription status from localStorage
+  const [hasSubscription, setHasSubscription] = useState(() => {
+    return localStorage.getItem("hasSubscription") === "true";
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
@@ -43,12 +45,6 @@ const BusinessReviews = () => {
       setHasSubscription(true);
       // Store subscription status in localStorage
       localStorage.setItem("hasSubscription", "true");
-    } else {
-      // Check localStorage for subscription status on initial load
-      const storedSubscription = localStorage.getItem("hasSubscription");
-      if (storedSubscription === "true") {
-        setHasSubscription(true);
-      }
     }
   }, [location]);
   
