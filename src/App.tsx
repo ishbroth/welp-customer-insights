@@ -17,6 +17,7 @@ import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
 import FAQ from "./pages/FAQ";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -89,6 +90,7 @@ const AppRoutes = () => {
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       
       {/* Search page is now accessible to all users */}
       <Route path="/search" element={<SearchResults />} />
