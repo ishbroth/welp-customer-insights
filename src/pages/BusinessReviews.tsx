@@ -1,32 +1,18 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
-import StarRating from "@/components/StarRating";
-import ReviewReactions from "@/components/ReviewReactions";
-import ReviewCard from "@/components/ReviewCard";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Card } from "@/components/ui/card";
+import SubscriptionBanner from "@/components/subscription/SubscriptionBanner";
+import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
+import ReviewPagination from "@/components/reviews/ReviewPagination";
+import ReviewCard from "@/components/ReviewCard";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -137,23 +123,7 @@ const BusinessReviews = () => {
               </p>
             </div>
             
-            {!hasSubscription && (
-              <Card className="mb-6 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-amber-800">Upgrade to Premium</h3>
-                      <p className="text-sm text-amber-700">
-                        Subscribe to respond to customer feedback and access all reviews.
-                      </p>
-                    </div>
-                    <Button className="mt-3 md:mt-0" asChild>
-                      <Link to="/subscription">View Plans</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {!hasSubscription && <SubscriptionBanner type="business" />}
             
             <div className="flex justify-between mb-6">
               <div>
@@ -170,127 +140,34 @@ const BusinessReviews = () => {
             </div>
             
             {workingReviews.length === 0 ? (
-              <Card className="p-6 text-center">
-                <p className="text-gray-500 mb-4">
-                  You haven't written any customer reviews yet.
-                </p>
-                <Button className="mt-2" asChild>
-                  <Link to="/review/new">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Write Your First Customer Review
-                  </Link>
-                </Button>
-              </Card>
+              <EmptyReviewsMessage type="business" />
             ) : (
               <div className="space-y-6">
                 {currentReviews.map((review) => (
-                  <Card key={review.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-xl">{review.customerName}</CardTitle>
-                        <StarRating rating={review.rating} />
-                      </div>
-                      <p className="text-sm text-gray-500">{review.date}</p>
-                    </CardHeader>
-                    
-                    <CardContent>
-                      <div className="mb-2">
-                        <h3 className="font-medium">{review.title}</h3>
-                      </div>
-                      <p className="text-gray-700">{review.content}</p>
-                      
-                      {/* Review reactions */}
-                      <div className="mt-4 border-t pt-3">
-                        <div className="text-sm text-gray-500 mb-2">Reactions to your review:</div>
-                        <ReviewReactions 
-                          reviewId={review.id}
-                          customerId={review.customerId}
-                          reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
-                          onReactionToggle={handleReactionToggle}
-                        />
-                      </div>
-                    </CardContent>
-                    
-                    <CardFooter className="bg-gray-50 flex justify-between">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleEditReview(review)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      
-                      {hasSubscription ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-welp-primary hover:text-welp-secondary"
-                          onClick={() => {
-                            navigate(`/customer/${review.customerId}?reviewId=${review.id}&showResponse=true`);
-                          }}
-                        >
-                          Respond to Feedback
-                        </Button>
-                      ) : (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          asChild
-                        >
-                          <Link to="/subscription">
-                            Upgrade to Respond
-                          </Link>
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
+                  <ReviewCard 
+                    key={review.id}
+                    review={{
+                      id: review.id,
+                      businessName: review.customerName,
+                      businessId: review.customerId,
+                      customerName: currentUser?.name || "",
+                      customerId: currentUser?.id,
+                      rating: review.rating,
+                      comment: review.content,
+                      createdAt: review.date,
+                      location: "",
+                      responses: review.responses
+                    }}
+                    showResponse={true}
+                    hasSubscription={hasSubscription}
+                  />
                 ))}
                 
-                {totalPages > 1 && (
-                  <Pagination className="mt-6">
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          href="#" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage > 1) setCurrentPage(currentPage - 1);
-                          }}
-                          aria-disabled={currentPage === 1}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                        />
-                      </PaginationItem>
-                      
-                      {[...Array(totalPages)].map((_, i) => (
-                        <PaginationItem key={i}>
-                          <PaginationLink 
-                            href="#" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(i + 1);
-                            }}
-                            isActive={currentPage === i + 1}
-                          >
-                            {i + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      
-                      <PaginationItem>
-                        <PaginationNext 
-                          href="#" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                          }}
-                          aria-disabled={currentPage === totalPages}
-                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                )}
+                <ReviewPagination 
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
           </div>
