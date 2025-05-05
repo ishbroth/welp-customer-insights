@@ -51,6 +51,10 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
 
+  // Log subscription status for debugging
+  console.log("ReviewCard - hasSubscription:", hasSubscription);
+  console.log("ReviewCard - canRespond:", canRespond);
+
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -263,7 +267,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         {showResponse && (
           <div className="mt-4 flex justify-end">
             <Button 
-              variant="outline"
+              variant={hasSubscription ? "default" : "outline"}
               onClick={() => {
                 if (!hasSubscription) {
                   setShowSubscriptionMessage(true);
@@ -272,7 +276,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                 }
                 setIsResponseVisible(!isResponseVisible);
               }}
-              className="text-welp-primary hover:text-welp-secondary"
+              className={hasSubscription ? "" : "text-welp-primary hover:text-welp-secondary"}
             >
               {isResponseVisible ? "Cancel" : "Respond"}
             </Button>
@@ -290,7 +294,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         )}
 
         {/* Response form - only shown when user is subscribed and clicks respond */}
-        {isResponseVisible && (
+        {isResponseVisible && hasSubscription && (
           <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
             <Textarea
               value={response}
