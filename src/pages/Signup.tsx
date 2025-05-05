@@ -10,7 +10,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -30,7 +29,8 @@ const Signup = () => {
   const [businessConfirmPassword, setBusinessConfirmPassword] = useState("");
   
   // Customer form state
-  const [customerName, setCustomerName] = useState("");
+  const [customerFirstName, setCustomerFirstName] = useState("");
+  const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -40,40 +40,16 @@ const Signup = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationData, setVerificationData] = useState<any>(null);
   const [verificationError, setVerificationError] = useState("");
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [mockCodeSent, setMockCodeSent] = useState(false);
-  const [mockVerificationCode] = useState("123456"); // Mock code for demo purposes
+  
+  const [isPhoneVerifying, setIsPhoneVerifying] = useState(false);
 
   useEffect(() => {
     // Reset form and steps when account type changes
     setStep(1);
     setVerificationData(null);
     setVerificationError("");
-    setIsPhoneVerified(false);
-    setMockCodeSent(false);
+    setIsPhoneVerifying(false);
   }, [accountType]);
-
-  // Auto-fill mock verification code after a delay when code is sent
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (mockCodeSent) {
-      timer = setTimeout(() => {
-        setVerificationCode(mockVerificationCode);
-        // Auto-verify after filling in the code
-        setTimeout(() => {
-          setIsPhoneVerified(true);
-          toast({
-            title: "Phone Verified",
-            description: "Your phone number has been verified successfully.",
-          });
-        }, 1000);
-      }, 1500);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [mockCodeSent, mockVerificationCode, toast]);
 
   const handleBusinessVerification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,54 +82,62 @@ const Signup = () => {
     }
   };
 
-  const handleSendVerificationText = () => {
-    setMockCodeSent(true);
-    toast({
-      title: "Verification Text Sent",
-      description: `A verification code has been sent to ${accountType === "business" ? businessPhone : customerPhone}`,
-    });
-  };
-
-  const handleVerifyCode = () => {
-    // For demo purposes, any 6-digit code works
-    if (verificationCode.length === 6) {
-      setIsPhoneVerified(true);
+  const initiateCustomerVerification = () => {
+    // Validate customer information
+    if (!customerFirstName || !customerLastName || !customerPhone || !customerEmail || !customerPassword) {
       toast({
-        title: "Phone Verified",
-        description: "Your phone number has been verified successfully.",
-      });
-    } else {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid 6-digit verification code.",
+        title: "Missing Information",
+        description: "Please fill out all required fields.",
         variant: "destructive",
       });
+      return;
     }
+    
+    if (customerPassword !== customerConfirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Your passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Store customer data in session storage for the verification flow
+    const customerData = {
+      firstName: customerFirstName,
+      lastName: customerLastName,
+      phone: customerPhone,
+      zipCode: customerZipCode,
+      email: customerEmail,
+      password: customerPassword,
+    };
+    
+    sessionStorage.setItem("customerSignupData", JSON.stringify(customerData));
+    
+    // Generate a random 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    sessionStorage.setItem("phoneVerificationCode", verificationCode);
+    
+    // Show a toast indicating that the verification code is being sent
+    toast({
+      title: "Verification Code Sent",
+      description: `A verification code has been sent to ${customerPhone}. For demo purposes, the code is: ${verificationCode}`,
+    });
+    
+    // Redirect to the verification page
+    navigate("/verify-phone");
   };
 
-  const handleCreateAccount = () => {
-    if (accountType === "business") {
-      // For business accounts, redirect to the verification success page
-      toast({
-        title: "Account Created",
-        description: "Your business account has been created successfully!",
-      });
-      
-      // Simulate account creation
-      setTimeout(() => {
-        navigate("/business-verification-success");
-      }, 1000);
-    } else {
-      // For customer accounts, use the existing flow
-      toast({
-        title: "Account Created",
-        description: "Your customer account has been created successfully! Redirecting to your dashboard...",
-      });
-      
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 2000);
-    }
+  const handleCreateBusinessAccount = () => {
+    toast({
+      title: "Account Created",
+      description: "Your business account has been created successfully!",
+    });
+    
+    // Simulate account creation
+    setTimeout(() => {
+      navigate("/business-verification-success");
+    }, 1000);
   };
 
   return (
@@ -324,65 +308,11 @@ const Signup = () => {
                         />
                       </div>
                       
-                      <div className="pt-2">
-                        <h3 className="text-md font-medium mb-2">Phone Verification</h3>
-                        {!isPhoneVerified ? (
-                          <div className="space-y-3">
-                            <p className="text-sm">
-                              We need to verify your business phone number. A text message with a code will be sent to:
-                              <br />
-                              <strong>{businessPhone}</strong>
-                            </p>
-                            
-                            {!mockCodeSent ? (
-                              <Button 
-                                onClick={handleSendVerificationText}
-                                className="welp-button"
-                              >
-                                Send Verification Text
-                              </Button>
-                            ) : (
-                              <div className="space-y-3">
-                                <p className="text-sm text-green-600">Code sent! Enter the 6-digit code below:</p>
-                                <div className="flex justify-center mb-4">
-                                  <InputOTP 
-                                    maxLength={6} 
-                                    value={verificationCode} 
-                                    onChange={setVerificationCode}
-                                  >
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={0} />
-                                      <InputOTPSlot index={1} />
-                                      <InputOTPSlot index={2} />
-                                      <InputOTPSlot index={3} />
-                                      <InputOTPSlot index={4} />
-                                      <InputOTPSlot index={5} />
-                                    </InputOTPGroup>
-                                  </InputOTP>
-                                </div>
-                                <Button 
-                                  onClick={handleVerifyCode}
-                                  className="welp-button w-full"
-                                  disabled={verificationCode.length !== 6}
-                                >
-                                  Verify
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="p-3 bg-green-100 text-green-700 rounded-md flex items-center">
-                            <span className="text-xl mr-2">✓</span>
-                            <span>Phone number verified successfully!</span>
-                          </div>
-                        )}
-                      </div>
-                      
                       <div className="pt-4">
                         <Button
-                          onClick={handleCreateAccount}
+                          onClick={handleCreateBusinessAccount}
                           className="welp-button w-full"
-                          disabled={!isPhoneVerified || !businessEmail || !businessPassword || businessPassword !== businessConfirmPassword}
+                          disabled={!businessEmail || !businessPassword || businessPassword !== businessConfirmPassword}
                         >
                           Create Business Account
                         </Button>
@@ -401,12 +331,24 @@ const Signup = () => {
                   <h2 className="text-xl font-semibold mb-4">Create Customer Account</h2>
                   
                   <div>
-                    <label htmlFor="customerName" className="block text-sm font-medium mb-1">Full Name</label>
+                    <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
                     <Input
-                      id="customerName"
-                      placeholder="John Smith"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
+                      id="customerFirstName"
+                      placeholder="John"
+                      value={customerFirstName}
+                      onChange={(e) => setCustomerFirstName(e.target.value)}
+                      className="welp-input"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
+                    <Input
+                      id="customerLastName"
+                      placeholder="Smith"
+                      value={customerLastName}
+                      onChange={(e) => setCustomerLastName(e.target.value)}
                       className="welp-input"
                       required
                     />
@@ -422,6 +364,7 @@ const Signup = () => {
                       className="welp-input"
                       required
                     />
+                    <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
                   </div>
                   
                   <div>
@@ -473,65 +416,11 @@ const Signup = () => {
                     />
                   </div>
                   
-                  <div className="pt-2">
-                    <h3 className="text-md font-medium mb-2">Phone Verification</h3>
-                    {!isPhoneVerified ? (
-                      <div className="space-y-3">
-                        <p className="text-sm">
-                          We need to verify your phone number. A text message with a code will be sent to:
-                          <br />
-                          <strong>{customerPhone || "(Not provided)"}</strong>
-                        </p>
-                        
-                        {!mockCodeSent && customerPhone ? (
-                          <Button 
-                            onClick={handleSendVerificationText}
-                            className="welp-button"
-                          >
-                            Send Verification Text
-                          </Button>
-                        ) : customerPhone && (
-                          <div className="space-y-3">
-                            <p className="text-sm text-green-600">Code sent! Enter the 6-digit code below:</p>
-                            <div className="flex justify-center mb-4">
-                              <InputOTP 
-                                maxLength={6} 
-                                value={verificationCode} 
-                                onChange={setVerificationCode}
-                              >
-                                <InputOTPGroup>
-                                  <InputOTPSlot index={0} />
-                                  <InputOTPSlot index={1} />
-                                  <InputOTPSlot index={2} />
-                                  <InputOTPSlot index={3} />
-                                  <InputOTPSlot index={4} />
-                                  <InputOTPSlot index={5} />
-                                </InputOTPGroup>
-                              </InputOTP>
-                            </div>
-                            <Button 
-                              onClick={handleVerifyCode}
-                              className="welp-button w-full"
-                              disabled={verificationCode.length !== 6}
-                            >
-                              Verify
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-green-100 text-green-700 rounded-md flex items-center">
-                        <span className="text-xl mr-2">✓</span>
-                        <span>Phone number verified successfully!</span>
-                      </div>
-                    )}
-                  </div>
-                  
                   <div className="pt-4">
                     <Button
-                      onClick={handleCreateAccount}
+                      onClick={initiateCustomerVerification}
                       className="welp-button w-full"
-                      disabled={!isPhoneVerified || !customerEmail || !customerPassword || customerPassword !== customerConfirmPassword}
+                      disabled={!customerFirstName || !customerLastName || !customerPhone || !customerEmail || !customerPassword || customerPassword !== customerConfirmPassword}
                     >
                       Create Customer Account
                     </Button>

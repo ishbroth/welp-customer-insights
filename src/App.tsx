@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VerifyPhone from "./pages/VerifyPhone";
 import NewReview from "./pages/NewReview";
 import ReviewSuccess from "./pages/ReviewSuccess";
 import Subscription from "./pages/Subscription";
@@ -79,6 +80,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/one-time-review" element={<OneTimeReviewAccess />} />
