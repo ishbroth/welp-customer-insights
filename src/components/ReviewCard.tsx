@@ -7,7 +7,17 @@ import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Edit, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ReviewResponse {
   id: string;
@@ -44,11 +54,38 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   const [responses, setResponses] = useState<ReviewResponse[]>(review.responses || []);
   const [replyToResponseId, setReplyToResponseId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [editResponseId, setEditResponseId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [responseToDeleteId, setResponseToDeleteId] = useState<string | null>(null);
+  
   const { currentUser } = useAuth();
   const { toast } = useToast();
   
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
+
+  // Check if the business owner can respond
+  const canBusinessRespond = () => {
+    if (!currentUser || !responses.length) return true;
+    
+    // Sort responses by creation date
+    const sortedResponses = [...responses].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    // Get the most recent response
+    const lastResponse = sortedResponses[0];
+    
+    // If the last response is from the business owner, they cannot respond again
+    // until the customer responds
+    return lastResponse.authorId !== currentUser.id;
+  };
+
+  // Find business owner responses in the review
+  const businessResponses = responses.filter(resp => 
+    resp.authorId === currentUser?.id
+  );
 
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +121,68 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         description: "Your response has been added successfully!"
       });
     }, 1000);
+  };
+
+  // Function to handle editing a response
+  const handleEditResponse = (responseId: string) => {
+    const responseToEdit = responses.find(resp => resp.id === responseId);
+    if (responseToEdit) {
+      setEditResponseId(responseId);
+      setEditContent(responseToEdit.content);
+    }
+  };
+
+  // Function to save an edited response
+  const handleSaveEdit = () => {
+    if (!editResponseId || !editContent.trim()) {
+      toast({
+        title: "Empty response",
+        description: "Please write something before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setResponses(prev => prev.map(resp => {
+      if (resp.id === editResponseId) {
+        return {
+          ...resp,
+          content: editContent,
+          createdAt: new Date().toISOString() // Update the timestamp
+        };
+      }
+      return resp;
+    }));
+
+    // Reset state
+    setEditResponseId(null);
+    setEditContent("");
+
+    // Show success toast
+    toast({
+      title: "Response updated",
+      description: "Your response has been updated successfully!"
+    });
+  };
+
+  // Function to cancel editing
+  const handleCancelEdit = () => {
+    setEditResponseId(null);
+    setEditContent("");
+  };
+
+  // Function to confirm delete
+  const handleDeleteResponse = () => {
+    if (!responseToDeleteId) return;
+
+    setResponses(prev => prev.filter(resp => resp.id !== responseToDeleteId));
+    setDeleteDialogOpen(false);
+    setResponseToDeleteId(null);
+
+    toast({
+      title: "Response deleted",
+      description: "Your response has been deleted successfully!"
+    });
   };
 
   // Function to handle replying to a customer response
@@ -178,7 +277,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </span>
         </div>
         
-        {/* Display existing responses with ability to reply */}
+        {/* Display existing responses with ability to edit/delete */}
         {responses.length > 0 && (
           <div className="mt-4 border-t pt-4">
             <h4 className="text-md font-semibold mb-3">Responses</h4>
@@ -192,7 +291,62 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                     })}
                   </span>
                 </div>
-                <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
+                
+                {/* If in edit mode for this response, show edit form */}
+                {editResponseId === resp.id ? (
+                  <div>
+                    <Textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full p-2 text-sm min-h-[80px] mb-2"
+                      maxLength={1500}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={handleSaveEdit}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
+                )}
+                
+                {/* Show edit/delete buttons for business owner's own responses */}
+                {resp.authorId === currentUser?.id && editResponseId !== resp.id && (
+                  <div className="mt-2 flex justify-end gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-gray-600 hover:bg-gray-100 h-8 px-2 py-1"
+                      onClick={() => handleEditResponse(resp.id)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2 py-1"
+                      onClick={() => {
+                        setResponseToDeleteId(resp.id);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                )}
                 
                 {/* Check if user can reply to this response */}
                 {hasSubscription && resp.authorId !== currentUser?.id && (
@@ -256,13 +410,37 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
-        {/* Respond button - only shown when showResponse is true */}
-        {showResponse && (
+        {/* Respond button - only shown when appropriate conditions are met */}
+        {showResponse && canBusinessRespond() && (
           <div className="mt-4 flex justify-end">
             <Button 
               onClick={() => setIsResponseVisible(!isResponseVisible)}
             >
               {isResponseVisible ? "Cancel" : "Respond"}
+            </Button>
+          </div>
+        )}
+        
+        {/* If business already responded but has no action options, show manage buttons */}
+        {showResponse && !canBusinessRespond() && businessResponses.length > 0 && (
+          <div className="mt-4 flex justify-end gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => handleEditResponse(businessResponses[businessResponses.length - 1].id)}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit Response
+            </Button>
+            <Button 
+              variant="outline"
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-700"
+              onClick={() => {
+                setResponseToDeleteId(businessResponses[businessResponses.length - 1].id);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete Response
             </Button>
           </div>
         )}
@@ -293,6 +471,27 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </form>
         )}
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Response</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this response? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteResponse}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
