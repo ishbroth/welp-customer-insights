@@ -198,7 +198,9 @@ const BusinessReviews = () => {
                         comment: review.content,
                         createdAt: review.date,
                         location: "",
-                        zipCode: review.zipCode || "00000", // Added zipCode
+                        address: review.address || "",
+                        city: review.city || "",
+                        zipCode: review.zipCode || "00000", // Added zipCode properly
                         responses: review.responses
                       }}
                       showResponse={true}

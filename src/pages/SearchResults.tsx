@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -60,6 +61,7 @@ const SearchResults = () => {
   const phone = searchParams.get("phone") || "";
   const address = searchParams.get("address") || "";
   const city = searchParams.get("city") || "";
+  const state = searchParams.get("state") || "";
   const zipCode = searchParams.get("zipCode") || "";
 
   useEffect(() => {
@@ -77,15 +79,42 @@ const SearchResults = () => {
         const phoneMatch = phone ? customer.phone.includes(phone) : true;
         const addressMatch = address ? customer.address.toLowerCase().includes(address.toLowerCase()) : true;
         const cityMatch = city ? customer.city.toLowerCase().includes(city.toLowerCase()) : true;
+        const stateMatch = state ? customer.state === state : true;
         const zipCodeMatch = zipCode ? customer.zipCode.includes(zipCode) : true;
         
-        return lastNameMatch && firstNameMatch && phoneMatch && addressMatch && cityMatch && zipCodeMatch;
+        return lastNameMatch && firstNameMatch && phoneMatch && addressMatch && cityMatch && stateMatch && zipCodeMatch;
       });
       
       setCustomers(filteredCustomers);
       setIsLoading(false);
     }, 1000);
-  }, [lastName, firstName, phone, address, city, zipCode]);
+  }, [lastName, firstName, phone, address, city, state, zipCode]);
+
+  // Function to format address for display based on subscription status
+  const formatAddress = (customer: any) => {
+    // If the user is subscribed or admin, show full address
+    if (currentUser?.type === "admin" || isSubscribed) {
+      return customer.address;
+    }
+    
+    // Check if the user has one-time access to this customer
+    const hasOneTimeAccess = localStorage.getItem(`customer_access_${customer.id}`) === "true";
+    if (hasOneTimeAccess) {
+      return customer.address;
+    }
+    
+    // For unsubscribed users, only show the street name without numbers
+    if (customer.address) {
+      // Remove the house/building number from the address
+      const addressParts = customer.address.split(' ');
+      // If the first part is a number, remove it
+      if (addressParts.length > 1 && !isNaN(Number(addressParts[0]))) {
+        return addressParts.slice(1).join(' ');
+      }
+      return customer.address;
+    }
+    return '';
+  };
 
   const handleSelectCustomer = (customer: any) => {
     setSelectedCustomer(customer);
@@ -193,32 +222,43 @@ const SearchResults = () => {
                 <div className="mt-6">
                   <h3 className="font-semibold mb-2">Search Results ({customers.length})</h3>
                   <div className="space-y-3">
-                    {customers.map(customer => (
-                      <div 
-                        key={customer.id}
-                        onClick={() => handleSelectCustomer(customer)}
-                        className={`p-3 border rounded-md cursor-pointer transition-colors ${selectedCustomer?.id === customer.id ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
-                      >
-                        <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
-                        <div className="text-sm text-gray-600">{customer.address}</div>
-                        <div className="text-sm text-gray-600">
-                          {customer.city && customer.state ? `${customer.city}, ${customer.state}` : 
-                           customer.city ? customer.city :
-                           customer.state ? customer.state : "Location not available"}
-                        </div>
-                        <div className="flex justify-between items-center mt-1">
-                          <div className="flex items-center">
-                            <StarRating rating={Math.round(customer.averageRating)} size="sm" />
-                            <span className="ml-2 text-sm text-gray-500">
-                              ({customer.averageRating.toFixed(1)})
+                    {customers.map(customer => {
+                      // Check if the user has one-time access to this customer
+                      const hasOneTimeAccess = localStorage.getItem(`customer_access_${customer.id}`) === "true";
+                      const canSeeFullDetails = currentUser?.type === "admin" || 
+                                               isSubscribed || 
+                                               hasOneTimeAccess;
+                                               
+                      return (
+                        <div 
+                          key={customer.id}
+                          onClick={() => handleSelectCustomer(customer)}
+                          className={`p-3 border rounded-md cursor-pointer transition-colors ${selectedCustomer?.id === customer.id ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
+                        >
+                          <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
+                          <div className="text-sm text-gray-600">
+                            {canSeeFullDetails ? customer.address : formatAddress(customer)}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {customer.city && customer.state ? `${customer.city}, ${customer.state}` : 
+                             customer.city ? customer.city :
+                             customer.state ? customer.state : "Location not available"}
+                            {customer.zipCode && ` ${customer.zipCode}`}
+                          </div>
+                          <div className="flex justify-between items-center mt-1">
+                            <div className="flex items-center">
+                              <StarRating rating={Math.round(customer.averageRating)} size="sm" />
+                              <span className="ml-2 text-sm text-gray-500">
+                                ({customer.averageRating.toFixed(1)})
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-500">
-                            {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
-                          </span>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -231,13 +271,25 @@ const SearchResults = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <h2 className="text-2xl font-bold">{selectedCustomer.lastName}, {selectedCustomer.firstName}</h2>
-                      <p className="text-gray-600">{selectedCustomer.address}</p>
+                      
+                      {/* Display full or partial address based on subscription status */}
+                      {(currentUser?.type === "admin" || isSubscribed || hasFullAccess(selectedCustomer.id)) ? (
+                        <>
+                          <p className="text-gray-600">{selectedCustomer.address}</p>
+                          <p className="text-gray-600">{selectedCustomer.phone}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-gray-600">{formatAddress(selectedCustomer)}</p>
+                        </>
+                      )}
+                      
                       <p className="text-gray-600">
                         {selectedCustomer.city && selectedCustomer.state ? `${selectedCustomer.city}, ${selectedCustomer.state}` : 
                          selectedCustomer.city ? selectedCustomer.city :
                          selectedCustomer.state ? selectedCustomer.state : ""}
+                        {selectedCustomer.zipCode && ` ${selectedCustomer.zipCode}`}
                       </p>
-                      <p className="text-gray-600">{selectedCustomer.phone}</p>
                       
                       <div className="flex items-center mt-2">
                         <StarRating rating={Math.round(selectedCustomer.averageRating)} />

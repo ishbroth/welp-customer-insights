@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +44,7 @@ interface ReviewCardProps {
     location: string;
     address?: string;
     city?: string;
+    zipCode?: string; // Added zipCode as an optional property
     responses?: ReviewResponse[];
   };
   showResponse?: boolean;
