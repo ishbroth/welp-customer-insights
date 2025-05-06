@@ -264,11 +264,13 @@ const ProfilePage = () => {
                         )}
                       </div>
                       <div>
+                        {/* Only show address if user is a business or admin, never for customers */}
                         {(currentUser?.address || currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
                           <div className="flex items-center gap-3 mb-4">
                             <MapPin className="h-5 w-5 text-gray-500" />
                             <div>
                               <p className="text-sm text-gray-500">Address</p>
+                              {/* Address is only visible to the business owner themselves or admins */}
                               {currentUser?.address && (
                                 <p className="font-medium">{currentUser.address}</p>
                               )}

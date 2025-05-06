@@ -1,87 +1,31 @@
-
-import { verifyBusiness } from "@/utils/supabaseHelpers";
-
-interface VerificationResult {
-  verified: boolean;
-  message?: string;
-  details?: Record<string, any>;
-}
-
-// This is a mock implementation of business ID verification
-// In a real application, this would connect to actual verification APIs
-export const verifyBusinessId = async (businessId: string, userId?: string): Promise<VerificationResult> => {
-  console.log(`Verifying business ID: ${businessId}`);
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+// Function to verify business license information
+// This is a mock function and should be replaced with a real API call to a license verification service
+export const verifyBusinessLicense = async (
+  license: {
+    licenseType: string;
+    license_number: string;  // Make sure we use snake_case to match the type
+    businessName: string;
+    expirationDate: string;
+  }
+) => {
+  // Simulate a delay for API call
+  await new Promise(resolve => setTimeout(resolve, 1500));
   
   // Mock verification logic
-  // In a real implementation, you would make API calls to business verification services
+  const isValid = license.license_number && 
+                 license.license_number.length > 5 &&
+                 new Date(license.expirationDate) > new Date();
   
-  // Check if the ID looks like an EIN (XX-XXXXXXX format)
-  const einRegex = /^\d{2}-\d{7}$/;
-  // Check if the ID looks like a business license (alphanumeric with possible dashes)
-  const licenseRegex = /^[A-Z0-9]{5,15}(-[A-Z0-9]{1,5})?$/i;
-  
-  let result: VerificationResult;
-  
-  if (einRegex.test(businessId)) {
-    // For demo purposes, verify only specific EINs
-    if (['12-3456789', '98-7654321'].includes(businessId)) {
-      result = {
-        verified: true,
-        message: "EIN verified successfully",
-        details: {
-          type: "EIN",
-          registrationDate: "2020-01-15",
-        }
-      };
-    } else {
-      result = {
-        verified: false,
-        message: "EIN could not be verified in our database"
-      };
-    }
-  } else if (licenseRegex.test(businessId)) {
-    // For demo purposes, verify only specific license numbers
-    if (['LIC123456', 'BUS789012', 'CONTR456'].includes(businessId.toUpperCase())) {
-      result = {
-        verified: true,
-        message: "Business license verified successfully",
-        details: {
-          type: "Business License",
-          expirationDate: "2025-12-31",
-          status: "Active"
-        }
-      };
-    } else {
-      result = {
-        verified: false,
-        message: "Business license could not be verified"
-      };
-    }
-  } else {
-    result = {
-      verified: false,
-      message: "Invalid format. Please provide a valid EIN (XX-XXXXXXX) or business license number"
+  if (isValid) {
+    return {
+      verified: true,
+      license_number: license.license_number,
+      license_type: license.licenseType,
+      license_status: "Active",
+      license_expiration: license.expirationDate,
+      business_name: license.businessName
     };
+  } else {
+    throw new Error("License verification failed");
   }
-  
-  // If verification is successful and we have a userId, update the business verification in Supabase
-  if (result.verified && userId) {
-    try {
-      await verifyBusiness(userId, {
-        licenseNumber: businessId,
-        businessName: "Business Name", // This would come from form data in a real app
-        licenseType: result.details?.type || "Business License",
-        licenseStatus: "Active",
-        licenseExpiration: result.details?.expirationDate || "2025-12-31"
-      });
-    } catch (error) {
-      console.error("Error updating business verification status:", error);
-      // We'll still return verification as successful since the check passed
-    }
-  }
-  
-  return result;
 };

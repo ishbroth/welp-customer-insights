@@ -28,8 +28,10 @@ export const getUserProfile = async (userId: string) => {
 
 /**
  * Get a business profile with business info by ID
+ * @param userId The ID of the business user
+ * @param requestingUserType Optional parameter indicating the type of user making the request
  */
-export const getBusinessProfile = async (userId: string) => {
+export const getBusinessProfile = async (userId: string, requestingUserType?: string) => {
   // First get the profile
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -54,7 +56,18 @@ export const getBusinessProfile = async (userId: string) => {
     throw businessError;
   }
   
-  // Combine the data
+  // If the requesting user is a customer, remove the address information
+  if (requestingUserType === 'customer') {
+    return {
+      ...profile,
+      address: undefined, // Remove address for customers
+      business_name: businessInfo.business_name,
+      license_number: businessInfo.license_number,
+      verified: businessInfo.verified,
+    };
+  }
+  
+  // Return full information for other user types (business owners, admins)
   return {
     ...profile,
     business_name: businessInfo.business_name,
@@ -125,8 +138,10 @@ export const verifyBusiness = async (userId: string, businessData: Partial<Busin
 
 /**
  * Search for customers by various parameters
+ * @param params Search parameters
+ * @param requestingUserType The type of user making the request (business, customer, admin)
  */
-export const searchCustomers = async (params: SearchParams) => {
+export const searchCustomers = async (params: SearchParams, requestingUserType?: string) => {
   let query = supabase
     .from('profiles')
     .select(`
@@ -186,6 +201,23 @@ export const searchCustomers = async (params: SearchParams) => {
     throw error;
   }
   
+  // If the requesting user is a customer, remove address information from 
+  // any business profiles that might be included in the nested data
+  if (requestingUserType === 'customer') {
+    return data.map(customer => {
+      // Remove address from reviews where the business profile is included
+      if (customer.reviews) {
+        customer.reviews = customer.reviews.map(review => {
+          if (review.business && review.business.profiles) {
+            // Remove address information from the business profile
+            delete review.business.profiles.address;
+          }
+          return review;
+        });
+      }
+      return customer;
+    });
+  }
+  
   return data;
 };
-
