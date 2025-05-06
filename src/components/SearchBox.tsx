@@ -73,7 +73,7 @@ const SearchBox = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Extract first word of address for search
+    // Extract ONLY the first word of address for search, explicitly ignoring any subsequent words
     const firstWordOfAddress = address.trim().split(/\s+/)[0];
     
     // Prepare the search parameters with similarity threshold information
@@ -81,7 +81,7 @@ const SearchBox = ({
       lastName,
       firstName,
       phone,
-      address: firstWordOfAddress,
+      address: firstWordOfAddress, // Only using the first word
       city,
       state,
       zipCode,
