@@ -203,6 +203,7 @@ export const searchCustomers = async (params: SearchParams, requestingUserType?:
   
   // Make sure data is not null before trying to map over it
   if (!data) {
+    // Return empty array instead of trying to map over null data
     return [];
   }
   
