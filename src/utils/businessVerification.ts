@@ -1,4 +1,6 @@
 
+import { verifyBusiness } from "@/utils/supabaseHelpers";
+
 interface VerificationResult {
   verified: boolean;
   message?: string;
@@ -7,7 +9,7 @@ interface VerificationResult {
 
 // This is a mock implementation of business ID verification
 // In a real application, this would connect to actual verification APIs
-export const verifyBusinessId = async (businessId: string): Promise<VerificationResult> => {
+export const verifyBusinessId = async (businessId: string, userId?: string): Promise<VerificationResult> => {
   console.log(`Verifying business ID: ${businessId}`);
   
   // Simulate API call delay
@@ -21,10 +23,12 @@ export const verifyBusinessId = async (businessId: string): Promise<Verification
   // Check if the ID looks like a business license (alphanumeric with possible dashes)
   const licenseRegex = /^[A-Z0-9]{5,15}(-[A-Z0-9]{1,5})?$/i;
   
+  let result: VerificationResult;
+  
   if (einRegex.test(businessId)) {
     // For demo purposes, verify only specific EINs
     if (['12-3456789', '98-7654321'].includes(businessId)) {
-      return {
+      result = {
         verified: true,
         message: "EIN verified successfully",
         details: {
@@ -33,7 +37,7 @@ export const verifyBusinessId = async (businessId: string): Promise<Verification
         }
       };
     } else {
-      return {
+      result = {
         verified: false,
         message: "EIN could not be verified in our database"
       };
@@ -41,7 +45,7 @@ export const verifyBusinessId = async (businessId: string): Promise<Verification
   } else if (licenseRegex.test(businessId)) {
     // For demo purposes, verify only specific license numbers
     if (['LIC123456', 'BUS789012', 'CONTR456'].includes(businessId.toUpperCase())) {
-      return {
+      result = {
         verified: true,
         message: "Business license verified successfully",
         details: {
@@ -51,21 +55,33 @@ export const verifyBusinessId = async (businessId: string): Promise<Verification
         }
       };
     } else {
-      return {
+      result = {
         verified: false,
         message: "Business license could not be verified"
       };
     }
+  } else {
+    result = {
+      verified: false,
+      message: "Invalid format. Please provide a valid EIN (XX-XXXXXXX) or business license number"
+    };
   }
   
-  return {
-    verified: false,
-    message: "Invalid format. Please provide a valid EIN (XX-XXXXXXX) or business license number"
-  };
+  // If verification is successful and we have a userId, update the business verification in Supabase
+  if (result.verified && userId) {
+    try {
+      await verifyBusiness(userId, {
+        licenseNumber: businessId,
+        businessName: "Business Name", // This would come from form data in a real app
+        licenseType: result.details?.type || "Business License",
+        licenseStatus: "Active",
+        licenseExpiration: result.details?.expirationDate || "2025-12-31"
+      });
+    } catch (error) {
+      console.error("Error updating business verification status:", error);
+      // We'll still return verification as successful since the check passed
+    }
+  }
+  
+  return result;
 };
-
-// In a real application, you would implement multiple verification services
-// For example:
-// export const verifyEIN = async (ein: string): Promise<VerificationResult> => { ... }
-// export const verifyContractorLicense = async (licenseNumber: string, state: string): Promise<VerificationResult> => { ... }
-// export const verifyLiquorLicense = async (licenseNumber: string, state: string): Promise<VerificationResult> => { ... }

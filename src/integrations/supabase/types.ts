@@ -9,7 +9,197 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      business_info: {
+        Row: {
+          business_name: string
+          id: string
+          license_expiration: string | null
+          license_number: string | null
+          license_status: string | null
+          license_type: string | null
+          verified: boolean
+        }
+        Insert: {
+          business_name: string
+          id: string
+          license_expiration?: string | null
+          license_number?: string | null
+          license_status?: string | null
+          license_type?: string | null
+          verified?: boolean
+        }
+        Update: {
+          business_name?: string
+          id?: string
+          license_expiration?: string | null
+          license_number?: string | null
+          license_status?: string | null
+          license_type?: string | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      customer_access: {
+        Row: {
+          business_id: string
+          created_at: string
+          customer_id: string
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          customer_id: string
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          customer_id?: string
+          expires_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          state: string | null
+          type: string
+          updated_at: string
+          zipcode: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone?: string | null
+          state?: string | null
+          type: string
+          updated_at?: string
+          zipcode?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+          zipcode?: string | null
+        }
+        Relationships: []
+      }
+      responses: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          review_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          review_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          review_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "responses_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          business_id: string | null
+          content: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          content: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          content?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          started_at: string
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          status: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
