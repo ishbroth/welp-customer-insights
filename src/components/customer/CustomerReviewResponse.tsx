@@ -2,10 +2,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Eye } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface Response {
   id: string;
@@ -20,7 +21,7 @@ interface CustomerReviewResponseProps {
   responses: Response[];
   hasSubscription: boolean;
   isOneTimeUnlocked: boolean;
-  hideReplyOption?: boolean; // We'll keep this prop but make sure it's always respected
+  hideReplyOption?: boolean;
 }
 
 const CustomerReviewResponse = ({ 
@@ -96,17 +97,31 @@ const CustomerReviewResponse = ({
         </div>
       )}
       
-      {/* Only show respond button if hideReplyOption is false and user has appropriate access */}
-      {canRespond && !hideReplyOption && (
+      {/* Show different UI based on subscription status */}
+      {!hideReplyOption && (
         <>
-          {/* Toggle response form button */}
-          {!isResponseVisible && (
+          {canRespond ? (
+            /* If user has subscription, show respond button */
+            !isResponseVisible && (
+              <Button 
+                onClick={() => setIsResponseVisible(true)}
+                className="welp-button"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Respond
+              </Button>
+            )
+          ) : (
+            /* If user doesn't have subscription, show link to subscription page */
             <Button 
-              onClick={() => setIsResponseVisible(true)}
-              className="welp-button"
+              variant="outline"
+              asChild
+              className="flex items-center gap-1 text-sm"
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Respond
+              <Link to="/subscription">
+                <Eye className="h-4 w-4 mr-1" />
+                Subscribe to respond
+              </Link>
             </Button>
           )}
           
@@ -144,13 +159,6 @@ const CustomerReviewResponse = ({
             </form>
           )}
         </>
-      )}
-      
-      {/* Subscription message */}
-      {!canRespond && (
-        <div className="text-sm text-gray-500 mt-2">
-          <span>You need a subscription to respond to reviews.</span>
-        </div>
       )}
     </div>
   );

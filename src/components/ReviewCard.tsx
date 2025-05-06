@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,7 +7,8 @@ import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Edit, Trash2 } from "lucide-react";
+import { MessageSquare, Edit, Trash2, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -370,16 +372,35 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
-        {/* Respond button - only shown when appropriate conditions are met */}
-        {showResponse && canBusinessRespond() && (
-          <div className="mt-4 flex justify-end">
-            <Button 
-              onClick={() => setIsResponseVisible(!isResponseVisible)}
-            >
-              {isResponseVisible ? "Cancel" : "Respond"}
-            </Button>
-          </div>
-        )}
+        {/* Show different UI based on subscription status */}
+        {showResponse ? (
+          hasSubscription ? (
+            /* If user has subscription, show respond button when appropriate */
+            canBusinessRespond() && (
+              <div className="mt-4 flex justify-end">
+                <Button 
+                  onClick={() => setIsResponseVisible(!isResponseVisible)}
+                >
+                  {isResponseVisible ? "Cancel" : "Respond"}
+                </Button>
+              </div>
+            )
+          ) : (
+            /* If user doesn't have subscription, show link to subscription page */
+            <div className="mt-4 flex justify-end">
+              <Button 
+                variant="outline"
+                asChild
+                className="flex items-center gap-1 text-sm"
+              >
+                <Link to="/subscription">
+                  <Eye className="h-4 w-4 mr-1" />
+                  Subscribe to respond
+                </Link>
+              </Button>
+            </div>
+          )
+        ) : null}
         
         {/* Response form - only shown when clicked respond */}
         {isResponseVisible && (
