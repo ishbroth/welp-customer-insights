@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +42,6 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   const [response, setResponse] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responses, setResponses] = useState<ReviewResponse[]>(review.responses || []);
-  const [showSubscriptionMessage, setShowSubscriptionMessage] = useState(false);
   const [replyToResponseId, setReplyToResponseId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const { currentUser } = useAuth();
@@ -50,17 +50,10 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
 
-  // Log subscription status for debugging
-  console.log("ReviewCard - hasSubscription:", hasSubscription);
-  console.log("ReviewCard - canRespond:", canRespond);
-  console.log("ReviewCard - localStorage subscription:", localStorage.getItem("hasSubscription"));
-
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!canRespond) {
-      setShowSubscriptionMessage(true);
-      setTimeout(() => setShowSubscriptionMessage(false), 3000);
       return;
     }
     
@@ -201,7 +194,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                 </div>
                 <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
                 
-                {/* Check if has subscription AND it's not the business's own response */}
+                {/* Check if user can reply to this response */}
                 {hasSubscription && resp.authorId !== currentUser?.id && (
                   <div className="mt-2 flex justify-end">
                     <Button 
@@ -216,7 +209,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                   </div>
                 )}
                 
-                {/* Reply form - Only visible when subscribed */}
+                {/* Reply form */}
                 {replyToResponseId === resp.id && (
                   <div className="mt-2 pl-4 border-l-2 border-gray-200">
                     <Textarea
@@ -263,38 +256,19 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
-        {/* Respond button - always shown when showResponse is true, but functionality depends on subscription */}
+        {/* Respond button - only shown when showResponse is true */}
         {showResponse && (
           <div className="mt-4 flex justify-end">
             <Button 
-              variant={hasSubscription ? "default" : "outline"}
-              onClick={() => {
-                if (!hasSubscription) {
-                  setShowSubscriptionMessage(true);
-                  setTimeout(() => setShowSubscriptionMessage(false), 3000);
-                  return;
-                }
-                setIsResponseVisible(!isResponseVisible);
-              }}
-              className={hasSubscription ? "" : "text-welp-primary hover:text-welp-secondary"}
+              onClick={() => setIsResponseVisible(!isResponseVisible)}
             >
               {isResponseVisible ? "Cancel" : "Respond"}
             </Button>
           </div>
         )}
-        
-        {/* Subscription message - only shown when user is not subscribed and tries to respond */}
-        {showSubscriptionMessage && !hasSubscription && (
-          <div className="mt-3 p-3 bg-amber-50 text-amber-700 rounded-md border border-amber-200">
-            <p className="text-sm">
-              You need a Premium subscription to respond to reviews. 
-              <a href="/subscription" className="ml-1 underline font-medium">Upgrade now</a>
-            </p>
-          </div>
-        )}
 
-        {/* Response form - only shown when user is subscribed and clicks respond */}
-        {isResponseVisible && hasSubscription && (
+        {/* Response form - only shown when clicked respond */}
+        {isResponseVisible && (
           <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
             <Textarea
               value={response}

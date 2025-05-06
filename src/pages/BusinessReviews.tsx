@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -9,7 +10,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
-import SubscriptionBanner from "@/components/subscription/SubscriptionBanner";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ReviewCard from "@/components/ReviewCard";
@@ -32,30 +32,11 @@ const BusinessReviews = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize subscription status from localStorage with immediate URL parameter check
-  const [hasSubscription, setHasSubscription] = useState(() => {
-    // Check URL parameters first during initial load
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("subscribed") === "true") {
-      localStorage.setItem("hasSubscription", "true");
-      return true;
-    }
-    return localStorage.getItem("hasSubscription") === "true";
-  });
+  // Set hasSubscription to true by default for business users - removing the subscription check
+  const [hasSubscription, setHasSubscription] = useState(true);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
-  
-  // Monitor URL parameters for subscription changes
-  useEffect(() => {
-    // Check URL parameters
-    const urlParams = new URLSearchParams(location.search);
-    if (urlParams.get("subscribed") === "true") {
-      console.log("Setting subscription to true from URL parameter");
-      setHasSubscription(true);
-      localStorage.setItem("hasSubscription", "true");
-    }
-  }, [location]);
   
   // State to hold a working copy of reviews (with changes to reactions)
   const [workingReviews, setWorkingReviews] = useState(() => {
@@ -156,11 +137,6 @@ const BusinessReviews = () => {
     );
   };
 
-  // Log the current subscription status to help with debugging
-  console.log("BusinessReviews - Current subscription status:", hasSubscription);
-  console.log("BusinessReviews - localStorage value:", localStorage.getItem("hasSubscription"));
-  console.log("BusinessReviews - URL subscribed param:", new URLSearchParams(location.search).get("subscribed"));
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -175,9 +151,6 @@ const BusinessReviews = () => {
                 Manage the reviews you've written about customers.
               </p>
             </div>
-            
-            {/* Only show subscription banner if user doesn't have a subscription */}
-            {!hasSubscription && <SubscriptionBanner type="business" />}
             
             <div className="flex justify-between mb-6">
               <div>

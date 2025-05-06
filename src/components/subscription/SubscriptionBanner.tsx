@@ -8,6 +8,12 @@ interface SubscriptionBannerProps {
 }
 
 const SubscriptionBanner = ({ type }: SubscriptionBannerProps) => {
+  // For business users, return null (no banner displayed)
+  if (type === "business") {
+    return null;
+  }
+
+  // Only display subscription banner for customers
   const isCustomer = type === "customer";
 
   return (
