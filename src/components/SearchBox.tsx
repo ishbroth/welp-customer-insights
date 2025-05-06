@@ -37,11 +37,15 @@ const SearchBox = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Extract first word of address for search
+    const firstWordOfAddress = address.trim().split(/\s+/)[0];
+    
     const searchParams = {
       lastName,
       firstName,
       phone,
-      address,
+      // Use only the first word of the address for searching
+      address: firstWordOfAddress,
       city,
       state,
       zipCode
@@ -52,7 +56,7 @@ const SearchBox = ({
       onSearch(searchParams);
     } else {
       // Default behavior - navigate to search results page
-      navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipCode=${encodeURIComponent(zipCode)}`);
+      navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(firstWordOfAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipCode=${encodeURIComponent(zipCode)}`);
     }
   };
 
