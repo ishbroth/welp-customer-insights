@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -185,7 +184,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     });
   };
 
-  // Function to handle replying to a customer response
+  // Function to handle replying to a customer response - we'll keep this since it's used for replies within responses
   const handleSubmitReply = (responseId: string) => {
     if (!hasSubscription) {
       toast({
@@ -348,44 +347,9 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                   </div>
                 )}
                 
-                {/* Check if user can reply to this response */}
-                {hasSubscription && resp.authorId !== currentUser?.id && (
-                  <div className="mt-2 flex justify-end">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-welp-primary hover:bg-welp-primary/10 h-8 px-2 py-1"
-                      onClick={() => setReplyToResponseId(replyToResponseId === resp.id ? null : resp.id)}
-                    >
-                      <MessageSquare className="h-3 w-3 mr-1" />
-                      {replyToResponseId === resp.id ? "Cancel" : "Reply"}
-                    </Button>
-                  </div>
-                )}
+                {/* Remove the Reply button that was here */}
                 
                 {/* Reply form */}
-                {replyToResponseId === resp.id && (
-                  <div className="mt-2 pl-4 border-l-2 border-gray-200">
-                    <Textarea
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder="Write your reply..."
-                      className="w-full p-2 text-sm min-h-[80px]"
-                      maxLength={1000}
-                    />
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="text-xs text-gray-500">
-                        {replyContent.length}/1000 characters
-                      </div>
-                      <Button 
-                        size="sm"
-                        onClick={() => handleSubmitReply(resp.id)}
-                      >
-                        Send Reply
-                      </Button>
-                    </div>
-                  </div>
-                )}
                 
                 {/* Display replies to this response */}
                 {resp.replies && resp.replies.length > 0 && (
