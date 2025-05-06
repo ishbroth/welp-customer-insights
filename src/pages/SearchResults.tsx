@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -47,10 +46,10 @@ const transformMockUsers = () => {
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const [customers, setCustomers] = useState<any[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
+  const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentUser } = useAuth();
@@ -116,13 +115,25 @@ const SearchResults = () => {
     return '';
   };
 
-  const handleSelectCustomer = (customer: any) => {
-    setSelectedCustomer(customer);
+  const handleSelectCustomer = (customerId: string) => {
+    // If this customer is already expanded, collapse it
+    if (expandedCustomerId === customerId) {
+      setExpandedCustomerId(null);
+      return;
+    }
+
+    // Otherwise, expand this customer
+    setExpandedCustomerId(customerId);
+    
+    // Check if we already fetched reviews for this customer
+    if (customerReviews[customerId]) {
+      return;
+    }
     
     // Simulate API call to fetch reviews for this customer
     setTimeout(() => {
       // Find the original user data from mockUsers
-      const userData = mockUsers.find(user => user.id === customer.id);
+      const userData = mockUsers.find(user => user.id === customerId);
       
       if (userData?.reviews?.length) {
         // Map user reviews to the format expected by ReviewCard
@@ -141,13 +152,21 @@ const SearchResults = () => {
             location: userData.city ? `${userData.city}, ${userData.state}` : "Unknown Location",
             // Add address and city from the reviewer (business owner) if available
             address: reviewerData?.address || "",
-            city: reviewerData?.city || ""
+            city: reviewerData?.city || "",
+            zipCode: userData.zipCode || ""
           };
         });
         
-        setReviews(mappedReviews);
+        // Store the reviews for this customer
+        setCustomerReviews(prev => ({
+          ...prev,
+          [customerId]: mappedReviews
+        }));
       } else {
-        setReviews([]);
+        setCustomerReviews(prev => ({
+          ...prev,
+          [customerId]: []
+        }));
       }
     }, 500);
   };
@@ -228,34 +247,175 @@ const SearchResults = () => {
                       const canSeeFullDetails = currentUser?.type === "admin" || 
                                                isSubscribed || 
                                                hasOneTimeAccess;
+                      
+                      // Check if this customer is currently expanded
+                      const isExpanded = expandedCustomerId === customer.id;
+                      
+                      // Get reviews for this customer if expanded
+                      const reviews = customerReviews[customer.id] || [];
                                                
                       return (
-                        <div 
-                          key={customer.id}
-                          onClick={() => handleSelectCustomer(customer)}
-                          className={`p-3 border rounded-md cursor-pointer transition-colors ${selectedCustomer?.id === customer.id ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
-                        >
-                          <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
-                          <div className="text-sm text-gray-600">
-                            {canSeeFullDetails ? customer.address : formatAddress(customer)}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {customer.city && customer.state ? `${customer.city}, ${customer.state}` : 
-                             customer.city ? customer.city :
-                             customer.state ? customer.state : "Location not available"}
-                            {customer.zipCode && ` ${customer.zipCode}`}
-                          </div>
-                          <div className="flex justify-between items-center mt-1">
-                            <div className="flex items-center">
-                              <StarRating rating={Math.round(customer.averageRating)} size="sm" />
-                              <span className="ml-2 text-sm text-gray-500">
-                                ({customer.averageRating.toFixed(1)})
+                        <div key={customer.id} className="border rounded-md overflow-hidden">
+                          <div 
+                            onClick={() => handleSelectCustomer(customer.id)}
+                            className={`p-3 cursor-pointer transition-colors ${isExpanded ? 'border-welp-primary bg-welp-primary/5' : 'hover:border-welp-primary'}`}
+                          >
+                            <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
+                            <div className="text-sm text-gray-600">
+                              {canSeeFullDetails ? customer.address : formatAddress(customer)}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {customer.city && customer.state ? `${customer.city}, ${customer.state}` : 
+                              customer.city ? customer.city :
+                              customer.state ? customer.state : "Location not available"}
+                              {customer.zipCode && ` ${customer.zipCode}`}
+                            </div>
+                            <div className="flex justify-between items-center mt-1">
+                              <div className="flex items-center">
+                                <StarRating rating={Math.round(customer.averageRating)} size="sm" />
+                                <span className="ml-2 text-sm text-gray-500">
+                                  ({customer.averageRating.toFixed(1)})
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
                               </span>
                             </div>
-                            <span className="text-xs text-gray-500">
-                              {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
-                            </span>
                           </div>
+                          
+                          {/* Show reviews when customer is expanded */}
+                          {isExpanded && (
+                            <div className="border-t">
+                              {/* Show subscription card if needed */}
+                              {currentUser && customer.isSubscriptionNeeded && !isSubscribed && currentUser.type === "business" && !hasFullAccess(customer.id) && (
+                                <div className="p-4 border-b border-welp-primary/20 bg-welp-primary/5">
+                                  <div className="flex items-center">
+                                    <Lock className="text-welp-primary mr-4 h-10 w-10 flex-shrink-0" />
+                                    <div>
+                                      <h3 className="text-lg font-bold mb-1">Subscribe to See Full Reviews</h3>
+                                      <p className="text-gray-600 mb-3 text-sm">
+                                        You've found information on this customer, but you need a subscription to see all detailed reviews.
+                                      </p>
+                                      <div className="flex flex-col sm:flex-row gap-2">
+                                        <Button 
+                                          className="welp-button"
+                                          onClick={() => handleBuyFullReview(customer.id)}
+                                          size="sm"
+                                        >
+                                          Pay $3.00 for this customer
+                                        </Button>
+                                        <Link to="/subscription">
+                                          <Button variant="outline" className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" size="sm">
+                                            Subscribe for $19.99/month
+                                          </Button>
+                                        </Link>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Reviews list */}
+                              {reviews.length > 0 ? (
+                                <div className="divide-y">
+                                  {reviews.map(review => {
+                                    // Check if the user has access to full reviews for this customer
+                                    const hasAccess = hasFullAccess(customer.id);
+                                    
+                                    // For non-logged in users or those without subscription or one-time access, show limited version
+                                    if (shouldShowLimitedReview && !hasAccess) {
+                                      // Create a modified review with just the first 5 words
+                                      const partialReview = {
+                                        ...review,
+                                        comment: getFirstFiveWords(review.comment)
+                                      };
+                                      
+                                      return (
+                                        <div key={review.id} className="p-4">
+                                          <ReviewCard review={partialReview} showResponse={false} />
+                                          <div className="mt-2 flex justify-end">
+                                            {currentUser ? (
+                                              <Button 
+                                                variant="outline" 
+                                                className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
+                                                onClick={() => handleBuyFullReview(customer.id)}
+                                              >
+                                                <Lock className="w-4 h-4 mr-2" />
+                                                See All Reviews for $3
+                                              </Button>
+                                            ) : (
+                                              <Link to="/login">
+                                                <Button 
+                                                  variant="outline" 
+                                                  className="border-welp-primary text-welp-primary hover:bg-welp-primary/10"
+                                                >
+                                                  <Lock className="w-4 h-4 mr-2" />
+                                                  Login to See Full Reviews
+                                                </Button>
+                                              </Link>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    // For users with access, show the full review
+                                    return (
+                                      <div key={review.id} className="p-4">
+                                        <ReviewCard key={review.id} review={review} />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="p-6 text-center">
+                                  <h3 className="text-lg font-bold mb-2">No Reviews Yet</h3>
+                                  <p className="text-gray-600 mb-4">
+                                    {currentUser && currentUser.type === "business" ? 
+                                      "Be the first to review this customer and help other businesses." : 
+                                      "No reviews are available for this customer yet."}
+                                  </p>
+                                  {currentUser && currentUser.type === "business" && (
+                                    <Link to={`/review/new?customerId=${customer.id}`}>
+                                      <Button className="welp-button">
+                                        Write a Review
+                                      </Button>
+                                    </Link>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Write review button for business accounts */}
+                              {currentUser && currentUser.type === "business" && reviews.length > 0 && (
+                                <div className="p-4 border-t bg-gray-50 text-center">
+                                  <Link to={`/review/new?customerId=${customer.id}`}>
+                                    <Button className="welp-button">
+                                      Write a Review
+                                    </Button>
+                                  </Link>
+                                </div>
+                              )}
+                              
+                              {/* Login/signup prompts for non-logged in users */}
+                              {!currentUser && (
+                                <div className="p-4 border-t bg-gray-50 text-center">
+                                  <p className="text-sm mb-3">Sign up or login to write reviews and see full customer details</p>
+                                  <div className="flex justify-center gap-2">
+                                    <Link to={`/signup?type=business`}>
+                                      <Button variant="outline" className="border-welp-primary text-welp-primary hover:bg-welp-primary/10">
+                                        Sign Up
+                                      </Button>
+                                    </Link>
+                                    <Link to={`/login`}>
+                                      <Button className="welp-button">
+                                        Login
+                                      </Button>
+                                    </Link>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -263,160 +423,6 @@ const SearchResults = () => {
                 </div>
               )}
             </Card>
-            
-            {/* Selected customer details and reviews */}
-            {selectedCustomer && (
-              <div>
-                <Card className="p-6 mb-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-2xl font-bold">{selectedCustomer.lastName}, {selectedCustomer.firstName}</h2>
-                      
-                      {/* Display full or partial address based on subscription status */}
-                      {(currentUser?.type === "admin" || isSubscribed || hasFullAccess(selectedCustomer.id)) ? (
-                        <>
-                          <p className="text-gray-600">{selectedCustomer.address}</p>
-                          <p className="text-gray-600">{selectedCustomer.phone}</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-gray-600">{formatAddress(selectedCustomer)}</p>
-                        </>
-                      )}
-                      
-                      <p className="text-gray-600">
-                        {selectedCustomer.city && selectedCustomer.state ? `${selectedCustomer.city}, ${selectedCustomer.state}` : 
-                         selectedCustomer.city ? selectedCustomer.city :
-                         selectedCustomer.state ? selectedCustomer.state : ""}
-                        {selectedCustomer.zipCode && ` ${selectedCustomer.zipCode}`}
-                      </p>
-                      
-                      <div className="flex items-center mt-2">
-                        <StarRating rating={Math.round(selectedCustomer.averageRating)} />
-                        <span className="ml-2 text-gray-700">
-                          {selectedCustomer.averageRating.toFixed(1)} ({selectedCustomer.totalReviews} {selectedCustomer.totalReviews === 1 ? 'review' : 'reviews'})
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {currentUser && currentUser.type === "business" && (
-                      <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
-                        <Button className="welp-button">
-                          Write a Review
-                        </Button>
-                      </Link>
-                    )}
-                    
-                    {!currentUser && (
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Link to={`/signup?type=business`}>
-                          <Button variant="outline" className="border-welp-primary text-welp-primary hover:bg-welp-primary/10">
-                            Sign Up
-                          </Button>
-                        </Link>
-                        <Link to={`/login`}>
-                          <Button className="welp-button">
-                            Login
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-                
-                {/* Only show subscription card if user is logged in but hasn't subscribed */}
-                {currentUser && selectedCustomer.isSubscriptionNeeded && !isSubscribed && currentUser.type === "business" && !hasFullAccess(selectedCustomer.id) ? (
-                  <Card className="p-6 mb-6 border-2 border-welp-primary">
-                    <div className="flex items-center">
-                      <Lock className="text-welp-primary mr-4 h-12 w-12" />
-                      <div>
-                        <h3 className="text-xl font-bold mb-1">Subscribe to See Full Reviews</h3>
-                        <p className="text-gray-600 mb-4">
-                          You've found information on this customer, but you need a subscription to see all detailed reviews.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button 
-                            className="welp-button"
-                            onClick={() => handleBuyFullReview(selectedCustomer.id)}
-                          >
-                            Pay $3.00 for this customer
-                          </Button>
-                          <Link to="/subscription">
-                            <Button variant="outline" className="border-welp-primary text-welp-primary hover:bg-welp-primary/10">
-                              Subscribe for $19.99/month
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ) : reviews.length > 0 ? (
-                  <div>
-                    <h3 className="text-xl font-bold mb-4">Customer Reviews</h3>
-                    {reviews.map(review => {
-                      // Check if the user has access to full reviews for this customer
-                      const hasAccess = hasFullAccess(selectedCustomer.id);
-                      
-                      // For non-logged in users or those without subscription or one-time access, show limited version
-                      if (shouldShowLimitedReview && !hasAccess) {
-                        // Create a modified review with just the first 5 words
-                        const partialReview = {
-                          ...review,
-                          comment: getFirstFiveWords(review.comment)
-                        };
-                        
-                        return (
-                          <div key={review.id} className="mb-4">
-                            <ReviewCard review={partialReview} showResponse={false} />
-                            <div className="mt-2 flex justify-end">
-                              {currentUser ? (
-                                <Button 
-                                  variant="outline" 
-                                  className="border-welp-primary text-welp-primary hover:bg-welp-primary/10" 
-                                  onClick={() => handleBuyFullReview(selectedCustomer.id)}
-                                >
-                                  <Lock className="w-4 h-4 mr-2" />
-                                  See All Reviews for $3
-                                </Button>
-                              ) : (
-                                <Link to="/login">
-                                  <Button 
-                                    variant="outline" 
-                                    className="border-welp-primary text-welp-primary hover:bg-welp-primary/10"
-                                  >
-                                    <Lock className="w-4 h-4 mr-2" />
-                                    Login to See Full Reviews
-                                  </Button>
-                                </Link>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      // For users with access, show the full review
-                      return <ReviewCard key={review.id} review={review} />;
-                    })}
-                  </div>
-                ) : (
-                  <Card className="p-6 text-center">
-                    <h3 className="text-xl font-bold mb-2">No Reviews Yet</h3>
-                    <p className="text-gray-600 mb-4">
-                      {currentUser && currentUser.type === "business" ? 
-                        "Be the first to review this customer and help other businesses." : 
-                        "No reviews are available for this customer yet."}
-                    </p>
-                    {currentUser && currentUser.type === "business" && (
-                      <Link to={`/review/new?customerId=${selectedCustomer.id}`}>
-                        <Button className="welp-button">
-                          Write a Review
-                        </Button>
-                      </Link>
-                    )}
-                  </Card>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </main>
