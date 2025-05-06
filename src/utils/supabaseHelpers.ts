@@ -201,12 +201,17 @@ export const searchCustomers = async (params: SearchParams, requestingUserType?:
     throw error;
   }
   
+  // Make sure data is not null before trying to map over it
+  if (!data) {
+    return [];
+  }
+  
   // If the requesting user is a customer, remove address information from 
   // any business profiles that might be included in the nested data
-  if (requestingUserType === 'customer') {
+  if (requestingUserType === 'customer' && Array.isArray(data)) {
     return data.map(customer => {
       // Remove address from reviews where the business profile is included
-      if (customer.reviews) {
+      if (customer.reviews && Array.isArray(customer.reviews)) {
         customer.reviews = customer.reviews.map(review => {
           if (review.business && review.business.profiles) {
             // Remove address information from the business profile
