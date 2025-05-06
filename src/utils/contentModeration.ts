@@ -11,7 +11,7 @@ const PROFANITY_WORDS = [
 ];
 
 // Maximum number of profanity words allowed
-const MAX_PROFANITY_COUNT = 6;
+const MAX_PROFANITY_COUNT = 3;
 
 // URL regex pattern
 const URL_PATTERN = /https?:\/\/[^\s]+|www\.[^\s]+|\b[a-zA-Z0-9]+\.(com|org|net|io|edu)\b/gi;
