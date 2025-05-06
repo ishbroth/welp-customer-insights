@@ -1,164 +1,191 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  SearchParams,
-  UserWithProfile,
-  BusinessWithInfo
+import type { 
+  Profile, 
+  ProfileInsert, 
+  BusinessInfo, 
+  BusinessInfoInsert, 
+  SearchParams 
 } from "@/types/supabase";
 
 /**
- * Search for customer profiles based on search parameters
+ * Get a user profile by ID
+ */
+export const getUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+  
+  return data;
+};
+
+/**
+ * Get a business profile with business info by ID
+ */
+export const getBusinessProfile = async (userId: string) => {
+  // First get the profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (profileError) {
+    console.error("Error fetching business profile:", profileError);
+    throw profileError;
+  }
+  
+  // Then get the business info
+  const { data: businessInfo, error: businessError } = await supabase
+    .from('business_info')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (businessError) {
+    console.error("Error fetching business info:", businessError);
+    throw businessError;
+  }
+  
+  // Combine the data
+  return {
+    ...profile,
+    business_name: businessInfo.business_name,
+    license_number: businessInfo.license_number,
+    verified: businessInfo.verified,
+  };
+};
+
+/**
+ * Update a user profile
+ */
+export const updateUserProfile = async (userId: string, profileData: Partial<Profile>) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(profileData)
+    .eq('id', userId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
+  }
+  
+  return data;
+};
+
+/**
+ * Update business information
+ */
+export const updateBusinessInfo = async (userId: string, businessData: Partial<BusinessInfo>) => {
+  const { data, error } = await supabase
+    .from('business_info')
+    .update(businessData)
+    .eq('id', userId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error updating business info:", error);
+    throw error;
+  }
+  
+  return data;
+};
+
+/**
+ * Verify a business
+ */
+export const verifyBusiness = async (userId: string, businessData: Partial<BusinessInfo>) => {
+  const { data, error } = await supabase
+    .from('business_info')
+    .update({
+      ...businessData,
+      verified: true
+    })
+    .eq('id', userId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error verifying business:", error);
+    throw error;
+  }
+  
+  return data;
+};
+
+/**
+ * Search for customers by various parameters
  */
 export const searchCustomers = async (params: SearchParams) => {
   let query = supabase
     .from('profiles')
-    .select('*, business_info(*)')
+    .select(`
+      *,
+      reviews!customer_id(
+        id,
+        rating,
+        content,
+        created_at,
+        business:business_id(
+          id,
+          profiles!business_id(
+            first_name,
+            last_name
+          ),
+          business_info!id(
+            business_name
+          )
+        )
+      )
+    `)
     .eq('type', 'customer');
 
-  // Add filter conditions based on provided parameters
-  if (params.firstName) {
-    query = query.ilike('first_name', `%${params.firstName}%`);
+  // Apply filters based on provided parameters
+  if (params.firstName && params.firstName.trim()) {
+    query = query.ilike('first_name', `%${params.firstName.trim()}%`);
   }
   
-  if (params.lastName) {
-    query = query.ilike('last_name', `%${params.lastName}%`);
+  if (params.lastName && params.lastName.trim()) {
+    query = query.ilike('last_name', `%${params.lastName.trim()}%`);
   }
   
-  if (params.phone) {
-    query = query.ilike('phone', `%${params.phone}%`);
+  if (params.phone && params.phone.trim()) {
+    query = query.ilike('phone', `%${params.phone.trim()}%`);
   }
   
-  if (params.address) {
-    query = query.ilike('address', `%${params.address}%`);
+  if (params.address && params.address.trim()) {
+    query = query.ilike('address', `%${params.address.trim()}%`);
   }
   
-  if (params.city) {
-    query = query.ilike('city', `%${params.city}%`);
+  if (params.city && params.city.trim()) {
+    query = query.ilike('city', `%${params.city.trim()}%`);
   }
   
-  if (params.state) {
-    query = query.eq('state', params.state);
+  if (params.state && params.state.trim()) {
+    query = query.ilike('state', `%${params.state.trim()}%`);
   }
   
-  if (params.zipCode) {
-    query = query.eq('zipcode', params.zipCode);
+  if (params.zipCode && params.zipCode.trim()) {
+    query = query.ilike('zipcode', `%${params.zipCode.trim()}%`);
   }
 
   const { data, error } = await query;
   
   if (error) {
-    console.error('Error searching customers:', error);
+    console.error("Error searching for customers:", error);
     throw error;
   }
   
-  return data || [];
+  return data;
 };
 
-/**
- * Get the current user profile with additional information
- */
-export const getCurrentUserProfile = async (): Promise<UserWithProfile | null> => {
-  const { data: sessionData } = await supabase.auth.getSession();
-  
-  if (!sessionData.session?.user) {
-    return null;
-  }
-  
-  const userId = sessionData.session.user.id;
-  
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-  
-  if (error) {
-    console.error('Error getting user profile:', error);
-    throw error;
-  }
-  
-  if (!data) {
-    return null;
-  }
-  
-  return {
-    id: data.id,
-    email: sessionData.session.user.email,
-    type: data.type as 'business' | 'customer',
-    first_name: data.first_name || undefined,
-    last_name: data.last_name || undefined,
-    phone: data.phone || undefined,
-    address: data.address || undefined,
-    city: data.city || undefined,
-    state: data.state || undefined,
-    zipcode: data.zipcode || undefined
-  };
-};
-
-/**
- * Get a business profile with business info
- */
-export const getBusinessProfile = async (businessId: string): Promise<BusinessWithInfo | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(`
-      *,
-      business_info(*)
-    `)
-    .eq('id', businessId)
-    .eq('type', 'business')
-    .maybeSingle();
-  
-  if (error) {
-    console.error('Error getting business profile:', error);
-    throw error;
-  }
-  
-  if (!data || !data.business_info) {
-    return null;
-  }
-  
-  return {
-    id: data.id,
-    type: 'business',
-    first_name: data.first_name || undefined,
-    last_name: data.last_name || undefined,
-    phone: data.phone || undefined,
-    address: data.address || undefined,
-    city: data.city || undefined,
-    state: data.state || undefined,
-    zipcode: data.zipcode || undefined,
-    business_name: data.business_info.business_name,
-    license_number: data.business_info.license_number || undefined,
-    verified: data.business_info.verified
-  };
-};
-
-/**
- * Verify a business with license information
- */
-export const verifyBusiness = async (businessId: string, licenseData: {
-  licenseNumber: string;
-  businessName: string;
-  licenseType?: string;
-  licenseStatus?: string;
-  licenseExpiration?: string;
-}): Promise<boolean> => {
-  const { error } = await supabase
-    .from('business_info')
-    .update({
-      license_number: licenseData.licenseNumber,
-      license_type: licenseData.licenseType || 'Business License',
-      license_status: licenseData.licenseStatus || 'Active',
-      license_expiration: licenseData.licenseExpiration ? new Date(licenseData.licenseExpiration).toISOString() : null,
-      verified: true
-    })
-    .eq('id', businessId);
-  
-  if (error) {
-    console.error('Error verifying business:', error);
-    throw error;
-  }
-  
-  return true;
-};
