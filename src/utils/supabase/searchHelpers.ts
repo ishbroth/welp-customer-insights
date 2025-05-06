@@ -1,93 +1,90 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { SearchParams } from "@/types/supabase";
+import type { Profile } from "@/types/supabase";
 
 /**
- * Search for customers by various parameters
- * @param params Search parameters
- * @param requestingUserType The type of user making the request (business, customer, admin)
+ * Search for businesses by name or category
  */
-export const searchCustomers = async (params: SearchParams, requestingUserType?: string) => {
-  let query = supabase
+export const searchBusinesses = async (query: string, filters?: { category?: string, location?: string }) => {
+  let queryBuilder = supabase
     .from('profiles')
     .select(`
       *,
-      reviews!customer_id(
-        id,
-        rating,
-        content,
-        created_at,
-        business:business_id(
-          id,
-          profiles!business_id(
-            first_name,
-            last_name
-          ),
-          business_info!id(
-            business_name
-          )
-        )
-      )
+      business_info(*)
     `)
-    .eq('type', 'customer');
+    .eq('type', 'business');
 
-  // Apply filters based on provided parameters
-  if (params.firstName && params.firstName.trim()) {
-    query = query.ilike('first_name', `%${params.firstName.trim()}%`);
-  }
-  
-  if (params.lastName && params.lastName.trim()) {
-    query = query.ilike('last_name', `%${params.lastName.trim()}%`);
-  }
-  
-  if (params.phone && params.phone.trim()) {
-    query = query.ilike('phone', `%${params.phone.trim()}%`);
-  }
-  
-  if (params.address && params.address.trim()) {
-    query = query.ilike('address', `%${params.address.trim()}%`);
-  }
-  
-  if (params.city && params.city.trim()) {
-    query = query.ilike('city', `%${params.city.trim()}%`);
-  }
-  
-  if (params.state && params.state.trim()) {
-    query = query.ilike('state', `%${params.state.trim()}%`);
-  }
-  
-  if (params.zipCode && params.zipCode.trim()) {
-    query = query.ilike('zipcode', `%${params.zipCode.trim()}%`);
+  if (query) {
+    queryBuilder = queryBuilder.textSearch('business_info.business_name', query);
   }
 
-  const { data, error } = await query;
-  
+  if (filters?.category) {
+    queryBuilder = queryBuilder.eq('business_info.category', filters.category);
+  }
+
+  if (filters?.location) {
+    queryBuilder = queryBuilder.or(`city.eq.${filters.location},state.eq.${filters.location},zipcode.eq.${filters.location}`);
+  }
+
+  const { data, error } = await queryBuilder;
+
   if (error) {
-    console.error("Error searching for customers:", error);
+    console.error("Error searching businesses:", error);
     throw error;
   }
+
+  return data;
+};
+
+/**
+ * Search for customers by name or location
+ */
+export const searchCustomers = async (query: string, filters?: { location?: string }) => {
+  let queryBuilder = supabase
+    .from('profiles')
+    .select('*')
+    .eq('type', 'customer');
+
+  if (query) {
+    queryBuilder = queryBuilder.or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%`);
+  }
+
+  if (filters?.location) {
+    queryBuilder = queryBuilder.or(`city.eq.${filters.location},state.eq.${filters.location},zipcode.eq.${filters.location}`);
+  }
+
+  const { data, error } = await queryBuilder;
+
+  if (error) {
+    console.error("Error searching customers:", error);
+    throw error;
+  }
+
+  // Fixed: Return the data array instead of trying to assign it to an object with error property
+  return data || [];
+};
+
+/**
+ * Search for reviews by business or customer
+ */
+export const searchReviews = async (params: { businessId?: string, customerId?: string }) => {
+  const { businessId, customerId } = params;
   
-  // TypeScript fix: Ensure we return an array even if data is null
-  if (!data) {
-    return [];
+  let queryBuilder = supabase.from('reviews').select('*');
+  
+  if (businessId) {
+    queryBuilder = queryBuilder.eq('business_id', businessId);
   }
   
-  // If the requesting user is a customer, remove address information from 
-  // any business profiles that might be included in the nested data
-  if (requestingUserType === 'customer' && Array.isArray(data)) {
-    return data.map(customer => {
-      // Remove address from reviews where the business profile is included
-      if (customer.reviews && Array.isArray(customer.reviews)) {
-        customer.reviews = customer.reviews.map(review => {
-          if (review.business && review.business.profiles) {
-            // Remove address information from the business profile
-            delete review.business.profiles.address;
-          }
-          return review;
-        });
-      }
-      return customer;
-    });
+  if (customerId) {
+    queryBuilder = queryBuilder.eq('customer_id', customerId);
+  }
+  
+  const { data, error } = await queryBuilder;
+  
+  if (error) {
+    console.error("Error searching reviews:", error);
+    throw error;
   }
   
   return data;
