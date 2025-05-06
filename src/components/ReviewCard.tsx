@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, Edit, Trash2, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { moderateContent } from "@/utils/contentModeration";
+import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,8 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   const [editContent, setEditContent] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [responseToDeleteId, setResponseToDeleteId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -92,6 +95,14 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     e.preventDefault();
     
     if (!canRespond) {
+      return;
+    }
+    
+    // Add content moderation check
+    const moderationResult = moderateContent(response);
+    if (!moderationResult.isApproved) {
+      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
+      setShowRejectionDialog(true);
       return;
     }
     
@@ -144,6 +155,14 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
       return;
     }
 
+    // Add content moderation check
+    const moderationResult = moderateContent(editContent);
+    if (!moderationResult.isApproved) {
+      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
+      setShowRejectionDialog(true);
+      return;
+    }
+
     setResponses(prev => prev.map(resp => {
       if (resp.id === editResponseId) {
         return {
@@ -186,7 +205,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     });
   };
 
-  // Function to handle replying to a customer response - we'll keep this since it's used for replies within responses
+  // Function to handle replying to a customer response
   const handleSubmitReply = (responseId: string) => {
     if (!hasSubscription) {
       toast({
@@ -203,6 +222,14 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         description: "Please write something before submitting.",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Add content moderation check
+    const moderationResult = moderateContent(replyContent);
+    if (!moderationResult.isApproved) {
+      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
+      setShowRejectionDialog(true);
       return;
     }
 
@@ -429,7 +456,14 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         )}
       </div>
       
-      {/* Delete Confirmation Dialog */}
+      {/* Add Content Rejection Dialog */}
+      <ContentRejectionDialog 
+        open={showRejectionDialog}
+        onOpenChange={setShowRejectionDialog}
+        reason={rejectionReason || ""}
+      />
+      
+      {/* Keep existing delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

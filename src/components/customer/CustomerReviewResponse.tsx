@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +6,8 @@ import { formatDistance } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { moderateContent } from "@/utils/contentModeration";
+import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 
 interface Response {
   id: string;
@@ -34,6 +35,8 @@ const CustomerReviewResponse = ({
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [responseText, setResponseText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const { currentUser } = useAuth();
   const { toast } = useToast();
   
@@ -56,6 +59,14 @@ const CustomerReviewResponse = ({
         description: "You need a subscription to respond to reviews.",
         variant: "destructive"
       });
+      return;
+    }
+    
+    // Add content moderation check
+    const moderationResult = moderateContent(responseText);
+    if (!moderationResult.isApproved) {
+      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
+      setShowRejectionDialog(true);
       return;
     }
     
@@ -160,6 +171,13 @@ const CustomerReviewResponse = ({
           )}
         </>
       )}
+      
+      {/* Add Content Rejection Dialog */}
+      <ContentRejectionDialog 
+        open={showRejectionDialog}
+        onOpenChange={setShowRejectionDialog}
+        reason={rejectionReason || ""}
+      />
     </div>
   );
 };

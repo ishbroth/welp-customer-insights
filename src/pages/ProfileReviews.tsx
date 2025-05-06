@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Review } from "@/data/mockUsers";
@@ -11,6 +10,8 @@ import CustomerReviewCard from "@/components/customer/CustomerReviewCard";
 import SubscriptionBanner from "@/components/subscription/SubscriptionBanner";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
+import { moderateContent } from "@/utils/contentModeration";
+import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,6 +45,10 @@ const ProfileReviews = () => {
     
     loadUnlockedReviews();
   }, [currentUser]);
+  
+  // Add new state for content moderation
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   // Get reviews about the current customer user - sorted by newest first
   const [customerReviews, setCustomerReviews] = useState(() => {
@@ -84,7 +89,7 @@ const ProfileReviews = () => {
     return unlockedReviews.includes(reviewId) || hasSubscription;
   };
 
-  // Handle toggling reactions
+  // Handle toggling reactions - with content moderation for comments if added in the future
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
     setCustomerReviews(prevReviews => 
       prevReviews.map(review => {
@@ -158,6 +163,13 @@ const ProfileReviews = () => {
         </main>
       </div>
       <Footer />
+      
+      {/* Add Content Rejection Dialog */}
+      <ContentRejectionDialog 
+        open={showRejectionDialog}
+        onOpenChange={setShowRejectionDialog}
+        reason={rejectionReason || ""}
+      />
     </div>
   );
 };

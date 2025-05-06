@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
+import { moderateContent } from "@/utils/contentModeration";
+import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 
 // Mock customer data for demonstration
 const mockCustomers = [
@@ -61,6 +63,8 @@ const NewReview = () => {
   const [customerZipCode, setCustomerZipCode] = useState(searchParamZipCode);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   useEffect(() => {
     // Handle pre-filling data if we're editing
@@ -102,6 +106,14 @@ const NewReview = () => {
         description: "Please select a star rating for this customer.",
         variant: "destructive",
       });
+      return;
+    }
+    
+    // Add content moderation check
+    const moderationResult = moderateContent(comment);
+    if (!moderationResult.isApproved) {
+      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
+      setShowRejectionDialog(true);
       return;
     }
     
@@ -280,6 +292,13 @@ const NewReview = () => {
         </div>
       </main>
       <Footer />
+      
+      {/* Add Content Rejection Dialog */}
+      <ContentRejectionDialog 
+        open={showRejectionDialog}
+        onOpenChange={setShowRejectionDialog}
+        reason={rejectionReason || ""}
+      />
     </div>
   );
 };

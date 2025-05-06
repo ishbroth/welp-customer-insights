@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -13,6 +12,8 @@ import { Card } from "@/components/ui/card";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ReviewCard from "@/components/ReviewCard";
+import { moderateContent } from "@/utils/contentModeration";
+import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +75,10 @@ const BusinessReviews = () => {
     });
   });
 
+  // Add new state for content moderation
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
+  
   // Pagination settings
   const reviewsPerPage = 5;
   const totalPages = Math.ceil(workingReviews.length / reviewsPerPage);
@@ -113,7 +118,7 @@ const BusinessReviews = () => {
     setReviewToDelete(null);
   };
 
-  // Handle toggling reactions
+  // Handle toggling reactions - add content moderation 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
     setWorkingReviews(prevReviews => 
       prevReviews.map(review => {
@@ -228,6 +233,13 @@ const BusinessReviews = () => {
       </div>
       <Footer />
 
+      {/* Add Content Rejection Dialog */}
+      <ContentRejectionDialog 
+        open={showRejectionDialog}
+        onOpenChange={setShowRejectionDialog}
+        reason={rejectionReason || ""}
+      />
+      
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
