@@ -123,13 +123,13 @@ const CustomerReviewCard = ({
                 />
               </div>
               
-              {/* Customer review responses component - with the reply option removed */}
+              {/* Customer review responses component - ensure hideReplyOption is set to true */}
               <CustomerReviewResponse 
                 reviewId={review.id}
                 responses={review.responses || []}
                 hasSubscription={hasSubscription}
                 isOneTimeUnlocked={isUnlocked && !hasSubscription}
-                hideReplyOption={true} // Added this prop to hide the reply link
+                hideReplyOption={true}
               />
             </div>
           ) : (

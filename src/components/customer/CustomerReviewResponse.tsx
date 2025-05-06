@@ -20,7 +20,7 @@ interface CustomerReviewResponseProps {
   responses: Response[];
   hasSubscription: boolean;
   isOneTimeUnlocked: boolean;
-  hideReplyOption?: boolean; // Added this prop to hide the reply link
+  hideReplyOption?: boolean; // We'll keep this prop but make sure it's always respected
 }
 
 const CustomerReviewResponse = ({ 
@@ -28,7 +28,7 @@ const CustomerReviewResponse = ({
   responses, 
   hasSubscription, 
   isOneTimeUnlocked,
-  hideReplyOption = false // Default to false for backward compatibility
+  hideReplyOption = false
 }: CustomerReviewResponseProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [responseText, setResponseText] = useState("");
@@ -96,10 +96,10 @@ const CustomerReviewResponse = ({
         </div>
       )}
       
-      {/* Only show respond options for users with the appropriate access */}
-      {canRespond && (
+      {/* Only show respond button if hideReplyOption is false and user has appropriate access */}
+      {canRespond && !hideReplyOption && (
         <>
-          {/* Toggle response form button - always show this */}
+          {/* Toggle response form button */}
           {!isResponseVisible && (
             <Button 
               onClick={() => setIsResponseVisible(true)}
