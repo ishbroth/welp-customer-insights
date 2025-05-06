@@ -45,13 +45,19 @@ const ProfileReviews = () => {
     loadUnlockedReviews();
   }, [currentUser]);
   
-  // Get reviews about the current customer user
+  // Get reviews about the current customer user - sorted by newest first
   const [customerReviews, setCustomerReviews] = useState(() => {
     return currentUser?.type === "customer" && currentUser?.reviews 
-      ? [...currentUser.reviews].map(review => ({
-          ...review,
-          responses: review.responses || []
-        }))
+      ? [...currentUser.reviews]
+          .map(review => ({
+            ...review,
+            responses: review.responses || []
+          }))
+          .sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateB.getTime() - dateA.getTime(); // Sort newest first
+          })
       : [];
   });
   

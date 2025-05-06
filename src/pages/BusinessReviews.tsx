@@ -65,7 +65,13 @@ const BusinessReviews = () => {
       }
     }
     
-    return reviews;
+    // Sort reviews by date (newest first)
+    return reviews.sort((a, b) => {
+      // Convert string dates to Date objects for comparison
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB.getTime() - dateA.getTime(); // Sort in descending order (newest first)
+    });
   });
 
   // Pagination settings

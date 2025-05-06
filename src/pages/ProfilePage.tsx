@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,15 +51,24 @@ const ProfilePage = () => {
         }
       }
       
-      return reviews;
+      // Sort reviews by date (newest first)
+      return reviews.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+      });
     })() : [];
 
   // Get reviews about the current customer user
   const customerReviews = currentUser?.type === "customer" ? 
-    // Find all reviews about this customer
-    currentUser.reviews || [] : [];
+    // Find all reviews about this customer and sort by newest first
+    (currentUser.reviews || []).sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB.getTime() - dateA.getTime();
+    }) : [];
 
-  // All reviews for admin view
+  // All reviews for admin view - sorted by newest first
   const allReviews = currentUser?.type === "admin" ? 
     mockUsers
       .filter(user => user.type === "customer" && user.reviews)
@@ -70,7 +78,12 @@ const ProfilePage = () => {
           customerName: user.name,
           customerId: user.id
         }))
-      ) : [];
+      )
+      .sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+      }) : [];
 
   // Function to get the first sentence of a text
   const getFirstSentence = (content) => {
