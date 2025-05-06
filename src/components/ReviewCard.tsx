@@ -347,10 +347,6 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                   </div>
                 )}
                 
-                {/* Remove the Reply button that was here */}
-                
-                {/* Reply form */}
-                
                 {/* Display replies to this response */}
                 {resp.replies && resp.replies.length > 0 && (
                   <div className="mt-3 pl-4 border-l-2 border-gray-200">
@@ -385,30 +381,6 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
-        {/* If business already responded but has no action options, show manage buttons */}
-        {showResponse && !canBusinessRespond() && businessResponses.length > 0 && (
-          <div className="mt-4 flex justify-end gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => handleEditResponse(businessResponses[businessResponses.length - 1].id)}
-            >
-              <Edit className="h-4 w-4 mr-1" />
-              Edit Response
-            </Button>
-            <Button 
-              variant="outline"
-              className="text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-700"
-              onClick={() => {
-                setResponseToDeleteId(businessResponses[businessResponses.length - 1].id);
-                setDeleteDialogOpen(true);
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete Response
-            </Button>
-          </div>
-        )}
-
         {/* Response form - only shown when clicked respond */}
         {isResponseVisible && (
           <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
