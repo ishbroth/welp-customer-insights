@@ -5,8 +5,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ReviewSuccess = () => {
+  const { currentUser } = useAuth();
+  
+  // Determine the home link based on user type
+  const homeLink = currentUser?.type === "business" || currentUser?.type === "admin" 
+    ? "/profile" 
+    : "/";
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -32,7 +40,7 @@ const ReviewSuccess = () => {
               </Button>
               
               <Button asChild variant="outline" className="w-full">
-                <Link to="/">Return to Home</Link>
+                <Link to={homeLink}>Return to Home</Link>
               </Button>
             </div>
           </Card>
