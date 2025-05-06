@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -55,6 +56,8 @@ const BusinessReviews = () => {
                 customerId: user.id,
                 // Ensure reactions exist
                 reactions: review.reactions || { like: [], funny: [], useful: [], ohNo: [] },
+                // Ensure zipCode exists
+                zipCode: review.zipCode || user.zipCode || "00000",
                 // Enhance content if needed
                 content: review.content.length < 150 ? 
                   review.content + " We had a very detailed interaction with this customer and would like to highlight several aspects of their behavior that other businesses should be aware of. They were punctual with their payments and communicated clearly throughout our business relationship. We would recommend other businesses to work with this customer based on our positive experience." : 
@@ -195,6 +198,7 @@ const BusinessReviews = () => {
                         comment: review.content,
                         createdAt: review.date,
                         location: "",
+                        zipCode: review.zipCode || "00000", // Added zipCode
                         responses: review.responses
                       }}
                       showResponse={true}

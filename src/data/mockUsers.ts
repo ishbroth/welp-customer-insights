@@ -32,6 +32,7 @@ export interface Review {
   reviewerName: string;
   reviewerAvatar?: string;
   date: string;
+  zipCode?: string; // Adding zipCode field to reviews
   reactions?: {
     like: string[];
     funny: string[];
@@ -91,6 +92,7 @@ export const mockUsers: User[] = [
         reviewerName: "Business Owner",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-04-15",
+        zipCode: "94105", // Added zip code
         reactions: {
           like: ["2", "4"],
           funny: [],
@@ -123,6 +125,7 @@ export const mockUsers: User[] = [
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-05-20",
+        zipCode: "90001", // Added zip code
         reactions: {
           like: ["1"],
           funny: [],
@@ -154,6 +157,7 @@ export const mockUsers: User[] = [
         reviewerName: "Business Owner",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-03-10",
+        zipCode: "94105", // Added zip code
         reactions: {
           like: [],
           funny: [],
@@ -207,6 +211,7 @@ export const mockUsers: User[] = [
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-07-14",
+        zipCode: "90001", // Added zip code
         reactions: {
           like: [],
           funny: ["1"],
@@ -238,6 +243,7 @@ export const mockUsers: User[] = [
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-08-22",
+        zipCode: "90001", // Added zip code
         reactions: {
           like: ["1"],
           funny: [],
@@ -254,6 +260,7 @@ export const mockUsers: User[] = [
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-09-05",
+        zipCode: "90001", // Added zip code
         reactions: {
           like: [],
           funny: [],
@@ -285,6 +292,7 @@ export const mockUsers: User[] = [
         reviewerName: "Bob's Bistro",
         reviewerAvatar: "/placeholder.svg",
         date: "2023-10-10",
+        zipCode: "90001", // Added zip code
         reactions: {
           like: [],
           funny: ["1", "5"],

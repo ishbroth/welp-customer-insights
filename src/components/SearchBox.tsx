@@ -115,7 +115,6 @@ const SearchBox = ({
             <SelectTrigger 
               className="welp-input" 
               aria-label="State"
-              required={!lastName && !firstName && !phone && !address && !city && !zipCode}
             >
               <SelectValue placeholder="State" />
             </SelectTrigger>
