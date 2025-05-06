@@ -12,6 +12,42 @@ import { mockUsers, User, Review } from "@/data/mockUsers";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Function to calculate similarity between two strings (for fuzzy matching)
+const calculateStringSimilarity = (str1: string, str2: string): number => {
+  // Convert both strings to lowercase for case-insensitive comparison
+  const s1 = str1.toLowerCase();
+  const s2 = str2.toLowerCase();
+  
+  // If either string is empty, return 0
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  // If the strings are identical, return 1
+  if (s1 === s2) return 1;
+  
+  // Calculate the Levenshtein distance (edit distance)
+  const matrix = Array(s1.length + 1).fill(null).map(() => Array(s2.length + 1).fill(null));
+  
+  // Initialize the first row and column
+  for (let i = 0; i <= s1.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= s2.length; j++) matrix[0][j] = j;
+  
+  // Fill in the rest of the matrix
+  for (let i = 1; i <= s1.length; i++) {
+    for (let j = 1; j <= s2.length; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  // Calculate similarity as 1 - normalized distance
+  const maxLength = Math.max(s1.length, s2.length);
+  return maxLength > 0 ? 1 - matrix[s1.length][s2.length] / maxLength : 1;
+}
+
 // Transform mock users into the format expected by the search results page
 const transformMockUsers = () => {
   return mockUsers
@@ -62,6 +98,10 @@ const SearchResults = () => {
   const city = searchParams.get("city") || "";
   const state = searchParams.get("state") || "";
   const zipCode = searchParams.get("zipCode") || "";
+  
+  // Get fuzzy match parameters
+  const fuzzyMatch = searchParams.get("fuzzyMatch") === "true";
+  const similarityThreshold = parseFloat(searchParams.get("similarityThreshold") || "0.7");
 
   useEffect(() => {
     // Simulate API call to search for customers with the real mock data
@@ -73,11 +113,26 @@ const SearchResults = () => {
       
       // Filter mock customers based on search params
       const filteredCustomers = mockCustomers.filter(customer => {
-        const lastNameMatch = lastName ? customer.lastName.toLowerCase().includes(lastName.toLowerCase()) : true;
-        const firstNameMatch = firstName ? customer.firstName.toLowerCase().includes(firstName.toLowerCase()) : true;
+        // Helper function to check if two strings match (exact or fuzzy)
+        const matches = (value: string, search: string): boolean => {
+          if (!search) return true; // Empty search matches everything
+          if (!value) return false; // Empty value matches nothing
+          
+          if (fuzzyMatch) {
+            // Calculate similarity and check if it's above threshold
+            return calculateStringSimilarity(value, search) >= similarityThreshold;
+          } else {
+            // Use standard includes check for exact matching
+            return value.toLowerCase().includes(search.toLowerCase());
+          }
+        };
+        
+        // Check each field for matching
+        const lastNameMatch = matches(customer.lastName, lastName);
+        const firstNameMatch = matches(customer.firstName, firstName);
         const phoneMatch = phone ? customer.phone.includes(phone) : true;
-        const addressMatch = address ? customer.address.toLowerCase().includes(address.toLowerCase()) : true;
-        const cityMatch = city ? customer.city.toLowerCase().includes(city.toLowerCase()) : true;
+        const addressMatch = matches(customer.address, address);
+        const cityMatch = matches(customer.city, city);
         const stateMatch = state ? customer.state === state : true;
         const zipCodeMatch = zipCode ? customer.zipCode.includes(zipCode) : true;
         
@@ -87,7 +142,7 @@ const SearchResults = () => {
       setCustomers(filteredCustomers);
       setIsLoading(false);
     }, 1000);
-  }, [lastName, firstName, phone, address, city, state, zipCode]);
+  }, [lastName, firstName, phone, address, city, state, zipCode, fuzzyMatch, similarityThreshold]);
 
   // Function to format address for display based on subscription status
   const formatAddress = (customer: any) => {
