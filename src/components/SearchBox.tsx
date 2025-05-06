@@ -1,8 +1,16 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SearchBoxProps {
   className?: string;
@@ -23,6 +31,7 @@ const SearchBox = ({
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
   
   const handleSearch = (e: React.FormEvent) => {
@@ -34,6 +43,7 @@ const SearchBox = ({
       phone,
       address,
       city,
+      state,
       zipCode
     };
     
@@ -42,7 +52,7 @@ const SearchBox = ({
       onSearch(searchParams);
     } else {
       // Default behavior - navigate to search results page
-      navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}&zipCode=${encodeURIComponent(zipCode)}`);
+      navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipCode=${encodeURIComponent(zipCode)}`);
     }
   };
 
@@ -62,7 +72,7 @@ const SearchBox = ({
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="welp-input"
-            required={!lastName && !phone && !address && !city && !zipCode}
+            required={!lastName && !phone && !address && !city && !state && !zipCode}
           />
           
           <Input
@@ -71,7 +81,7 @@ const SearchBox = ({
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="welp-input"
-            required={!firstName && !phone && !address && !city && !zipCode}
+            required={!firstName && !phone && !address && !city && !state && !zipCode}
           />
           
           <Input
@@ -80,7 +90,7 @@ const SearchBox = ({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="welp-input"
-            required={!lastName && !firstName && !address && !city && !zipCode}
+            required={!lastName && !firstName && !address && !city && !state && !zipCode}
           />
           
           <Input
@@ -89,7 +99,7 @@ const SearchBox = ({
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             className="welp-input"
-            required={!lastName && !firstName && !phone && !city && !zipCode}
+            required={!lastName && !firstName && !phone && !city && !state && !zipCode}
           />
 
           <Input
@@ -98,8 +108,71 @@ const SearchBox = ({
             value={city}
             onChange={(e) => setCity(e.target.value)}
             className="welp-input"
-            required={!lastName && !firstName && !phone && !address && !zipCode}
+            required={!lastName && !firstName && !phone && !address && !state && !zipCode}
           />
+
+          <Select value={state} onValueChange={setState}>
+            <SelectTrigger 
+              className="welp-input" 
+              aria-label="State"
+              required={!lastName && !firstName && !phone && !address && !city && !zipCode}
+            >
+              <SelectValue placeholder="State" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="AL">Alabama</SelectItem>
+              <SelectItem value="AK">Alaska</SelectItem>
+              <SelectItem value="AZ">Arizona</SelectItem>
+              <SelectItem value="AR">Arkansas</SelectItem>
+              <SelectItem value="CA">California</SelectItem>
+              <SelectItem value="CO">Colorado</SelectItem>
+              <SelectItem value="CT">Connecticut</SelectItem>
+              <SelectItem value="DE">Delaware</SelectItem>
+              <SelectItem value="FL">Florida</SelectItem>
+              <SelectItem value="GA">Georgia</SelectItem>
+              <SelectItem value="HI">Hawaii</SelectItem>
+              <SelectItem value="ID">Idaho</SelectItem>
+              <SelectItem value="IL">Illinois</SelectItem>
+              <SelectItem value="IN">Indiana</SelectItem>
+              <SelectItem value="IA">Iowa</SelectItem>
+              <SelectItem value="KS">Kansas</SelectItem>
+              <SelectItem value="KY">Kentucky</SelectItem>
+              <SelectItem value="LA">Louisiana</SelectItem>
+              <SelectItem value="ME">Maine</SelectItem>
+              <SelectItem value="MD">Maryland</SelectItem>
+              <SelectItem value="MA">Massachusetts</SelectItem>
+              <SelectItem value="MI">Michigan</SelectItem>
+              <SelectItem value="MN">Minnesota</SelectItem>
+              <SelectItem value="MS">Mississippi</SelectItem>
+              <SelectItem value="MO">Missouri</SelectItem>
+              <SelectItem value="MT">Montana</SelectItem>
+              <SelectItem value="NE">Nebraska</SelectItem>
+              <SelectItem value="NV">Nevada</SelectItem>
+              <SelectItem value="NH">New Hampshire</SelectItem>
+              <SelectItem value="NJ">New Jersey</SelectItem>
+              <SelectItem value="NM">New Mexico</SelectItem>
+              <SelectItem value="NY">New York</SelectItem>
+              <SelectItem value="NC">North Carolina</SelectItem>
+              <SelectItem value="ND">North Dakota</SelectItem>
+              <SelectItem value="OH">Ohio</SelectItem>
+              <SelectItem value="OK">Oklahoma</SelectItem>
+              <SelectItem value="OR">Oregon</SelectItem>
+              <SelectItem value="PA">Pennsylvania</SelectItem>
+              <SelectItem value="RI">Rhode Island</SelectItem>
+              <SelectItem value="SC">South Carolina</SelectItem>
+              <SelectItem value="SD">South Dakota</SelectItem>
+              <SelectItem value="TN">Tennessee</SelectItem>
+              <SelectItem value="TX">Texas</SelectItem>
+              <SelectItem value="UT">Utah</SelectItem>
+              <SelectItem value="VT">Vermont</SelectItem>
+              <SelectItem value="VA">Virginia</SelectItem>
+              <SelectItem value="WA">Washington</SelectItem>
+              <SelectItem value="WV">West Virginia</SelectItem>
+              <SelectItem value="WI">Wisconsin</SelectItem>
+              <SelectItem value="WY">Wyoming</SelectItem>
+              <SelectItem value="DC">District of Columbia</SelectItem>
+            </SelectContent>
+          </Select>
 
           <Input
             type="text"
@@ -107,7 +180,7 @@ const SearchBox = ({
             value={zipCode}
             onChange={(e) => setZipCode(e.target.value)}
             className="welp-input"
-            required={!lastName && !firstName && !phone && !address && !city}
+            required={!lastName && !firstName && !phone && !address && !city && !state}
           />
         </div>
         
