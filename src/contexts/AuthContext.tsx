@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -343,7 +344,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           // Only update the profile if there are valid profile fields
           if (Object.keys(profileUpdates).length > 0) {
-            await updateUserProfile(currentUser.id, profileUpdates);
+            await updateUserProfile(currentUser.id, profileUpdates)
+              .catch(error => {
+                console.error("Error updating profile:", error);
+                toast({
+                  title: "Profile Update Failed",
+                  description: "Failed to update your profile. Please try again.",
+                  variant: "destructive",
+                });
+              });
           }
           
           // Update local state with new profile data
