@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
-import { validatePhoneNumber } from "@/utils/phoneVerification";
+import { validatePhoneNumber, sendSmsVerification } from "@/utils/phoneVerification";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ const Signup = () => {
   const [accountType, setAccountType] = useState<"business" | "customer">(initialAccountType);
   const [step, setStep] = useState(1);
   const { toast } = useToast();
+  const { signUp, useMockData } = useAuth();
   
   // Business form state
   const [businessName, setBusinessName] = useState("");
@@ -82,7 +85,7 @@ const Signup = () => {
     }
   };
 
-  const initiateCustomerVerification = () => {
+  const initiateCustomerVerification = async () => {
     // Validate customer information
     if (!customerFirstName || !customerLastName || !customerPhone || !customerEmail || !customerPassword) {
       toast({
@@ -120,26 +123,95 @@ const Signup = () => {
       zipCode: customerZipCode,
       email: customerEmail,
       password: customerPassword,
+      type: "customer",
     };
     
     sessionStorage.setItem("customerSignupData", JSON.stringify(customerData));
     
-    // We don't generate the code here anymore, it will be sent via SMS in the VerifyPhone component
+    // If we're using mock data, just navigate to verification page
+    if (useMockData) {
+      navigate("/verify-phone");
+      return;
+    }
     
-    // Redirect to the verification page
-    navigate("/verify-phone");
+    // If we're using real data, send SMS verification
+    try {
+      setIsPhoneVerifying(true);
+      const response = await sendSmsVerification(customerPhone);
+      
+      if (response.success) {
+        toast({
+          title: "Verification Code Sent",
+          description: "A verification code has been sent to your phone.",
+        });
+        navigate("/verify-phone");
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to send verification code. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("SMS verification error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send verification code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPhoneVerifying(false);
+    }
   };
 
-  const handleCreateBusinessAccount = () => {
-    toast({
-      title: "Account Created",
-      description: "Your business account has been created successfully!",
-    });
+  const handleCreateBusinessAccount = async () => {
+    if (!businessEmail || !businessPassword || businessPassword !== businessConfirmPassword) {
+      toast({
+        title: "Invalid Information",
+        description: "Please check your email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Simulate account creation
-    setTimeout(() => {
-      navigate("/business-verification-success");
-    }, 1000);
+    const businessData = {
+      type: "business",
+      business_name: businessName,
+      first_name: businessName.split(' ')[0] || '',
+      last_name: businessName.split(' ').slice(1).join(' ') || '',
+      phone: businessPhone,
+      address: businessAddress,
+      license_number: licenseNumber
+    };
+    
+    if (useMockData) {
+      // Using mock data
+      toast({
+        title: "Account Created",
+        description: "Your business account has been created successfully!",
+      });
+      
+      setTimeout(() => {
+        navigate("/business-verification-success");
+      }, 1000);
+    } else {
+      // Using Supabase
+      const { success, error } = await signUp(businessEmail, businessPassword, businessData);
+      
+      if (success) {
+        toast({
+          title: "Account Created",
+          description: "Your business account has been created successfully!",
+        });
+        navigate("/business-verification-success");
+      } else {
+        toast({
+          title: "Signup Error",
+          description: error || "Failed to create account. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
@@ -422,9 +494,17 @@ const Signup = () => {
                     <Button
                       onClick={initiateCustomerVerification}
                       className="welp-button w-full"
-                      disabled={!customerFirstName || !customerLastName || !customerPhone || !customerEmail || !customerPassword || customerPassword !== customerConfirmPassword}
+                      disabled={
+                        !customerFirstName || 
+                        !customerLastName || 
+                        !customerPhone || 
+                        !customerEmail || 
+                        !customerPassword || 
+                        customerPassword !== customerConfirmPassword ||
+                        isPhoneVerifying
+                      }
                     >
-                      Create Customer Account
+                      {isPhoneVerifying ? "Sending Verification..." : "Create Customer Account"}
                     </Button>
                     
                     {customerPassword !== customerConfirmPassword && customerConfirmPassword && (
@@ -439,6 +519,28 @@ const Signup = () => {
               <p className="text-sm text-gray-600">
                 Already have an account? <Link to="/login" className="text-welp-primary hover:underline">Log In</Link>
               </p>
+            </div>
+
+            {/* Toggle for Mock/Real Data */}
+            <div className="mt-8 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-center">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={!useMockData}
+                    onChange={() => {
+                      // Toggle to demo mode
+                      const { setUseMockData } = useAuth();
+                      setUseMockData(!useMockData);
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <span className="ml-3 text-sm font-medium text-gray-900">
+                    {useMockData ? "Use Mock Data (Demo)" : "Use Real Database"}
+                  </span>
+                </label>
+              </div>
             </div>
           </Card>
         </div>

@@ -1,151 +1,189 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { sendSmsVerification, formatPhoneNumber } from "@/utils/phoneVerification";
+import { sendSmsVerification } from "@/utils/phoneVerification";
 
 const VerifyPhone = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, useMockData } = useAuth();
   const [verificationCode, setVerificationCode] = useState("");
-  const [storedCode, setStoredCode] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [customerData, setCustomerData] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [remainingAttempts, setRemainingAttempts] = useState(3);
+  const [isResending, setIsResending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
+  // Load customer data from session storage
   useEffect(() => {
-    // Get data from session storage
     const storedData = sessionStorage.getItem("customerSignupData");
-    const storedVerificationCode = sessionStorage.getItem("phoneVerificationCode");
-    
-    if (!storedData) {
-      // No data found, redirect back to signup
+    if (storedData) {
+      setCustomerData(JSON.parse(storedData));
+    } else {
+      // Redirect to signup if no data is found
+      navigate("/signup?type=customer");
+    }
+  }, [navigate]);
+
+  // Countdown timer for resending code
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const handleVerify = async () => {
+    if (!verificationCode || !customerData) {
       toast({
-        title: "Session Expired",
-        description: "Please start the signup process again.",
+        title: "Missing Information",
+        description: "Please enter the verification code.",
         variant: "destructive",
       });
-      navigate("/signup", { replace: true });
       return;
     }
-    
-    const parsedData = JSON.parse(storedData);
-    setCustomerData(parsedData);
-    setPhoneNumber(parsedData.phone);
-    
-    // If there's already a stored code from a previous send, use it
-    if (storedVerificationCode) {
-      setStoredCode(storedVerificationCode);
-    } else {
-      // Otherwise send a new verification code
-      sendVerificationCode(parsedData.phone);
-    }
-  }, [navigate, toast]);
 
-  const sendVerificationCode = async (phone: string) => {
-    setIsSending(true);
-    
-    try {
-      const formattedPhone = formatPhoneNumber(phone);
-      const result = await sendSmsVerification(formattedPhone);
-      
-      if (result.success) {
-        // Save the verification code in session storage
-        setStoredCode(result.verificationCode);
-        sessionStorage.setItem("phoneVerificationCode", result.verificationCode);
+    setIsVerifying(true);
+
+    if (useMockData) {
+      // For demo purposes, any 6-digit code is valid
+      if (verificationCode.length === 6) {
+        // Mock successful verification
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         toast({
-          title: "Verification Code Sent",
-          description: `A verification code has been sent to ${phone}.`,
+          title: "Verification Successful",
+          description: "Your phone number has been verified.",
         });
+        
+        // Navigate to success/login page
+        navigate("/");
       } else {
         toast({
-          title: "Failed to Send Code",
-          description: result.message,
+          title: "Invalid Code",
+          description: "Please enter a valid 6-digit verification code.",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Error sending verification code:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send verification code. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSending(false);
+      setIsVerifying(false);
+    } else {
+      // In a real implementation, we would verify the code with an API call
+      // For now, we'll just simulate validation and create the account
+      try {
+        // For demo, we'll allow any 6-digit code to work
+        if (verificationCode.length === 6) {
+          // Create the account with Supabase
+          const { success, error } = await signUp(
+            customerData.email,
+            customerData.password,
+            {
+              first_name: customerData.firstName,
+              last_name: customerData.lastName,
+              phone: customerData.phone,
+              zipcode: customerData.zipCode,
+              type: "customer"
+            }
+          );
+          
+          if (success) {
+            toast({
+              title: "Account Created",
+              description: "Your account has been created successfully!",
+            });
+            
+            // Clear the session storage
+            sessionStorage.removeItem("customerSignupData");
+            
+            // Navigate to home page
+            navigate("/");
+          } else {
+            toast({
+              title: "Signup Error",
+              description: error || "Failed to create account. Please try again.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Invalid Code",
+            description: "Please enter a valid 6-digit verification code.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Verification error:", error);
+        toast({
+          title: "Verification Error",
+          description: "An error occurred during verification. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsVerifying(false);
+      }
     }
   };
 
-  const handleVerifyCode = () => {
-    setIsVerifying(true);
-    
-    // Check verification code
-    setTimeout(() => {
-      if (verificationCode === storedCode) {
-        // Successful verification
-        setShowSuccessDialog(true);
-      } else {
-        // Failed verification
-        const newAttempts = remainingAttempts - 1;
-        setRemainingAttempts(newAttempts);
+  const handleResendCode = async () => {
+    if (!customerData?.phone) {
+      toast({
+        title: "Error",
+        description: "Phone number not found. Please go back to signup.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsResending(true);
+
+    try {
+      if (useMockData) {
+        // Mock resending code
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        if (newAttempts > 0) {
+        toast({
+          title: "Code Resent",
+          description: "A new verification code has been sent to your phone.",
+        });
+        
+        // Set a countdown to prevent spam
+        setCountdown(30);
+      } else {
+        // Call the real SMS verification service
+        const response = await sendSmsVerification(customerData.phone);
+        
+        if (response.success) {
           toast({
-            title: "Invalid Code",
-            description: `Incorrect verification code. ${newAttempts} attempts remaining.`,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Verification Failed",
-            description: "You've exceeded the maximum number of attempts. Please start over.",
-            variant: "destructive",
+            title: "Code Resent",
+            description: "A new verification code has been sent to your phone.",
           });
           
-          // Clear session storage and redirect back to signup
-          sessionStorage.removeItem("customerSignupData");
-          sessionStorage.removeItem("phoneVerificationCode");
-          navigate("/signup", { replace: true });
+          // Set a countdown to prevent spam
+          setCountdown(30);
+        } else {
+          toast({
+            title: "Error",
+            description: response.message || "Failed to send verification code. Please try again.",
+            variant: "destructive",
+          });
         }
       }
-      
-      setIsVerifying(false);
-    }, 1000);
+    } catch (error) {
+      console.error("Error resending code:", error);
+      toast({
+        title: "Error",
+        description: "Failed to resend verification code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResending(false);
+    }
   };
-
-  const handleResendCode = () => {
-    sendVerificationCode(phoneNumber);
-  };
-
-  const handleContinueToProfile = () => {
-    // In a real app, you would create the user account here
-    // For now, just simulate a successful account creation
-    sessionStorage.setItem("currentUser", JSON.stringify({
-      ...customerData,
-      id: Math.random().toString(36).substring(2, 15),
-      type: "customer"
-    }));
-    
-    // Clear verification data
-    sessionStorage.removeItem("customerSignupData");
-    sessionStorage.removeItem("phoneVerificationCode");
-    
-    // Redirect to profile page
-    navigate("/profile", { replace: true });
-  };
-
-  if (!phoneNumber) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -153,89 +191,74 @@ const VerifyPhone = () => {
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
           <Card className="max-w-md mx-auto p-6">
-            <h1 className="text-2xl font-bold text-center mb-6">Verify Your Phone Number</h1>
+            <h1 className="text-2xl font-bold text-center mb-6">Verify Your Phone</h1>
             
-            <div className="space-y-4">
-              <p className="text-center">
-                We've sent a verification code to <span className="font-medium">{phoneNumber}</span>
-              </p>
-              
-              <div className="my-8">
-                <label htmlFor="code" className="block text-sm font-medium text-center mb-3">
-                  Enter the 6-digit verification code
-                </label>
-                <div className="flex justify-center mb-4">
-                  <InputOTP 
-                    maxLength={6} 
-                    value={verificationCode} 
-                    onChange={setVerificationCode}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
+            {customerData && (
+              <div className="space-y-6">
+                <div>
+                  <p className="text-center mb-4">
+                    We've sent a verification code to:
+                    <span className="block font-semibold mt-2">{customerData.phone}</span>
+                  </p>
                 </div>
-              </div>
-              
-              <div className="flex flex-col space-y-3">
-                <Button
-                  onClick={handleVerifyCode}
-                  className="welp-button w-full"
-                  disabled={verificationCode.length !== 6 || isVerifying}
+                
+                <div>
+                  <label htmlFor="verificationCode" className="block text-sm font-medium mb-2">
+                    Enter Verification Code
+                  </label>
+                  <Input
+                    id="verificationCode"
+                    placeholder="Enter 6-digit code"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    maxLength={6}
+                    className="text-center text-lg tracking-widest"
+                  />
+                </div>
+                
+                <Button 
+                  className="w-full" 
+                  onClick={handleVerify}
+                  disabled={isVerifying || verificationCode.length !== 6}
                 >
-                  {isVerifying ? "Verifying..." : "Verify Code"}
+                  {isVerifying ? "Verifying..." : "Verify & Create Account"}
                 </Button>
                 
-                <Button
-                  variant="outline"
-                  onClick={handleResendCode}
-                  className="w-full"
-                  disabled={isSending}
-                >
-                  {isSending ? "Sending..." : "Resend Code"}
-                </Button>
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="link" 
+                    onClick={handleResendCode}
+                    disabled={isResending || countdown > 0}
+                    className="text-sm"
+                  >
+                    {countdown > 0 
+                      ? `Resend code in ${countdown}s` 
+                      : isResending 
+                        ? "Sending..." 
+                        : "Didn't receive a code? Resend"}
+                  </Button>
+                </div>
+                
+                <div className="text-center mt-2">
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate("/signup?type=customer")}
+                    className="text-sm"
+                  >
+                    Use a different phone number
+                  </Button>
+                </div>
+
+                {useMockData && (
+                  <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm">
+                    <p><strong>Demo Mode:</strong> Enter any 6-digit code to continue.</p>
+                  </div>
+                )}
               </div>
-              
-              <div className="text-center mt-6">
-                <p className="text-sm text-gray-600">
-                  Having issues? <a href="mailto:support@welp.com" className="text-welp-primary hover:underline">Contact Support</a>
-                </p>
-              </div>
-            </div>
+            )}
           </Card>
         </div>
       </main>
-      
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center">Congratulations!</DialogTitle>
-          </DialogHeader>
-          <div className="p-4 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Your Account Has Been Created!</h3>
-            <p className="text-gray-600 mb-6">
-              Welcome to Welp, {customerData?.firstName}! Your account has been successfully verified.
-            </p>
-            <Button 
-              onClick={handleContinueToProfile} 
-              className="welp-button w-full"
-            >
-              Continue to Your Profile
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
       <Footer />
     </div>
   );
