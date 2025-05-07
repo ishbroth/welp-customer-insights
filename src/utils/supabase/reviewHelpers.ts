@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Review, ReviewInsert, Response, ResponseInsert } from "@/types/supabase";
 
@@ -9,7 +10,7 @@ export const getBusinessReviews = async (businessId: string) => {
     .from('reviews')
     .select(`
       *,
-      profiles:customer_id (first_name, last_name)
+      profiles:customer_id (first_name, last_name, name)
     `)
     .eq('business_id', businessId)
     .order('created_at', { ascending: false });
@@ -32,7 +33,7 @@ export const getCustomerReviews = async (customerId: string) => {
       *,
       business_profiles:business_id (
         *,
-        business_info (*)
+        business_info:id (*)
       )
     `)
     .eq('customer_id', customerId)
@@ -75,7 +76,7 @@ export const getReviewById = async (reviewId: string) => {
       profiles:customer_id (*),
       business_profiles:business_id (
         *,
-        business_info (*)
+        business_info:id (*)
       ),
       responses (*)
     `)
@@ -163,37 +164,6 @@ export const deleteReviewResponse = async (responseId: string) => {
 };
 
 /**
- * Add a reaction to a review
- */
-export const addReviewReaction = async (reviewId: string, userId: string, reactionType: string) => {
-  // Since we don't have a review_reactions table in Supabase yet,
-  // we'll implement a mock version for now that returns immediately
-  console.log(`Mock: Adding reaction ${reactionType} to review ${reviewId} by user ${userId}`);
-  
-  // Mock successful addition
-  return true;
-};
-
-/**
- * Get all reactions for a review
- */
-export const getReviewReactions = async (reviewId: string) => {
-  // Since we don't have a review_reactions table in Supabase yet,
-  // we'll return mock data
-  console.log(`Mock: Getting reactions for review ${reviewId}`);
-  
-  // Format reactions by type
-  const formattedReactions = {
-    like: [] as string[],
-    funny: [] as string[],
-    useful: [] as string[],
-    ohNo: [] as string[]
-  };
-  
-  return formattedReactions;
-};
-
-/**
  * Search for reviews by business name, customer name, or content
  */
 export const searchReviews = async (query: string) => {
@@ -203,10 +173,10 @@ export const searchReviews = async (query: string) => {
     .from('reviews')
     .select(`
       *,
-      customer:customer_id (first_name, last_name),
+      customer:customer_id (first_name, last_name, name),
       business:business_id (
         *,
-        business_info (business_name)
+        business_info:id (business_name)
       )
     `)
     .or(`content.ilike.%${query}%,customer.first_name.ilike.%${query}%,customer.last_name.ilike.%${query}%,business.business_info.business_name.ilike.%${query}%`)

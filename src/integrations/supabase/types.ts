@@ -37,40 +37,68 @@ export type Database = {
           license_type?: string | null
           verified?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "business_info_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_access: {
         Row: {
-          business_id: string
+          business_id: string | null
           created_at: string
-          customer_id: string
+          customer_id: string | null
           expires_at: string
           id: string
         }
         Insert: {
-          business_id: string
+          business_id?: string | null
           created_at?: string
-          customer_id: string
+          customer_id?: string | null
           expires_at: string
           id?: string
         }
         Update: {
-          business_id?: string
+          business_id?: string | null
           created_at?: string
-          customer_id?: string
+          customer_id?: string | null
           expires_at?: string
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_access_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_access_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           address: string | null
+          avatar: string | null
+          bio: string | null
+          business_id: string | null
           city: string | null
           created_at: string
+          email: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          name: string | null
           phone: string | null
           state: string | null
           type: string
@@ -79,24 +107,34 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          avatar?: string | null
+          bio?: string | null
+          business_id?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          name?: string | null
           phone?: string | null
           state?: string | null
-          type: string
+          type?: string
           updated_at?: string
           zipcode?: string | null
         }
         Update: {
           address?: string | null
+          avatar?: string | null
+          bio?: string | null
+          business_id?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          name?: string | null
           phone?: string | null
           state?: string | null
           type?: string
@@ -110,21 +148,21 @@ export type Database = {
           content: string
           created_at: string
           id: string
-          review_id: string
+          review_id: string | null
           updated_at: string
         }
         Insert: {
           content: string
           created_at?: string
           id?: string
-          review_id: string
+          review_id?: string | null
           updated_at?: string
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
-          review_id?: string
+          review_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -165,7 +203,22 @@ export type Database = {
           rating?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -176,7 +229,7 @@ export type Database = {
           status: string
           type: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -186,7 +239,7 @@ export type Database = {
           status: string
           type: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -196,9 +249,17 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

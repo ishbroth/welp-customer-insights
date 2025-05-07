@@ -4,23 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Profile } from '@/types/supabase';
+import { ExtendedUser, normalizeUserFields } from '@/utils/userTypes';
 import { getUserProfile, updateUserProfile } from '@/utils/supabase';
 
-// Define the user type to include Profile properties and additional fields
-export interface UserType extends Profile {
-  id: string;
-  email: string;
-  avatar?: string;
-}
-
+// Define the context type
 interface AuthContextType {
-  currentUser: UserType | null;
-  setCurrentUser: React.Dispatch<React.SetStateAction<UserType | null>>;
+  currentUser: ExtendedUser | null;
+  setCurrentUser: React.Dispatch<React.SetStateAction<ExtendedUser | null>>;
   loading: boolean;
   login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   signUp: (email: string, type: string) => Promise<{ success: boolean; error?: any; }>;
-  updateProfile: (profileData: Partial<UserType>) => Promise<{ success: boolean; error?: any; }>;
+  updateProfile: (profileData: Partial<ExtendedUser>) => Promise<{ success: boolean; error?: any; }>;
   useMockData: boolean;
   setUseMockData: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -32,7 +27,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
+  const [currentUser, setCurrentUser] = useState<ExtendedUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [useMockData, setUseMockData] = useState(
     localStorage.getItem('useMockData') === 'true'
@@ -46,27 +41,69 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem('useMockData', String(useMockData));
   }, [useMockData]);
 
+  // Effect to handle auth state changes
   useEffect(() => {
-    const session = supabase.auth.getSession();
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session?.user) {
+          try {
+            const profile = await getUserProfile(data.session.user.id);
+            
+            if (profile) {
+              setCurrentUser(normalizeUserFields({
+                ...data.session.user,
+                ...profile,
+                email: data.session.user.email
+              }));
+            } else {
+              setCurrentUser(normalizeUserFields(data.session.user));
+            }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+            setCurrentUser(normalizeUserFields(data.session.user));
+          }
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    supabase.auth.onAuthStateChange(async (_event, session) => {
+    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         try {
           const profile = await getUserProfile(session.user.id);
-          setCurrentUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            ...profile,
-          });
+          
+          if (profile) {
+            setCurrentUser(normalizeUserFields({
+              ...session.user,
+              ...profile,
+              email: session.user.email
+            }));
+          } else {
+            setCurrentUser(normalizeUserFields(session.user));
+          }
         } catch (error) {
           console.error("Error fetching user profile:", error);
-          setCurrentUser(null);
+          setCurrentUser(normalizeUserFields(session.user));
         }
       } else {
         setCurrentUser(null);
       }
       setLoading(false);
     });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Function to handle user login
@@ -135,11 +172,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // Create user profile immediately after signup
       if (data.user?.id) {
-        const newProfile: UserType = {
+        const newProfile = {
           id: data.user.id,
+          email: email,
           first_name: '',
           last_name: '',
-          email: email,
           type: type,
           avatar: '',
           phone: '',
@@ -147,9 +184,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           city: '',
           state: '',
           zipcode: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
         
-        await updateUserProfile(data.user.id, newProfile);
+        try {
+          await updateUserProfile(data.user.id, newProfile);
+        } catch (profileError) {
+          console.error("Error creating user profile:", profileError);
+        }
       }
 
       toast({
@@ -172,7 +215,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   // Function to update the user profile
-  const updateProfile = async (profileData: Partial<UserType>) => {
+  const updateProfile = async (profileData: Partial<ExtendedUser>) => {
     if (!currentUser) {
       toast({
         title: "Update Failed",
@@ -183,38 +226,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      const { id: currentUserId, email } = currentUser;
+      const { id: currentUserId } = currentUser;
 
-      // Group updates by table
+      // Prepare profile updates
       const profileUpdates: Partial<Profile> = {};
-      const userUpdates: { email?: string } = {};
-
-      // Separate email (for auth.users) from other profile data
-      if (profileData.email && profileData.email !== email) {
-        userUpdates.email = profileData.email;
-        
-        // Update email in Supabase auth
-        try {
-          await supabase.auth.updateUser({ email: profileData.email });
-        } catch (error) {
-          console.error("Error updating email:", error);
-          toast({
-            title: "Email Update Failed",
-            description: "Failed to update your email. Please try again.",
-            variant: "destructive",
-          });
-          // Don't throw, continue with other updates
-        }
+      
+      // Convert frontend property names to database field names
+      if (profileData.name) {
+        // Split name into first_name and last_name
+        const nameParts = profileData.name.split(' ');
+        profileUpdates.first_name = nameParts[0];
+        profileUpdates.last_name = nameParts.slice(1).join(' ');
+        profileUpdates.name = profileData.name;
       }
-
-      // Copy all valid profile fields to profileUpdates
-      Object.keys(profileData).forEach(key => {
-        // Skip id and email as they are handled separately
-        if (key !== 'id' && key !== 'email') {
-          // @ts-ignore - We're filtering properties appropriately
-          profileUpdates[key] = profileData[key];
-        }
-      });
+      
+      if (profileData.avatar) profileUpdates.avatar = profileData.avatar;
+      if (profileData.bio) profileUpdates.bio = profileData.bio;
+      if (profileData.phone) profileUpdates.phone = profileData.phone;
+      if (profileData.address) profileUpdates.address = profileData.address;
+      if (profileData.city) profileUpdates.city = profileData.city;
+      if (profileData.state) profileUpdates.state = profileData.state;
+      if (profileData.zipCode) profileUpdates.zipcode = profileData.zipCode;
+      if (profileData.businessId) profileUpdates.business_id = profileData.businessId;
       
       // Only update the profile if there are valid profile fields
       if (Object.keys(profileUpdates).length > 0) {
@@ -234,8 +267,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Update local state with new profile data
       setCurrentUser({
         ...currentUser,
-        ...profileUpdates,
-        ...(userUpdates.email ? { email: userUpdates.email } : {})
+        ...profileData
       });
 
       toast({

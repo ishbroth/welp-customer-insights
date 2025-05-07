@@ -27,7 +27,8 @@ export const getBusinessProfile = async (userId: string, requestingUserType?: st
     .eq('id', userId)
     .single();
   
-  if (businessError) {
+  if (businessError && businessError.code !== 'PGRST116') {
+    // PGRST116 means no rows returned, which is ok if the user is not a business
     console.error("Error fetching business info:", businessError);
     throw businessError;
   }
@@ -37,18 +38,18 @@ export const getBusinessProfile = async (userId: string, requestingUserType?: st
     return {
       ...profile,
       address: undefined, // Remove address for customers
-      business_name: businessInfo.business_name,
-      license_number: businessInfo.license_number,
-      verified: businessInfo.verified,
+      business_name: businessInfo?.business_name,
+      license_number: businessInfo?.license_number,
+      verified: businessInfo?.verified,
     };
   }
   
   // Return full information for other user types (business owners, admins)
   return {
     ...profile,
-    business_name: businessInfo.business_name,
-    license_number: businessInfo.license_number,
-    verified: businessInfo.verified,
+    business_name: businessInfo?.business_name,
+    license_number: businessInfo?.license_number,
+    verified: businessInfo?.verified,
   };
 };
 
@@ -56,19 +57,48 @@ export const getBusinessProfile = async (userId: string, requestingUserType?: st
  * Update business information
  */
 export const updateBusinessInfo = async (userId: string, businessData: Partial<BusinessInfo>) => {
-  const { data, error } = await supabase
+  // Check if business info exists
+  const { data: existingInfo } = await supabase
     .from('business_info')
-    .update(businessData)
+    .select('id')
     .eq('id', userId)
-    .select()
     .single();
   
-  if (error) {
-    console.error("Error updating business info:", error);
-    throw error;
+  if (existingInfo) {
+    // Update existing record
+    const { data, error } = await supabase
+      .from('business_info')
+      .update(businessData)
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error updating business info:", error);
+      throw error;
+    }
+    
+    return data;
+  } else {
+    // Create new record
+    const { data, error } = await supabase
+      .from('business_info')
+      .insert({
+        id: userId,
+        business_name: businessData.business_name || 'New Business',
+        license_number: businessData.license_number,
+        verified: businessData.verified || false
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating business info:", error);
+      throw error;
+    }
+    
+    return data;
   }
-  
-  return data;
 };
 
 /**

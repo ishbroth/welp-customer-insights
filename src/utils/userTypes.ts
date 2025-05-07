@@ -10,10 +10,9 @@ export type ExtendedUser = User & Partial<Profile> & {
   bio?: string;
   businessId?: string;
   zipCode?: string;
-  email?: string; // Make sure email is included
-  zipcode?: string; // Include zipcode too for database consistency
+  email?: string;
   reviews?: any[];
-  type?: string; // Make sure type is included for business vs customer checks
+  type?: string;
 };
 
 // Type guard to check if user is a Mock User
@@ -41,7 +40,7 @@ export function getUserName(user: ExtendedUser | MockUser | null): string {
     if (fullName) return fullName;
   }
   
-  return user.email?.split('@')[0] || 'User';
+  return user.email?.split('@')?.[0] || 'User';
 }
 
 // Create a display name from the user data
@@ -56,5 +55,18 @@ export function getDisplayName(user: ExtendedUser | MockUser | null): string {
     return user.name;
   }
   
-  return user.email?.split('@')[0] || 'User';
+  return user.email?.split('@')?.[0] || 'User';
+}
+
+// Helper function to normalize user property names
+export function normalizeUserFields(user: any): ExtendedUser {
+  if (!user) return {} as ExtendedUser;
+  
+  return {
+    ...user,
+    // Map database field names to our frontend property names for consistency
+    name: user.name || (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : undefined),
+    businessId: user.business_id || user.businessId,
+    zipCode: user.zipcode || user.zipCode,
+  };
 }
