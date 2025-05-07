@@ -7,7 +7,7 @@ import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Edit, Trash2, Eye } from "lucide-react";
+import { MessageSquare, Edit, Trash2, Eye, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
@@ -44,7 +44,7 @@ interface ReviewCardProps {
     location: string;
     address?: string;
     city?: string;
-    zipCode?: string; // Added zipCode as an optional property
+    zipCode?: string;
     responses?: ReviewResponse[];
   };
   showResponse?: boolean;
@@ -97,6 +97,11 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     e.preventDefault();
     
     if (!canRespond) {
+      toast({
+        title: "Subscription required",
+        description: "You need an active subscription to respond to reviews.",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -139,6 +144,15 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
 
   // Function to handle editing a response
   const handleEditResponse = (responseId: string) => {
+    if (!hasSubscription) {
+      toast({
+        title: "Subscription required",
+        description: "You need an active subscription to edit responses.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const responseToEdit = responses.find(resp => resp.id === responseId);
     if (responseToEdit) {
       setEditResponseId(responseId);
@@ -148,6 +162,15 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
 
   // Function to save an edited response
   const handleSaveEdit = () => {
+    if (!hasSubscription) {
+      toast({
+        title: "Subscription required",
+        description: "You need an active subscription to edit responses.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!editResponseId || !editContent.trim()) {
       toast({
         title: "Empty response",
@@ -195,6 +218,15 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
 
   // Function to confirm delete
   const handleDeleteResponse = () => {
+    if (!hasSubscription) {
+      toast({
+        title: "Subscription required",
+        description: "You need an active subscription to delete responses.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!responseToDeleteId) return;
 
     setResponses(prev => prev.filter(resp => resp.id !== responseToDeleteId));
@@ -359,21 +391,31 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                       size="sm" 
                       className="text-gray-600 hover:bg-gray-100 h-8 px-2 py-1"
                       onClick={() => handleEditResponse(resp.id)}
+                      disabled={!hasSubscription}
                     >
                       <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                      {hasSubscription ? 'Edit' : <Lock className="h-3 w-3" />}
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2 py-1"
                       onClick={() => {
-                        setResponseToDeleteId(resp.id);
-                        setDeleteDialogOpen(true);
+                        if (hasSubscription) {
+                          setResponseToDeleteId(resp.id);
+                          setDeleteDialogOpen(true);
+                        } else {
+                          toast({
+                            title: "Subscription required",
+                            description: "You need an active subscription to delete responses.",
+                            variant: "destructive"
+                          });
+                        }
                       }}
+                      disabled={!hasSubscription}
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
+                      {hasSubscription ? 'Delete' : <Lock className="h-3 w-3" />}
                     </Button>
                   </div>
                 )}
@@ -423,7 +465,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                 className="flex items-center gap-1 text-sm"
               >
                 <Link to="/subscription">
-                  <Eye className="h-4 w-4 mr-1" />
+                  <Lock className="h-4 w-4 mr-1" />
                   Subscribe to respond
                 </Link>
               </Button>
@@ -431,8 +473,8 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           )
         ) : null}
         
-        {/* Response form - only shown when clicked respond */}
-        {isResponseVisible && (
+        {/* Response form - only shown when clicked respond and has subscription */}
+        {isResponseVisible && hasSubscription && (
           <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
             <Textarea
               value={response}

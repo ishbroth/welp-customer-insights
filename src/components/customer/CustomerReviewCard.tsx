@@ -123,13 +123,13 @@ const CustomerReviewCard = ({
                 />
               </div>
               
-              {/* Customer review responses component - ensure hideReplyOption is set to true */}
+              {/* Customer review responses component - ensure hideReplyOption is set appropriately based on subscription */}
               <CustomerReviewResponse 
                 reviewId={review.id}
                 responses={review.responses || []}
                 hasSubscription={hasSubscription}
                 isOneTimeUnlocked={isUnlocked && !hasSubscription}
-                hideReplyOption={true}
+                hideReplyOption={!hasSubscription} // Hide reply option if no subscription
               />
             </div>
           ) : (

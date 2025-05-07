@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
@@ -29,13 +29,18 @@ import {
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Set hasSubscription to true by default for business users - removing the subscription check
-  const [hasSubscription, setHasSubscription] = useState(true);
+  // Set hasSubscription based on auth context
+  const [hasSubscription, setHasSubscription] = useState(isSubscribed);
+  
+  // Update local state when subscription changes
+  useEffect(() => {
+    setHasSubscription(isSubscribed);
+  }, [isSubscribed]);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
@@ -151,6 +156,10 @@ const BusinessReviews = () => {
     );
   };
 
+  const handleSubscribeClick = () => {
+    navigate('/subscription');
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -165,6 +174,22 @@ const BusinessReviews = () => {
                 Manage the reviews you've written about customers.
               </p>
             </div>
+            
+            {!hasSubscription && (
+              <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
+                <div className="flex flex-col sm:flex-row justify-between items-center">
+                  <div className="mb-4 sm:mb-0">
+                    <h3 className="font-semibold text-yellow-800">Premium Features Disabled</h3>
+                    <p className="text-sm text-yellow-700">
+                      Your subscription has expired. Subscribe to enable review responses and premium features.
+                    </p>
+                  </div>
+                  <Button onClick={handleSubscribeClick} className="bg-yellow-600 hover:bg-yellow-700">
+                    Subscribe Now
+                  </Button>
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-between mb-6">
               <div>

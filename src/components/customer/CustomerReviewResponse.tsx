@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Eye } from "lucide-react";
+import { MessageSquare, Eye, Lock } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -130,7 +131,7 @@ const CustomerReviewResponse = ({
               className="flex items-center gap-1 text-sm"
             >
               <Link to="/subscription">
-                <Eye className="h-4 w-4 mr-1" />
+                <Lock className="h-4 w-4 mr-1" />
                 Subscribe to respond
               </Link>
             </Button>

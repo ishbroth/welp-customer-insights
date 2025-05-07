@@ -13,18 +13,24 @@ import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import { Button } from "@/components/ui/button";
 
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [unlockedReviews, setUnlockedReviews] = useState<string[]>([]);
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // For simulating customer subscription status
-  const [hasSubscription, setHasSubscription] = useState(false);
+  // For simulating customer subscription status - Now use isSubscribed from AuthContext
+  const [hasSubscription, setHasSubscription] = useState(isSubscribed);
+
   useEffect(() => {
+    // Update local subscription status when the auth context changes
+    setHasSubscription(isSubscribed);
+    
+    // Check URL params for legacy support
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("subscribed") === "true") {
       setHasSubscription(true);
@@ -50,7 +56,7 @@ const ProfileReviews = () => {
     };
     
     loadUnlockedReviews();
-  }, [currentUser]);
+  }, [currentUser, isSubscribed]);
   
   // Add new state for content moderation
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
@@ -125,6 +131,10 @@ const ProfileReviews = () => {
     );
   };
 
+  const handleSubscribeClick = () => {
+    navigate('/subscription');
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -141,7 +151,32 @@ const ProfileReviews = () => {
               </p>
             </div>
             
-            {!hasSubscription && <SubscriptionBanner type="customer" />}
+            {!hasSubscription ? (
+              <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
+                <div className="flex flex-col sm:flex-row justify-between items-center">
+                  <div className="mb-4 sm:mb-0">
+                    <h3 className="font-semibold text-yellow-800">Premium Features Disabled</h3>
+                    <p className="text-sm text-yellow-700">
+                      Subscribe now to unlock full access to all reviews and responses.
+                    </p>
+                  </div>
+                  <Button onClick={handleSubscribeClick} className="bg-yellow-600 hover:bg-yellow-700">
+                    Subscribe Now
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-4 border border-green-300 bg-green-50 rounded-md">
+                <div className="flex items-center">
+                  <div>
+                    <h3 className="font-semibold text-green-800">Premium Subscription Active</h3>
+                    <p className="text-sm text-green-700">
+                      You have full access to all reviews and response features.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {customerReviews.length === 0 ? (
               <EmptyReviewsMessage type="customer" />
