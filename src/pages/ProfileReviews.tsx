@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Review } from "@/data/mockUsers";
@@ -23,7 +22,7 @@ const ProfileReviews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // For simulating customer subscription status - Now use isSubscribed from AuthContext
+  // Update local subscription status when the auth context changes
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
 
   useEffect(() => {
