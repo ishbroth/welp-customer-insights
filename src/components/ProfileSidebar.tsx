@@ -11,7 +11,6 @@ import {
   Bell,
   Menu
 } from "lucide-react";
-import { getUserName } from "@/utils/userTypes";
 
 interface ProfileSidebarProps {
   isOpen: boolean;
@@ -23,12 +22,6 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   const location = useLocation();
   
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
-  
-  // Get a display name using our utility function
-  const displayName = getUserName(currentUser);
-  
-  // Get the first initial for the avatar
-  const initial = displayName.charAt(0).toUpperCase();
   
   return (
     <>
@@ -47,10 +40,14 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
           <div className="p-6 border-b">
             <div className="flex items-center space-x-4">
               <Avatar className="h-12 w-12">
-                <AvatarFallback>{initial}</AvatarFallback>
+                {currentUser?.avatar ? (
+                  <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                ) : (
+                  <AvatarFallback>{currentUser?.name?.[0] || "U"}</AvatarFallback>
+                )}
               </Avatar>
               <div>
-                <h3 className="font-medium">{displayName}</h3>
+                <h3 className="font-medium">{currentUser?.name}</h3>
                 <p className="text-sm text-gray-500">{currentUser?.email}</p>
               </div>
             </div>

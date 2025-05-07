@@ -1,93 +1,71 @@
-// This file uses the newer implementations from @/utils/supabase/businessHelpers.ts
-import { verifyBusinessLicense as verifyLicenseWithAPI } from "@/utils/supabase";
 
-// Function to verify business ID (used in Signup.tsx and ProfileEdit.tsx)
-export const verifyBusinessId = async (businessId: string, businessName?: string, state?: string) => {
-  // If we have a short ID or a demo test case (for backward compatibility), use the mock verification
-  if (businessId.length < 6 || businessId.includes("Acme") || businessId.startsWith("123")) {
-    return mockVerifyBusinessId(businessId);
-  }
-  
-  try {
-    // Otherwise use the real API verification
-    const result = await verifyLicenseWithAPI({
-      licenseNumber: businessId,
-      businessName: businessName || "Unknown Business",
-      state
-    });
-    
-    return {
-      verified: result.verified,
-      message: result.verified ? "Business ID verified successfully" : "Business ID verification failed",
-      details: {
-        type: result.license_type,
-        expirationDate: result.license_expiration
-      }
-    };
-  } catch (error) {
-    console.error("Business verification error:", error);
-    return {
-      verified: false,
-      message: "Business ID verification failed. Please check your information and try again."
-    };
-  }
-};
+interface VerificationResult {
+  verified: boolean;
+  message?: string;
+  details?: Record<string, any>;
+}
 
-// Mock verification function for backward compatibility and testing
-const mockVerifyBusinessId = async (businessId: string) => {
-  // Simulate a delay for API call
-  await new Promise(resolve => setTimeout(resolve, 1500));
+// This is a mock implementation of business ID verification
+// In a real application, this would connect to actual verification APIs
+export const verifyBusinessId = async (businessId: string): Promise<VerificationResult> => {
+  console.log(`Verifying business ID: ${businessId}`);
   
-  // Mock verification logic - in a real application this would call an external API
-  const isValid = businessId && businessId.length > 5;
-  
-  // Demo validation - if businessId contains "Acme" or starts with "123", consider it valid
-  const demoValidBusinessId = businessId.includes("Acme") || businessId.startsWith("123");
-  
-  if (isValid && demoValidBusinessId) {
-    return {
-      verified: true,
-      message: "Business ID verified successfully",
-      details: {
-        type: "General Business License",
-        expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
-      }
-    };
-  } else {
-    return {
-      verified: false,
-      message: "Business ID verification failed. Please check your information and try again."
-    };
-  }
-};
-
-// Keep the legacy function for backward compatibility with renamed function name to avoid clash
-export const verifyBusinessLicenseLegacy = async (
-  license: {
-    licenseType: string;
-    license_number: string;
-    businessName: string;
-    expirationDate: string;
-  }
-) => {
-  // Simulate a delay for API call
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   // Mock verification logic
-  const isValid = license.license_number && 
-                 license.license_number.length > 5 &&
-                 new Date(license.expirationDate) > new Date();
+  // In a real implementation, you would make API calls to business verification services
   
-  if (isValid) {
-    return {
-      verified: true,
-      license_number: license.license_number,
-      license_type: license.licenseType,
-      license_status: "Active",
-      license_expiration: license.expirationDate,
-      business_name: license.businessName
-    };
-  } else {
-    throw new Error("License verification failed");
+  // Check if the ID looks like an EIN (XX-XXXXXXX format)
+  const einRegex = /^\d{2}-\d{7}$/;
+  // Check if the ID looks like a business license (alphanumeric with possible dashes)
+  const licenseRegex = /^[A-Z0-9]{5,15}(-[A-Z0-9]{1,5})?$/i;
+  
+  if (einRegex.test(businessId)) {
+    // For demo purposes, verify only specific EINs
+    if (['12-3456789', '98-7654321'].includes(businessId)) {
+      return {
+        verified: true,
+        message: "EIN verified successfully",
+        details: {
+          type: "EIN",
+          registrationDate: "2020-01-15",
+        }
+      };
+    } else {
+      return {
+        verified: false,
+        message: "EIN could not be verified in our database"
+      };
+    }
+  } else if (licenseRegex.test(businessId)) {
+    // For demo purposes, verify only specific license numbers
+    if (['LIC123456', 'BUS789012', 'CONTR456'].includes(businessId.toUpperCase())) {
+      return {
+        verified: true,
+        message: "Business license verified successfully",
+        details: {
+          type: "Business License",
+          expirationDate: "2025-12-31",
+          status: "Active"
+        }
+      };
+    } else {
+      return {
+        verified: false,
+        message: "Business license could not be verified"
+      };
+    }
   }
+  
+  return {
+    verified: false,
+    message: "Invalid format. Please provide a valid EIN (XX-XXXXXXX) or business license number"
+  };
 };
+
+// In a real application, you would implement multiple verification services
+// For example:
+// export const verifyEIN = async (ein: string): Promise<VerificationResult> => { ... }
+// export const verifyContractorLicense = async (licenseNumber: string, state: string): Promise<VerificationResult> => { ... }
+// export const verifyLiquorLicense = async (licenseNumber: string, state: string): Promise<VerificationResult> => { ... }

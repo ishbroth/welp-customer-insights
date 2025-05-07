@@ -144,23 +144,20 @@ const SearchResults = () => {
     }, 1000);
   }, [lastName, firstName, phone, address, city, state, zipCode, fuzzyMatch, similarityThreshold]);
 
-  // Update the formatAddress function to ensure business addresses are never shown to customers
+  // Function to format address for display based on subscription status
   const formatAddress = (customer: any) => {
-    // If the current user is a customer, don't show business addresses
-    if (currentUser?.type === "customer") {
-      return "Address hidden for privacy";
-    }
-    
-    // For business users or admins, check if they have access
-    const hasAccess = currentUser?.type === "admin" || 
-                   isSubscribed || 
-                   localStorage.getItem(`customer_access_${customer.id}`) === "true";
-    
-    if (hasAccess) {
+    // If the user is subscribed or admin, show full address
+    if (currentUser?.type === "admin" || isSubscribed) {
       return customer.address;
     }
     
-    // For unsubscribed business users, only show the street name without numbers
+    // Check if the user has one-time access to this customer
+    const hasOneTimeAccess = localStorage.getItem(`customer_access_${customer.id}`) === "true";
+    if (hasOneTimeAccess) {
+      return customer.address;
+    }
+    
+    // For unsubscribed users, only show the street name without numbers
     if (customer.address) {
       // Remove the house/building number from the address
       const addressParts = customer.address.split(' ');
@@ -320,7 +317,7 @@ const SearchResults = () => {
                           >
                             <div className="font-semibold">{customer.lastName}, {customer.firstName}</div>
                             <div className="text-sm text-gray-600">
-                              {currentUser?.type === "customer" ? "Address hidden for privacy" : formatAddress(customer)}
+                              {canSeeFullDetails ? customer.address : formatAddress(customer)}
                             </div>
                             <div className="text-sm text-gray-600">
                               {customer.city && customer.state ? `${customer.city}, ${customer.state}` : 
