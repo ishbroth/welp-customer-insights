@@ -1,371 +1,185 @@
-
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { getUserProfile, updateUserProfile } from "@/utils/supabase";
-import { Profile } from "@/types/supabase";
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { User as MockUser, mockUsers } from "@/data/mockUsers";
-import { ExtendedUser, isMockUser, isExtendedUser } from "@/utils/userTypes";
+import { Profile, UserType } from '@/types/supabase';
+import { getUserProfile, updateUserProfile } from '@/utils/supabase';
 
 interface AuthContextType {
-  currentUser: ExtendedUser | MockUser | null;
-  session: Session | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string, userData: any) => Promise<{success: boolean, error?: string}>;
-  loginWithGoogle: () => Promise<boolean>;
-  loginWithApple: () => Promise<boolean>;
+  currentUser: UserType | null;
+  setCurrentUser: React.Dispatch<React.SetStateAction<UserType | null>>;
+  loading: boolean;
+  login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile> & { avatar?: string, name?: string, bio?: string, businessId?: string, zipCode?: string }) => Promise<void>;
-  useMockData: boolean;
-  setUseMockData: (use: boolean) => void;
+  signUp: (email: string, type: string) => Promise<void>;
+  updateProfile: (profileData: Partial<Profile>) => Promise<{ success: boolean; error?: any; }>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<ExtendedUser | MockUser | null>(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [session, setSession] = useState<Session | null>(null);
-  const [useMockData, setUseMockData] = useState<boolean>(true);
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Setup Supabase auth state listener
   useEffect(() => {
-    // Only set up Supabase listeners if not using mock data
-    if (!useMockData) {
-      // First set up auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          setSession(session);
-          
-          if (session?.user) {
-            // Use setTimeout to prevent possible deadlock with Supabase
-            setTimeout(async () => {
-              try {
-                const { data: profile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', session.user.id)
-                  .single();
-                
-                // Merge the user and profile data
-                if (profile) {
-                  const fullUser = {
-                    ...session.user,
-                    ...profile,
-                    // For compatibility with the mock data structure
-                    name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User',
-                    zipCode: profile.zipcode
-                  } as ExtendedUser;
-                  
-                  setCurrentUser(fullUser);
-                  localStorage.setItem("currentUser", JSON.stringify(fullUser));
-                } else {
-                  // Add a name property to ensure compatibility
-                  const userWithName = {
-                    ...session.user,
-                    name: session.user.email?.split('@')[0] || 'User'
-                  } as ExtendedUser;
-                  
-                  setCurrentUser(userWithName);
-                }
-              } catch (error) {
-                console.error("Error fetching user profile:", error);
-                // Add a name property to ensure compatibility
-                const userWithName = {
-                  ...session.user,
-                  name: session.user.email?.split('@')[0] || 'User'
-                } as ExtendedUser;
-                
-                setCurrentUser(userWithName);
-              }
-            }, 0);
-          } else {
-            setCurrentUser(null);
-            localStorage.removeItem("currentUser");
-          }
-        }
-      );
-      
-      // Then check for existing session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        
-        if (session?.user) {
-          // Fetch the user profile data
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data: profile }) => {
-              if (profile) {
-                const fullUser = {
-                  ...session.user,
-                  ...profile,
-                  // For compatibility with the mock data structure
-                  name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User',
-                  zipCode: profile.zipcode
-                } as ExtendedUser;
-                
-                setCurrentUser(fullUser);
-                localStorage.setItem("currentUser", JSON.stringify(fullUser));
-              } else {
-                // Add a name property to ensure compatibility
-                const userWithName = {
-                  ...session.user,
-                  name: session.user.email?.split('@')[0] || 'User'
-                } as ExtendedUser;
-                
-                setCurrentUser(userWithName);
-              }
-            })
-            .catch((error) => {
-              console.error("Error fetching user profile:", error);
-              // Add a name property to ensure compatibility
-              const userWithName = {
-                ...session.user,
-                name: session.user.email?.split('@')[0] || 'User'
-              } as ExtendedUser;
-              
-              setCurrentUser(userWithName);
-            });
-        }
-      }).catch(error => {
-        console.error("Error getting session:", error);
-      });
-      
-      return () => {
-        subscription?.unsubscribe();
-      };
-    }
-  }, [useMockData]);
+    const session = supabase.auth.getSession();
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    if (useMockData) {
-      // Mock authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const user = mockUsers.find(user => user.email === email);
-      
-      if (user) {
-        setCurrentUser(user);
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        return true;
-      }
-      return false;
-    } else {
-      // Real Supabase authentication
-      try {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const profile = await getUserProfile(session.user.id);
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          ...profile,
         });
+      } else {
+        setCurrentUser(null);
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  // Function to handle user login
+  const login = async (email: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) throw error;
+      toast({
+        title: "Check your email",
+        description: "We've sent you a magic link to log in.",
+      });
+      navigate('/verify-email');
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "An error occurred during login.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to handle user logout
+  const logout = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setCurrentUser(null);
+      toast({
+        description: "Logged out successfully.",
+      });
+      navigate('/login');
+    } catch (error: any) {
+      toast({
+        title: "Logout Failed",
+        description: error.message || "An error occurred during logout.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to handle user sign-up
+  const signUp = async (email: string, type: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        options: {
+          data: {
+            type: type,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-email`,
+        },
+      });
+      if (error) throw error;
+
+      // Create user profile immediately after signup
+      if (data.user?.id) {
+        const newProfile: Profile = {
+          id: data.user.id,
+          first_name: '',
+          last_name: '',
+          email: email,
+          type: type,
+          avatar: '',
+          phone: '',
+          address: '',
+          city: '',
+          state: '',
+          zipCode: '',
+        };
+        await updateUserProfile(data.user.id, newProfile);
+      }
+
+      toast({
+        title: "Check your email",
+        description: "We've sent you a magic link to verify your email and complete sign up.",
+      });
+      navigate('/verify-email');
+    } catch (error: any) {
+      toast({
+        title: "Sign-up Failed",
+        description: error.message || "An error occurred during sign-up.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to update the user profile
+  const updateProfile = async (profileData: Partial<Profile>) => {
+    if (!currentUser) throw new Error("No user logged in");
+
+    try {
+      const { id: currentUserId, email } = currentUser;
+
+      // Group updates by table
+      const profileUpdates: Partial<Profile> = {};
+      const userUpdates: { email?: string } = {};
+
+      // Separate email (for auth.users) from other profile data
+      if (profileData.email && profileData.email !== email) {
+        userUpdates.email = profileData.email;
         
-        if (error) {
-          console.error("Login error:", error.message);
+        // Update email in Supabase auth
+        try {
+          await supabase.auth.updateUser({ email: profileData.email });
+        } catch (error) {
+          console.error("Error updating email:", error);
           toast({
-            title: "Login Error",
-            description: error.message,
+            title: "Email Update Failed",
+            description: "Failed to update your email. Please try again.",
             variant: "destructive",
           });
-          return false;
+          // Don't throw, continue with other updates
         }
-        
-        return true;
-      } catch (error) {
-        console.error("Login error:", error);
-        return false;
       }
-    }
-  };
 
-  const signUp = async (email: string, password: string, userData: any): Promise<{success: boolean, error?: string}> => {
-    if (useMockData) {
-      // Mock signup
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const newUser = {
-        id: `mock-${Date.now()}`,
-        email,
-        ...userData
-      };
-      setCurrentUser(newUser as MockUser);
-      localStorage.setItem("currentUser", JSON.stringify(newUser));
-      return { success: true };
-    } else {
-      // Real Supabase signup
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: userData
-          }
-        });
-        
-        if (error) {
-          console.error("Signup error:", error.message);
-          return { success: false, error: error.message };
+      // Copy all valid profile fields to profileUpdates
+      Object.keys(profileData).forEach(key => {
+        if (key !== 'email' && key in currentUser) {
+          // Type assertion to safely add the profile field
+          // @ts-ignore - This is safe because we've checked that the key exists in the profile
+          profileUpdates[key] = profileData[key];
         }
-        
-        toast({
-          title: "Account Created",
-          description: "Your account has been successfully created.",
-        });
-        
-        return { success: true };
-      } catch (error: any) {
-        console.error("Signup error:", error);
-        return { success: false, error: error.message };
-      }
-    }
-  };
-
-  const loginWithGoogle = async (): Promise<boolean> => {
-    if (useMockData) {
-      // Mock Google authentication
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const customerUser = mockUsers.find(user => user.email === "customer@example.com");
+      });
       
-      if (customerUser) {
-        setCurrentUser(customerUser);
-        localStorage.setItem("currentUser", JSON.stringify(customerUser));
-        return true;
-      }
-      return false;
-    } else {
-      // Real Supabase OAuth
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-        });
-        
-        if (error) {
-          console.error("Google login error:", error.message);
-          return false;
-        }
-        
-        return true;
-      } catch (error) {
-        console.error("Google login error:", error);
-        return false;
-      }
-    }
-  };
-
-  const loginWithApple = async (): Promise<boolean> => {
-    if (useMockData) {
-      // Mock Apple authentication
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const businessUser = mockUsers.find(user => user.email === "business@example.com");
-      
-      if (businessUser) {
-        setCurrentUser(businessUser);
-        localStorage.setItem("currentUser", JSON.stringify(businessUser));
-        return true;
-      }
-      return false;
-    } else {
-      // Real Supabase OAuth
-      try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-        });
-        
-        if (error) {
-          console.error("Apple login error:", error.message);
-          return false;
-        }
-        
-        return true;
-      } catch (error) {
-        console.error("Apple login error:", error);
-        return false;
-      }
-    }
-  };
-
-  const logout = async () => {
-    if (useMockData) {
-      // Mock logout
-      setCurrentUser(null);
-      localStorage.removeItem("currentUser");
-    } else {
-      // Real Supabase logout
-      try {
-        await supabase.auth.signOut();
-        // Clear currentUser state just in case
-        setCurrentUser(null);
-        localStorage.removeItem("currentUser");
-      } catch (error) {
-        console.error("Logout error:", error);
-      }
-    }
-  };
-
-  const updateProfile = async (updates: Partial<Profile> & { 
-    avatar?: string, 
-    name?: string, 
-    bio?: string, 
-    businessId?: string,
-    zipCode?: string
-  }) => {
-    if (useMockData) {
-      // Mock profile update
-      if (currentUser) {
-        const updatedUser = { ...currentUser, ...updates } as MockUser;
-        setCurrentUser(updatedUser);
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      }
-    } else {
-      // Real Supabase profile update
-      if (currentUser && 'id' in currentUser) {
+      // Only update the profile if there are valid profile fields
+      if (Object.keys(profileUpdates).length > 0) {
         try {
-          // Convert from our extended fields to Supabase profile format
-          const profileUpdates: Partial<Profile> = {
-            ...(updates.first_name !== undefined && { first_name: updates.first_name }),
-            ...(updates.last_name !== undefined && { last_name: updates.last_name }),
-            ...(updates.phone !== undefined && { phone: updates.phone }),
-            ...(updates.address !== undefined && { address: updates.address }),
-            ...(updates.city !== undefined && { city: updates.city }),
-            ...(updates.state !== undefined && { state: updates.state }),
-            ...(updates.zipCode !== undefined && { zipcode: updates.zipCode })
-          };
-          
-          // Only update the profile if there are valid profile fields
-          if (Object.keys(profileUpdates).length > 0) {
-            try {
-              await updateUserProfile(currentUser.id, profileUpdates);
-            } catch (error) {
-              console.error("Error updating profile:", error);
-              toast({
-                title: "Profile Update Failed",
-                description: "Failed to update your profile. Please try again.",
-                variant: "destructive",
-              });
-            }
-          }
-          
-          // Update local state with new profile data
-          const updatedUser = { 
-            ...currentUser, 
-            ...updates,
-            // Convert zipCode to zipcode for consistency with database field
-            ...(updates.zipCode && { zipcode: updates.zipCode })
-          } as ExtendedUser;
-          
-          setCurrentUser(updatedUser);
-          localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+          await updateUserProfile(currentUser.id, profileUpdates);
         } catch (error) {
           console.error("Error updating profile:", error);
           toast({
@@ -375,25 +189,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       }
+      
+      // Update local state with new profile data
+      setCurrentUser({
+        ...currentUser,
+        ...profileUpdates,
+        ...(userUpdates.email ? { email: userUpdates.email } : {})
+      });
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error in updateProfile:", error);
+      toast({
+        title: "Update Failed",
+        description: "An error occurred while updating your profile.",
+        variant: "destructive",
+      });
+      return { success: false, error };
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
-    session,
+    setCurrentUser,
+    loading,
     login,
-    signUp,
-    loginWithGoogle,
-    loginWithApple,
     logout,
+    signUp,
     updateProfile,
-    useMockData,
-    setUseMockData
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

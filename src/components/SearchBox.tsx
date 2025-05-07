@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -104,12 +103,6 @@ const SearchBox = ({
   return (
     <div className={className}>
       <form onSubmit={handleSearch} className="space-y-4">
-        {!simplified && (
-          <h2 className="text-2xl font-bold mb-4 text-center">
-            Find Customer Reviews
-          </h2>
-        )}
-        
         <div className="space-y-3">
           <Input
             type="text"
