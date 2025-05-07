@@ -6,6 +6,11 @@ import { User as MockUser } from "@/data/mockUsers";
 // Define a type for our extended user data that combines Supabase User and Profile
 export type ExtendedUser = User & Partial<Profile> & {
   name?: string;
+  avatar?: string;
+  bio?: string;
+  businessId?: string;
+  zipCode?: string; 
+  reviews?: any[];
 };
 
 // Type guard to check if user is a Mock User

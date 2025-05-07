@@ -11,6 +11,7 @@ import {
   Bell,
   Menu
 } from "lucide-react";
+import { getUserName } from "@/utils/userTypes";
 
 interface ProfileSidebarProps {
   isOpen: boolean;
@@ -23,12 +24,8 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
   
-  // Create a display name from the user data
-  const displayName = currentUser ? 
-    ((currentUser as any).first_name && (currentUser as any).last_name) ? 
-      `${(currentUser as any).first_name} ${(currentUser as any).last_name}` : 
-      (currentUser.email ? currentUser.email.split('@')[0] : 'User') : 
-    'User';
+  // Get a display name using our utility function
+  const displayName = getUserName(currentUser);
   
   // Get the first initial for the avatar
   const initial = displayName.charAt(0).toUpperCase();

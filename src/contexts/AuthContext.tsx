@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,11 +5,7 @@ import { getUserProfile, updateUserProfile } from "@/utils/supabase";
 import { Profile } from "@/types/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { User as MockUser, mockUsers } from "@/data/mockUsers";
-
-// Define a type for our extended user data
-type ExtendedUser = User & Partial<Profile> & {
-  name?: string;
-};
+import { ExtendedUser, isMockUser, isExtendedUser } from "@/utils/userTypes";
 
 interface AuthContextType {
   currentUser: ExtendedUser | MockUser | null;
@@ -20,7 +15,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<boolean>;
   loginWithApple: () => Promise<boolean>;
   logout: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  updateProfile: (updates: Partial<Profile> & { avatar?: string, name?: string, bio?: string, businessId?: string, zipCode?: string }) => Promise<void>;
   useMockData: boolean;
   setUseMockData: (use: boolean) => void;
 }
@@ -69,7 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     ...session.user,
                     ...profile,
                     // For compatibility with the mock data structure
-                    name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User'
+                    name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User',
+                    zipCode: profile.zipcode
                   } as ExtendedUser;
                   
                   setCurrentUser(fullUser);
@@ -118,7 +114,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   ...session.user,
                   ...profile,
                   // For compatibility with the mock data structure
-                  name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User'
+                  name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User',
+                  zipCode: profile.zipcode
                 } as ExtendedUser;
                 
                 setCurrentUser(fullUser);
@@ -144,6 +141,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setCurrentUser(userWithName);
             });
         }
+      }).catch(error => {
+        console.error("Error getting session:", error);
       });
       
       return () => {
@@ -313,7 +312,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = async (updates: Partial<Profile> & { 
+    avatar?: string, 
+    name?: string, 
+    bio?: string, 
+    businessId?: string,
+    zipCode?: string
+  }) => {
     if (useMockData) {
       // Mock profile update
       if (currentUser) {
@@ -325,10 +330,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Real Supabase profile update
       if (currentUser && 'id' in currentUser) {
         try {
-          await updateUserProfile(currentUser.id, updates);
+          // Convert from our extended fields to Supabase profile format
+          const profileUpdates: Partial<Profile> = {
+            ...(updates.first_name !== undefined && { first_name: updates.first_name }),
+            ...(updates.last_name !== undefined && { last_name: updates.last_name }),
+            ...(updates.phone !== undefined && { phone: updates.phone }),
+            ...(updates.address !== undefined && { address: updates.address }),
+            ...(updates.city !== undefined && { city: updates.city }),
+            ...(updates.state !== undefined && { state: updates.state }),
+            ...(updates.zipCode !== undefined && { zipcode: updates.zipCode })
+          };
+          
+          // Only update the profile if there are valid profile fields
+          if (Object.keys(profileUpdates).length > 0) {
+            await updateUserProfile(currentUser.id, profileUpdates);
+          }
           
           // Update local state with new profile data
-          const updatedUser = { ...currentUser, ...updates } as ExtendedUser;
+          const updatedUser = { 
+            ...currentUser, 
+            ...updates,
+            // Convert zipCode to zipcode for consistency with database field
+            ...(updates.zipCode && { zipcode: updates.zipCode })
+          } as ExtendedUser;
+          
           setCurrentUser(updatedUser);
           localStorage.setItem("currentUser", JSON.stringify(updatedUser));
         } catch (error) {
