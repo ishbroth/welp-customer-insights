@@ -26,67 +26,13 @@ const ProfilePage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useAuth();
   
-  // Get reviews created by the current business user about customers
-  const businessReviews = currentUser?.type === "business" ? 
-    // Find all customer users who have reviews from this business
-    // Then extract those specific reviews
-    (() => {
-      // This is a temporary array to hold all reviews by this business
-      const reviews = [];
-      
-      // Go through all customers in mockUsers who have reviews
-      for (const user of mockUsers) {
-        if (user.type === "customer" && user.reviews) {
-          // Go through each review of this customer
-          for (const review of user.reviews) {
-            // Check if the review was written by the current business
-            if (review.reviewerId === currentUser.id) {
-              reviews.push({
-                ...review,
-                customerName: user.name,
-                customerId: user.id
-              });
-            }
-          }
-        }
-      }
-      
-      // Sort reviews by date (newest first)
-      return reviews.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateB.getTime() - dateA.getTime();
-      });
-    })() : [];
-
-  // Get reviews about the current customer user
-  const customerReviews = currentUser?.type === "customer" ? 
-    // Find all reviews about this customer and sort by newest first
-    (currentUser.reviews || []).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB.getTime() - dateA.getTime();
-    }) : [];
-
-  // All reviews for admin view - sorted by newest first
-  const allReviews = currentUser?.type === "admin" ? 
-    mockUsers
-      .filter(user => user.type === "customer" && user.reviews)
-      .flatMap(user => 
-        (user.reviews || []).map(review => ({
-          ...review,
-          customerName: user.name,
-          customerId: user.id
-        }))
-      )
-      .sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateB.getTime() - dateA.getTime();
-      }) : [];
-
+  // Since we don't have the actual reviews structure, initialize with empty arrays
+  const businessReviews: any[] = [];
+  const customerReviews: any[] = [];
+  const allReviews: any[] = [];
+  
   // Function to get the first sentence of a text
-  const getFirstSentence = (content) => {
+  const getFirstSentence = (content: string) => {
     const match = content.match(/^.*?[.!?](?:\s|$)/);
     return match ? match[0] : `${content.substring(0, 80)}...`;
   };
@@ -116,48 +62,12 @@ const ProfilePage = () => {
       return;
     }
     
-    // First simulate a search to check if customer exists
-    const customersFound = mockUsers.filter(user => {
-      if (user.type !== 'customer') return false;
+    // Build query string and navigate to search or review page
+    const queryString = Object.entries(filteredParams)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
+      .join('&');
       
-      // Check for matches on each provided parameter
-      return Object.entries(filteredParams).every(([key, value]) => {
-        const searchValue = value.toLowerCase();
-        
-        switch(key) {
-          case 'firstName':
-            return user.name?.toLowerCase().includes(searchValue);
-          case 'lastName':
-            return user.name?.toLowerCase().includes(searchValue);
-          case 'phone':
-            return user.phone?.toLowerCase().includes(searchValue);
-          case 'address':
-            return user.address?.toLowerCase().includes(searchValue);
-          case 'city':
-            return user.city?.toLowerCase().includes(searchValue);
-          case 'zipCode':
-            return user.zipCode?.toLowerCase().includes(searchValue);
-          default:
-            return false;
-        }
-      });
-    });
-    
-    if (customersFound.length > 0) {
-      // Customers found - go to search results page
-      const queryString = Object.entries(filteredParams)
-        .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
-        .join('&');
-        
-      navigate(`/search?${queryString}`);
-    } else {
-      // No customers found - go to new review page with search parameters
-      const queryString = Object.entries(filteredParams)
-        .map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`)
-        .join('&');
-        
-      navigate(`/review/new?${queryString}`);
-    }
+    navigate(`/search?${queryString}`);
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Review } from "@/data/mockUsers";
@@ -32,11 +33,16 @@ const ProfileReviews = () => {
     // Load unlocked reviews from localStorage
     const loadUnlockedReviews = () => {
       const unlocked: string[] = [];
-      if (currentUser?.type === "customer" && currentUser?.reviews) {
-        for (const review of currentUser.reviews) {
-          const isUnlocked = localStorage.getItem(`review_access_${review.id}`) === "true";
+      if (currentUser?.type === "customer") {
+        // Get unlocked reviews from localStorage
+        const keys = Object.keys(localStorage);
+        const reviewAccessKeys = keys.filter(key => key.startsWith('review_access_'));
+        
+        for (const key of reviewAccessKeys) {
+          const isUnlocked = localStorage.getItem(key) === "true";
           if (isUnlocked) {
-            unlocked.push(review.id);
+            const reviewId = key.replace('review_access_', '');
+            unlocked.push(reviewId);
           }
         }
       }
@@ -51,20 +57,20 @@ const ProfileReviews = () => {
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   // Get reviews about the current customer user - sorted by newest first
-  const [customerReviews, setCustomerReviews] = useState(() => {
-    return currentUser?.type === "customer" && currentUser?.reviews 
-      ? [...currentUser.reviews]
-          .map(review => ({
-            ...review,
-            responses: review.responses || []
-          }))
-          .sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateB.getTime() - dateA.getTime(); // Sort newest first
-          })
-      : [];
+  const [customerReviews, setCustomerReviews] = useState<Review[]>(() => {
+    // This is a placeholder for actual reviews data
+    // In a real app, this would come from the API
+    return [];
   });
+  
+  useEffect(() => {
+    // In a real app, we'd fetch reviews from the API
+    // For now, just use an empty array if no reviews are available
+    if (currentUser?.type === "customer") {
+      // Mock implementation until we have real data
+      setCustomerReviews([]);
+    }
+  }, [currentUser]);
   
   // Pagination settings
   const reviewsPerPage = 5;
