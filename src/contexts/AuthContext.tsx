@@ -59,13 +59,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   .single();
                 
                 // Merge the user and profile data
-                const fullUser = {
-                  ...session.user,
-                  ...profile
-                };
-                
-                setCurrentUser(fullUser);
-                localStorage.setItem("currentUser", JSON.stringify(fullUser));
+                if (profile) {
+                  const fullUser = {
+                    ...session.user,
+                    ...profile,
+                    // For compatibility with the mock data structure
+                    name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User'
+                  };
+                  
+                  setCurrentUser(fullUser as User & Partial<Profile>);
+                  localStorage.setItem("currentUser", JSON.stringify(fullUser));
+                } else {
+                  setCurrentUser(session.user);
+                }
               } catch (error) {
                 console.error("Error fetching user profile:", error);
                 setCurrentUser(session.user);
@@ -93,9 +99,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               if (profile) {
                 const fullUser = {
                   ...session.user,
-                  ...profile
+                  ...profile,
+                  // For compatibility with the mock data structure
+                  name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User'
                 };
-                setCurrentUser(fullUser);
+                setCurrentUser(fullUser as User & Partial<Profile>);
                 localStorage.setItem("currentUser", JSON.stringify(fullUser));
               } else {
                 setCurrentUser(session.user);

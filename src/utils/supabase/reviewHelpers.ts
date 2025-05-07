@@ -128,6 +128,118 @@ export const addReviewResponse = async (responseData: ResponseInsert) => {
 };
 
 /**
+ * Update a response
+ */
+export const updateReviewResponse = async (responseId: string, content: string) => {
+  const { data, error } = await supabase
+    .from('responses')
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq('id', responseId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error updating review response:", error);
+    throw error;
+  }
+  
+  return data;
+};
+
+/**
+ * Delete a response
+ */
+export const deleteReviewResponse = async (responseId: string) => {
+  const { error } = await supabase
+    .from('responses')
+    .delete()
+    .eq('id', responseId);
+  
+  if (error) {
+    console.error("Error deleting review response:", error);
+    throw error;
+  }
+  
+  return true;
+};
+
+/**
+ * Add a reaction to a review
+ */
+export const addReviewReaction = async (reviewId: string, userId: string, reactionType: string) => {
+  // First check if reaction exists
+  const { data: existingReaction } = await supabase
+    .from('review_reactions')
+    .select('*')
+    .eq('review_id', reviewId)
+    .eq('user_id', userId)
+    .eq('reaction_type', reactionType)
+    .single();
+  
+  if (existingReaction) {
+    // If reaction exists, remove it (toggle off)
+    const { error } = await supabase
+      .from('review_reactions')
+      .delete()
+      .eq('id', existingReaction.id);
+    
+    if (error) {
+      console.error("Error removing review reaction:", error);
+      throw error;
+    }
+    
+    return false; // Reaction removed
+  } else {
+    // Add new reaction
+    const { error } = await supabase
+      .from('review_reactions')
+      .insert({
+        review_id: reviewId,
+        user_id: userId,
+        reaction_type: reactionType
+      });
+    
+    if (error) {
+      console.error("Error adding review reaction:", error);
+      throw error;
+    }
+    
+    return true; // Reaction added
+  }
+};
+
+/**
+ * Get all reactions for a review
+ */
+export const getReviewReactions = async (reviewId: string) => {
+  const { data, error } = await supabase
+    .from('review_reactions')
+    .select('*')
+    .eq('review_id', reviewId);
+  
+  if (error) {
+    console.error("Error fetching review reactions:", error);
+    throw error;
+  }
+  
+  // Format reactions by type
+  const formattedReactions = {
+    like: [] as string[],
+    funny: [] as string[],
+    useful: [] as string[],
+    ohNo: [] as string[]
+  };
+  
+  data.forEach(reaction => {
+    if (['like', 'funny', 'useful', 'ohNo'].includes(reaction.reaction_type)) {
+      formattedReactions[reaction.reaction_type as keyof typeof formattedReactions].push(reaction.user_id);
+    }
+  });
+  
+  return formattedReactions;
+};
+
+/**
  * Search for reviews by business name, customer name, or content
  */
 export const searchReviews = async (query: string) => {

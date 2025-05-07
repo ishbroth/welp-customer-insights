@@ -23,6 +23,16 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
   
+  // Create a display name from the user data
+  const displayName = currentUser ? 
+    (currentUser.first_name && currentUser.last_name) ? 
+      `${currentUser.first_name} ${currentUser.last_name}` : 
+      (currentUser.email ? currentUser.email.split('@')[0] : 'User') : 
+    'User';
+  
+  // Get the first initial for the avatar
+  const initial = displayName.charAt(0).toUpperCase();
+  
   return (
     <>
       <div className="md:hidden flex items-center p-4">
@@ -40,14 +50,10 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
           <div className="p-6 border-b">
             <div className="flex items-center space-x-4">
               <Avatar className="h-12 w-12">
-                {currentUser?.avatar ? (
-                  <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                ) : (
-                  <AvatarFallback>{currentUser?.name?.[0] || "U"}</AvatarFallback>
-                )}
+                <AvatarFallback>{initial}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-medium">{currentUser?.name}</h3>
+                <h3 className="font-medium">{displayName}</h3>
                 <p className="text-sm text-gray-500">{currentUser?.email}</p>
               </div>
             </div>
