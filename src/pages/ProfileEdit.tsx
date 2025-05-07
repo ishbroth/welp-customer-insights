@@ -1,3 +1,4 @@
+
 import { useState, useRef, ChangeEvent } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -169,7 +170,7 @@ const ProfileEdit = () => {
     // In a real application, you would send this data to your backend
     updateProfile({
       name: data.name,
-      email: data.email,
+      // Don't pass email since it's not part of the Profile type
       businessId: data.businessId,
       phone: data.phone,
       address: data.address,
