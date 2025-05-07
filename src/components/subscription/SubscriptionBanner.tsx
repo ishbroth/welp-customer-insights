@@ -2,18 +2,26 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SubscriptionBannerProps {
   type: "customer" | "business";
 }
 
 const SubscriptionBanner = ({ type }: SubscriptionBannerProps) => {
+  const { isSubscribed } = useAuth();
+  
+  // If the user is subscribed, don't show the banner at all
+  if (isSubscribed) {
+    return null;
+  }
+  
   // For business users, return null (no banner displayed)
   if (type === "business") {
     return null;
   }
 
-  // Only display subscription banner for customers
+  // Only display subscription banner for unsubscribed customers
   const isCustomer = type === "customer";
 
   return (

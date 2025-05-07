@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mockUsers } from "@/data/mockUsers";
@@ -175,7 +174,7 @@ const BusinessReviews = () => {
               </p>
             </div>
             
-            {!hasSubscription && (
+            {!hasSubscription ? (
               <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
                 <div className="flex flex-col sm:flex-row justify-between items-center">
                   <div className="mb-4 sm:mb-0">
@@ -187,6 +186,17 @@ const BusinessReviews = () => {
                   <Button onClick={handleSubscribeClick} className="bg-yellow-600 hover:bg-yellow-700">
                     Subscribe Now
                   </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-4 border border-green-300 bg-green-50 rounded-md">
+                <div className="flex items-center">
+                  <div>
+                    <h3 className="font-semibold text-green-800">Premium Features Enabled</h3>
+                    <p className="text-sm text-green-700">
+                      You have full access to all review responses and premium features.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
