@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { sendSmsVerification, formatPhoneNumber } from "@/utils/phoneVerification";
 
 const VerifyPhone = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ const VerifyPhone = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [customerData, setCustomerData] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [remainingAttempts, setRemainingAttempts] = useState(3);
 
@@ -25,7 +26,7 @@ const VerifyPhone = () => {
     const storedData = sessionStorage.getItem("customerSignupData");
     const storedVerificationCode = sessionStorage.getItem("phoneVerificationCode");
     
-    if (!storedData || !storedVerificationCode) {
+    if (!storedData) {
       // No data found, redirect back to signup
       toast({
         title: "Session Expired",
@@ -39,13 +40,55 @@ const VerifyPhone = () => {
     const parsedData = JSON.parse(storedData);
     setCustomerData(parsedData);
     setPhoneNumber(parsedData.phone);
-    setStoredCode(storedVerificationCode);
+    
+    // If there's already a stored code from a previous send, use it
+    if (storedVerificationCode) {
+      setStoredCode(storedVerificationCode);
+    } else {
+      // Otherwise send a new verification code
+      sendVerificationCode(parsedData.phone);
+    }
   }, [navigate, toast]);
+
+  const sendVerificationCode = async (phone: string) => {
+    setIsSending(true);
+    
+    try {
+      const formattedPhone = formatPhoneNumber(phone);
+      const result = await sendSmsVerification(formattedPhone);
+      
+      if (result.success) {
+        // Save the verification code in session storage
+        setStoredCode(result.verificationCode);
+        sessionStorage.setItem("phoneVerificationCode", result.verificationCode);
+        
+        toast({
+          title: "Verification Code Sent",
+          description: `A verification code has been sent to ${phone}.`,
+        });
+      } else {
+        toast({
+          title: "Failed to Send Code",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send verification code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const handleVerifyCode = () => {
     setIsVerifying(true);
     
-    // Simulate verification delay
+    // Check verification code
     setTimeout(() => {
       if (verificationCode === storedCode) {
         // Successful verification
@@ -76,19 +119,11 @@ const VerifyPhone = () => {
       }
       
       setIsVerifying(false);
-    }, 1500);
+    }, 1000);
   };
 
   const handleResendCode = () => {
-    // Generate a new random 6-digit code
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setStoredCode(newCode);
-    sessionStorage.setItem("phoneVerificationCode", newCode);
-    
-    toast({
-      title: "Code Resent",
-      description: `A new verification code has been sent to ${phoneNumber}. For demo purposes, the code is: ${newCode}`,
-    });
+    sendVerificationCode(phoneNumber);
   };
 
   const handleContinueToProfile = () => {
@@ -123,10 +158,6 @@ const VerifyPhone = () => {
             <div className="space-y-4">
               <p className="text-center">
                 We've sent a verification code to <span className="font-medium">{phoneNumber}</span>
-              </p>
-              
-              <p className="text-center text-sm text-gray-500">
-                For demo purposes, the code is: <span className="font-semibold">{storedCode}</span>
               </p>
               
               <div className="my-8">
@@ -164,8 +195,9 @@ const VerifyPhone = () => {
                   variant="outline"
                   onClick={handleResendCode}
                   className="w-full"
+                  disabled={isSending}
                 >
-                  Resend Code
+                  {isSending ? "Sending..." : "Resend Code"}
                 </Button>
               </div>
               

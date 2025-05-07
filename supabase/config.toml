@@ -3,3 +3,6 @@ project_id = "yftvcixhifvrovwhtgtj"
 
 [functions.verify-business-license]
 verify_jwt = true
+
+[functions.send-sms-verification]
+verify_jwt = false

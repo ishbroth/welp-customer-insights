@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { validatePhoneNumber } from "@/utils/phoneVerification";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -102,6 +102,16 @@ const Signup = () => {
       return;
     }
     
+    // Validate phone number format
+    if (!validatePhoneNumber(customerPhone)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Store customer data in session storage for the verification flow
     const customerData = {
       firstName: customerFirstName,
@@ -114,15 +124,7 @@ const Signup = () => {
     
     sessionStorage.setItem("customerSignupData", JSON.stringify(customerData));
     
-    // Generate a random 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    sessionStorage.setItem("phoneVerificationCode", verificationCode);
-    
-    // Show a toast indicating that the verification code is being sent
-    toast({
-      title: "Verification Code Sent",
-      description: `A verification code has been sent to ${customerPhone}. For demo purposes, the code is: ${verificationCode}`,
-    });
+    // We don't generate the code here anymore, it will be sent via SMS in the VerifyPhone component
     
     // Redirect to the verification page
     navigate("/verify-phone");
