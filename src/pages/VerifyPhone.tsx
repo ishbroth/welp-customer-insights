@@ -79,19 +79,12 @@ const VerifyPhone = () => {
         // For demo, we'll allow any 6-digit code to work
         if (verificationCode.length === 6) {
           // Create the account with Supabase
-          const { success, error } = await signUp(
+          const result = await signUp(
             customerData.email,
-            customerData.password,
-            {
-              first_name: customerData.firstName,
-              last_name: customerData.lastName,
-              phone: customerData.phone,
-              zipcode: customerData.zipCode,
-              type: "customer"
-            }
+            customerData.type
           );
           
-          if (success) {
+          if (result.success) {
             toast({
               title: "Account Created",
               description: "Your account has been created successfully!",
@@ -105,7 +98,7 @@ const VerifyPhone = () => {
           } else {
             toast({
               title: "Signup Error",
-              description: error || "Failed to create account. Please try again.",
+              description: result.error || "Failed to create account. Please try again.",
               variant: "destructive",
             });
           }

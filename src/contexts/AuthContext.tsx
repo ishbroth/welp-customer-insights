@@ -1,9 +1,17 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Profile, UserType } from '@/types/supabase';
+import { Profile } from '@/types/supabase';
 import { getUserProfile, updateUserProfile } from '@/utils/supabase';
+
+// Define the user type to include Profile properties and additional fields
+export interface UserType extends Profile {
+  id: string;
+  email: string;
+  avatar?: string;
+}
 
 interface AuthContextType {
   currentUser: UserType | null;
@@ -11,8 +19,10 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
-  signUp: (email: string, type: string) => Promise<void>;
-  updateProfile: (profileData: Partial<Profile>) => Promise<{ success: boolean; error?: any; }>;
+  signUp: (email: string, type: string) => Promise<{ success: boolean; error?: any; }>;
+  updateProfile: (profileData: Partial<UserType>) => Promise<{ success: boolean; error?: any; }>;
+  useMockData: boolean;
+  setUseMockData: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,20 +34,34 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [useMockData, setUseMockData] = useState(
+    localStorage.getItem('useMockData') === 'true'
+  );
+  
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Effect to persist mock data setting
+  useEffect(() => {
+    localStorage.setItem('useMockData', String(useMockData));
+  }, [useMockData]);
 
   useEffect(() => {
     const session = supabase.auth.getSession();
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const profile = await getUserProfile(session.user.id);
-        setCurrentUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          ...profile,
-        });
+        try {
+          const profile = await getUserProfile(session.user.id);
+          setCurrentUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            ...profile,
+          });
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          setCurrentUser(null);
+        }
       } else {
         setCurrentUser(null);
       }
@@ -93,8 +117,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (email: string, type: string) => {
     try {
       setLoading(true);
+      // For passwordless auth, we need to generate a random password
+      const tempPassword = Math.random().toString(36).slice(-10);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
+        password: tempPassword, // Required by Supabase but not used in passwordless flow
         options: {
           data: {
             type: type,
@@ -102,11 +130,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           emailRedirectTo: `${window.location.origin}/verify-email`,
         },
       });
+      
       if (error) throw error;
 
       // Create user profile immediately after signup
       if (data.user?.id) {
-        const newProfile: Profile = {
+        const newProfile: UserType = {
           id: data.user.id,
           first_name: '',
           last_name: '',
@@ -117,8 +146,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           address: '',
           city: '',
           state: '',
-          zipCode: '',
+          zipcode: '',
         };
+        
         await updateUserProfile(data.user.id, newProfile);
       }
 
@@ -126,21 +156,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: "Check your email",
         description: "We've sent you a magic link to verify your email and complete sign up.",
       });
+      
       navigate('/verify-email');
+      return { success: true };
     } catch (error: any) {
       toast({
         title: "Sign-up Failed",
         description: error.message || "An error occurred during sign-up.",
         variant: "destructive",
       });
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
   };
 
   // Function to update the user profile
-  const updateProfile = async (profileData: Partial<Profile>) => {
-    if (!currentUser) throw new Error("No user logged in");
+  const updateProfile = async (profileData: Partial<UserType>) => {
+    if (!currentUser) {
+      toast({
+        title: "Update Failed",
+        description: "No user logged in",
+        variant: "destructive",
+      });
+      return { success: false, error: "No user logged in" };
+    }
 
     try {
       const { id: currentUserId, email } = currentUser;
@@ -169,9 +209,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // Copy all valid profile fields to profileUpdates
       Object.keys(profileData).forEach(key => {
-        if (key !== 'email' && key in currentUser) {
-          // Type assertion to safely add the profile field
-          // @ts-ignore - This is safe because we've checked that the key exists in the profile
+        // Skip id and email as they are handled separately
+        if (key !== 'id' && key !== 'email') {
+          // @ts-ignore - We're filtering properties appropriately
           profileUpdates[key] = profileData[key];
         }
       });
@@ -187,6 +227,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             description: "Failed to update your profile. Please try again.",
             variant: "destructive",
           });
+          return { success: false, error };
         }
       }
       
@@ -222,6 +263,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
     signUp,
     updateProfile,
+    useMockData,
+    setUseMockData,
   };
 
   return (
