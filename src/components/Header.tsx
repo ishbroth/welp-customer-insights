@@ -14,12 +14,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, Bell, LogOut, Settings, User, FileText, Heart } from "lucide-react";
 import SearchBox from "./SearchBox";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import MockDataToggle from "./MockDataToggle";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

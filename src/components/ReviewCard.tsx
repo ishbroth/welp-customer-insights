@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +43,7 @@ interface ReviewCardProps {
     location: string;
     address?: string;
     city?: string;
-    zipCode?: string; // Added zipCode as an optional property
+    zipCode?: string;
     responses?: ReviewResponse[];
   };
   showResponse?: boolean;
@@ -67,6 +66,24 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  
+  // Get the user's name safely
+  const getUserName = () => {
+    if (!currentUser) return "User";
+    
+    if ('name' in currentUser && currentUser.name) {
+      return currentUser.name;
+    }
+    
+    // For Supabase users without a name property
+    if ('first_name' in currentUser || 'last_name' in currentUser) {
+      const firstName = (currentUser as any).first_name || '';
+      const lastName = (currentUser as any).last_name || '';
+      return `${firstName} ${lastName}`.trim() || (currentUser.email?.split('@')[0] || 'User');
+    }
+    
+    return currentUser.email?.split('@')[0] || 'User';
+  };
   
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
@@ -116,7 +133,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
       const newResponse = {
         id: `resp-${Date.now()}`,
         authorId: currentUser?.id || "",
-        authorName: currentUser?.name || "Business Owner",
+        authorName: getUserName(),
         content: response,
         createdAt: new Date().toISOString(),
         replies: []
@@ -239,7 +256,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     const newReply = {
       id: `reply-${Date.now()}`,
       authorId: currentUser?.id || "",
-      authorName: currentUser?.name || "Business Owner",
+      authorName: getUserName(),
       content: replyContent,
       createdAt: new Date().toISOString()
     };

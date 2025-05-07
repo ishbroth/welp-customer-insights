@@ -25,8 +25,8 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   
   // Create a display name from the user data
   const displayName = currentUser ? 
-    (currentUser.first_name && currentUser.last_name) ? 
-      `${currentUser.first_name} ${currentUser.last_name}` : 
+    ((currentUser as any).first_name && (currentUser as any).last_name) ? 
+      `${(currentUser as any).first_name} ${(currentUser as any).last_name}` : 
       (currentUser.email ? currentUser.email.split('@')[0] : 'User') : 
     'User';
   

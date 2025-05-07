@@ -7,8 +7,13 @@ import { Profile } from "@/types/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { User as MockUser, mockUsers } from "@/data/mockUsers";
 
+// Define a type for our extended user data
+type ExtendedUser = User & Partial<Profile> & {
+  name?: string;
+};
+
 interface AuthContextType {
-  currentUser: (User & Partial<Profile>) | MockUser | null;
+  currentUser: ExtendedUser | MockUser | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string, userData: any) => Promise<{success: boolean, error?: string}>;
@@ -31,7 +36,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<(User & Partial<Profile>) | MockUser | null>(() => {
+  const [currentUser, setCurrentUser] = useState<ExtendedUser | MockUser | null>(() => {
     const savedUser = localStorage.getItem("currentUser");
     return savedUser ? JSON.parse(savedUser) : null;
   });
@@ -65,16 +70,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     ...profile,
                     // For compatibility with the mock data structure
                     name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User'
-                  };
+                  } as ExtendedUser;
                   
-                  setCurrentUser(fullUser as User & Partial<Profile>);
+                  setCurrentUser(fullUser);
                   localStorage.setItem("currentUser", JSON.stringify(fullUser));
                 } else {
-                  setCurrentUser(session.user);
+                  // Add a name property to ensure compatibility
+                  const userWithName = {
+                    ...session.user,
+                    name: session.user.email?.split('@')[0] || 'User'
+                  } as ExtendedUser;
+                  
+                  setCurrentUser(userWithName);
                 }
               } catch (error) {
                 console.error("Error fetching user profile:", error);
-                setCurrentUser(session.user);
+                // Add a name property to ensure compatibility
+                const userWithName = {
+                  ...session.user,
+                  name: session.user.email?.split('@')[0] || 'User'
+                } as ExtendedUser;
+                
+                setCurrentUser(userWithName);
               }
             }, 0);
           } else {
@@ -102,16 +119,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   ...profile,
                   // For compatibility with the mock data structure
                   name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email?.split('@')[0] || 'User'
-                };
-                setCurrentUser(fullUser as User & Partial<Profile>);
+                } as ExtendedUser;
+                
+                setCurrentUser(fullUser);
                 localStorage.setItem("currentUser", JSON.stringify(fullUser));
               } else {
-                setCurrentUser(session.user);
+                // Add a name property to ensure compatibility
+                const userWithName = {
+                  ...session.user,
+                  name: session.user.email?.split('@')[0] || 'User'
+                } as ExtendedUser;
+                
+                setCurrentUser(userWithName);
               }
             })
             .catch((error) => {
               console.error("Error fetching user profile:", error);
-              setCurrentUser(session.user);
+              // Add a name property to ensure compatibility
+              const userWithName = {
+                ...session.user,
+                name: session.user.email?.split('@')[0] || 'User'
+              } as ExtendedUser;
+              
+              setCurrentUser(userWithName);
             });
         }
       });
@@ -274,6 +304,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Real Supabase logout
       try {
         await supabase.auth.signOut();
+        // Clear currentUser state just in case
+        setCurrentUser(null);
+        localStorage.removeItem("currentUser");
       } catch (error) {
         console.error("Logout error:", error);
       }
@@ -284,7 +317,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (useMockData) {
       // Mock profile update
       if (currentUser) {
-        const updatedUser = { ...currentUser, ...updates };
+        const updatedUser = { ...currentUser, ...updates } as MockUser;
         setCurrentUser(updatedUser);
         localStorage.setItem("currentUser", JSON.stringify(updatedUser));
       }
@@ -295,7 +328,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await updateUserProfile(currentUser.id, updates);
           
           // Update local state with new profile data
-          const updatedUser = { ...currentUser, ...updates };
+          const updatedUser = { ...currentUser, ...updates } as ExtendedUser;
           setCurrentUser(updatedUser);
           localStorage.setItem("currentUser", JSON.stringify(updatedUser));
         } catch (error) {

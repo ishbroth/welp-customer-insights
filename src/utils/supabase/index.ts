@@ -4,3 +4,4 @@ export * from './profileHelpers';
 export * from './businessHelpers';
 export * from './searchHelpers';
 export * from './reviewHelpers';
+export * from '../userTypes';
