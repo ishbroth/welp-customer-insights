@@ -92,3 +92,33 @@ export const verifyBusiness = async (userId: string, businessData: Partial<Busin
   
   return data;
 };
+
+/**
+ * Verify a business license/EIN using external API
+ * This integrates with our Supabase edge function
+ */
+export const verifyBusinessLicense = async (licenseData: {
+  licenseNumber: string;
+  businessName: string;
+  state?: string;
+}) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('verify-business-license', {
+      body: JSON.stringify(licenseData)
+    });
+    
+    if (error) throw error;
+    
+    return {
+      verified: data.verified,
+      license_number: data.licenseNumber,
+      license_type: data.licenseType,
+      license_status: data.licenseStatus,
+      license_expiration: data.licenseExpiration,
+      business_name: data.businessName
+    };
+  } catch (error) {
+    console.error("Error verifying business license:", error);
+    throw new Error("License verification failed. Please try again later.");
+  }
+};
