@@ -60,6 +60,7 @@ export const searchCustomers = async (query: string, filters?: { location?: stri
     throw error;
   }
 
+  // Fixed: Return the data array instead of trying to assign it to an object with error property
   return data || [];
 };
 
@@ -87,38 +88,4 @@ export const searchReviews = async (params: { businessId?: string, customerId?: 
   }
   
   return data;
-};
-
-// Add the missing functions for search history
-export const getSearchHistory = () => {
-  try {
-    const history = localStorage.getItem('searchHistory');
-    return history ? JSON.parse(history) : [];
-  } catch (error) {
-    console.error("Error getting search history:", error);
-    return [];
-  }
-};
-
-export const addToSearchHistory = (query: string) => {
-  try {
-    const history = getSearchHistory();
-    // Add the new query at the beginning and limit to 10 items
-    const newHistory = [query, ...history.filter(item => item !== query)].slice(0, 10);
-    localStorage.setItem('searchHistory', JSON.stringify(newHistory));
-    return newHistory;
-  } catch (error) {
-    console.error("Error adding to search history:", error);
-    return [];
-  }
-};
-
-export const clearSearchHistory = () => {
-  try {
-    localStorage.removeItem('searchHistory');
-    return [];
-  } catch (error) {
-    console.error("Error clearing search history:", error);
-    return [];
-  }
 };

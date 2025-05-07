@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Review, ReviewInsert, Response, ResponseInsert } from "@/types/supabase";
 
@@ -166,21 +167,60 @@ export const deleteReviewResponse = async (responseId: string) => {
  * Add a reaction to a review
  */
 export const addReviewReaction = async (reviewId: string, userId: string, reactionType: string) => {
-  // Since we don't have a review_reactions table in Supabase yet,
-  // we'll implement a mock version for now that returns immediately
-  console.log(`Mock: Adding reaction ${reactionType} to review ${reviewId} by user ${userId}`);
+  // First check if reaction exists
+  const { data: existingReaction } = await supabase
+    .from('review_reactions')
+    .select('*')
+    .eq('review_id', reviewId)
+    .eq('user_id', userId)
+    .eq('reaction_type', reactionType)
+    .single();
   
-  // Mock successful addition
-  return true;
+  if (existingReaction) {
+    // If reaction exists, remove it (toggle off)
+    const { error } = await supabase
+      .from('review_reactions')
+      .delete()
+      .eq('id', existingReaction.id);
+    
+    if (error) {
+      console.error("Error removing review reaction:", error);
+      throw error;
+    }
+    
+    return false; // Reaction removed
+  } else {
+    // Add new reaction
+    const { error } = await supabase
+      .from('review_reactions')
+      .insert({
+        review_id: reviewId,
+        user_id: userId,
+        reaction_type: reactionType
+      });
+    
+    if (error) {
+      console.error("Error adding review reaction:", error);
+      throw error;
+    }
+    
+    return true; // Reaction added
+  }
 };
 
 /**
  * Get all reactions for a review
  */
 export const getReviewReactions = async (reviewId: string) => {
-  // Since we don't have a review_reactions table in Supabase yet,
-  // we'll return mock data
-  console.log(`Mock: Getting reactions for review ${reviewId}`);
+  const { data, error } = await supabase
+    .from('review_reactions')
+    .select('*')
+    .eq('review_id', reviewId);
+  
+  if (error) {
+    console.error("Error fetching review reactions:", error);
+    throw error;
+  }
   
   // Format reactions by type
   const formattedReactions = {
@@ -189,6 +229,12 @@ export const getReviewReactions = async (reviewId: string) => {
     useful: [] as string[],
     ohNo: [] as string[]
   };
+  
+  data.forEach(reaction => {
+    if (['like', 'funny', 'useful', 'ohNo'].includes(reaction.reaction_type)) {
+      formattedReactions[reaction.reaction_type as keyof typeof formattedReactions].push(reaction.user_id);
+    }
+  });
   
   return formattedReactions;
 };
