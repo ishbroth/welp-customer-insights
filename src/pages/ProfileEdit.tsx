@@ -1,4 +1,5 @@
 import { useState, useRef, ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Crop, RotateCcw, RotateCw, Image as ImageIcon, Search, MapPin, Phone } from "lucide-react";
+import { Crop, RotateCcw, RotateCw, Image as ImageIcon, Search, MapPin, Phone, Star } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { verifyBusinessId } from "@/utils/businessVerification";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 
 // Mock address data for our autocomplete
 const mockAddressData = [
@@ -45,7 +47,7 @@ const profileSchema = z.object({
 
 const ProfileEdit = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, updateProfile, isSubscribed, setIsSubscribed } = useAuth();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatar || null);
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -186,6 +188,24 @@ const ProfileEdit = () => {
 
   // Check if user is a business type
   const isBusinessAccount = currentUser?.type === "business";
+
+  // Function to get the subscription page URL based on account type
+  const getSubscriptionUrl = () => {
+    return currentUser?.type === "business" 
+      ? "/subscription?type=business" 
+      : "/subscription?type=customer";
+  };
+
+  // Function to get the account type display text with subscription status
+  const getAccountTypeDisplay = () => {
+    if (!currentUser) return "Unknown";
+    
+    if (currentUser.type === "business") {
+      return isSubscribed ? "Business Premium" : "Business Account";
+    } else {
+      return isSubscribed ? "Premium Customer" : "Customer Account";
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -441,10 +461,56 @@ const ProfileEdit = () => {
                   
                   <TabsContent value="account" className="mt-6">
                     <div className="space-y-6">
-                      <div>
+                      <div className="bg-white border rounded-md p-6 space-y-4">
                         <h3 className="text-lg font-medium mb-3">Account Type</h3>
-                        <div className="px-4 py-3 bg-gray-50 rounded-md">
-                          <p className="font-semibold">{currentUser?.type === "business" ? "Business Account" : "Customer Account"}</p>
+                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-md">
+                          <div>
+                            <p className="font-semibold flex items-center">
+                              {getAccountTypeDisplay()}
+                              {isSubscribed && (
+                                <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 border-yellow-200">
+                                  <Star className="h-3 w-3 mr-1 fill-yellow-500 text-yellow-500" />
+                                  Premium
+                                </Badge>
+                              )}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {isSubscribed 
+                                ? "You have access to all premium features" 
+                                : "Upgrade to premium for additional features"}
+                            </p>
+                          </div>
+                          <div>
+                            {isSubscribed ? (
+                              <Button 
+                                variant="secondary" 
+                                className="bg-green-50 text-green-700 hover:bg-green-100"
+                                disabled
+                              >
+                                <Star className="h-4 w-4 mr-2 fill-green-500" />
+                                You are Subscribed!
+                              </Button>
+                            ) : (
+                              <Button asChild>
+                                <Link to={getSubscriptionUrl()}>
+                                  <Star className="h-4 w-4 mr-2" />
+                                  Subscribe Now
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* For demo purposes - let's add a toggle to simulate subscription */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-sm text-gray-500 mb-2">Demo Controls:</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setIsSubscribed(!isSubscribed)}
+                          >
+                            {isSubscribed ? "Simulate Unsubscribe" : "Simulate Subscribe"}
+                          </Button>
                         </div>
                       </div>
                     </div>

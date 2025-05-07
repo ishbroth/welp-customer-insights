@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User, mockUsers } from "@/data/mockUsers";
 
-// Extended User type with userType
+// Extended User type with userType and subscription status
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -10,6 +10,8 @@ interface AuthContextType {
   loginWithApple: () => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
+  isSubscribed: boolean;
+  setIsSubscribed: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -27,6 +29,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedUser = localStorage.getItem("currentUser");
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  
+  // Add subscription state
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(() => {
+    const subscriptionStatus = localStorage.getItem("isSubscribed");
+    return subscriptionStatus === "true";
+  });
+
+  // Store subscription status in localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("isSubscribed", isSubscribed.toString());
+  }, [isSubscribed]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Simulate API call delay
@@ -79,7 +92,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setCurrentUser(null);
+    setIsSubscribed(false);
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("isSubscribed");
   };
 
   const updateProfile = (updates: Partial<User>) => {
@@ -96,7 +111,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loginWithGoogle,
     loginWithApple,
     logout,
-    updateProfile
+    updateProfile,
+    isSubscribed,
+    setIsSubscribed
   };
 
   return (
