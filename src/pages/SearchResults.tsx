@@ -131,7 +131,24 @@ const SearchResults = () => {
         const lastNameMatch = matches(customer.lastName, lastName);
         const firstNameMatch = matches(customer.firstName, firstName);
         const phoneMatch = phone ? customer.phone.includes(phone) : true;
-        const addressMatch = matches(customer.address, address);
+        
+        // Improved address matching - extract first word from both customer address and search address
+        let addressMatch = true;
+        if (address) {
+          // Get the first word of both addresses for comparison
+          const searchAddressFirstWord = address.trim().split(/\s+/)[0].toLowerCase();
+          const customerAddressFirstWord = customer.address ? 
+                                           customer.address.trim().split(/\s+/)[0].toLowerCase() : 
+                                           "";
+          
+          // Check if the first words match (either exactly or with fuzzy matching)
+          if (fuzzyMatch) {
+            addressMatch = calculateStringSimilarity(customerAddressFirstWord, searchAddressFirstWord) >= similarityThreshold;
+          } else {
+            addressMatch = customerAddressFirstWord.includes(searchAddressFirstWord);
+          }
+        }
+        
         const cityMatch = matches(customer.city, city);
         const stateMatch = state ? customer.state === state : true;
         const zipCodeMatch = zipCode ? customer.zipCode.includes(zipCode) : true;
