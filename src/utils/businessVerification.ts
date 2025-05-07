@@ -1,5 +1,5 @@
 // This file uses the newer implementations from @/utils/supabase/businessHelpers.ts
-import { verifyBusinessLicense } from "@/utils/supabase";
+import { verifyBusinessLicense as verifyLicenseWithAPI } from "@/utils/supabase";
 
 // Function to verify business ID (used in Signup.tsx and ProfileEdit.tsx)
 export const verifyBusinessId = async (businessId: string, businessName?: string, state?: string) => {
@@ -10,7 +10,7 @@ export const verifyBusinessId = async (businessId: string, businessName?: string
   
   try {
     // Otherwise use the real API verification
-    const result = await verifyBusinessLicense({
+    const result = await verifyLicenseWithAPI({
       licenseNumber: businessId,
       businessName: businessName || "Unknown Business",
       state
@@ -61,8 +61,8 @@ const mockVerifyBusinessId = async (businessId: string) => {
   }
 };
 
-// Keep the legacy function for backward compatibility
-export const verifyBusinessLicense = async (
+// Keep the legacy function for backward compatibility with renamed function name to avoid clash
+export const verifyBusinessLicenseLegacy = async (
   license: {
     licenseType: string;
     license_number: string;
