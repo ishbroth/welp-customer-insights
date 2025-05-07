@@ -226,15 +226,15 @@ const SearchResults = () => {
     }, 500);
   };
   
-  // Function to get just the first 5 words of a review
-  const getFirstFiveWords = (text: string) => {
+  // Function to get just the first 3 words of a review
+  const getFirstThreeWords = (text: string) => {
     if (!text) return "";
     
-    // Split the text into words and take the first 5
+    // Split the text into words and take the first 3
     const words = text.split(/\s+/);
-    const firstFiveWords = words.slice(0, 5).join(" ");
+    const firstThreeWords = words.slice(0, 3).join(" ");
     
-    return `${firstFiveWords}...`;
+    return `${firstThreeWords}...`;
   };
   
   const handleBuyFullReview = (customerId: string) => {
@@ -379,15 +379,18 @@ const SearchResults = () => {
                                     
                                     // For non-logged in users or those without subscription or one-time access, show limited version
                                     if (shouldShowLimitedReview && !hasAccess) {
-                                      // Create a modified review with just the first 5 words
+                                      // Create a modified review with just the first 3 words
                                       const partialReview = {
                                         ...review,
-                                        comment: getFirstFiveWords(review.comment)
+                                        comment: getFirstThreeWords(review.comment)
                                       };
                                       
                                       return (
                                         <div key={review.id} className="p-4">
-                                          <ReviewCard review={partialReview} showResponse={false} />
+                                          <ReviewCard review={{
+                                            ...review,
+                                            comment: getFirstThreeWords(review.comment)
+                                          }} showResponse={false} />
                                           <div className="mt-2 flex justify-end">
                                             {currentUser ? (
                                               <Button 
