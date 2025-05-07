@@ -41,6 +41,23 @@ const CustomerReviewResponse = ({
   const { currentUser } = useAuth();
   const { toast } = useToast();
   
+  // Check if the customer can respond based on who sent the last message
+  const canCustomerRespond = () => {
+    if (!currentUser || !responses.length) return true;
+    
+    // Sort responses by creation date (newest first)
+    const sortedResponses = [...responses].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    // Get the most recent response
+    const lastResponse = sortedResponses[0];
+    
+    // If the last response is from the customer, they cannot respond again
+    // until the business responds
+    return lastResponse.authorId !== currentUser.id;
+  };
+  
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -109,12 +126,12 @@ const CustomerReviewResponse = ({
         </div>
       )}
       
-      {/* Show different UI based on subscription status */}
+      {/* Show different UI based on subscription status AND who sent the last message */}
       {!hideReplyOption && (
         <>
           {canRespond ? (
-            /* If user has subscription, show respond button */
-            !isResponseVisible && (
+            /* If user has subscription, show respond button only if they can respond */
+            !isResponseVisible && canCustomerRespond() && (
               <Button 
                 onClick={() => setIsResponseVisible(true)}
                 className="welp-button"
@@ -184,3 +201,4 @@ const CustomerReviewResponse = ({
 };
 
 export default CustomerReviewResponse;
+

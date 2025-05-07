@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,11 +70,11 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
 
-  // Check if the business owner can respond
+  // Check if the business owner can respond based on who sent the last message
   const canBusinessRespond = () => {
     if (!currentUser || !responses.length) return true;
     
-    // Sort responses by creation date
+    // Sort responses by creation date (newest first)
     const sortedResponses = [...responses].sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -443,7 +442,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </div>
         )}
         
-        {/* Show different UI based on subscription status */}
+        {/* Show different UI based on subscription status AND who sent the last message */}
         {showResponse ? (
           hasSubscription ? (
             /* If user has subscription, show respond button when appropriate */
