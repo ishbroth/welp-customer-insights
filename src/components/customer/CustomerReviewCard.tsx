@@ -56,7 +56,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             <div className="text-sm text-gray-500 mb-1">React to this review:</div>
             <ReviewReactions 
               reviewId={review.id}
-              customerId={review.customerId || ""}
+              customerId={review.reviewerId} // Changed from review.customerId to review.reviewerId
               reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
               onReactionToggle={onReactionToggle}
             />
