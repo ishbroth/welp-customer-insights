@@ -12,12 +12,10 @@ interface AuthContextType {
   currentUser: ExtendedUser | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<ExtendedUser | null>>;
   loading: boolean;
-  login: (email: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   signUp: (email: string, type: string) => Promise<{ success: boolean; error?: any; }>;
   updateProfile: (profileData: Partial<ExtendedUser>) => Promise<{ success: boolean; error?: any; }>;
-  useMockData: boolean;
-  setUseMockData: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,17 +27,9 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<ExtendedUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [useMockData, setUseMockData] = useState(
-    localStorage.getItem('useMockData') === 'true'
-  );
   
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Effect to persist mock data setting
-  useEffect(() => {
-    localStorage.setItem('useMockData', String(useMockData));
-  }, [useMockData]);
 
   // Effect to handle auth state changes
   useEffect(() => {
@@ -107,22 +97,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   // Function to handle user login
-  const login = async (email: string) => {
+  const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) throw error;
-      toast({
-        title: "Check your email",
-        description: "We've sent you a magic link to log in.",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-      navigate('/verify-email');
+      
+      if (error) throw error;
+      return true;
     } catch (error: any) {
       toast({
         title: "Login Failed",
         description: error.message || "An error occurred during login.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setLoading(false);
     }
@@ -154,17 +145,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (email: string, type: string) => {
     try {
       setLoading(true);
-      // For passwordless auth, we need to generate a random password
+      // Generate a random password for the user
       const tempPassword = Math.random().toString(36).slice(-10);
       
       const { data, error } = await supabase.auth.signUp({
         email,
-        password: tempPassword, // Required by Supabase but not used in passwordless flow
+        password: tempPassword,
         options: {
           data: {
             type: type,
           },
-          emailRedirectTo: `${window.location.origin}/verify-email`,
         },
       });
       
@@ -196,11 +186,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       toast({
-        title: "Check your email",
-        description: "We've sent you a magic link to verify your email and complete sign up.",
+        title: "Sign up successful",
+        description: "Please check your email to verify your account.",
       });
       
-      navigate('/verify-email');
       return { success: true };
     } catch (error: any) {
       toast({
@@ -294,9 +283,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     signUp,
-    updateProfile,
-    useMockData,
-    setUseMockData,
+    updateProfile
   };
 
   return (

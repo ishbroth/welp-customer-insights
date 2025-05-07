@@ -1,7 +1,6 @@
 
 import { User } from "@supabase/supabase-js";
 import { Profile } from "@/types/supabase";
-import { User as MockUser } from "@/data/mockUsers";
 
 // Define a type for our extended user data that combines Supabase User and Profile
 export type ExtendedUser = User & Partial<Profile> & {
@@ -11,22 +10,11 @@ export type ExtendedUser = User & Partial<Profile> & {
   businessId?: string;
   zipCode?: string;
   email?: string;
-  reviews?: any[];
   type?: string;
 };
 
-// Type guard to check if user is a Mock User
-export function isMockUser(user: any): user is MockUser {
-  return user && 'type' in user && !('aud' in user);
-}
-
-// Type guard to check if user is an Extended User
-export function isExtendedUser(user: any): user is ExtendedUser {
-  return user && 'aud' in user;
-}
-
 // Get formatted user name from any user type
-export function getUserName(user: ExtendedUser | MockUser | null): string {
+export function getUserName(user: ExtendedUser | null): string {
   if (!user) return "User";
   
   if ('name' in user && user.name) {
@@ -44,7 +32,7 @@ export function getUserName(user: ExtendedUser | MockUser | null): string {
 }
 
 // Create a display name from the user data
-export function getDisplayName(user: ExtendedUser | MockUser | null): string {
+export function getDisplayName(user: ExtendedUser | null): string {
   if (!user) return 'User';
   
   if ('first_name' in user && user.first_name && 'last_name' in user && user.last_name) {
