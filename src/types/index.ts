@@ -8,7 +8,10 @@ export interface User {
   city?: string;
   state?: string;
   zipCode?: string;
-  type: "business" | "customer";
+  type: "business" | "customer" | "admin";
+  avatar?: string;
+  bio?: string;
+  businessId?: string;
 }
 
 export interface Review {
