@@ -180,7 +180,7 @@ const CustomerBenefits = () => {
                   
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold">Premium</h3>
-                    <div className="text-3xl font-bold mt-4">$9.95<span className="text-base font-normal">/month</span></div>
+                    <div className="text-3xl font-bold mt-4">$11.99<span className="text-base font-normal">/month</span></div>
                     <div className="text-sm text-gray-500">Full Access</div>
                   </div>
                   

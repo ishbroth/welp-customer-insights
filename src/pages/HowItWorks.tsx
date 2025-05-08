@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -379,31 +380,35 @@ const HowItWorks = () => {
                   </Button>
                 </div>
                 
-                {/* Business Subscription Option */}
+                {/* Subscription Option - Combined for both types of users */}
                 <div className="welp-card p-6 border-t-4 border-[#ea384c] shadow-lg scale-105 z-10 relative">
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#ea384c] text-white px-4 py-1 rounded-full text-sm font-bold">
                     BEST VALUE
                   </div>
                   
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold">Business Subscription</h3>
-                    <div className="text-3xl font-bold mt-4">$19.99<span className="text-base font-normal">/month</span></div>
+                    <h3 className="text-xl font-bold">Subscription</h3>
+                    <div className="text-3xl font-bold mt-4">$11.99<span className="text-base font-normal">/month</span></div>
                   </div>
                   
                   <div className="space-y-4 mb-8">
                     <p className="font-semibold text-center">Available for:</p>
                     <p className="text-center flex items-center justify-center">
-                      <Building2 className="h-4 w-4 mr-1" /> Business Owners Only
+                      <UserRound className="h-4 w-4 mr-1" /> Customers
+                    </p>
+                    <p className="text-center flex items-center justify-center">
+                      <Building2 className="h-4 w-4 mr-1" /> Business Owners
                     </p>
                   </div>
                   
                   <div className="space-y-3 mb-8">
                     <p className="font-semibold">Unlimited access to:</p>
                     <ul className="list-disc ml-5 space-y-1 text-sm">
-                      <li>Full review content for all customers</li>
-                      <li>Detailed customer history and insights</li>
+                      <li>Full review content for all customers/businesses</li>
+                      <li>Unlimited responses to reviews</li>
+                      <li>Verified badge on your profile</li>
                       <li>Advanced search filters and tools</li>
-                      <li>Customer analytics dashboard</li>
+                      <li>Enhanced profile customization</li>
                       <li>Priority customer support</li>
                     </ul>
                   </div>
