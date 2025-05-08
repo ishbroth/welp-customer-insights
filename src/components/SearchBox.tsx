@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -67,6 +68,10 @@ const SearchBox = ({
             Find Customer Reviews
           </h2>
         )}
+        
+        <p className="text-center text-sm text-gray-600 mb-3">
+          Search for Customer Reviews with any piece information.
+        </p>
         
         <div className="space-y-3">
           <Input
