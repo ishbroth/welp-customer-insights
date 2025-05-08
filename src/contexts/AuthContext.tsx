@@ -24,6 +24,9 @@ interface SignupData {
   name?: string;
   phone?: string;
   zipCode?: string;
+  address?: string;
+  city?: string;
+  state?: string;
   type: "customer" | "business";
 }
 
@@ -105,6 +108,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           type: data.type as "business" | "customer" | "admin",
           phone: data.phone || '',
           zipCode: data.zip_code || '',
+          address: data.address || '',
+          city: data.city || '',
+          state: data.state || '',
           avatar: data.avatar_url || '',
           bio: data.bio || '',
         });
@@ -133,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Signup function
-  const signup = async ({ email, password, name, phone, zipCode, type }: SignupData) => {
+  const signup = async ({ email, password, name, phone, zipCode, address, city, state, type }: SignupData) => {
     try {
       // Signup with Supabase
       const { data, error } = await supabase.auth.signUp({
@@ -144,6 +150,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             name,
             phone,
             zip_code: zipCode,
+            address,
+            city,
+            state,
             type,
           }
         }
@@ -180,6 +189,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: updates.name,
         phone: updates.phone,
         zip_code: updates.zipCode,
+        address: updates.address,
+        city: updates.city,
+        state: updates.state,
         bio: updates.bio,
         avatar_url: updates.avatar,
         updated_at: new Date().toISOString(),

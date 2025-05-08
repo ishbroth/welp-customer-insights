@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,10 @@ const Signup = () => {
   const [customerFirstName, setCustomerFirstName] = useState("");
   const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  // New customer address fields
+  const [customerStreet, setCustomerStreet] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerState, setCustomerState] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPassword, setCustomerPassword] = useState("");
@@ -251,6 +256,9 @@ const Signup = () => {
         name: `${customerFirstName} ${customerLastName}`,
         phone: customerPhone,
         zipCode: customerZipCode,
+        address: customerStreet,
+        city: customerCity,
+        state: customerState,
         type: "customer"
       });
       
@@ -260,6 +268,9 @@ const Signup = () => {
           firstName: customerFirstName,
           lastName: customerLastName,
           phone: customerPhone,
+          address: customerStreet,
+          city: customerCity,
+          state: customerState,
           zipCode: customerZipCode,
           email: customerEmail
         };
@@ -584,6 +595,43 @@ const Signup = () => {
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
+                  </div>
+                  
+                  {/* New address fields for customer */}
+                  <div>
+                    <label htmlFor="customerStreet" className="block text-sm font-medium mb-1">Street Address</label>
+                    <Input
+                      id="customerStreet"
+                      placeholder="123 Main St"
+                      value={customerStreet}
+                      onChange={(e) => setCustomerStreet(e.target.value)}
+                      className="welp-input"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
+                    <Input
+                      id="customerCity"
+                      placeholder="New York"
+                      value={customerCity}
+                      onChange={(e) => setCustomerCity(e.target.value)}
+                      className="welp-input"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="customerState" className="block text-sm font-medium mb-1">State</label>
+                    <Select value={customerState} onValueChange={setCustomerState}>
+                      <SelectTrigger className="welp-input">
+                        <SelectValue placeholder="Select State" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white max-h-60">
+                        {US_STATES.map((state) => (
+                          <SelectItem key={state} value={state}>{state}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <div>
