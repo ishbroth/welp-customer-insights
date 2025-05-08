@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,18 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+
+// Array of US states for the dropdown
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
+  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", 
+  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
+  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", 
+  "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", 
+  "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+];
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -28,9 +39,13 @@ const Signup = () => {
   
   // Business form state
   const [businessName, setBusinessName] = useState("");
-  const [businessAddress, setBusinessAddress] = useState("");
+  // Address broken down into separate fields
+  const [businessStreet, setBusinessStreet] = useState("");
+  const [businessCity, setBusinessCity] = useState("");
+  const [businessState, setBusinessState] = useState("");
+  const [businessZipCode, setBusinessZipCode] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
-  const [businessType, setBusinessType] = useState("ein"); // New state for business type
+  const [businessType, setBusinessType] = useState("ein"); // Business type state
   const [licenseNumber, setLicenseNumber] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
   const [businessPassword, setBusinessPassword] = useState("");
@@ -65,13 +80,13 @@ const Signup = () => {
     setVerificationError("");
     
     try {
-      // Use the business verification utility with mock data
-      const result = await verifyBusinessId(licenseNumber, businessType);
+      // Use the business verification utility with state-specific verification
+      const result = await verifyBusinessId(licenseNumber, businessType, businessState);
       
       if (result.verified) {
         setVerificationData({
           name: businessName,
-          address: businessAddress,
+          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
           phone: businessPhone,
           licenseStatus: "Active",
           licenseType: result.details?.type || "General Business",
@@ -110,6 +125,44 @@ const Signup = () => {
       default:
         return "License Number / EIN";
     }
+  };
+
+  // Get guidance message based on selected state and business type
+  const getGuidanceMessage = () => {
+    if (!businessState || !businessType || businessType === "ein") {
+      return "";
+    }
+    
+    switch(businessType) {
+      case "contractor":
+        if (businessState === "California") {
+          return "California contractor licenses typically have 6-8 digits";
+        } else if (businessState === "Florida") {
+          return "Florida contractor licenses typically start with CBC, CCC, CFC, CGC, or CRC followed by 6 digits";
+        }
+        break;
+      case "bar":
+        if (businessState === "California") {
+          return "California liquor licenses typically have 6 digits";
+        } else if (businessState === "New York") {
+          return "New York liquor licenses typically have 8 digits";
+        }
+        break;
+      case "attorney":
+        if (businessState === "California") {
+          return "California bar numbers typically have 6 digits";
+        } else if (businessState === "New York") {
+          return "New York bar numbers typically have 7 digits";
+        }
+        break;
+      case "realtor":
+        if (businessState === "Florida") {
+          return "Florida real estate licenses typically start with BK or SL followed by 7 digits";
+        }
+        break;
+    }
+    
+    return "";
   };
 
   const initiateCustomerVerification = () => {
@@ -208,13 +261,55 @@ const Signup = () => {
                         />
                       </div>
                       
+                      {/* Business Street Address */}
                       <div>
-                        <label htmlFor="businessAddress" className="block text-sm font-medium mb-1">Business Address</label>
+                        <label htmlFor="businessStreet" className="block text-sm font-medium mb-1">Business Street Address</label>
                         <Input
-                          id="businessAddress"
-                          placeholder="123 Business St, City, State, ZIP"
-                          value={businessAddress}
-                          onChange={(e) => setBusinessAddress(e.target.value)}
+                          id="businessStreet"
+                          placeholder="123 Business St"
+                          value={businessStreet}
+                          onChange={(e) => setBusinessStreet(e.target.value)}
+                          className="welp-input"
+                          required
+                        />
+                      </div>
+                      
+                      {/* City */}
+                      <div>
+                        <label htmlFor="businessCity" className="block text-sm font-medium mb-1">City</label>
+                        <Input
+                          id="businessCity"
+                          placeholder="City"
+                          value={businessCity}
+                          onChange={(e) => setBusinessCity(e.target.value)}
+                          className="welp-input"
+                          required
+                        />
+                      </div>
+                      
+                      {/* State Dropdown */}
+                      <div>
+                        <label htmlFor="businessState" className="block text-sm font-medium mb-1">State</label>
+                        <Select value={businessState} onValueChange={setBusinessState}>
+                          <SelectTrigger className="welp-input">
+                            <SelectValue placeholder="Select State" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white max-h-60">
+                            {US_STATES.map((state) => (
+                              <SelectItem key={state} value={state}>{state}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Zip Code */}
+                      <div>
+                        <label htmlFor="businessZipCode" className="block text-sm font-medium mb-1">ZIP Code</label>
+                        <Input
+                          id="businessZipCode"
+                          placeholder="12345"
+                          value={businessZipCode}
+                          onChange={(e) => setBusinessZipCode(e.target.value)}
                           className="welp-input"
                           required
                         />
@@ -261,6 +356,9 @@ const Signup = () => {
                           className="welp-input"
                           required
                         />
+                        {getGuidanceMessage() && (
+                          <p className="text-xs text-gray-500 mt-1">{getGuidanceMessage()}</p>
+                        )}
                       </div>
                       
                       {verificationError && (
