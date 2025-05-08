@@ -38,8 +38,11 @@ const CustomerReviewResponse = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
+  
+  // Use the AuthContext to check if this specific review has one-time access
+  const hasReviewAccess = hasOneTimeAccess(reviewId);
   
   // Check if the customer can respond based on who sent the last message
   const canCustomerRespond = () => {
@@ -71,10 +74,10 @@ const CustomerReviewResponse = ({
     }
     
     // Check subscription status
-    if (!hasSubscription && !isOneTimeUnlocked) {
+    if (!hasSubscription && !isOneTimeUnlocked && !hasReviewAccess) {
       toast({
-        title: "Subscription required",
-        description: "You need a subscription to respond to reviews.",
+        title: "Access required",
+        description: "You need a subscription or one-time access to respond to reviews.",
         variant: "destructive"
       });
       return;
@@ -103,7 +106,7 @@ const CustomerReviewResponse = ({
     }, 1000);
   };
   
-  const canRespond = hasSubscription || isOneTimeUnlocked;
+  const canRespond = hasSubscription || isOneTimeUnlocked || hasReviewAccess;
   
   return (
     <div className="mt-4">
@@ -201,4 +204,3 @@ const CustomerReviewResponse = ({
 };
 
 export default CustomerReviewResponse;
-

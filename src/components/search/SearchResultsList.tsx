@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -7,19 +8,19 @@ import StarRating from "@/components/StarRating";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { Customer } from "@/types/search";
 
 interface SearchResultsListProps {
-  customers: any[];
+  customers: Customer[];
   isLoading: boolean;
 }
 
 const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
-  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const handleSelectCustomer = (customerId: string) => {
     // If this customer is already expanded, collapse it
@@ -74,15 +75,14 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   };
 
   // Format address for display based on subscription status
-  const formatAddress = (customer: any) => {
+  const formatAddress = (customer: Customer) => {
     // If the user is subscribed or admin, show full address
     if (currentUser?.type === "admin" || isSubscribed) {
       return customer.address;
     }
     
     // Check if the user has one-time access to this customer
-    const hasOneTimeAccess = localStorage.getItem(`customer_access_${customer.id}`) === "true";
-    if (hasOneTimeAccess) {
+    if (hasOneTimeAccess(customer.id)) {
       return customer.address;
     }
     
@@ -100,7 +100,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   };
 
   // Non-logged in users and customers who haven't subscribed only see truncated reviews
-  const shouldShowLimitedReview = !currentUser || (currentUser?.type === "customer") || (!isSubscribed && currentUser?.type !== "admin");
+  const shouldShowLimitedReview = !currentUser || (currentUser?.type === "customer" && !isSubscribed);
 
   // Check if user has access to the customer's full reviews
   const hasFullAccess = (customerId: string) => {
@@ -108,8 +108,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     if (currentUser && isSubscribed) return true;
     
     // Check if the user has paid for one-time access to this specific customer
-    const hasOneTimeAccess = localStorage.getItem(`customer_access_${customerId}`) === "true";
-    return hasOneTimeAccess;
+    return hasOneTimeAccess(customerId);
   };
 
   if (isLoading) {
@@ -121,12 +120,14 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
       <div className="text-center py-8">
         <p className="text-gray-500 mb-4">No customers found matching your search.</p>
         <p className="text-sm mb-4">Try adjusting your search criteria or add a new customer.</p>
-        <Link to="/review/new" className="inline-block">
-          <Button className="welp-button flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Add New Customer
-          </Button>
-        </Link>
+        {currentUser?.type === "business" && (
+          <Link to="/review/new" className="inline-block">
+            <Button className="welp-button flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Add New Customer
+            </Button>
+          </Link>
+        )}
       </div>
     );
   }
@@ -203,7 +204,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
                               onClick={() => handleBuyFullReview(customer.id)}
                             >
                               <Lock className="h-3 w-3 mr-1" />
-                              Buy Full Review ($1.99)
+                              Buy Full Review ($3.00)
                             </Button>
                           </div>
                         ) : (

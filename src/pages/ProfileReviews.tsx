@@ -18,12 +18,11 @@ import { Button } from "@/components/ui/button";
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [unlockedReviews, setUnlockedReviews] = useState<string[]>([]);
-  const { currentUser, isSubscribed } = useAuth();
+  const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Update local subscription status when the auth context changes
+  // Set local subscription status based on auth context
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
 
   useEffect(() => {
@@ -35,27 +34,6 @@ const ProfileReviews = () => {
     if (urlParams.get("subscribed") === "true") {
       setHasSubscription(true);
     }
-    
-    // Load unlocked reviews from localStorage
-    const loadUnlockedReviews = () => {
-      const unlocked: string[] = [];
-      if (currentUser?.type === "customer") {
-        // Get unlocked reviews from localStorage
-        const keys = Object.keys(localStorage);
-        const reviewAccessKeys = keys.filter(key => key.startsWith('review_access_'));
-        
-        for (const key of reviewAccessKeys) {
-          const isUnlocked = localStorage.getItem(key) === "true";
-          if (isUnlocked) {
-            const reviewId = key.replace('review_access_', '');
-            unlocked.push(reviewId);
-          }
-        }
-      }
-      setUnlockedReviews(unlocked);
-    };
-    
-    loadUnlockedReviews();
   }, [currentUser, isSubscribed]);
   
   // Add new state for content moderation
@@ -91,7 +69,7 @@ const ProfileReviews = () => {
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
-    return unlockedReviews.includes(reviewId) || hasSubscription;
+    return hasOneTimeAccess(reviewId) || hasSubscription;
   };
 
   // Handle toggling reactions - with content moderation for comments if added in the future

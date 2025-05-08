@@ -9,6 +9,8 @@ interface AuthContextType {
   updateProfile: (updates: Partial<User>) => void;
   isSubscribed: boolean;
   setIsSubscribed: (value: boolean) => void;
+  hasOneTimeAccess: (resourceId: string) => boolean;
+  markOneTimeAccess: (resourceId: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -37,6 +39,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem("isSubscribed", isSubscribed.toString());
   }, [isSubscribed]);
+  
+  // Check if user has one-time access to a specific resource
+  const hasOneTimeAccess = (resourceId: string): boolean => {
+    // Check both review-specific and customer-general access
+    const hasReviewAccess = localStorage.getItem(`review_access_${resourceId}`) === "true";
+    const hasCustomerAccess = localStorage.getItem(`customer_access_${resourceId}`) === "true";
+    return hasReviewAccess || hasCustomerAccess;
+  };
+  
+  // Mark a resource as having one-time access
+  const markOneTimeAccess = (resourceId: string) => {
+    // Determine if this is a review ID or customer ID based on prefix
+    if (resourceId.startsWith("review_")) {
+      localStorage.setItem(`review_access_${resourceId.replace("review_", "")}`, "true");
+    } else {
+      localStorage.setItem(`customer_access_${resourceId}`, "true");
+    }
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Simulate API call delay
@@ -77,7 +97,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     updateProfile,
     isSubscribed,
-    setIsSubscribed
+    setIsSubscribed,
+    hasOneTimeAccess,
+    markOneTimeAccess
   };
 
   return (

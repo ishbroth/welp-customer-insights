@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const OneTimeReviewAccess = () => {
   const [searchParams] = useSearchParams();
@@ -15,12 +16,13 @@ const OneTimeReviewAccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { currentUser, markOneTimeAccess } = useAuth();
 
   useEffect(() => {
-    if (!customerId) {
+    if (!customerId && !reviewId) {
       navigate("/search");
     }
-  }, [customerId, navigate]);
+  }, [customerId, reviewId, navigate]);
 
   const handleSubscription = () => {
     navigate("/subscription");
@@ -33,24 +35,32 @@ const OneTimeReviewAccess = () => {
     setTimeout(() => {
       setIsProcessing(false);
       
-      // Simulate successful payment
-      toast({
-        title: "Payment Successful",
-        description: reviewId 
-          ? "You now have access to this review and can respond once."
-          : "You now have access to all reviews for this customer.",
-      });
-      
-      // In a real app, we would store this information in the database
+      // Simulate successful payment and mark access granted
       if (reviewId) {
-        localStorage.setItem(`review_access_${reviewId}`, "true");
-      } else {
-        localStorage.setItem(`customer_access_${customerId}`, "true");
+        markOneTimeAccess(`review_${reviewId}`);
+        toast({
+          title: "Payment Successful",
+          description: "You now have access to this review and can respond once.",
+        });
+      } else if (customerId) {
+        markOneTimeAccess(customerId);
+        toast({
+          title: "Payment Successful",
+          description: "You now have access to all reviews for this customer.",
+        });
       }
       
       // Navigate back to search results
       navigate(-1);
     }, 2000);
+  };
+
+  // Determine appropriate pricing based on user type and what's being purchased
+  const getPrice = () => {
+    if (currentUser?.type === "business") {
+      return reviewId ? "$2.00" : "$3.00"; // Business pays less for reviews
+    }
+    return reviewId ? "$3.00" : "$5.00"; // Customers pay more for reviews
   };
 
   return (
@@ -99,7 +109,7 @@ const OneTimeReviewAccess = () => {
                       className="w-full welp-button"
                       onClick={handleSubscription}
                     >
-                      Subscribe for $9.95/month
+                      Subscribe for {currentUser?.type === "business" ? "$19.95" : "$9.95"}/month
                     </Button>
                   </div>
                   
@@ -134,7 +144,7 @@ const OneTimeReviewAccess = () => {
                   
                   <div className="flex justify-between items-center p-4 border-t border-b">
                     <span className="text-lg font-medium">Total</span>
-                    <span className="text-2xl font-bold">$3.00</span>
+                    <span className="text-2xl font-bold">{getPrice()}</span>
                   </div>
                   
                   <div className="space-y-4">
@@ -144,7 +154,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handlePayment}
                     >
-                      {isProcessing ? "Processing..." : "Pay $3.00"}
+                      {isProcessing ? "Processing..." : `Pay ${getPrice()}`}
                     </Button>
                     
                     <p className="text-sm text-gray-500 text-center">
