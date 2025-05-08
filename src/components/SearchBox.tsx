@@ -23,7 +23,7 @@ const SearchBox = ({
   className, 
   simplified = false, 
   onSearch,
-  buttonText = "Search"
+  buttonText = "Search for Customers!"
 }: SearchBoxProps) => {
   const navigate = useNavigate();
   const [lastName, setLastName] = useState("");
