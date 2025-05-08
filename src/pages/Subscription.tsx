@@ -14,7 +14,7 @@ const Subscription = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser } = useAuth();
+  const { currentUser, setIsSubscribed } = useAuth();
   const isCustomer = currentUser?.type === "customer";
 
   // Determine if we came from a specific review
@@ -33,9 +33,10 @@ const Subscription = () => {
     
     // Simulate payment processing
     setTimeout(() => {
-      // Set subscription in localStorage immediately
-      localStorage.setItem("hasSubscription", "true");
-      console.log("Subscription - Set localStorage hasSubscription to true");
+      // Update subscription status using AuthContext
+      setIsSubscribed(true);
+      
+      console.log("Subscription - Set subscription status to true");
       
       toast({
         title: "Subscription Active",
