@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Trophy, Star, Badge, CheckCircle2 } from "lucide-react";
+import { Trophy, Star, Badge, CheckCircle2, X, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const CustomerBenefits = () => {
@@ -12,6 +12,10 @@ const CustomerBenefits = () => {
   
   const handleNavigateToSignup = () => {
     navigate('/signup?type=customer');
+  };
+
+  const handleSubscribe = () => {
+    navigate('/subscription');
   };
 
   return (
@@ -128,56 +132,87 @@ const CustomerBenefits = () => {
               </div>
             </Card>
 
-            <div className="mt-16 text-center">
-              <h2 className="text-2xl font-semibold mb-6">Subscription Pricing</h2>
-              <div className="flex flex-wrap justify-center gap-8">
-                <Card className="w-full md:w-72 p-6 border-welp-light hover:border-welp-primary transition-colors">
-                  <h3 className="text-xl font-semibold mb-2">Monthly</h3>
-                  <div className="text-3xl font-bold text-welp-primary mb-1">$9.99</div>
-                  <p className="text-sm text-gray-500 mb-4">Billed monthly</p>
-                  <ul className="mb-6 space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>All core features</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>Unlimited review responses</span>
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>Verified customer badge</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full bg-welp-primary hover:bg-welp-tertiary text-white">Subscribe</Button>
-                </Card>
-
-                <Card className="w-full md:w-72 p-6 border-welp-primary relative hover:shadow-lg transition-shadow">
-                  <div className="absolute top-0 right-0 bg-welp-primary text-white text-xs py-1 px-3 rounded-bl-lg rounded-tr-lg font-medium">
-                    BEST VALUE
+            <div className="mt-16">
+              <h2 className="text-2xl font-semibold mb-10 text-center">Subscription Pricing</h2>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Free Plan */}
+                <Card className="p-6 border-2">
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold">Basic</h3>
+                    <div className="text-3xl font-bold mt-4">Free</div>
+                    <div className="text-sm text-gray-500">Limited Features</div>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Annual</h3>
-                  <div className="text-3xl font-bold text-welp-primary mb-1">$89.99</div>
-                  <p className="text-sm text-gray-500 mb-4">Billed annually (Save 25%)</p>
-                  <ul className="mb-6 space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>All core features</span>
+                  
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>View basic information about your reviews</span>
                     </li>
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>Unlimited review responses</span>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>Pay one-time fees to access specific reviews</span>
                     </li>
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>Verified customer badge</span>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>One response per paid review</span>
                     </li>
-                    <li className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                      <span>Priority support</span>
+                    <li className="flex items-start">
+                      <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+                      <span className="text-gray-500">Unlimited access to reviews</span>
+                    </li>
+                    <li className="flex items-start">
+                      <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+                      <span className="text-gray-500">Unlimited responses to businesses</span>
                     </li>
                   </ul>
-                  <Button className="w-full bg-welp-primary hover:bg-welp-tertiary text-white">Subscribe</Button>
+                  
+                  <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
+                    Current Plan
+                  </Button>
+                </Card>
+                
+                {/* Premium Plan */}
+                <Card className="p-6 border-2 border-welp-primary relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-welp-primary text-white px-4 py-1 rounded-full text-sm font-bold">
+                    RECOMMENDED
+                  </div>
+                  
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold">Premium</h3>
+                    <div className="text-3xl font-bold mt-4">$9.95<span className="text-base font-normal">/month</span></div>
+                    <div className="text-sm text-gray-500">Full Access</div>
+                  </div>
+                  
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>Full access to all reviews about you</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>Unlimited responses to business reviews</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>Ongoing conversation with businesses</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>No additional fees per review</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <span>Priority customer support</span>
+                    </li>
+                  </ul>
+                  
+                  <Button 
+                    onClick={handleSubscribe}
+                    className="w-full bg-welp-primary hover:bg-welp-tertiary text-white"
+                  >
+                    Subscribe Now
+                  </Button>
                 </Card>
               </div>
             </div>
