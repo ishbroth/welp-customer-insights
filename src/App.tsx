@@ -98,6 +98,7 @@ const AppRoutes = () => {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/success-stories" element={<SuccessStories />} />
+      <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
       
       {/* Customer pages */}
       <Route path="/customer-verification" element={<CustomerVerification />} />
