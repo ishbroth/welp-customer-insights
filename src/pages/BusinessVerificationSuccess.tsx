@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Star } from 'lucide-react';
+import { CheckCircle2, Star, Shield } from 'lucide-react';
 
 const BusinessVerificationSuccess = () => {
   const navigate = useNavigate();
@@ -65,6 +65,29 @@ const BusinessVerificationSuccess = () => {
               
               <p className="text-sm mt-3">
                 Redirecting to the review page in {countdown} seconds...
+              </p>
+            </div>
+
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-3 flex items-center justify-center">
+                <Shield className="h-6 w-6 text-emerald-600 mr-2" />
+                Why Business Verification?
+              </h2>
+              
+              <p className="text-sm text-left mb-3">
+                Welp is specifically designed for business owners to share experiences about their customers. 
+                Our verification process ensures that:
+              </p>
+              
+              <ul className="text-sm text-left list-disc pl-5 mb-3 space-y-2">
+                <li><span className="font-medium">Only legitimate businesses</span> can submit reviews, maintaining the integrity and value of our platform.</li>
+                <li><span className="font-medium">Reviews come from actual business interactions</span>, providing other business owners with reliable insights.</li>
+                <li><span className="font-medium">The platform remains protected</span> from fraudulent accounts or those seeking to manipulate ratings.</li>
+              </ul>
+              
+              <p className="text-sm text-left">
+                This verification establishes a trusted community where business owners can share genuine 
+                experiences and make informed decisions about potential clients or customers.
               </p>
             </div>
             
