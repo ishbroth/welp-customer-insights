@@ -13,14 +13,14 @@ interface ContentRejectionDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   reason: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const ContentRejectionDialog = ({ 
   open, 
   onOpenChange,
   reason,
-  onClose
+  onClose = () => {} // Added default empty function
 }: ContentRejectionDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -270,6 +269,7 @@ const NewReview = () => {
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
         reason={rejectionReason || ""}
+        onClose={() => setShowRejectionDialog(false)}
       />
     </div>
   );

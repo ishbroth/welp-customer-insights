@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -198,6 +197,7 @@ const CustomerReviewResponse = ({
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
         reason={rejectionReason || ""}
+        onClose={() => setShowRejectionDialog(false)}
       />
     </div>
   );

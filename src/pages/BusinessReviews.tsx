@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Review } from "@/types";
@@ -249,6 +248,7 @@ const BusinessReviews = () => {
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
         reason={rejectionReason || ""}
+        onClose={() => setShowRejectionDialog(false)}
       />
       
       {/* Delete Confirmation Dialog */}

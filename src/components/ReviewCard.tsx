@@ -504,6 +504,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
         reason={rejectionReason || ""}
+        onClose={() => setShowRejectionDialog(false)}
       />
       
       {/* Keep existing delete confirmation dialog */}
