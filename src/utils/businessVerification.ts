@@ -1,164 +1,239 @@
 
-interface VerificationResult {
+// Mock business verification utility
+// In a real application, this would connect to actual verification services
+
+type VerificationResult = {
   verified: boolean;
   message?: string;
-  details?: Record<string, any>;
-}
+  details?: {
+    type?: string;
+    status?: string;
+    expirationDate?: string;
+  };
+};
 
-// These are simulated verification services that would, in a real application,
-// connect to actual government and regulatory authority APIs
-export const verifyBusinessId = async (businessId: string): Promise<VerificationResult> => {
-  console.log(`Verifying business ID: ${businessId}`);
+/**
+ * Verify a business ID (license number or EIN)
+ */
+export const verifyBusinessId = async (
+  businessId: string, 
+  businessType: string = 'ein'
+): Promise<VerificationResult> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Check ID format to determine the type of verification needed
-  const einRegex = /^\d{2}-\d{7}$/;
-  const stateLicenseRegex = /^[A-Z0-9]{5,15}(-[A-Z0-9]{1,5})?$/i;
-  
-  // Route to appropriate verification service based on ID format
-  if (einRegex.test(businessId)) {
-    return await simulateEINVerification(businessId);
-  } else if (stateLicenseRegex.test(businessId)) {
-    return await simulateLicenseVerification(businessId);
+  // Remove spaces, dashes, and other common separators
+  const cleanId = businessId.replace(/[-\s]/g, '');
+
+  // Check if the ID is empty
+  if (!cleanId) {
+    return {
+      verified: false,
+      message: "Please provide a valid identifier."
+    };
   }
-  
-  return {
-    verified: false,
-    message: "Invalid format. Please provide a valid EIN (XX-XXXXXXX) or business license number"
-  };
-};
 
-// Simulates verification through the IRS Business Master File or similar tax authority database
-const simulateEINVerification = async (ein: string): Promise<VerificationResult> => {
-  console.log(`Simulating EIN verification with tax authority database: ${ein}`);
-  
-  // In a real implementation, this would connect to the IRS API
-  // or a third-party service that provides EIN verification
-  
-  // Simulating a successful verification for properly formatted EINs
-  return {
-    verified: true,
-    message: "EIN verified successfully through tax authority database",
-    details: {
-      type: "EIN",
-      verificationType: "Tax Authority Database",
-      registrationDate: "2020-01-15",
-      status: "Active"
-    }
-  };
-};
-
-// Simulates verification through state business license databases
-const simulateLicenseVerification = async (licenseNumber: string): Promise<VerificationResult> => {
-  console.log(`Simulating license verification with regulatory database: ${licenseNumber}`);
-  
-  // Detect license types by prefix (in a real system, this might be derived from the license format)
-  const licensePrefix = licenseNumber.substring(0, 3).toUpperCase();
-  
-  let licenseType = "General Business";
-  let verificationSource = "State Business Registry";
-  
-  // Determine license type based on prefix
-  switch (licensePrefix) {
-    case "CON":
-      licenseType = "Contractor License";
-      verificationSource = "Contractors State License Board";
-      break;
-    case "LIQ":
-      licenseType = "Liquor License";
-      verificationSource = "Alcohol Beverage Control Board";
-      break;
-    case "LAW":
-      licenseType = "Bar Association Registration";
-      verificationSource = "State Bar Association";
-      break;
-    case "REA":
-      licenseType = "Real Estate License";
-      verificationSource = "Real Estate Commission";
-      break;
-    case "MED":
-      licenseType = "Medical License";
-      verificationSource = "Medical Board";
-      break;
+  // Route verification to the appropriate function based on business type
+  switch(businessType) {
+    case 'ein':
+      return verifyEIN(cleanId);
+    case 'contractor':
+      return verifyContractorLicense(cleanId);
+    case 'bar':
+      return verifyLiquorLicense(cleanId);
+    case 'attorney':
+      return verifyBarAssociation(cleanId);
+    case 'realtor':
+      return verifyRealEstateLicense(cleanId);
+    case 'medical':
+      return verifyMedicalLicense(cleanId);
+    case 'restaurant':
+      return verifyRestaurantLicense(cleanId);
     default:
-      if (licenseNumber.length >= 10) {
-        licenseType = "Corporate Registration";
-        verificationSource = "Secretary of State Business Registry";
-      } else {
-        licenseType = "Small Business License";
-        verificationSource = "County Clerk Business Records";
-      }
+      return verifyGeneralLicense(cleanId);
+  }
+};
+
+/**
+ * Verify an Employer Identification Number (EIN)
+ */
+const verifyEIN = (ein: string): VerificationResult => {
+  // Basic EIN format check (9 digits)
+  if (!/^\d{9}$/.test(ein)) {
+    return {
+      verified: false,
+      message: "Invalid EIN format. EINs must be 9 digits."
+    };
   }
   
+  // For demo purposes, verify any well-formatted EIN
   return {
     verified: true,
-    message: `${licenseType} verified successfully through ${verificationSource}`,
     details: {
-      type: licenseType,
-      verificationType: verificationSource,
-      issueDate: "2022-03-15",
-      expirationDate: "2025-12-31",
-      status: "Active"
+      type: "Employer Identification Number",
+      status: "Active",
+      expirationDate: "N/A"
     }
   };
 };
 
-// Additional verification services could be implemented here for specific industries:
-
-export const verifyContractorLicense = async (licenseNumber: string, state: string): Promise<VerificationResult> => {
-  console.log(`Verifying contractor license: ${licenseNumber} in ${state}`);
-  // In a real implementation, this would connect to the state contractor licensing board API
-  await new Promise(resolve => setTimeout(resolve, 1500));
+/**
+ * Verify a contractor license
+ */
+const verifyContractorLicense = (license: string): VerificationResult => {
+  // Most contractor licenses have alphanumeric formats
+  if (!/^[A-Z0-9]{5,15}$/i.test(license)) {
+    return {
+      verified: false,
+      message: "Invalid contractor license format."
+    };
+  }
   
+  // For demo purposes, verify any well-formatted license
   return {
     verified: true,
-    message: `Contractor license verified through ${state} Contractors State License Board`,
     details: {
       type: "Contractor License",
-      state: state,
-      class: "B - General Building Contractor",
-      issueDate: "2019-08-10",
-      expirationDate: "2023-08-10",
-      status: "Active"
+      status: "Active",
+      expirationDate: "2025-12-31"
     }
   };
 };
 
-export const verifyLiquorLicense = async (licenseNumber: string, state: string): Promise<VerificationResult> => {
-  console.log(`Verifying liquor license: ${licenseNumber} in ${state}`);
-  // In a real implementation, this would connect to the state alcohol control board API
-  await new Promise(resolve => setTimeout(resolve, 1500));
+/**
+ * Verify a liquor license
+ */
+const verifyLiquorLicense = (license: string): VerificationResult => {
+  // Most liquor licenses have a specific format with letters and numbers
+  if (!/^[A-Z]{1,3}[0-9]{5,8}$/i.test(license)) {
+    return {
+      verified: false,
+      message: "Invalid liquor license format. Please check your license number."
+    };
+  }
   
+  // For demo purposes, verify any well-formatted license
   return {
     verified: true,
-    message: `Liquor license verified through ${state} Alcoholic Beverage Control`,
     details: {
       type: "Liquor License",
-      state: state,
-      class: "Type 47 - On-Sale General for Bona Fide Public Eating Place",
-      issueDate: "2021-05-15",
-      expirationDate: "2023-05-15",
-      status: "Active"
+      status: "Active",
+      expirationDate: "2025-06-30"
     }
   };
 };
 
-export const verifyLawLicense = async (barNumber: string, state: string): Promise<VerificationResult> => {
-  console.log(`Verifying attorney bar number: ${barNumber} in ${state}`);
-  // In a real implementation, this would connect to the state bar API
-  await new Promise(resolve => setTimeout(resolve, 1500));
+/**
+ * Verify a bar association number
+ */
+const verifyBarAssociation = (barNumber: string): VerificationResult => {
+  // Bar numbers are usually numeric but can vary by state
+  if (!/^[0-9]{5,8}$/.test(barNumber)) {
+    return {
+      verified: false,
+      message: "Invalid bar association number format."
+    };
+  }
   
+  // For demo purposes, verify any well-formatted bar number
   return {
     verified: true,
-    message: `Attorney verified through ${state} Bar Association`,
     details: {
-      type: "Bar Association Registration",
-      state: state,
+      type: "Attorney License",
       status: "Active Member",
-      admissionDate: "2015-12-01",
-      disciplinaryHistory: "None"
+      expirationDate: "2025-12-31"
+    }
+  };
+};
+
+/**
+ * Verify a real estate license
+ */
+const verifyRealEstateLicense = (license: string): VerificationResult => {
+  // Real estate licenses usually have a specific format
+  if (!/^[0-9]{6,8}$|^[A-Z]{1,2}[0-9]{5,7}$/i.test(license)) {
+    return {
+      verified: false,
+      message: "Invalid real estate license format."
+    };
+  }
+  
+  // For demo purposes, verify any well-formatted license
+  return {
+    verified: true,
+    details: {
+      type: "Real Estate License",
+      status: "Active",
+      expirationDate: "2026-03-31"
+    }
+  };
+};
+
+/**
+ * Verify a medical license
+ */
+const verifyMedicalLicense = (license: string): VerificationResult => {
+  // Medical licenses usually have a specific format
+  if (!/^[A-Z]{1,2}[0-9]{4,8}$/i.test(license)) {
+    return {
+      verified: false,
+      message: "Invalid medical license format."
+    };
+  }
+  
+  // For demo purposes, verify any well-formatted license
+  return {
+    verified: true,
+    details: {
+      type: "Medical License",
+      status: "Active",
+      expirationDate: "2027-01-31"
+    }
+  };
+};
+
+/**
+ * Verify a restaurant license
+ */
+const verifyRestaurantLicense = (license: string): VerificationResult => {
+  // Restaurant licenses can vary but often have numbers with some letters
+  if (!/^[A-Z0-9]{5,12}$/i.test(license)) {
+    return {
+      verified: false,
+      message: "Invalid restaurant license format."
+    };
+  }
+  
+  // For demo purposes, verify any well-formatted license
+  return {
+    verified: true,
+    details: {
+      type: "Food Service Establishment License",
+      status: "Active",
+      expirationDate: "2025-09-30"
+    }
+  };
+};
+
+/**
+ * Verify a general business license
+ */
+const verifyGeneralLicense = (license: string): VerificationResult => {
+  // General business licenses can have various formats
+  if (license.length < 5) {
+    return {
+      verified: false,
+      message: "License number seems too short. Please check your entry."
+    };
+  }
+  
+  // For demo purposes, verify any license that's not too short
+  return {
+    verified: true,
+    details: {
+      type: "Business License",
+      status: "Active",
+      expirationDate: "2025-12-31"
     }
   };
 };

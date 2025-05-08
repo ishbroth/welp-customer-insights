@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,13 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -22,6 +30,7 @@ const Signup = () => {
   const [businessName, setBusinessName] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
+  const [businessType, setBusinessType] = useState("ein"); // New state for business type
   const [licenseNumber, setLicenseNumber] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
   const [businessPassword, setBusinessPassword] = useState("");
@@ -57,7 +66,7 @@ const Signup = () => {
     
     try {
       // Use the business verification utility with mock data
-      const result = await verifyBusinessId(licenseNumber);
+      const result = await verifyBusinessId(licenseNumber, businessType);
       
       if (result.verified) {
         setVerificationData({
@@ -78,6 +87,28 @@ const Signup = () => {
       console.error("Verification error:", error);
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  // Get label for the license input based on selected business type
+  const getLicenseLabel = () => {
+    switch (businessType) {
+      case "ein":
+        return "EIN";
+      case "contractor":
+        return "Contractor License Number";
+      case "restaurant":
+        return "Restaurant License Number";
+      case "bar":
+        return "Liquor License Number";
+      case "attorney":
+        return "Bar Association Number";
+      case "realtor":
+        return "Real Estate License Number";
+      case "medical":
+        return "Medical License Number";
+      default:
+        return "License Number / EIN";
     }
   };
 
@@ -202,16 +233,34 @@ const Signup = () => {
                       </div>
                       
                       <div>
-                        <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1">License Number / EIN</label>
+                        <label htmlFor="businessType" className="block text-sm font-medium mb-1">Business Type</label>
+                        <Select value={businessType} onValueChange={setBusinessType}>
+                          <SelectTrigger className="welp-input">
+                            <SelectValue placeholder="Select Business Type" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            <SelectItem value="ein">EIN (Employer Identification Number)</SelectItem>
+                            <SelectItem value="contractor">Contractor</SelectItem>
+                            <SelectItem value="restaurant">Restaurant</SelectItem>
+                            <SelectItem value="bar">Bar/Liquor Store</SelectItem>
+                            <SelectItem value="attorney">Attorney/Legal Services</SelectItem>
+                            <SelectItem value="realtor">Real Estate Agent</SelectItem>
+                            <SelectItem value="medical">Medical Professional</SelectItem>
+                            <SelectItem value="other">Other Licensed Business</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1">{getLicenseLabel()}</label>
                         <Input
                           id="licenseNumber"
-                          placeholder="e.g. 123456789 or 12-3456789"
+                          placeholder={`Enter your ${getLicenseLabel()}`}
                           value={licenseNumber}
                           onChange={(e) => setLicenseNumber(e.target.value)}
                           className="welp-input"
                           required
                         />
-                        <p className="text-xs text-gray-500 mt-1">Enter your business license, contractor license, or EIN</p>
                       </div>
                       
                       {verificationError && (
