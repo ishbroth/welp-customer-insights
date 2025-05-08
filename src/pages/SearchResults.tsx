@@ -5,39 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
 import { Card } from "@/components/ui/card";
-import { mockUsers } from "@/data/mockUsers";
 import SearchResultsList from "@/components/search/SearchResultsList";
-
-// Transform mock users into the format expected by the search results page
-const transformMockUsers = () => {
-  return mockUsers
-    .filter(user => user.type === "customer")
-    .map(user => {
-      // Split name into first and last name (assuming format is "First Last")
-      const nameParts = user.name.split(' ');
-      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : user.name;
-      
-      // Calculate average rating if the user has reviews
-      const totalReviews = user.reviews?.length || 0;
-      const totalRating = user.reviews?.reduce((sum, review) => sum + review.rating, 0) || 0;
-      const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
-      
-      return {
-        id: user.id,
-        firstName,
-        lastName,
-        phone: user.phone || "",
-        address: user.address || "",
-        city: user.city || "",
-        state: user.state || "",
-        zipCode: user.zipCode || "",
-        averageRating,
-        totalReviews,
-        isSubscriptionNeeded: Math.random() > 0.5 // Randomly determine if subscription is needed for demo
-      };
-    });
-};
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
