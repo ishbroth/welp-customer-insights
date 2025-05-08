@@ -492,7 +492,7 @@ const HowItWorks = () => {
                 </Button>
               </Link>
               <Link to="/login">
-                <Button variant="outline" className="border-white text-white hover:bg-white/20 font-bold py-3 px-8 rounded-full">
+                <Button variant="outline" className="border-white text-[#ea384c] hover:bg-white/20 hover:text-white font-bold py-3 px-8 rounded-full">
                   Log In
                 </Button>
               </Link>
