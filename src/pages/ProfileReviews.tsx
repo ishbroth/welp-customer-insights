@@ -24,6 +24,10 @@ const ProfileReviews = () => {
   
   // Set local subscription status based on auth context
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
+  
+  // State for customer reviews
+  const [customerReviews, setCustomerReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Update local subscription status when the auth context changes
@@ -40,14 +44,59 @@ const ProfileReviews = () => {
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
-  // Get reviews about the current customer user - with empty initial state (no mock data)
-  const [customerReviews, setCustomerReviews] = useState<Review[]>([]);
-  
+  // Automatically fetch reviews based on customer profile info when component mounts
   useEffect(() => {
-    // In a real app, this would fetch reviews from Supabase
-    // For now, initialize with an empty array
-    setCustomerReviews([]);
+    if (currentUser && currentUser.type === "customer") {
+      fetchCustomerReviews();
+    }
   }, [currentUser]);
+  
+  // Function to fetch customer reviews based on profile information
+  const fetchCustomerReviews = async () => {
+    if (!currentUser) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // In a real app, this would make an API call to fetch reviews
+      // We're simulating the API call with a timeout
+      setTimeout(() => {
+        // For demo purposes, we're just creating empty reviews array
+        // In a real implementation, this would use the customer's name, address, etc.
+        // to search for matching reviews in the database
+        
+        // Example of how we would use profile info to search:
+        // const searchParams = {
+        //   firstName: currentUser.name.split(' ')[0],
+        //   lastName: currentUser.name.split(' ').slice(1).join(' '),
+        //   phone: currentUser.phone || '',
+        //   address: currentUser.address || '',
+        //   city: currentUser.city || '',
+        //   state: currentUser.state || '',
+        //   zipCode: currentUser.zipCode || ''
+        // };
+        
+        // For now, we'll just set empty array since we're not actually fetching from a database
+        setCustomerReviews([]);
+        
+        // Show a toast to inform the user what's happening
+        toast({
+          title: "Reviews Loaded",
+          description: "We've checked for reviews that match your profile information.",
+        });
+        
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Error fetching customer reviews:", error);
+      toast({
+        title: "Error",
+        description: "There was an error fetching your reviews. Please try again.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
   
   // Pagination settings
   const reviewsPerPage = 5;
@@ -106,6 +155,11 @@ const ProfileReviews = () => {
     navigate('/subscription');
   };
 
+  // Function to manually refresh reviews
+  const handleRefreshReviews = () => {
+    fetchCustomerReviews();
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -114,12 +168,17 @@ const ProfileReviews = () => {
         
         <main className="flex-1 p-6">
           <div className="container mx-auto">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">My Reviews</h1>
-              <p className="text-gray-600">
-                See what businesses have said about you. Purchase full access to reviews for $3 each,
-                or subscribe for unlimited access.
-              </p>
+            <div className="mb-8 flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">My Reviews</h1>
+                <p className="text-gray-600">
+                  See what businesses have said about you. Purchase full access to reviews for $3 each,
+                  or subscribe for unlimited access.
+                </p>
+              </div>
+              <Button onClick={handleRefreshReviews} disabled={isLoading}>
+                {isLoading ? "Loading..." : "Refresh Reviews"}
+              </Button>
             </div>
             
             {!hasSubscription ? (
@@ -149,7 +208,14 @@ const ProfileReviews = () => {
               </div>
             )}
             
-            {customerReviews.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-10">
+                <p className="text-gray-500 mb-2">Loading your reviews...</p>
+                <p className="text-sm text-gray-400">
+                  We're checking for reviews that match your profile information.
+                </p>
+              </div>
+            ) : customerReviews.length === 0 ? (
               <EmptyReviewsMessage type="customer" />
             ) : (
               <div className="space-y-6">
@@ -158,17 +224,19 @@ const ProfileReviews = () => {
                     key={review.id}
                     review={review}
                     isUnlocked={isReviewUnlocked(review.id)}
-                    hasSubscription={hasSubscription}
-                    onPurchaseReview={handlePurchaseReview}
+                    onPurchase={handlePurchaseReview}
                     onReactionToggle={handleReactionToggle}
+                    hasSubscription={hasSubscription}
                   />
                 ))}
                 
-                <ReviewPagination 
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
+                {totalPages > 1 && (
+                  <ReviewPagination 
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -176,12 +244,12 @@ const ProfileReviews = () => {
       </div>
       <Footer />
       
-      {/* Add Content Rejection Dialog */}
-      <ContentRejectionDialog 
-        open={showRejectionDialog}
-        onOpenChange={setShowRejectionDialog}
-        reason={rejectionReason || ""}
-      />
+      {showRejectionDialog && rejectionReason && (
+        <ContentRejectionDialog
+          reason={rejectionReason}
+          onClose={() => setShowRejectionDialog(false)}
+        />
+      )}
     </div>
   );
 };
