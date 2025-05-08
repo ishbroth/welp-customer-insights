@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ const Signup = () => {
   const [businessPhone, setBusinessPhone] = useState("");
   const [businessType, setBusinessType] = useState("ein"); // Business type state
   const [licenseNumber, setLicenseNumber] = useState("");
-  const [businessEmail, setBusinessEmail] = useState("");
+  const [businessEmail, setBusinessEmail] = useState(""); // Already defined
   const [businessPassword, setBusinessPassword] = useState("");
   const [businessConfirmPassword, setBusinessConfirmPassword] = useState("");
   
@@ -85,6 +86,13 @@ const Signup = () => {
     setIsVerifying(true);
     setVerificationError("");
     
+    // Validate business email
+    if (!businessEmail || !businessEmail.includes('@')) {
+      setVerificationError("Please provide a valid business email address.");
+      setIsVerifying(false);
+      return;
+    }
+    
     try {
       // Use the business verification utility with state-specific verification
       const result = await verifyBusinessId(licenseNumber, businessType, businessState);
@@ -98,6 +106,8 @@ const Signup = () => {
           address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
           licenseNumber: licenseNumber,
           businessType: businessType,
+          state: businessState,
+          city: businessCity
         };
         
         // Store the verification data in session storage
@@ -107,6 +117,7 @@ const Signup = () => {
           name: businessName,
           address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
           phone: businessPhone,
+          email: businessEmail,
           licenseStatus: "Active",
           licenseType: result.details?.type || "General Business",
           licenseExpiration: result.details?.expirationDate || "2025-12-31"
@@ -358,6 +369,21 @@ const Signup = () => {
                         />
                       </div>
                       
+                      {/* Business Email */}
+                      <div>
+                        <label htmlFor="businessEmail" className="block text-sm font-medium mb-1">Business Email</label>
+                        <Input
+                          id="businessEmail"
+                          type="email"
+                          placeholder="business@example.com"
+                          value={businessEmail}
+                          onChange={(e) => setBusinessEmail(e.target.value)}
+                          className="welp-input"
+                          required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
+                      </div>
+                      
                       {/* Business Street Address */}
                       <div>
                         <label htmlFor="businessStreet" className="block text-sm font-medium mb-1">Business Street Address</label>
@@ -480,6 +506,7 @@ const Signup = () => {
                     <h3 className="text-lg font-semibold text-green-700 mb-2">Business Verified</h3>
                     <div className="space-y-2 text-sm">
                       <p><strong>Name:</strong> {verificationData.name}</p>
+                      <p><strong>Email:</strong> {verificationData.email}</p>
                       <p><strong>Address:</strong> {verificationData.address}</p>
                       <p><strong>License Type:</strong> {verificationData.licenseType}</p>
                       <p><strong>License Status:</strong> <span className="text-green-600 font-medium">{verificationData.licenseStatus}</span></p>
