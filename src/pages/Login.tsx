@@ -14,7 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login, loginWithGoogle, loginWithApple } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,50 +51,6 @@ const Login = () => {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      const success = await loginWithGoogle();
-      if (success) {
-        toast({
-          title: "Logged In",
-          description: "Welcome back to Welp.",
-        });
-        navigate("/profile");
-      }
-    } catch (error) {
-      toast({
-        title: "Google Login Failed",
-        description: "Could not log in with Google. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    setIsLoading(true);
-    try {
-      const success = await loginWithApple();
-      if (success) {
-        toast({
-          title: "Logged In",
-          description: "Welcome back to Welp.",
-        });
-        navigate("/profile");
-      }
-    } catch (error) {
-      toast({
-        title: "Apple Login Failed",
-        description: "Could not log in with Apple. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -156,30 +112,6 @@ const Login = () => {
               <p className="text-sm text-gray-600">
                 Don't have an account? <Link to="/signup" className="text-welp-primary hover:underline">Sign Up</Link>
               </p>
-            </div>
-            
-            <div className="mt-8 pt-6 border-t">
-              <p className="text-sm text-center text-gray-500 mb-4">
-                Log in with
-              </p>
-              <div className="flex justify-center space-x-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full flex items-center justify-center"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                >
-                  Google
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full flex items-center justify-center"
-                  onClick={handleAppleLogin}
-                  disabled={isLoading}
-                >
-                  Apple
-                </Button>
-              </div>
             </div>
           </Card>
         </div>

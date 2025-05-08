@@ -5,8 +5,6 @@ import { User } from "@/types";
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithGoogle: () => Promise<boolean>;
-  loginWithApple: () => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
   isSubscribed: boolean;
@@ -58,40 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
-  const loginWithGoogle = async (): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // This would be replaced with actual Supabase auth with Google
-    const demoUser: User = {
-      id: "google-user",
-      email: "customer@example.com",
-      name: "Google User",
-      type: "customer"
-    };
-    
-    setCurrentUser(demoUser);
-    localStorage.setItem("currentUser", JSON.stringify(demoUser));
-    return true;
-  };
-
-  const loginWithApple = async (): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // This would be replaced with actual Supabase auth with Apple
-    const demoUser: User = {
-      id: "apple-user",
-      email: "business@example.com",
-      name: "Apple User",
-      type: "business"
-    };
-    
-    setCurrentUser(demoUser);
-    localStorage.setItem("currentUser", JSON.stringify(demoUser));
-    return true;
-  };
-
   const logout = () => {
     setCurrentUser(null);
     setIsSubscribed(false);
@@ -110,8 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     currentUser,
     login,
-    loginWithGoogle,
-    loginWithApple,
     logout,
     updateProfile,
     isSubscribed,
