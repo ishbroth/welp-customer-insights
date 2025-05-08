@@ -1,18 +1,54 @@
 
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-export const handleSubscription = (
+export const handleSubscription = async (
   setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>,
   setIsSubscribed: (value: boolean) => void,
   toast: ReturnType<typeof useToast>["toast"],
   isCustomer: boolean
 ): Promise<void> => {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      // Update subscription status using AuthContext
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in to subscribe.",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        resolve();
+        return;
+      }
+      
+      // Insert a new subscription record
+      const { error } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          active: true,
+          subscription_type: 'premium',
+          start_date: new Date().toISOString(),
+          // For demo purposes, no end_date means it's ongoing
+        });
+        
+      if (error) {
+        console.error("Subscription error:", error);
+        toast({
+          title: "Subscription Error",
+          description: "There was an error processing your subscription. Please try again.",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        resolve();
+        return;
+      }
+      
+      // Update subscription status in AuthContext
       setIsSubscribed(true);
       
       console.log("Subscription - Set subscription status to true");
@@ -24,7 +60,16 @@ export const handleSubscription = (
       
       setIsProcessing(false);
       resolve();
-    }, 2000);
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast({
+        title: "Subscription Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+      resolve();
+    }
   });
 };
 

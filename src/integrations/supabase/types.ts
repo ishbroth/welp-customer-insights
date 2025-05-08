@@ -9,13 +9,105 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      one_time_access: {
+        Row: {
+          created_at: string | null
+          id: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          type: string
+          updated_at: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id: string
+          name?: string | null
+          phone?: string | null
+          type?: string
+          updated_at?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          type?: string
+          updated_at?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          end_date: string | null
+          id: string
+          start_date: string | null
+          subscription_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          subscription_type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          subscription_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_has_active_subscription: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

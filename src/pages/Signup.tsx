@@ -16,7 +16,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Array of US states for the dropdown
 const US_STATES = [
@@ -36,6 +36,7 @@ const Signup = () => {
   const [accountType, setAccountType] = useState<"business" | "customer">(initialAccountType);
   const [step, setStep] = useState(1);
   const { toast } = useToast();
+  const { signup } = useAuth();
   
   // Business form state
   const [businessName, setBusinessName] = useState("");
@@ -65,6 +66,7 @@ const Signup = () => {
   const [verificationError, setVerificationError] = useState("");
   
   const [isPhoneVerifying, setIsPhoneVerifying] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Reset form and steps when account type changes
@@ -165,62 +167,134 @@ const Signup = () => {
     return "";
   };
 
-  const initiateCustomerVerification = () => {
-    // Validate customer information
-    if (!customerFirstName || !customerLastName || !customerPhone || !customerEmail || !customerPassword) {
+  const handleCreateBusinessAccount = async () => {
+    if (
+      !businessEmail || 
+      !businessPassword || 
+      businessPassword !== businessConfirmPassword
+    ) {
       toast({
-        title: "Missing Information",
-        description: "Please fill out all required fields.",
+        title: "Error",
+        description: "Please check your form inputs and try again.",
         variant: "destructive",
       });
       return;
     }
     
-    if (customerPassword !== customerConfirmPassword) {
+    setIsSubmitting(true);
+    
+    try {
+      // Create a business name by joining the business name and type
+      const fullBusinessName = `${businessName} (${businessType})`;
+      
+      const { success, error } = await signup({
+        email: businessEmail,
+        password: businessPassword,
+        name: fullBusinessName,
+        phone: businessPhone,
+        zipCode: businessZipCode,
+        type: "business"
+      });
+      
+      if (success) {
+        toast({
+          title: "Account Created",
+          description: "Your business account has been created successfully!",
+        });
+        
+        // Redirect to business verification success page
+        navigate("/business-verification-success");
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: error || "An error occurred while creating your account.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
       toast({
-        title: "Password Mismatch",
-        description: "Your passwords do not match.",
+        title: "Signup Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Store customer data in session storage for the verification flow
-    const customerData = {
-      firstName: customerFirstName,
-      lastName: customerLastName,
-      phone: customerPhone,
-      zipCode: customerZipCode,
-      email: customerEmail,
-      password: customerPassword,
-    };
-    
-    sessionStorage.setItem("customerSignupData", JSON.stringify(customerData));
-    
-    // Generate a random 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    sessionStorage.setItem("phoneVerificationCode", verificationCode);
-    
-    // Show a toast indicating that the verification code is being sent
-    toast({
-      title: "Verification Code Sent",
-      description: `A verification code has been sent to ${customerPhone}. For demo purposes, the code is: ${verificationCode}`,
-    });
-    
-    // Redirect to the verification page
-    navigate("/verify-phone");
   };
 
-  const handleCreateBusinessAccount = () => {
-    toast({
-      title: "Account Created",
-      description: "Your business account has been created successfully!",
-    });
+  const handleCreateCustomerAccount = async () => {
+    // Validate customer information
+    if (
+      !customerFirstName || 
+      !customerLastName || 
+      !customerPhone || 
+      !customerEmail || 
+      !customerPassword ||
+      customerPassword !== customerConfirmPassword
+    ) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all required fields and ensure passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Simulate account creation
-    setTimeout(() => {
-      navigate("/business-verification-success");
-    }, 1000);
+    setIsSubmitting(true);
+    
+    try {
+      // Create customer account with Supabase
+      const { success, error } = await signup({
+        email: customerEmail,
+        password: customerPassword,
+        name: `${customerFirstName} ${customerLastName}`,
+        phone: customerPhone,
+        zipCode: customerZipCode,
+        type: "customer"
+      });
+      
+      if (success) {
+        // Store verification data in session storage for the onboarding flow
+        const customerData = {
+          firstName: customerFirstName,
+          lastName: customerLastName,
+          phone: customerPhone,
+          zipCode: customerZipCode,
+          email: customerEmail
+        };
+        
+        sessionStorage.setItem("customerSignupData", JSON.stringify(customerData));
+        
+        // Generate a random 6-digit verification code for demo purposes
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        sessionStorage.setItem("phoneVerificationCode", verificationCode);
+        
+        // Show a toast indicating that verification is needed
+        toast({
+          title: "Verification Code Sent",
+          description: `A verification code has been sent to ${customerPhone}. For demo purposes, the code is: ${verificationCode}`,
+        });
+        
+        // Redirect to the verification page
+        navigate("/verify-phone");
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: error || "An error occurred while creating your account.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast({
+        title: "Signup Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -457,9 +531,9 @@ const Signup = () => {
                         <Button
                           onClick={handleCreateBusinessAccount}
                           className="welp-button w-full"
-                          disabled={!businessEmail || !businessPassword || businessPassword !== businessConfirmPassword}
+                          disabled={!businessEmail || !businessPassword || businessPassword !== businessConfirmPassword || isSubmitting}
                         >
-                          Create Business Account
+                          {isSubmitting ? "Creating Account..." : "Create Business Account"}
                         </Button>
                         
                         {businessPassword !== businessConfirmPassword && businessConfirmPassword && (
@@ -563,11 +637,19 @@ const Signup = () => {
                   
                   <div className="pt-4">
                     <Button
-                      onClick={initiateCustomerVerification}
+                      onClick={handleCreateCustomerAccount}
                       className="welp-button w-full"
-                      disabled={!customerFirstName || !customerLastName || !customerPhone || !customerEmail || !customerPassword || customerPassword !== customerConfirmPassword}
+                      disabled={
+                        !customerFirstName || 
+                        !customerLastName || 
+                        !customerPhone || 
+                        !customerEmail || 
+                        !customerPassword || 
+                        customerPassword !== customerConfirmPassword ||
+                        isSubmitting
+                      }
                     >
-                      Create Customer Account
+                      {isSubmitting ? "Creating Account..." : "Create Customer Account"}
                     </Button>
                     
                     {customerPassword !== customerConfirmPassword && customerConfirmPassword && (

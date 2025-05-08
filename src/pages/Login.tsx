@@ -32,7 +32,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const success = await login(email, password);
+      const { success, error } = await login(email, password);
       
       if (success) {
         toast({
@@ -43,7 +43,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
+          description: error || "Invalid email or password. Please try again.",
           variant: "destructive",
         });
       }
