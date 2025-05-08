@@ -1,4 +1,6 @@
+
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import StarRating from "./StarRating";
@@ -6,10 +8,11 @@ import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Edit, Trash2, Eye, Lock } from "lucide-react";
+import { MessageSquare, Edit, Trash2, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import { supabase, createResponse, updateResponse, deleteResponse } from "@/lib/supabase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +56,6 @@ interface ReviewCardProps {
 const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: ReviewCardProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [response, setResponse] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [responses, setResponses] = useState<ReviewResponse[]>(review.responses || []);
   const [replyToResponseId, setReplyToResponseId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
@@ -66,6 +68,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
@@ -92,6 +95,116 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     resp.authorId === currentUser?.id
   );
 
+  // Create response mutation
+  const createResponseMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!currentUser?.id) throw new Error("User not authenticated");
+      
+      const result = await createResponse({
+        review_id: review.id,
+        content: content
+      });
+      
+      return {
+        id: result.id,
+        authorId: currentUser.id,
+        authorName: currentUser.name || "Business Owner",
+        content: content,
+        createdAt: result.created_at
+      };
+    },
+    onSuccess: (newResponse) => {
+      setResponses(prev => [...prev, newResponse]);
+      setResponse("");
+      setIsResponseVisible(false);
+      
+      toast({
+        title: "Response submitted",
+        description: "Your response has been added successfully!"
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['businessReviews'] });
+    },
+    onError: (error) => {
+      console.error("Error creating response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit response. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update response mutation
+  const updateResponseMutation = useMutation({
+    mutationFn: async ({ responseId, content }: { responseId: string, content: string }) => {
+      const result = await updateResponse(responseId, { content });
+      
+      return {
+        id: responseId,
+        content: content,
+        createdAt: result.updated_at
+      };
+    },
+    onSuccess: (updatedResponse) => {
+      setResponses(prev => prev.map(resp => {
+        if (resp.id === updatedResponse.id) {
+          return { ...resp, content: updatedResponse.content, createdAt: updatedResponse.createdAt };
+        }
+        return resp;
+      }));
+      
+      setEditResponseId(null);
+      setEditContent("");
+      
+      toast({
+        title: "Response updated",
+        description: "Your response has been updated successfully!"
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['businessReviews'] });
+    },
+    onError: (error) => {
+      console.error("Error updating response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update response. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete response mutation
+  const deleteResponseMutation = useMutation({
+    mutationFn: async (responseId: string) => {
+      await deleteResponse(responseId);
+      return responseId;
+    },
+    onSuccess: (deletedResponseId) => {
+      setResponses(prev => prev.filter(resp => resp.id !== deletedResponseId));
+      setResponseToDeleteId(null);
+      setDeleteDialogOpen(false);
+      
+      toast({
+        title: "Response deleted",
+        description: "Your response has been deleted successfully!"
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['businessReviews'] });
+    },
+    onError: (error) => {
+      console.error("Error deleting response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete response. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -99,6 +212,15 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
       toast({
         title: "Subscription required",
         description: "You need an active subscription to respond to reviews.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!response.trim()) {
+      toast({
+        title: "Empty response",
+        description: "Please write something before submitting.",
         variant: "destructive"
       });
       return;
@@ -112,33 +234,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
       return;
     }
     
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Create new response
-      const newResponse = {
-        id: `resp-${Date.now()}`,
-        authorId: currentUser?.id || "",
-        authorName: currentUser?.name || "Business Owner",
-        content: response,
-        createdAt: new Date().toISOString(),
-        replies: []
-      };
-      
-      // Add response to the list
-      setResponses(prev => [...prev, newResponse]);
-      
-      setIsSubmitting(false);
-      setIsResponseVisible(false);
-      setResponse("");
-      
-      // Show success toast
-      toast({
-        title: "Response submitted",
-        description: "Your response has been added successfully!"
-      });
-    }, 1000);
+    createResponseMutation.mutate(response);
   };
 
   // Function to handle editing a response
@@ -187,26 +283,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
       return;
     }
 
-    setResponses(prev => prev.map(resp => {
-      if (resp.id === editResponseId) {
-        return {
-          ...resp,
-          content: editContent,
-          createdAt: new Date().toISOString() // Update the timestamp
-        };
-      }
-      return resp;
-    }));
-
-    // Reset state
-    setEditResponseId(null);
-    setEditContent("");
-
-    // Show success toast
-    toast({
-      title: "Response updated",
-      description: "Your response has been updated successfully!"
-    });
+    updateResponseMutation.mutate({ responseId: editResponseId, content: editContent });
   };
 
   // Function to cancel editing
@@ -227,74 +304,8 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     }
     
     if (!responseToDeleteId) return;
-
-    setResponses(prev => prev.filter(resp => resp.id !== responseToDeleteId));
-    setDeleteDialogOpen(false);
-    setResponseToDeleteId(null);
-
-    toast({
-      title: "Response deleted",
-      description: "Your response has been deleted successfully!"
-    });
-  };
-
-  // Function to handle replying to a customer response
-  const handleSubmitReply = (responseId: string) => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need a premium subscription to reply to customers.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!replyContent.trim()) {
-      toast({
-        title: "Empty reply",
-        description: "Please write something before submitting.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Add content moderation check
-    const moderationResult = moderateContent(replyContent);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-
-    // Create new reply
-    const newReply = {
-      id: `reply-${Date.now()}`,
-      authorId: currentUser?.id || "",
-      authorName: currentUser?.name || "Business Owner",
-      content: replyContent,
-      createdAt: new Date().toISOString()
-    };
-
-    // Add reply to the appropriate response
-    setResponses(prev => prev.map(resp => {
-      if (resp.id === responseId) {
-        return {
-          ...resp,
-          replies: [...(resp.replies || []), newReply]
-        };
-      }
-      return resp;
-    }));
-
-    // Reset state
-    setReplyToResponseId(null);
-    setReplyContent("");
-
-    // Show success toast
-    toast({
-      title: "Reply submitted",
-      description: "Your reply has been added successfully!"
-    });
+    
+    deleteResponseMutation.mutate(responseToDeleteId);
   };
 
   // Format the location info including business address when available
@@ -373,8 +384,9 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                       <Button 
                         size="sm" 
                         onClick={handleSaveEdit}
+                        disabled={updateResponseMutation.isPending}
                       >
-                        Save
+                        {updateResponseMutation.isPending ? "Saving..." : "Save"}
                       </Button>
                     </div>
                   </div>
@@ -416,25 +428,6 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
                       <Trash2 className="h-3 w-3 mr-1" />
                       {hasSubscription ? 'Delete' : <Lock className="h-3 w-3" />}
                     </Button>
-                  </div>
-                )}
-                
-                {/* Display replies to this response */}
-                {resp.replies && resp.replies.length > 0 && (
-                  <div className="mt-3 pl-4 border-l-2 border-gray-200">
-                    {resp.replies.map(reply => (
-                      <div key={reply.id} className="bg-white p-2 rounded-md mb-2 border border-gray-100">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-medium text-xs">{reply.authorName}</span>
-                          <span className="text-xs text-gray-500">
-                            {formatDistance(new Date(reply.createdAt), new Date(), {
-                              addSuffix: true,
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 text-xs">{reply.content}</p>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
@@ -490,23 +483,23 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
               <Button 
                 type="submit" 
                 className="welp-button" 
-                disabled={isSubmitting}
+                disabled={createResponseMutation.isPending}
               >
-                {isSubmitting ? "Submitting..." : "Submit Response"}
+                {createResponseMutation.isPending ? "Submitting..." : "Submit Response"}
               </Button>
             </div>
           </form>
         )}
       </div>
       
-      {/* Add Content Rejection Dialog */}
+      {/* Content Rejection Dialog */}
       <ContentRejectionDialog 
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
         reason={rejectionReason || ""}
       />
       
-      {/* Keep existing delete confirmation dialog */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -520,8 +513,9 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
             <AlertDialogAction 
               onClick={handleDeleteResponse}
               className="bg-red-500 text-white hover:bg-red-600"
+              disabled={deleteResponseMutation.isPending}
             >
-              Delete
+              {deleteResponseMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -75,7 +75,7 @@ const SearchBox = ({
     // Extract ONLY the first word of address for search, explicitly ignoring any subsequent words
     const firstWordOfAddress = address.trim().split(/\s+/)[0];
     
-    // Prepare the search parameters with similarity threshold information
+    // Prepare the search parameters
     const searchParams = {
       lastName,
       firstName,
@@ -84,10 +84,9 @@ const SearchBox = ({
       city,
       state,
       zipCode,
-      // Add a parameter to indicate we want fuzzy matching - this will be used
-      // by the search logic in the results page
+      // Add a parameter to indicate we want fuzzy matching
       fuzzyMatch: "true",
-      // Default similarity threshold - adjust as needed
+      // Default similarity threshold
       similarityThreshold: "0.7" 
     };
     

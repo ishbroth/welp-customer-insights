@@ -1,14 +1,14 @@
+
 import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Edit, Trash2, Lock } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ReviewCard from "@/components/ReviewCard";
@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { supabase, checkSubscriptionStatus } from "@/lib/supabase";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,73 +33,139 @@ const BusinessReviews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   
   // Set hasSubscription based on auth context
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
   
+  // Check subscription status from Supabase
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ['subscriptionStatus', currentUser?.id],
+    queryFn: () => currentUser ? checkSubscriptionStatus(currentUser.id) : false,
+    enabled: !!currentUser,
+    onSuccess: (data) => {
+      setHasSubscription(!!data);
+    }
+  });
+  
   // Update local state when subscription changes
   useEffect(() => {
-    setHasSubscription(isSubscribed);
-  }, [isSubscribed]);
+    setHasSubscription(isSubscribed || !!subscriptionStatus);
+  }, [isSubscribed, subscriptionStatus]);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
-  
-  // State to hold a working copy of reviews (with changes to reactions)
-  const [workingReviews, setWorkingReviews] = useState(() => {
-    // Initialize working reviews from mock data
-    const reviews = [];
-    
-    if (currentUser?.type === "business") {
-      for (const user of mockUsers) {
-        if (user.type === "customer" && user.reviews) {
-          for (const review of user.reviews) {
-            if (review.reviewerId === currentUser.id) {
-              reviews.push({
-                ...review,
-                customerName: user.name,
-                customerId: user.id,
-                // Ensure reactions exist
-                reactions: review.reactions || { like: [], funny: [], useful: [], ohNo: [] },
-                // Ensure zipCode exists
-                zipCode: review.zipCode || user.zipCode || "00000",
-                // Enhance content if needed
-                content: review.content.length < 150 ? 
-                  review.content + " We had a very detailed interaction with this customer and would like to highlight several aspects of their behavior that other businesses should be aware of. They were punctual with their payments and communicated clearly throughout our business relationship. We would recommend other businesses to work with this customer based on our positive experience." : 
-                  review.content
-              });
-            }
-          }
-        }
-      }
-    }
-    
-    // Sort reviews by date (newest first)
-    return reviews.sort((a, b) => {
-      // Convert string dates to Date objects for comparison
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB.getTime() - dateA.getTime(); // Sort in descending order (newest first)
-    });
-  });
-
-  // Add new state for content moderation
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
+  // Fetch business reviews from Supabase
+  const { data: reviews, isLoading } = useQuery({
+    queryKey: ['businessReviews', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          customer: customer_id (
+            id,
+            name,
+            first_name,
+            last_name,
+            address,
+            city,
+            state,
+            zipcode
+          ),
+          responses (
+            *,
+            profile: profiles (
+              id, 
+              name
+            )
+          )
+        `)
+        .eq('business_id', currentUser.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching reviews:', error);
+        throw error;
+      }
+      
+      return data || [];
+    },
+    enabled: !!currentUser?.id
+  });
+  
+  // Delete review mutation
+  const deleteReviewMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      // First delete all responses associated with the review
+      const { error: responsesError } = await supabase
+        .from('responses')
+        .delete()
+        .eq('review_id', reviewId);
+        
+      if (responsesError) {
+        throw responsesError;
+      }
+      
+      // Then delete the review itself
+      const { error } = await supabase
+        .from('reviews')
+        .delete()
+        .eq('id', reviewId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      return reviewId;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Review deleted",
+        description: "Your review has been successfully deleted.",
+      });
+      
+      // Invalidate and refetch reviews
+      queryClient.invalidateQueries({ queryKey: ['businessReviews'] });
+      
+      setDeleteDialogOpen(false);
+      setReviewToDelete(null);
+    },
+    onError: (error) => {
+      console.error('Error deleting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete review. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+  
   // Pagination settings
   const reviewsPerPage = 5;
-  const totalPages = Math.ceil(workingReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil((reviews?.length || 0) / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-  const currentReviews = workingReviews.slice(indexOfFirstReview, indexOfLastReview);
+  const currentReviews = reviews ? reviews.slice(indexOfFirstReview, indexOfLastReview) : [];
 
   // Function to handle editing a review
-  const handleEditReview = (review) => {
+  const handleEditReview = (review: any) => {
     // Navigate to the NewReview page with the review data
-    navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
+    navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customer_id}`, {
       state: {
-        reviewData: review,
+        reviewData: {
+          id: review.id,
+          content: review.content,
+          rating: review.rating,
+          customerId: review.customer_id,
+          customerName: review.customer?.name || `${review.customer?.first_name || ""} ${review.customer?.last_name || ""}`,
+          zipCode: review.customer?.zipcode
+        },
         isEditing: true
       }
     });
@@ -112,52 +179,36 @@ const BusinessReviews = () => {
 
   // Function to handle deleting a review
   const handleDeleteReview = () => {
-    if (!reviewToDelete) return;
-
-    setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
-    
-    toast({
-      title: "Review deleted",
-      description: "Your review has been successfully deleted.",
-    });
-    
-    setDeleteDialogOpen(false);
-    setReviewToDelete(null);
-  };
-
-  // Handle toggling reactions - add content moderation 
-  const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    setWorkingReviews(prevReviews => 
-      prevReviews.map(review => {
-        if (review.id === reviewId) {
-          const userId = currentUser?.id || "";
-          const hasReacted = review.reactions?.[reactionType]?.includes(userId);
-          
-          const updatedReactions = { 
-            ...review.reactions,
-            [reactionType]: hasReacted
-              ? review.reactions[reactionType].filter(id => id !== userId)
-              : [...(review.reactions[reactionType] || []), userId]
-          };
-          
-          // Show notification toast for the business owner
-          if (!hasReacted) {
-            toast({
-              title: "Reaction added",
-              description: `You added a ${reactionType} reaction to your review of ${review.customerName}`,
-            });
-          }
-          
-          return { ...review, reactions: updatedReactions };
-        }
-        return review;
-      })
-    );
+    if (reviewToDelete) {
+      deleteReviewMutation.mutate(reviewToDelete);
+    }
   };
 
   const handleSubscribeClick = () => {
     navigate('/subscription');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex-grow flex flex-col md:flex-row">
+          <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
+          <main className="flex-1 p-6">
+            <div className="container mx-auto">
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold mb-2">My Customer Reviews</h1>
+              </div>
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-welp-primary"></div>
+              </div>
+            </div>
+          </main>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -204,7 +255,7 @@ const BusinessReviews = () => {
             <div className="flex justify-between mb-6">
               <div>
                 <span className="text-gray-600">
-                  {workingReviews.length} {workingReviews.length === 1 ? 'review' : 'reviews'} total
+                  {reviews?.length || 0} {(reviews?.length || 0) === 1 ? 'review' : 'reviews'} total
                 </span>
               </div>
               <Button asChild>
@@ -215,7 +266,7 @@ const BusinessReviews = () => {
               </Button>
             </div>
             
-            {workingReviews.length === 0 ? (
+            {!reviews?.length ? (
               <EmptyReviewsMessage type="business" />
             ) : (
               <div className="space-y-6">
@@ -225,18 +276,24 @@ const BusinessReviews = () => {
                       key={review.id}
                       review={{
                         id: review.id,
-                        businessName: review.customerName,
-                        businessId: review.customerId,
+                        businessName: review.customer?.name || `${review.customer?.first_name || ""} ${review.customer?.last_name || ""}`,
+                        businessId: review.customer_id,
                         customerName: currentUser?.name || "",
                         customerId: currentUser?.id,
                         rating: review.rating,
                         comment: review.content,
-                        createdAt: review.date,
+                        createdAt: review.created_at,
                         location: "",
-                        address: review.address || "",
-                        city: review.city || "",
-                        zipCode: review.zipCode || "00000", // Added zipCode properly
-                        responses: review.responses
+                        address: review.customer?.address || "",
+                        city: review.customer?.city || "",
+                        zipCode: review.customer?.zipcode || "",
+                        responses: review.responses?.map((resp: any) => ({
+                          id: resp.id,
+                          authorId: resp.profile?.id || "",
+                          authorName: resp.profile?.name || "Unknown",
+                          content: resp.content,
+                          createdAt: resp.created_at
+                        })) || []
                       }}
                       showResponse={true}
                       hasSubscription={hasSubscription}
@@ -274,7 +331,7 @@ const BusinessReviews = () => {
       </div>
       <Footer />
 
-      {/* Add Content Rejection Dialog */}
+      {/* Content Rejection Dialog */}
       <ContentRejectionDialog 
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
