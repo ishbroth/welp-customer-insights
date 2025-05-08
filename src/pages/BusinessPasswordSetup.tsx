@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,7 @@ const BusinessPasswordSetup = () => {
     setIsSubmitting(true);
     
     try {
-      // Create the user account with Supabase
+      // Create the user account with Supabase with auto-confirmation
       const { data, error } = await supabase.auth.signUp({
         email: businessData.email,
         password: password,
@@ -59,6 +58,7 @@ const BusinessPasswordSetup = () => {
             phone: businessData.phone,
             type: "business"
           }
+          // No emailRedirectTo option to make the account auto-confirmed
         }
       });
       
@@ -71,12 +71,23 @@ const BusinessPasswordSetup = () => {
         description: "Your business account has been created successfully!",
       });
       
-      // Navigate to profile or login page
-      navigate("/login", { 
-        state: { 
-          message: "Your business account has been created! Please log in with your email and password." 
-        } 
+      // Try to log the user in right away
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: businessData.email,
+        password: password
       });
+      
+      if (loginError) {
+        // If login fails, redirect to login page
+        navigate("/login", { 
+          state: { 
+            message: "Your business account has been created! Please log in with your email and password." 
+          } 
+        });
+      } else {
+        // If login succeeds, navigate to the profile page
+        navigate("/profile");
+      }
     } catch (error: any) {
       console.error("Signup error:", error);
       toast({

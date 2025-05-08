@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,10 +137,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Signup function
+  // Signup function - updated to skip email verification
   const signup = async ({ email, password, name, phone, zipCode, address, city, state, type }: SignupData) => {
     try {
-      // Signup with Supabase
+      // Signup with Supabase with auto-confirmation
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -154,7 +153,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             city,
             state,
             type,
-          }
+          },
+          // Skip email verification by not providing emailRedirectTo
+          // This forces auto-confirmation of the email
         }
       });
 

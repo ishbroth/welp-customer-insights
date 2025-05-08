@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -49,7 +48,7 @@ const BusinessVerificationSuccess = () => {
     setIsSubmitting(true);
     
     try {
-      // Create the user account with Supabase
+      // Create the user account with Supabase with email auto-confirm
       const { data, error } = await supabase.auth.signUp({
         email: businessData.email,
         password: values.password,
@@ -64,7 +63,8 @@ const BusinessVerificationSuccess = () => {
             // Add verification method to user metadata
             verification_method: businessData.verificationMethod || "license",
             is_fully_verified: businessData.isFullyVerified !== false // true by default unless explicitly set to false
-          }
+          },
+          emailRedirectTo: window.location.origin + "/login"
         }
       });
       

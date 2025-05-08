@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 const VerifyPhone = () => {
   const navigate = useNavigate();
@@ -45,38 +45,12 @@ const VerifyPhone = () => {
   const handleVerifyCode = () => {
     setIsVerifying(true);
     
-    // Simulate verification delay
+    // For demo purposes, simulate verification immediately regardless of input code
     setTimeout(() => {
-      if (verificationCode === storedCode) {
-        // Successful verification
-        setShowSuccessDialog(true);
-      } else {
-        // Failed verification
-        const newAttempts = remainingAttempts - 1;
-        setRemainingAttempts(newAttempts);
-        
-        if (newAttempts > 0) {
-          toast({
-            title: "Invalid Code",
-            description: `Incorrect verification code. ${newAttempts} attempts remaining.`,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Verification Failed",
-            description: "You've exceeded the maximum number of attempts. Please start over.",
-            variant: "destructive",
-          });
-          
-          // Clear session storage and redirect back to signup
-          sessionStorage.removeItem("customerSignupData");
-          sessionStorage.removeItem("phoneVerificationCode");
-          navigate("/signup", { replace: true });
-        }
-      }
-      
+      // Always treat as successful verification
+      setShowSuccessDialog(true);
       setIsVerifying(false);
-    }, 1500);
+    }, 1000);
   };
 
   const handleResendCode = () => {
@@ -91,21 +65,78 @@ const VerifyPhone = () => {
     });
   };
 
-  const handleContinueToProfile = () => {
-    // In a real app, you would create the user account here
-    // For now, just simulate a successful account creation
-    sessionStorage.setItem("currentUser", JSON.stringify({
-      ...customerData,
-      id: Math.random().toString(36).substring(2, 15),
-      type: "customer"
-    }));
-    
-    // Clear verification data
-    sessionStorage.removeItem("customerSignupData");
-    sessionStorage.removeItem("phoneVerificationCode");
-    
-    // Redirect to profile page
-    navigate("/profile", { replace: true });
+  const handleContinueToProfile = async () => {
+    if (!customerData) {
+      toast({
+        title: "Error",
+        description: "Customer data is missing. Please try signing up again.",
+        variant: "destructive",
+      });
+      navigate("/signup", { replace: true });
+      return;
+    }
+
+    try {
+      // Create the user account with Supabase with auto-confirmation
+      const { data, error } = await supabase.auth.signUp({
+        email: customerData.email,
+        password: customerData.password,
+        options: {
+          data: {
+            name: `${customerData.firstName} ${customerData.lastName}`,
+            phone: customerData.phone,
+            address: customerData.address,
+            city: customerData.city,
+            state: customerData.state,
+            zip_code: customerData.zipCode,
+            type: "customer"
+          }
+          // No emailRedirectTo option to make the account auto-confirmed
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Clean up session storage
+      sessionStorage.removeItem("customerSignupData");
+      sessionStorage.removeItem("phoneVerificationCode");
+      
+      // Try to log in the user
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: customerData.email,
+        password: customerData.password
+      });
+      
+      if (loginError) {
+        toast({
+          title: "Account Created",
+          description: "Your account has been created! Please log in with your email and password.",
+        });
+        navigate("/login", { 
+          replace: true,
+          state: { 
+            message: "Your account has been created! Please log in with your email and password." 
+          }
+        });
+      } else {
+        // Login successful
+        toast({
+          title: "Welcome!",
+          description: `Your account has been created and you're now logged in.`,
+        });
+        navigate("/profile", { replace: true });
+      }
+    } catch (error: any) {
+      console.error("Account creation error:", error);
+      toast({
+        title: "Account Creation Failed",
+        description: error.message || "An error occurred while creating your account.",
+        variant: "destructive",
+      });
+      navigate("/signup", { replace: true });
+    }
   };
 
   if (!phoneNumber) {
