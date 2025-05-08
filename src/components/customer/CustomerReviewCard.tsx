@@ -10,7 +10,7 @@ interface CustomerReviewCardProps {
   review: Review;
   isUnlocked: boolean;
   hasSubscription: boolean;
-  onPurchaseReview: (reviewId: string) => void;
+  onPurchase: (reviewId: string) => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
 }
 
@@ -25,11 +25,11 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   review,
   isUnlocked,
   hasSubscription,
-  onPurchaseReview,
+  onPurchase,
   onReactionToggle,
 }) => {
   const handlePurchaseClick = () => {
-    onPurchaseReview(review.id);
+    onPurchase(review.id);
   };
 
   return (

@@ -10,15 +10,17 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface ContentRejectionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   reason: string;
+  onClose: () => void;
 }
 
 const ContentRejectionDialog = ({ 
   open, 
   onOpenChange,
-  reason 
+  reason,
+  onClose
 }: ContentRejectionDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -30,7 +32,7 @@ const ContentRejectionDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction>
+          <AlertDialogAction onClick={onClose}>
             Try Again
           </AlertDialogAction>
         </AlertDialogFooter>
