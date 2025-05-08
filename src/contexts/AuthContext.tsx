@@ -1,8 +1,9 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { User, mockUsers } from "@/data/mockUsers";
+import { User } from "@/types";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-// Extended User type with userType and subscription status
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -12,6 +13,7 @@ interface AuthContextType {
   updateProfile: (updates: Partial<User>) => void;
   isSubscribed: boolean;
   setIsSubscribed: (value: boolean) => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -25,83 +27,231 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
   // Add subscription state
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(() => {
-    const subscriptionStatus = localStorage.getItem("isSubscribed");
-    return subscriptionStatus === "true";
-  });
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
 
-  // Store subscription status in localStorage when it changes
+  // Check for existing session on mount
   useEffect(() => {
-    localStorage.setItem("isSubscribed", isSubscribed.toString());
-  }, [isSubscribed]);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock authentication - in a real app, we'd verify credentials with a backend
-    const user = mockUsers.find(user => user.email === email);
-    
-    if (user) {
-      setCurrentUser(user);
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      return true;
+    async function getInitialSession() {
+      setLoading(true);
+      
+      try {
+        // Check if there is an active session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error fetching session:", sessionError);
+          return;
+        }
+        
+        if (sessionData?.session) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', sessionData.session.user.id)
+            .single();
+          
+          if (userError) {
+            console.error("Error fetching user:", userError);
+            return;
+          }
+          
+          if (userData) {
+            setCurrentUser(userData as User);
+            
+            // Check if user has active subscription
+            const { data: subscriptionData } = await supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('user_id', userData.id)
+              .eq('status', 'active')
+              .single();
+            
+            setIsSubscribed(!!subscriptionData);
+          }
+        }
+      } catch (error) {
+        console.error("Error during authentication check:", error);
+      } finally {
+        setLoading(false);
+      }
     }
     
-    return false;
+    getInitialSession();
+    
+    // Set up auth listener for changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (!userError && userData) {
+            setCurrentUser(userData as User);
+          }
+        } else {
+          setCurrentUser(null);
+          setIsSubscribed(false);
+        }
+      }
+    );
+    
+    // Clean up subscription
+    return () => {
+      if (authListener) authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      if (data.user) {
+        // Fetch user details from users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (userError) {
+          console.error("Error fetching user data:", userError);
+          return false;
+        }
+        
+        setCurrentUser(userData as User);
+        
+        // Check subscription status
+        const { data: subscriptionData } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .eq('status', 'active')
+          .single();
+        
+        setIsSubscribed(!!subscriptionData);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    }
   };
 
   const loginWithGoogle = async (): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock Google authentication - in a real app, we'd use OAuth
-    // For demo purposes, we'll sign in as a customer by default
-    const customerUser = mockUsers.find(user => user.email === "customer@example.com");
-    
-    if (customerUser) {
-      setCurrentUser(customerUser);
-      localStorage.setItem("currentUser", JSON.stringify(customerUser));
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Google login failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
       return true;
+    } catch (error) {
+      console.error("Google login error:", error);
+      return false;
     }
-    
-    return false;
   };
 
   const loginWithApple = async (): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock Apple authentication - sign in as business owner
-    const businessUser = mockUsers.find(user => user.email === "business@example.com");
-    
-    if (businessUser) {
-      setCurrentUser(businessUser);
-      localStorage.setItem("currentUser", JSON.stringify(businessUser));
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Apple login failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
       return true;
+    } catch (error) {
+      console.error("Apple login error:", error);
+      return false;
     }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Logout error:", error);
+        return;
+      }
+      
+      setCurrentUser(null);
+      setIsSubscribed(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!currentUser) return;
     
-    return false;
-  };
-
-  const logout = () => {
-    setCurrentUser(null);
-    setIsSubscribed(false);
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("isSubscribed");
-  };
-
-  const updateProfile = (updates: Partial<User>) => {
-    if (currentUser) {
-      const updatedUser = { ...currentUser, ...updates };
-      setCurrentUser(updatedUser);
-      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', currentUser.id);
+      
+      if (error) {
+        console.error("Error updating profile:", error);
+        toast({
+          title: "Update failed",
+          description: "Could not update your profile.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setCurrentUser({ ...currentUser, ...updates });
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated."
+      });
+    } catch (error) {
+      console.error("Profile update error:", error);
     }
   };
 
@@ -113,7 +263,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     updateProfile,
     isSubscribed,
-    setIsSubscribed
+    setIsSubscribed,
+    loading
   };
 
   return (
