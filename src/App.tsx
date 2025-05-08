@@ -27,6 +27,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import BillingPage from "./pages/BillingPage";
 import BusinessVerificationSuccess from "./pages/BusinessVerificationSuccess";
 import SuccessStories from "./pages/SuccessStories";
+import Verification from "./pages/Verification";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
+      <Route path="/verification" element={<Verification />} />
       <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/one-time-review" element={<OneTimeReviewAccess />} />
