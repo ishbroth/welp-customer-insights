@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Trophy, Star, Badge } from "lucide-react";
+import { Trophy, Star, Badge, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const CustomerBenefits = () => {
