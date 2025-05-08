@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,7 @@ const SearchBox = ({
   className, 
   simplified = false, 
   onSearch,
-  buttonText = "Search for Customers!"
+  buttonText = "Search a Customer"
 }: SearchBoxProps) => {
   const navigate = useNavigate();
   const [lastName, setLastName] = useState("");
