@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import PasswordSetupForm, { PasswordFormValues } from '@/components/business/PasswordSetupForm';
 import SecurityInfoBox from '@/components/business/SecurityInfoBox';
@@ -60,7 +60,10 @@ const BusinessVerificationSuccess = () => {
             phone: businessData.phone,
             address: businessData.address,
             city: businessData.city,
-            state: businessData.state
+            state: businessData.state,
+            // Add verification method to user metadata
+            verification_method: businessData.verificationMethod || "license",
+            is_fully_verified: businessData.isFullyVerified !== false // true by default unless explicitly set to false
           }
         }
       });
@@ -71,7 +74,9 @@ const BusinessVerificationSuccess = () => {
       
       toast({
         title: "Account Created",
-        description: "Your business account has been set up successfully!",
+        description: businessData.isFullyVerified === false
+          ? "Your business account has been created with limited access. Complete verification for full access."
+          : "Your business account has been set up successfully!"
       });
       
       // Clear the session storage
@@ -118,11 +123,38 @@ const BusinessVerificationSuccess = () => {
               <CheckCircle2 className="h-16 w-16 text-green-500" />
             </div>
             
-            <h1 className="text-2xl font-bold text-center mb-2">Business Verified!</h1>
+            <h1 className="text-2xl font-bold text-center mb-2">
+              {businessData?.isFullyVerified === false ? "Business Partially Verified" : "Business Verified!"}
+            </h1>
             
             <p className="text-center text-gray-600 mb-6">
               Complete your account setup by creating a secure password.
             </p>
+
+            {businessData?.isFullyVerified === false && (
+              <div className="mb-6 p-4 border border-amber-300 bg-amber-50 rounded-md">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 mr-2" />
+                  <div>
+                    <h3 className="font-medium text-amber-800">Limited Access Account</h3>
+                    <p className="text-sm text-amber-700 mt-1">
+                      Your account will have limited functionality until your business is fully verified with a license number or EIN.
+                    </p>
+                    <div className="mt-2 text-sm text-amber-700">
+                      <strong>You can:</strong>
+                      <ul className="list-disc pl-5 mt-1">
+                        <li>Search the customer database</li>
+                        <li>Purchase one-time access to view specific reviews</li>
+                        <li>Subscribe to view all customer reviews</li>
+                      </ul>
+                    </div>
+                    <p className="text-sm text-amber-700 mt-2">
+                      You can complete full verification through your profile page after login.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <PasswordSetupForm 
               businessEmail={businessData?.email}
