@@ -1,11 +1,14 @@
 
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const handleSubscription = async (
   setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>,
   setIsSubscribed: (value: boolean) => void,
-  toast: ReturnType<typeof useToast>["toast"],
+  toast: { 
+    title: string;
+    description: string;
+    variant?: "default" | "destructive";
+  },
   isCustomer: boolean
 ): Promise<void> => {
   return new Promise(async (resolve) => {
@@ -15,11 +18,11 @@ export const handleSubscription = async (
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast({
+        toast = {
           title: "Authentication Error",
           description: "Please log in to subscribe.",
           variant: "destructive"
-        });
+        };
         setIsProcessing(false);
         resolve();
         return;
@@ -38,11 +41,11 @@ export const handleSubscription = async (
         
       if (error) {
         console.error("Subscription error:", error);
-        toast({
+        toast = {
           title: "Subscription Error",
           description: "There was an error processing your subscription. Please try again.",
           variant: "destructive"
-        });
+        };
         setIsProcessing(false);
         resolve();
         return;
@@ -53,20 +56,20 @@ export const handleSubscription = async (
       
       console.log("Subscription - Set subscription status to true");
       
-      toast({
+      toast = {
         title: "Subscription Active",
         description: "Thank you for subscribing! You now have full access to Welp.",
-      });
+      };
       
       setIsProcessing(false);
       resolve();
     } catch (error) {
       console.error("Subscription error:", error);
-      toast({
+      toast = {
         title: "Subscription Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
-      });
+      };
       setIsProcessing(false);
       resolve();
     }

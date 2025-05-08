@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import Login from "./pages/Login";
@@ -32,8 +33,6 @@ import Verification from "./pages/Verification";
 import CustomerVerification from "./pages/CustomerVerification";
 import CustomerBenefits from "./pages/CustomerBenefits";
 import CustomerStories from "./pages/CustomerStories";
-
-const queryClient = new QueryClient();
 
 // Protected route component that allows access if user is logged in
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -155,18 +154,23 @@ const AppRoutes = () => {
 };
 
 // App component with proper provider nesting
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Create a new QueryClient instance inside the component
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
