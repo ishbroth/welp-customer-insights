@@ -22,40 +22,26 @@ export const verifyBusinessId = async (businessId: string): Promise<Verification
   const licenseRegex = /^[A-Z0-9]{5,15}(-[A-Z0-9]{1,5})?$/i;
   
   if (einRegex.test(businessId)) {
-    // For demo purposes, verify only specific EINs
-    if (['12-3456789', '98-7654321'].includes(businessId)) {
-      return {
-        verified: true,
-        message: "EIN verified successfully",
-        details: {
-          type: "EIN",
-          registrationDate: "2020-01-15",
-        }
-      };
-    } else {
-      return {
-        verified: false,
-        message: "EIN could not be verified in our database"
-      };
-    }
+    // For demo purposes, verify any properly formatted EIN
+    return {
+      verified: true,
+      message: "EIN verified successfully",
+      details: {
+        type: "EIN",
+        registrationDate: "2020-01-15",
+      }
+    };
   } else if (licenseRegex.test(businessId)) {
-    // For demo purposes, verify only specific license numbers
-    if (['LIC123456', 'BUS789012', 'CONTR456'].includes(businessId.toUpperCase())) {
-      return {
-        verified: true,
-        message: "Business license verified successfully",
-        details: {
-          type: "Business License",
-          expirationDate: "2025-12-31",
-          status: "Active"
-        }
-      };
-    } else {
-      return {
-        verified: false,
-        message: "Business license could not be verified"
-      };
-    }
+    // For demo purposes, verify any properly formatted license number
+    return {
+      verified: true,
+      message: "Business license verified successfully",
+      details: {
+        type: "Business License",
+        expirationDate: "2025-12-31",
+        status: "Active"
+      }
+    };
   }
   
   return {

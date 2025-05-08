@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -176,7 +175,6 @@ const Signup = () => {
                           className="welp-input"
                           required
                         />
-                        <p className="text-xs text-gray-500 mt-1">Use "Acme" for demo verification to succeed</p>
                       </div>
                       
                       <div>
