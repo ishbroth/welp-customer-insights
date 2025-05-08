@@ -33,7 +33,7 @@ const CustomerSignupForm = () => {
   // Customer form state
   const [customerFirstName, setCustomerFirstName] = useState("");
   const [customerLastName, setCustomerLastName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState(""); // Moved up in form
+  const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerStreet, setCustomerStreet] = useState("");
   const [customerCity, setCustomerCity] = useState("");
