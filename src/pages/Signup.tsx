@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -91,6 +90,19 @@ const Signup = () => {
       const result = await verifyBusinessId(licenseNumber, businessType, businessState);
       
       if (result.verified) {
+        // Store business data for later use in verification success page
+        const businessData = {
+          name: businessName,
+          email: businessEmail,
+          phone: businessPhone,
+          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+          licenseNumber: licenseNumber,
+          businessType: businessType,
+        };
+        
+        // Store the verification data in session storage
+        sessionStorage.setItem("businessVerificationData", JSON.stringify(businessData));
+        
         setVerificationData({
           name: businessName,
           address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
@@ -477,7 +489,7 @@ const Signup = () => {
                       <p className="mb-2">Does this information look correct?</p>
                       <div className="flex space-x-3">
                         <Button 
-                          onClick={() => setStep(2)} 
+                          onClick={() => navigate("/business-verification-success")}
                           className="welp-button"
                         >
                           Yes, Continue
@@ -486,6 +498,7 @@ const Signup = () => {
                           onClick={() => {
                             setVerificationData(null);
                             setVerificationError("");
+                            sessionStorage.removeItem("businessVerificationData");
                           }} 
                           variant="outline"
                         >

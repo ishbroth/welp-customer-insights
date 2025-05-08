@@ -12,20 +12,37 @@ const BusinessVerificationSuccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [countdown, setCountdown] = useState(5);
+  
+  // Get data from sessionStorage if available
+  const [businessData, setBusinessData] = useState(() => {
+    const storedData = sessionStorage.getItem("businessVerificationData");
+    if (storedData) {
+      return JSON.parse(storedData);
+    }
+    return null;
+  });
 
   // Countdown effect for auto-redirect
   useEffect(() => {
     const timer = countdown > 0 && setInterval(() => setCountdown(countdown - 1), 1000);
     if (countdown === 0) {
-      navigate('/review/new');
+      handleRedirectNow();
     }
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [countdown, navigate]);
+  }, [countdown]);
 
   const handleRedirectNow = () => {
-    navigate('/review/new');
+    // If we have business data, redirect to password setup page
+    if (businessData) {
+      navigate('/business-password-setup', {
+        state: { businessData }
+      });
+    } else {
+      // Fallback if no business data found
+      navigate('/signup?type=business');
+    }
   };
   
   return (
@@ -42,29 +59,28 @@ const BusinessVerificationSuccess = () => {
             
             <p className="text-lg mb-6">
               Congratulations! Your business has been successfully verified on Welp.
-              You're now ready to start using our platform.
+              Complete your account setup by creating a secure password.
             </p>
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
               <h2 className="text-xl font-semibold mb-3 flex items-center justify-center">
-                <Star className="h-6 w-6 text-yellow-500 mr-2" />
-                Write Your First Review
+                <Shield className="h-6 w-6 text-blue-600 mr-2" />
+                Complete Your Account Setup
               </h2>
               
               <p className="mb-4">
-                As a business owner on Welp, you can now review customers you've interacted with.
-                Share your experience to help other businesses make informed decisions.
+                You're almost there! The next step is to create a secure password for your business account.
               </p>
               
               <Button 
                 onClick={handleRedirectNow} 
                 className="welp-button w-full"
               >
-                Start Writing Reviews Now
+                Set Up Password Now
               </Button>
               
               <p className="text-sm mt-3">
-                Redirecting to the review page in {countdown} seconds...
+                Redirecting to password setup in {countdown} seconds...
               </p>
             </div>
 

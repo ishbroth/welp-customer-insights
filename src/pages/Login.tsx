@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +18,22 @@ const Login = () => {
   const { toast } = useToast();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get success message if passed from another page
+  const [successMessage, setSuccessMessage] = useState<string | null>(
+    location.state?.message || null
+  );
+
+  // Clear the success message after 10 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +83,13 @@ const Login = () => {
         <div className="container mx-auto px-4">
           <Card className="max-w-md mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-6">Log In to Welp.</h1>
+            
+            {successMessage && (
+              <Alert className="mb-6 bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+              </Alert>
+            )}
             
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
