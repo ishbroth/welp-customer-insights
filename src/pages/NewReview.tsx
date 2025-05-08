@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,9 +9,26 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { v4 as uuidv4 } from 'uuid';
+
+// Mock customer data for demonstration
+const mockCustomers = [
+  {
+    id: "1",
+    firstName: "John",
+    lastName: "Smith",
+    phone: "555-123-4567",
+    address: "123 Main St, Anytown",
+    zipCode: "12345"
+  },
+  {
+    id: "2",
+    firstName: "Sarah",
+    lastName: "Jones",
+    phone: "555-987-6543", 
+    address: "456 Oak Ave, Somewhere",
+    zipCode: "67890"
+  }
+];
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -34,9 +49,9 @@ const NewReview = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
-  const queryClient = useQueryClient();
   
+  const [customer, setCustomer] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [rating, setRating] = useState(isEditing && reviewData ? reviewData.rating : 0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState(isEditing && reviewData ? reviewData.content : "");
@@ -47,152 +62,43 @@ const NewReview = () => {
   const [customerCity, setCustomerCity] = useState(searchParamCity);
   const [customerZipCode, setCustomerZipCode] = useState(searchParamZipCode);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
-  // Fetch customer data if customerId is provided
-  const { data: customer } = useQuery({
-    queryKey: ['customer', customerId],
-    queryFn: async () => {
-      if (!customerId) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', customerId)
-        .single();
-        
-      if (error) {
-        console.error('Error fetching customer:', error);
-        throw error;
-      }
-      
-      return data;
-    },
-    enabled: !!customerId,
-  });
-  
-  // Set customer data when it's loaded
   useEffect(() => {
-    if (customer) {
-      setCustomerFirstName(customer.first_name || '');
-      setCustomerLastName(customer.last_name || '');
-      setCustomerPhone(customer.phone || '');
-      setCustomerAddress(customer.address || '');
-      setCustomerCity(customer.city || '');
-      setCustomerZipCode(customer.zipcode || '');
-      setIsNewCustomer(false);
-    } else if (customerId === null) {
-      setIsNewCustomer(true);
-    }
-  }, [customer, customerId]);
-  
-  // Create/Update review mutation
-  const reviewMutation = useMutation({
-    mutationFn: async (reviewData: {
-      id?: string;
-      business_id: string;
-      customer_id: string;
-      content: string;
-      rating: number;
-    }) => {
-      if (isEditing && reviewId) {
-        // Update existing review
-        const { data, error } = await supabase
-          .from('reviews')
-          .update({
-            content: reviewData.content,
-            rating: reviewData.rating,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', reviewId)
-          .select();
-          
-        if (error) throw error;
-        return data?.[0];
-      } else {
-        // Create new review
-        const { data, error } = await supabase
-          .from('reviews')
-          .insert([{
-            business_id: reviewData.business_id,
-            customer_id: reviewData.customer_id,
-            content: reviewData.content,
-            rating: reviewData.rating,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }])
-          .select();
-          
-        if (error) throw error;
-        return data?.[0];
-      }
-    },
-    onSuccess: () => {
-      toast({
-        title: isEditing ? "Review Updated" : "Review Submitted",
-        description: isEditing 
-          ? "Your customer review has been successfully updated." 
-          : "Your customer review has been successfully submitted.",
-      });
-      
-      // Invalidate and refetch reviews
-      queryClient.invalidateQueries({ queryKey: ['businessReviews'] });
-      
-      // Navigate to success page
-      navigate("/review/success");
-    },
-    onError: (error) => {
-      console.error('Error submitting review:', error);
-      toast({
-        title: "Error",
-        description: `Failed to ${isEditing ? "update" : "submit"} review. Please try again.`,
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Create customer mutation
-  const createCustomerMutation = useMutation({
-    mutationFn: async (customerData: {
-      id: string;
-      first_name: string;
-      last_name: string;
-      phone?: string;
-      address?: string;
-      city?: string;
-      zipcode?: string;
-      type: string;
-    }) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([customerData])
-        .select();
-        
-      if (error) throw error;
-      return data?.[0];
-    }
-  });
-  
-  useEffect(() => {
+    // Handle pre-filling data if we're editing
     if (isEditing && reviewData) {
       // Pre-fill review content and rating
       setRating(reviewData.rating);
       setComment(reviewData.content);
     }
-  }, [isEditing, reviewData]);
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     
-    if (!currentUser?.id) {
-      toast({
-        title: "Authentication Required",
-        description: "You must be logged in to submit a review.",
-        variant: "destructive",
-      });
-      return;
+    if (customerId) {
+      // Simulate API call to get customer details
+      setIsLoading(true);
+      setTimeout(() => {
+        const foundCustomer = mockCustomers.find(c => c.id === customerId);
+        if (foundCustomer) {
+          setCustomer(foundCustomer);
+          setCustomerLastName(foundCustomer.lastName);
+          setCustomerFirstName(foundCustomer.firstName);
+          setCustomerPhone(foundCustomer.phone);
+          setCustomerAddress(foundCustomer.address);
+          setCustomerZipCode(foundCustomer.zipCode);
+        } else {
+          setIsNewCustomer(true);
+        }
+        setIsLoading(false);
+      }, 1000);
+    } else {
+      setIsNewCustomer(true);
+      setIsLoading(false);
     }
+  }, [customerId, isEditing, reviewData]);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
     if (rating === 0) {
       toast({
@@ -211,39 +117,22 @@ const NewReview = () => {
       return;
     }
     
-    try {
-      let targetCustomerId = customerId;
-      
-      // If this is a new customer, create the customer first
-      if (isNewCustomer || !customerId) {
-        // Generate a UUID for the new customer
-        const newCustomerId = uuidv4();
-        
-        const newCustomer = await createCustomerMutation.mutateAsync({
-          id: newCustomerId,
-          first_name: customerFirstName,
-          last_name: customerLastName,
-          phone: customerPhone || undefined,
-          address: customerAddress || undefined,
-          city: customerCity || undefined,
-          zipcode: customerZipCode || undefined,
-          type: 'customer',
-        });
-        
-        targetCustomerId = newCustomer.id;
-      }
-      
-      // Now submit the review
-      await reviewMutation.mutateAsync({
-        id: isEditing ? reviewId || undefined : undefined,
-        business_id: currentUser.id,
-        customer_id: targetCustomerId!,
-        content: comment,
-        rating: rating
+    setIsSubmitting(true);
+    
+    // Simulate API call to submit review
+    setTimeout(() => {
+      toast({
+        title: isEditing ? "Review Updated" : "Review Submitted",
+        description: isEditing 
+          ? "Your customer review has been successfully updated." 
+          : "Your customer review has been successfully submitted.",
       });
-    } catch (error) {
-      console.error('Error in submission process:', error);
-    }
+      
+      setIsSubmitting(false);
+      
+      // Navigate to success page
+      navigate("/review/success");
+    }, 1500);
   };
 
   return (
@@ -256,8 +145,8 @@ const NewReview = () => {
               {isEditing ? "Edit Customer Review" : "Write a Customer Review"}
             </h1>
             
-            {isLoadingCustomer ? (
-              <div className="text-center py-10">Loading customer data...</div>
+            {isLoading ? (
+              <div className="text-center py-10">Loading...</div>
             ) : (
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
@@ -389,9 +278,9 @@ const NewReview = () => {
                     <Button
                       type="submit"
                       className="welp-button w-full"
-                      disabled={reviewMutation.isPending || createCustomerMutation.isPending}
+                      disabled={isSubmitting}
                     >
-                      {(reviewMutation.isPending || createCustomerMutation.isPending) ? 
+                      {isSubmitting ? 
                         (isEditing ? "Updating..." : "Submitting...") : 
                         (isEditing ? "Update Review" : "Submit Review")}
                     </Button>
@@ -404,7 +293,7 @@ const NewReview = () => {
       </main>
       <Footer />
       
-      {/* Content Rejection Dialog */}
+      {/* Add Content Rejection Dialog */}
       <ContentRejectionDialog 
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
