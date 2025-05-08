@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,15 +41,14 @@ const BusinessReviews = () => {
   const { data: subscriptionStatus } = useQuery({
     queryKey: ['subscriptionStatus', currentUser?.id],
     queryFn: () => currentUser ? checkSubscriptionStatus(currentUser.id) : false,
-    enabled: !!currentUser,
-    onSuccess: (data) => {
-      setHasSubscription(!!data);
-    }
+    enabled: !!currentUser
   });
   
   // Update local state when subscription changes
   useEffect(() => {
-    setHasSubscription(isSubscribed || !!subscriptionStatus);
+    if (subscriptionStatus !== undefined) {
+      setHasSubscription(isSubscribed || !!subscriptionStatus);
+    }
   }, [isSubscribed, subscriptionStatus]);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -68,7 +66,7 @@ const BusinessReviews = () => {
         .from('reviews')
         .select(`
           *,
-          customer: customer_id (
+          customer:profiles!reviews_customer_id_fkey (
             id,
             name,
             first_name,
@@ -80,7 +78,7 @@ const BusinessReviews = () => {
           ),
           responses (
             *,
-            profile: profiles (
+            profile:profiles!responses_review_id_fkey (
               id, 
               name
             )
@@ -163,7 +161,8 @@ const BusinessReviews = () => {
           content: review.content,
           rating: review.rating,
           customerId: review.customer_id,
-          customerName: review.customer?.name || `${review.customer?.first_name || ""} ${review.customer?.last_name || ""}`,
+          customerName: review.customer?.name || 
+                       `${review.customer?.first_name || ""} ${review.customer?.last_name || ""}`,
           zipCode: review.customer?.zipcode
         },
         isEditing: true
@@ -276,7 +275,8 @@ const BusinessReviews = () => {
                       key={review.id}
                       review={{
                         id: review.id,
-                        businessName: review.customer?.name || `${review.customer?.first_name || ""} ${review.customer?.last_name || ""}`,
+                        businessName: review.customer?.name || 
+                                     `${review.customer?.first_name || ""} ${review.customer?.last_name || ""}`,
                         businessId: review.customer_id,
                         customerName: currentUser?.name || "",
                         customerId: currentUser?.id,

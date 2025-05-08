@@ -66,13 +66,13 @@ export async function getCustomerReviews(customerId: string) {
     .from('reviews')
     .select(`
       *,
-      business: business_id (
+      business:profiles!reviews_business_id_fkey (
         id,
         name
       ),
       responses (
         *,
-        profile: profiles (
+        profile:profiles!responses_review_id_fkey (
           id,
           name
         )

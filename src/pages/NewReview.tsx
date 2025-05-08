@@ -13,6 +13,7 @@ import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { v4 as uuidv4 } from 'uuid';
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -50,7 +51,7 @@ const NewReview = () => {
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   // Fetch customer data if customerId is provided
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery({
+  const { data: customer } = useQuery({
     queryKey: ['customer', customerId],
     queryFn: async () => {
       if (!customerId) return null;
@@ -69,20 +70,22 @@ const NewReview = () => {
       return data;
     },
     enabled: !!customerId,
-    onSuccess: (data) => {
-      if (data) {
-        setCustomerFirstName(data.first_name || '');
-        setCustomerLastName(data.last_name || '');
-        setCustomerPhone(data.phone || '');
-        setCustomerAddress(data.address || '');
-        setCustomerCity(data.city || '');
-        setCustomerZipCode(data.zipcode || '');
-        setIsNewCustomer(false);
-      } else {
-        setIsNewCustomer(true);
-      }
-    }
   });
+  
+  // Set customer data when it's loaded
+  useEffect(() => {
+    if (customer) {
+      setCustomerFirstName(customer.first_name || '');
+      setCustomerLastName(customer.last_name || '');
+      setCustomerPhone(customer.phone || '');
+      setCustomerAddress(customer.address || '');
+      setCustomerCity(customer.city || '');
+      setCustomerZipCode(customer.zipcode || '');
+      setIsNewCustomer(false);
+    } else if (customerId === null) {
+      setIsNewCustomer(true);
+    }
+  }, [customer, customerId]);
   
   // Create/Update review mutation
   const reviewMutation = useMutation({
@@ -152,6 +155,7 @@ const NewReview = () => {
   // Create customer mutation
   const createCustomerMutation = useMutation({
     mutationFn: async (customerData: {
+      id: string;
       first_name: string;
       last_name: string;
       phone?: string;
@@ -176,9 +180,7 @@ const NewReview = () => {
       setRating(reviewData.rating);
       setComment(reviewData.content);
     }
-    
-    // If we have customer data from the query, it will be handled by onSuccess above
-  }, [customerId, isEditing, reviewData]);
+  }, [isEditing, reviewData]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,7 +216,11 @@ const NewReview = () => {
       
       // If this is a new customer, create the customer first
       if (isNewCustomer || !customerId) {
+        // Generate a UUID for the new customer
+        const newCustomerId = uuidv4();
+        
         const newCustomer = await createCustomerMutation.mutateAsync({
+          id: newCustomerId,
           first_name: customerFirstName,
           last_name: customerLastName,
           phone: customerPhone || undefined,
