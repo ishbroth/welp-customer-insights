@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -9,20 +8,87 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Lock, UserPlus } from "lucide-react";
 import StarRating from "@/components/StarRating";
+import { mockUsers, User, Review } from "@/data/mockUsers";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { calculateStringSimilarity } from "@/lib/supabase";
-import { useQuery } from "@tanstack/react-query";
-import { Customer, Review } from "@/types";
+
+// Function to calculate similarity between two strings (for fuzzy matching)
+const calculateStringSimilarity = (str1: string, str2: string): number => {
+  // Convert both strings to lowercase for case-insensitive comparison
+  const s1 = str1.toLowerCase();
+  const s2 = str2.toLowerCase();
+  
+  // If either string is empty, return 0
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  // If the strings are identical, return 1
+  if (s1 === s2) return 1;
+  
+  // Calculate the Levenshtein distance (edit distance)
+  const matrix = Array(s1.length + 1).fill(null).map(() => Array(s2.length + 1).fill(null));
+  
+  // Initialize the first row and column
+  for (let i = 0; i <= s1.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= s2.length; j++) matrix[0][j] = j;
+  
+  // Fill in the rest of the matrix
+  for (let i = 1; i <= s1.length; i++) {
+    for (let j = 1; j <= s2.length; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  // Calculate similarity as 1 - normalized distance
+  const maxLength = Math.max(s1.length, s2.length);
+  return maxLength > 0 ? 1 - matrix[s1.length][s2.length] / maxLength : 1;
+}
+
+// Transform mock users into the format expected by the search results page
+const transformMockUsers = () => {
+  return mockUsers
+    .filter(user => user.type === "customer")
+    .map(user => {
+      // Split name into first and last name (assuming format is "First Last")
+      const nameParts = user.name.split(' ');
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+      const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : user.name;
+      
+      // Calculate average rating if the user has reviews
+      const totalReviews = user.reviews?.length || 0;
+      const totalRating = user.reviews?.reduce((sum, review) => sum + review.rating, 0) || 0;
+      const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+      
+      return {
+        id: user.id,
+        firstName,
+        lastName,
+        phone: user.phone || "",
+        address: user.address || "",
+        city: user.city || "",
+        state: user.state || "",
+        zipCode: user.zipCode || "",
+        averageRating,
+        totalReviews,
+        isSubscriptionNeeded: Math.random() > 0.5 // Randomly determine if subscription is needed for demo
+      };
+    });
+};
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { currentUser, isSubscribed } = useAuth();
+  const { currentUser } = useAuth();
 
   // Extract search parameters
   const lastName = searchParams.get("lastName") || "";
@@ -37,127 +103,66 @@ const SearchResults = () => {
   const fuzzyMatch = searchParams.get("fuzzyMatch") === "true";
   const similarityThreshold = parseFloat(searchParams.get("similarityThreshold") || "0.7");
 
-  // Query to fetch customers based on search criteria
-  const { data: customers = [], isLoading } = useQuery({
-    queryKey: ['customers', lastName, firstName, phone, address, city, state, zipCode, fuzzyMatch, similarityThreshold],
-    queryFn: async () => {
-      // Start with a query that gets all customers
-      let query = supabase.from('customers').select('*');
+  useEffect(() => {
+    // Simulate API call to search for customers with the real mock data
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      // Get our transformed mock users
+      const mockCustomers = transformMockUsers();
       
-      // Add filters based on the search parameters
-      if (lastName) {
-        query = query.ilike('lastName', `%${lastName}%`);
-      }
-      
-      if (firstName) {
-        query = query.ilike('firstName', `%${firstName}%`);
-      }
-      
-      if (phone) {
-        query = query.ilike('phone', `%${phone}%`);
-      }
-      
-      if (address) {
-        // For address, use the first word for comparison
-        const firstWordOfAddress = address.split(/\s+/)[0];
-        query = query.ilike('address', `%${firstWordOfAddress}%`);
-      }
-      
-      if (city) {
-        query = query.ilike('city', `%${city}%`);
-      }
-      
-      if (state) {
-        query = query.eq('state', state);
-      }
-      
-      if (zipCode) {
-        query = query.ilike('zipCode', `%${zipCode}%`);
-      }
-      
-      // Execute the query
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error("Error fetching customers:", error);
-        return [];
-      }
-      
-      // If fuzzy matching is enabled, further refine results
-      if (fuzzyMatch) {
-        return data.filter((customer: Customer) => {
-          // Helper function to check if two strings match (exact or fuzzy)
-          const matches = (value: string, search: string): boolean => {
-            if (!search) return true; // Empty search matches everything
-            if (!value) return false; // Empty value matches nothing
-            
+      // Filter mock customers based on search params
+      const filteredCustomers = mockCustomers.filter(customer => {
+        // Helper function to check if two strings match (exact or fuzzy)
+        const matches = (value: string, search: string): boolean => {
+          if (!search) return true; // Empty search matches everything
+          if (!value) return false; // Empty value matches nothing
+          
+          if (fuzzyMatch) {
             // Calculate similarity and check if it's above threshold
             return calculateStringSimilarity(value, search) >= similarityThreshold;
-          };
-          
-          // Check each field for matching
-          const lastNameMatch = matches(customer.lastName, lastName);
-          const firstNameMatch = matches(customer.firstName, firstName);
-          const phoneMatch = phone ? customer.phone?.includes(phone) || false : true;
-          
-          // Improved address matching - extract first word from both customer address and search address
-          let addressMatch = true;
-          if (address) {
-            // Get the first word of both addresses for comparison
-            const searchAddressFirstWord = address.trim().split(/\s+/)[0].toLowerCase();
-            const customerAddressFirstWord = customer.address ? 
+          } else {
+            // Use standard includes check for exact matching
+            return value.toLowerCase().includes(search.toLowerCase());
+          }
+        };
+        
+        // Check each field for matching
+        const lastNameMatch = matches(customer.lastName, lastName);
+        const firstNameMatch = matches(customer.firstName, firstName);
+        const phoneMatch = phone ? customer.phone.includes(phone) : true;
+        
+        // Improved address matching - extract first word from both customer address and search address
+        let addressMatch = true;
+        if (address) {
+          // Get the first word of both addresses for comparison
+          const searchAddressFirstWord = address.trim().split(/\s+/)[0].toLowerCase();
+          const customerAddressFirstWord = customer.address ? 
                                            customer.address.trim().split(/\s+/)[0].toLowerCase() : 
                                            "";
-            
-            // Check if the first words match (either exactly or with fuzzy matching)
+          
+          // Check if the first words match (either exactly or with fuzzy matching)
+          if (fuzzyMatch) {
             addressMatch = calculateStringSimilarity(customerAddressFirstWord, searchAddressFirstWord) >= similarityThreshold;
+          } else {
+            addressMatch = customerAddressFirstWord.includes(searchAddressFirstWord);
           }
-          
-          const cityMatch = matches(customer.city || "", city);
-          const stateMatch = state ? customer.state === state : true;
-          const zipCodeMatch = zipCode ? customer.zipCode?.includes(zipCode) || false : true;
-          
-          return lastNameMatch && firstNameMatch && phoneMatch && addressMatch && cityMatch && stateMatch && zipCodeMatch;
-        });
-      }
-      
-      return data;
-    }
-  });
-
-  // Get customer reviews count and average ratings
-  const { data: customerStats } = useQuery({
-    queryKey: ['customerStats', customers.map(c => c.id).join(',')],
-    queryFn: async () => {
-      if (!customers.length) return {};
-      
-      const stats: Record<string, { totalReviews: number, averageRating: number }> = {};
-      
-      for (const customer of customers) {
-        const { data, error } = await supabase
-          .from('reviews')
-          .select('rating')
-          .eq('customerId', customer.id);
-        
-        if (!error && data) {
-          const totalReviews = data.length;
-          const totalRating = data.reduce((sum, review) => sum + (review.rating || 0), 0);
-          const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
-          
-          stats[customer.id] = {
-            totalReviews,
-            averageRating
-          };
         }
-      }
+        
+        const cityMatch = matches(customer.city, city);
+        const stateMatch = state ? customer.state === state : true;
+        const zipCodeMatch = zipCode ? customer.zipCode.includes(zipCode) : true;
+        
+        return lastNameMatch && firstNameMatch && phoneMatch && addressMatch && cityMatch && stateMatch && zipCodeMatch;
+      });
       
-      return stats;
-    },
-    enabled: customers.length > 0
-  });
+      setCustomers(filteredCustomers);
+      setIsLoading(false);
+    }, 1000);
+  }, [lastName, firstName, phone, address, city, state, zipCode, fuzzyMatch, similarityThreshold]);
 
   // Function to format address for display based on subscription status
-  const formatAddress = (customer: Customer) => {
+  const formatAddress = (customer: any) => {
     // If the user is subscribed or admin, show full address
     if (currentUser?.type === "admin" || isSubscribed) {
       return customer.address;
@@ -182,48 +187,7 @@ const SearchResults = () => {
     return '';
   };
 
-  // Function to fetch reviews for a customer when expanded
-  const fetchCustomerReviews = async (customerId: string) => {
-    const { data, error } = await supabase
-      .from('reviews')
-      .select(`
-        *,
-        users!reviewerId (
-          id,
-          name,
-          avatar,
-          address,
-          city
-        ),
-        responses (*)
-      `)
-      .eq('customerId', customerId);
-      
-    if (error) {
-      console.error("Error fetching reviews:", error);
-      return [];
-    }
-
-    // Format reviews for ReviewCard component
-    return data.map(review => ({
-      id: review.id,
-      businessName: review.reviewerName || review.users?.name || "Unknown Business",
-      businessId: review.reviewerId,
-      customerName: customers.find(c => c.id === review.customerId)?.firstName + " " + 
-                  customers.find(c => c.id === review.customerId)?.lastName,
-      customerId: review.customerId,
-      rating: review.rating,
-      comment: review.content,
-      createdAt: review.date,
-      location: `${review.users?.city || "Unknown Location"}`,
-      address: review.users?.address || "",
-      city: review.users?.city || "",
-      zipCode: review.zipCode || "",
-      responses: review.responses || []
-    }));
-  };
-
-  const handleSelectCustomer = async (customerId: string) => {
+  const handleSelectCustomer = (customerId: string) => {
     // If this customer is already expanded, collapse it
     if (expandedCustomerId === customerId) {
       setExpandedCustomerId(null);
@@ -238,14 +202,45 @@ const SearchResults = () => {
       return;
     }
     
-    // Fetch reviews for this customer
-    const reviews = await fetchCustomerReviews(customerId);
-    
-    // Store the reviews for this customer
-    setCustomerReviews(prev => ({
-      ...prev,
-      [customerId]: reviews
-    }));
+    // Simulate API call to fetch reviews for this customer
+    setTimeout(() => {
+      // Find the original user data from mockUsers
+      const userData = mockUsers.find(user => user.id === customerId);
+      
+      if (userData?.reviews?.length) {
+        // Map user reviews to the format expected by ReviewCard
+        const mappedReviews = userData.reviews.map(review => {
+          // Find the reviewer data from mockUsers to get address/city
+          const reviewerData = mockUsers.find(user => user.id === review.reviewerId);
+          
+          return {
+            id: review.id,
+            businessName: review.reviewerName,
+            businessId: review.reviewerId,
+            customerName: userData.name,
+            rating: review.rating,
+            comment: review.content,
+            createdAt: review.date,
+            location: userData.city ? `${userData.city}, ${userData.state}` : "Unknown Location",
+            // Add address and city from the reviewer (business owner) if available
+            address: reviewerData?.address || "",
+            city: reviewerData?.city || "",
+            zipCode: userData.zipCode || ""
+          };
+        });
+        
+        // Store the reviews for this customer
+        setCustomerReviews(prev => ({
+          ...prev,
+          [customerId]: mappedReviews
+        }));
+      } else {
+        setCustomerReviews(prev => ({
+          ...prev,
+          [customerId]: []
+        }));
+      }
+    }, 500);
   };
   
   // Function to get just the first 3 words of a review
@@ -319,9 +314,6 @@ const SearchResults = () => {
                   <h3 className="font-semibold mb-2">Search Results ({customers.length})</h3>
                   <div className="space-y-3">
                     {customers.map(customer => {
-                      // Get stats for this customer
-                      const stats = customerStats?.[customer.id] || { totalReviews: 0, averageRating: 0 };
-                      
                       // Check if the user has one-time access to this customer
                       const hasOneTimeAccess = localStorage.getItem(`customer_access_${customer.id}`) === "true";
                       const canSeeFullDetails = currentUser?.type === "admin" || 
@@ -352,13 +344,13 @@ const SearchResults = () => {
                             </div>
                             <div className="flex justify-between items-center mt-1">
                               <div className="flex items-center">
-                                <StarRating rating={Math.round(stats.averageRating)} size="sm" />
+                                <StarRating rating={Math.round(customer.averageRating)} size="sm" />
                                 <span className="ml-2 text-sm text-gray-500">
-                                  ({stats.averageRating.toFixed(1)})
+                                  ({customer.averageRating.toFixed(1)})
                                 </span>
                               </div>
                               <span className="text-xs text-gray-500">
-                                {stats.totalReviews} {stats.totalReviews === 1 ? 'review' : 'reviews'}
+                                {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
                               </span>
                             </div>
                           </div>
@@ -367,7 +359,7 @@ const SearchResults = () => {
                           {isExpanded && (
                             <div className="border-t">
                               {/* Show subscription card if needed */}
-                              {currentUser && stats.totalReviews > 0 && !isSubscribed && currentUser.type === "business" && !hasFullAccess(customer.id) && (
+                              {currentUser && customer.isSubscriptionNeeded && !isSubscribed && currentUser.type === "business" && !hasFullAccess(customer.id) && (
                                 <div className="p-4 border-b border-welp-primary/20 bg-welp-primary/5">
                                   <div className="flex items-center">
                                     <Lock className="text-welp-primary mr-4 h-10 w-10 flex-shrink-0" />

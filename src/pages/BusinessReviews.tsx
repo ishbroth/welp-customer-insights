@@ -1,21 +1,19 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
-import { Edit, Trash2 } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Edit, Trash2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ReviewCard from "@/components/ReviewCard";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
-import { supabase } from "@/lib/supabase";
-import { Review } from "@/types";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,155 +31,70 @@ const BusinessReviews = () => {
   const { currentUser, isSubscribed } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const location = useLocation();
+  
+  // Set hasSubscription based on auth context
+  const [hasSubscription, setHasSubscription] = useState(isSubscribed);
   
   // Update local state when subscription changes
-  const [hasSubscription, setHasSubscription] = useState(isSubscribed);
+  useEffect(() => {
+    setHasSubscription(isSubscribed);
+  }, [isSubscribed]);
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
+  // State to hold a working copy of reviews (with changes to reactions)
+  const [workingReviews, setWorkingReviews] = useState(() => {
+    // Initialize working reviews from mock data
+    const reviews = [];
+    
+    if (currentUser?.type === "business") {
+      for (const user of mockUsers) {
+        if (user.type === "customer" && user.reviews) {
+          for (const review of user.reviews) {
+            if (review.reviewerId === currentUser.id) {
+              reviews.push({
+                ...review,
+                customerName: user.name,
+                customerId: user.id,
+                // Ensure reactions exist
+                reactions: review.reactions || { like: [], funny: [], useful: [], ohNo: [] },
+                // Ensure zipCode exists
+                zipCode: review.zipCode || user.zipCode || "00000",
+                // Enhance content if needed
+                content: review.content.length < 150 ? 
+                  review.content + " We had a very detailed interaction with this customer and would like to highlight several aspects of their behavior that other businesses should be aware of. They were punctual with their payments and communicated clearly throughout our business relationship. We would recommend other businesses to work with this customer based on our positive experience." : 
+                  review.content
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    // Sort reviews by date (newest first)
+    return reviews.sort((a, b) => {
+      // Convert string dates to Date objects for comparison
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB.getTime() - dateA.getTime(); // Sort in descending order (newest first)
+    });
+  });
+
   // Add new state for content moderation
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
+  
+  // Pagination settings
+  const reviewsPerPage = 5;
+  const totalPages = Math.ceil(workingReviews.length / reviewsPerPage);
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = workingReviews.slice(indexOfFirstReview, indexOfLastReview);
 
-  // Fetch reviews written by the current user
-  const { data: reviews = [], isLoading } = useQuery({
-    queryKey: ['businessReviews', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('reviews')
-        .select(`
-          *,
-          customers (
-            id,
-            firstName,
-            lastName,
-            phone,
-            address,
-            city,
-            state,
-            zipCode
-          ),
-          responses (*)
-        `)
-        .eq('reviewerId', currentUser.id)
-        .order('date', { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching reviews:", error);
-        return [];
-      }
-      
-      // Format the reviews data
-      return data.map(review => ({
-        ...review,
-        customerName: `${review.customers.firstName} ${review.customers.lastName}`,
-        customerId: review.customers.id,
-        // Ensure reactions exist
-        reactions: review.reactions || { like: [], funny: [], useful: [], ohNo: [] }
-      })) as Review[];
-    },
-    enabled: !!currentUser?.id
-  });
-  
-  // Delete review mutation
-  const deleteReviewMutation = useMutation({
-    mutationFn: async (reviewId: string) => {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', reviewId);
-      
-      if (error) throw new Error(`Error deleting review: ${error.message}`);
-      
-      return { success: true };
-    },
-    onSuccess: () => {
-      // Invalidate and refetch the reviews query
-      queryClient.invalidateQueries({ queryKey: ['businessReviews', currentUser?.id] });
-      
-      toast({
-        title: "Review deleted",
-        description: "Your review has been successfully deleted.",
-      });
-      
-      setDeleteDialogOpen(false);
-      setReviewToDelete(null);
-    },
-    onError: (error) => {
-      console.error("Delete error:", error);
-      toast({
-        title: "Delete Failed",
-        description: "There was a problem deleting your review.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Reaction toggle mutation
-  const toggleReactionMutation = useMutation({
-    mutationFn: async ({ reviewId, reactionType, userId }: { reviewId: string, reactionType: string, userId: string }) => {
-      // Get the current review
-      const { data: review, error: fetchError } = await supabase
-        .from('reviews')
-        .select('reactions')
-        .eq('id', reviewId)
-        .single();
-      
-      if (fetchError) throw new Error(`Error fetching review: ${fetchError.message}`);
-      
-      // Update the reactions
-      const reactions = review.reactions || { like: [], funny: [], useful: [], ohNo: [] };
-      const hasReacted = reactions[reactionType]?.includes(userId);
-      
-      const updatedReactions = { 
-        ...reactions,
-        [reactionType]: hasReacted
-          ? reactions[reactionType].filter((id: string) => id !== userId)
-          : [...(reactions[reactionType] || []), userId]
-      };
-      
-      // Update the review with new reactions
-      const { error: updateError } = await supabase
-        .from('reviews')
-        .update({ reactions: updatedReactions })
-        .eq('id', reviewId);
-      
-      if (updateError) throw new Error(`Error updating reaction: ${updateError.message}`);
-      
-      return { reviewId, hasReacted, reactionType };
-    },
-    onSuccess: ({ reviewId, hasReacted, reactionType }) => {
-      // If the user added a reaction, show a toast
-      if (!hasReacted) {
-        const review = reviews.find(r => r.id === reviewId);
-        
-        if (review) {
-          toast({
-            title: "Reaction added",
-            description: `You added a ${reactionType} reaction to your review of ${review.customerName}`,
-          });
-        }
-      }
-      
-      // Refetch the reviews
-      queryClient.invalidateQueries({ queryKey: ['businessReviews', currentUser?.id] });
-    },
-    onError: (error) => {
-      console.error("Reaction error:", error);
-      toast({
-        title: "Reaction Failed",
-        description: "There was a problem updating your reaction.",
-        variant: "destructive"
-      });
-    }
-  });
-  
   // Function to handle editing a review
-  const handleEditReview = (review: Review) => {
+  const handleEditReview = (review) => {
     // Navigate to the NewReview page with the review data
     navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
       state: {
@@ -200,30 +113,51 @@ const BusinessReviews = () => {
   // Function to handle deleting a review
   const handleDeleteReview = () => {
     if (!reviewToDelete) return;
-    deleteReviewMutation.mutate(reviewToDelete);
+
+    setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
+    
+    toast({
+      title: "Review deleted",
+      description: "Your review has been successfully deleted.",
+    });
+    
+    setDeleteDialogOpen(false);
+    setReviewToDelete(null);
   };
 
-  // Handle toggling reactions
+  // Handle toggling reactions - add content moderation 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    if (!currentUser?.id) return;
-    
-    toggleReactionMutation.mutate({
-      reviewId,
-      reactionType,
-      userId: currentUser.id
-    });
+    setWorkingReviews(prevReviews => 
+      prevReviews.map(review => {
+        if (review.id === reviewId) {
+          const userId = currentUser?.id || "";
+          const hasReacted = review.reactions?.[reactionType]?.includes(userId);
+          
+          const updatedReactions = { 
+            ...review.reactions,
+            [reactionType]: hasReacted
+              ? review.reactions[reactionType].filter(id => id !== userId)
+              : [...(review.reactions[reactionType] || []), userId]
+          };
+          
+          // Show notification toast for the business owner
+          if (!hasReacted) {
+            toast({
+              title: "Reaction added",
+              description: `You added a ${reactionType} reaction to your review of ${review.customerName}`,
+            });
+          }
+          
+          return { ...review, reactions: updatedReactions };
+        }
+        return review;
+      })
+    );
   };
 
   const handleSubscribeClick = () => {
     navigate('/subscription');
   };
-
-  // Pagination settings
-  const reviewsPerPage = 5;
-  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-  const indexOfLastReview = currentPage * reviewsPerPage;
-  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -270,7 +204,7 @@ const BusinessReviews = () => {
             <div className="flex justify-between mb-6">
               <div>
                 <span className="text-gray-600">
-                  {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'} total
+                  {workingReviews.length} {workingReviews.length === 1 ? 'review' : 'reviews'} total
                 </span>
               </div>
               <Button asChild>
@@ -281,9 +215,7 @@ const BusinessReviews = () => {
               </Button>
             </div>
             
-            {isLoading ? (
-              <div className="text-center py-10">Loading reviews...</div>
-            ) : reviews.length === 0 ? (
+            {workingReviews.length === 0 ? (
               <EmptyReviewsMessage type="business" />
             ) : (
               <div className="space-y-6">
@@ -293,8 +225,8 @@ const BusinessReviews = () => {
                       key={review.id}
                       review={{
                         id: review.id,
-                        businessName: review.customerName || "",
-                        businessId: review.customerId || "",
+                        businessName: review.customerName,
+                        businessId: review.customerId,
                         customerName: currentUser?.name || "",
                         customerId: currentUser?.id,
                         rating: review.rating,
@@ -303,7 +235,7 @@ const BusinessReviews = () => {
                         location: "",
                         address: review.address || "",
                         city: review.city || "",
-                        zipCode: review.zipCode || "",
+                        zipCode: review.zipCode || "00000", // Added zipCode properly
                         responses: review.responses
                       }}
                       showResponse={true}
