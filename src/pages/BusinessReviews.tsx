@@ -1,14 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockUsers } from "@/data/mockUsers";
+import { Review } from "@/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Edit, Trash2, Lock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ReviewCard from "@/components/ReviewCard";
@@ -31,7 +31,6 @@ const BusinessReviews = () => {
   const { currentUser, isSubscribed } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
   
   // Set hasSubscription based on auth context
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
@@ -44,47 +43,18 @@ const BusinessReviews = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
-  // State to hold a working copy of reviews (with changes to reactions)
-  const [workingReviews, setWorkingReviews] = useState(() => {
-    // Initialize working reviews from mock data
-    const reviews = [];
-    
-    if (currentUser?.type === "business") {
-      for (const user of mockUsers) {
-        if (user.type === "customer" && user.reviews) {
-          for (const review of user.reviews) {
-            if (review.reviewerId === currentUser.id) {
-              reviews.push({
-                ...review,
-                customerName: user.name,
-                customerId: user.id,
-                // Ensure reactions exist
-                reactions: review.reactions || { like: [], funny: [], useful: [], ohNo: [] },
-                // Ensure zipCode exists
-                zipCode: review.zipCode || user.zipCode || "00000",
-                // Enhance content if needed
-                content: review.content.length < 150 ? 
-                  review.content + " We had a very detailed interaction with this customer and would like to highlight several aspects of their behavior that other businesses should be aware of. They were punctual with their payments and communicated clearly throughout our business relationship. We would recommend other businesses to work with this customer based on our positive experience." : 
-                  review.content
-              });
-            }
-          }
-        }
-      }
-    }
-    
-    // Sort reviews by date (newest first)
-    return reviews.sort((a, b) => {
-      // Convert string dates to Date objects for comparison
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB.getTime() - dateA.getTime(); // Sort in descending order (newest first)
-    });
-  });
+  // State for reviews with empty initial value
+  const [workingReviews, setWorkingReviews] = useState<Review[]>([]);
 
   // Add new state for content moderation
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
+  
+  // Load reviews - this would be replaced with an API call
+  useEffect(() => {
+    // In a real app, this would be a fetch call to get the business's reviews
+    setWorkingReviews([]);
+  }, [currentUser]);
   
   // Pagination settings
   const reviewsPerPage = 5;
@@ -94,7 +64,7 @@ const BusinessReviews = () => {
   const currentReviews = workingReviews.slice(indexOfFirstReview, indexOfLastReview);
 
   // Function to handle editing a review
-  const handleEditReview = (review) => {
+  const handleEditReview = (review: Review) => {
     // Navigate to the NewReview page with the review data
     navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
       state: {
@@ -125,7 +95,7 @@ const BusinessReviews = () => {
     setReviewToDelete(null);
   };
 
-  // Handle toggling reactions - add content moderation 
+  // Handle toggling reactions - with content moderation 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
     setWorkingReviews(prevReviews => 
       prevReviews.map(review => {
@@ -136,8 +106,8 @@ const BusinessReviews = () => {
           const updatedReactions = { 
             ...review.reactions,
             [reactionType]: hasReacted
-              ? review.reactions[reactionType].filter(id => id !== userId)
-              : [...(review.reactions[reactionType] || []), userId]
+              ? review.reactions?.[reactionType].filter(id => id !== userId) || []
+              : [...(review.reactions?.[reactionType] || []), userId]
           };
           
           // Show notification toast for the business owner
@@ -235,7 +205,7 @@ const BusinessReviews = () => {
                         location: "",
                         address: review.address || "",
                         city: review.city || "",
-                        zipCode: review.zipCode || "00000", // Added zipCode properly
+                        zipCode: review.zipCode || "00000",
                         responses: review.responses
                       }}
                       showResponse={true}

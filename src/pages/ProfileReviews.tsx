@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Review } from "@/data/mockUsers";
+import { Review } from "@/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -61,20 +62,13 @@ const ProfileReviews = () => {
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
-  // Get reviews about the current customer user - sorted by newest first
-  const [customerReviews, setCustomerReviews] = useState<Review[]>(() => {
-    // This is a placeholder for actual reviews data
-    // In a real app, this would come from the API
-    return [];
-  });
+  // Get reviews about the current customer user - with empty initial state (no mock data)
+  const [customerReviews, setCustomerReviews] = useState<Review[]>([]);
   
   useEffect(() => {
-    // In a real app, we'd fetch reviews from the API
-    // For now, just use an empty array if no reviews are available
-    if (currentUser?.type === "customer") {
-      // Mock implementation until we have real data
-      setCustomerReviews([]);
-    }
+    // In a real app, this would fetch reviews from Supabase
+    // For now, initialize with an empty array
+    setCustomerReviews([]);
   }, [currentUser]);
   
   // Pagination settings

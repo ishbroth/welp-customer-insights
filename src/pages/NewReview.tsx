@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -9,26 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
-
-// Mock customer data for demonstration
-const mockCustomers = [
-  {
-    id: "1",
-    firstName: "John",
-    lastName: "Smith",
-    phone: "555-123-4567",
-    address: "123 Main St, Anytown",
-    zipCode: "12345"
-  },
-  {
-    id: "2",
-    firstName: "Sarah",
-    lastName: "Jones",
-    phone: "555-987-6543", 
-    address: "456 Oak Ave, Somewhere",
-    zipCode: "67890"
-  }
-];
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -75,22 +56,13 @@ const NewReview = () => {
     }
     
     if (customerId) {
-      // Simulate API call to get customer details
+      // In a real app, this would be a fetch call to your Supabase DB
       setIsLoading(true);
       setTimeout(() => {
-        const foundCustomer = mockCustomers.find(c => c.id === customerId);
-        if (foundCustomer) {
-          setCustomer(foundCustomer);
-          setCustomerLastName(foundCustomer.lastName);
-          setCustomerFirstName(foundCustomer.firstName);
-          setCustomerPhone(foundCustomer.phone);
-          setCustomerAddress(foundCustomer.address);
-          setCustomerZipCode(foundCustomer.zipCode);
-        } else {
-          setIsNewCustomer(true);
-        }
+        // Instead of using mock data, we'll assume this is a new customer
+        setIsNewCustomer(true);
         setIsLoading(false);
-      }, 1000);
+      }, 500);
     } else {
       setIsNewCustomer(true);
       setIsLoading(false);

@@ -2,7 +2,7 @@
 import React from "react";
 import { Eye, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Review } from "@/data/mockUsers";
+import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 
@@ -56,7 +56,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             <div className="text-sm text-gray-500 mb-1">React to this review:</div>
             <ReviewReactions 
               reviewId={review.id}
-              customerId={review.reviewerId} // Changed from review.customerId to review.reviewerId
+              customerId={review.reviewerId}
               reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
               onReactionToggle={onReactionToggle}
             />

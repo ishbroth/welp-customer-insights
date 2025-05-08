@@ -1,8 +1,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { User, mockUsers } from "@/data/mockUsers";
+import { User } from "@/types";
 
-// Extended User type with userType and subscription status
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -45,49 +44,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Mock authentication - in a real app, we'd verify credentials with a backend
-    const user = mockUsers.find(user => user.email === email);
+    // This would be replaced with actual Supabase auth
+    // For now, we'll simulate a login for demo purposes
+    const demoUser: User = {
+      id: "demo-user",
+      email: email,
+      name: "Demo User",
+      type: email.includes("business") ? "business" : "customer"
+    };
     
-    if (user) {
-      setCurrentUser(user);
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      return true;
-    }
-    
-    return false;
+    setCurrentUser(demoUser);
+    localStorage.setItem("currentUser", JSON.stringify(demoUser));
+    return true;
   };
 
   const loginWithGoogle = async (): Promise<boolean> => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Mock Google authentication - in a real app, we'd use OAuth
-    // For demo purposes, we'll sign in as a customer by default
-    const customerUser = mockUsers.find(user => user.email === "customer@example.com");
+    // This would be replaced with actual Supabase auth with Google
+    const demoUser: User = {
+      id: "google-user",
+      email: "customer@example.com",
+      name: "Google User",
+      type: "customer"
+    };
     
-    if (customerUser) {
-      setCurrentUser(customerUser);
-      localStorage.setItem("currentUser", JSON.stringify(customerUser));
-      return true;
-    }
-    
-    return false;
+    setCurrentUser(demoUser);
+    localStorage.setItem("currentUser", JSON.stringify(demoUser));
+    return true;
   };
 
   const loginWithApple = async (): Promise<boolean> => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Mock Apple authentication - sign in as business owner
-    const businessUser = mockUsers.find(user => user.email === "business@example.com");
+    // This would be replaced with actual Supabase auth with Apple
+    const demoUser: User = {
+      id: "apple-user",
+      email: "business@example.com",
+      name: "Apple User",
+      type: "business"
+    };
     
-    if (businessUser) {
-      setCurrentUser(businessUser);
-      localStorage.setItem("currentUser", JSON.stringify(businessUser));
-      return true;
-    }
-    
-    return false;
+    setCurrentUser(demoUser);
+    localStorage.setItem("currentUser", JSON.stringify(demoUser));
+    return true;
   };
 
   const logout = () => {
