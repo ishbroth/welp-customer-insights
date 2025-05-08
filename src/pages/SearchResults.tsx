@@ -10,6 +10,7 @@ import { Lock, UserPlus } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { mockUsers } from "@/data/mockUsers";
 
 // Function to calculate similarity between two strings (for fuzzy matching)
 const calculateStringSimilarity = (str1: string, str2: string): number => {
