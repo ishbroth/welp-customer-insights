@@ -145,7 +145,7 @@ const Signup = () => {
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto p-6">
-            <h1 className="text-3xl font-bold text-center mb-6">Create Your Welp! Account</h1>
+            <h1 className="text-3xl font-bold text-center mb-6">Create Your Welp. Account</h1>
             
             <Tabs 
               defaultValue={initialAccountType} 
