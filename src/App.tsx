@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,6 +29,9 @@ import BillingPage from "./pages/BillingPage";
 import BusinessVerificationSuccess from "./pages/BusinessVerificationSuccess";
 import SuccessStories from "./pages/SuccessStories";
 import Verification from "./pages/Verification";
+import CustomerVerification from "./pages/CustomerVerification";
+import CustomerBenefits from "./pages/CustomerBenefits";
+import CustomerStories from "./pages/CustomerStories";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +99,11 @@ const AppRoutes = () => {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/success-stories" element={<SuccessStories />} />
+      
+      {/* Customer pages */}
+      <Route path="/customer-verification" element={<CustomerVerification />} />
+      <Route path="/customer-benefits" element={<CustomerBenefits />} />
+      <Route path="/customer-stories" element={<CustomerStories />} />
       
       {/* Search page is now accessible to all users */}
       <Route path="/search" element={<SearchResults />} />

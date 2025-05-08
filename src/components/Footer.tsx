@@ -7,7 +7,7 @@ const Footer = () => {
   return (
     <footer className="bg-welp-dark text-white py-6 mt-auto">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-3 text-[#ea384c]">
               Welp.
@@ -42,6 +42,15 @@ const Footer = () => {
               <li><Link to="/verification" className="hover:text-welp-primary transition-colors">Business Verification</Link></li>
               <li><Link to="/subscription" className="hover:text-welp-primary transition-colors">Subscription Benefits</Link></li>
               <li><Link to="/success-stories" className="hover:text-welp-primary transition-colors">Success Stories</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-lg font-semibold mb-3">Customer Accounts</h4>
+            <ul className="space-y-2 text-gray-300 text-sm">
+              <li><Link to="/customer-verification" className="hover:text-welp-primary transition-colors">Customer Verification</Link></li>
+              <li><Link to="/customer-benefits" className="hover:text-welp-primary transition-colors">Subscription Benefits</Link></li>
+              <li><Link to="/customer-stories" className="hover:text-welp-primary transition-colors">Success Stories</Link></li>
             </ul>
           </div>
         </div>
