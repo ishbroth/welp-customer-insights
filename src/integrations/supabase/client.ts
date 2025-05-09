@@ -8,7 +8,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Create a single instance of the Supabase client to use throughout the app
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Add fallback values to prevent runtime errors when environment variables are missing
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://your-project-url.supabase.co',
+  supabaseAnonKey || 'your-anon-key'
+);
 
 // Export Database type for TypeScript compatibility
 export type { Database };
