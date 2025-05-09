@@ -1,21 +1,18 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Lock, ArrowRight } from "lucide-react";
+import { PasswordSetupForm } from "@/components/business";
+import { PasswordFormValues } from "@/schemas/passwordSchema";
 import { supabase } from "@/integrations/supabase/client";
 
 const BusinessPasswordSetup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Get business data from location state or use empty defaults
@@ -53,23 +50,12 @@ const BusinessPasswordSetup = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!password || password.length < 6) {
+  const handleSubmit = async (values: PasswordFormValues) => {
+    if (!businessData?.email) {
       toast({
-        title: "Password Error",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: "Password Error",
-        description: "Passwords do not match.",
-        variant: "destructive",
+        title: "Error",
+        description: "Business email is required.",
+        variant: "destructive"
       });
       return;
     }
@@ -80,7 +66,7 @@ const BusinessPasswordSetup = () => {
       // Create the user account with Supabase with auto-confirmation
       const { data, error } = await supabase.auth.signUp({
         email: businessData.email,
-        password: password,
+        password: values.password,
         options: {
           data: {
             name: businessData.name,
@@ -106,7 +92,7 @@ const BusinessPasswordSetup = () => {
       // Try to log the user in right away
       const { error: loginError } = await supabase.auth.signInWithPassword({
         email: businessData.email,
-        password: password
+        password: values.password
       });
       
       if (loginError) {
@@ -148,62 +134,11 @@ const BusinessPasswordSetup = () => {
               </p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {businessData.email && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
-                  <Input
-                    type="email"
-                    value={businessData.email}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                </div>
-              )}
-              
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="welp-input"
-                  placeholder="Create a strong password"
-                  autoComplete="new-password"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters</p>
-              </div>
-              
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">Confirm Password</label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="welp-input"
-                  placeholder="Confirm your password"
-                  autoComplete="new-password"
-                  required
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                className="welp-button w-full mt-4"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  "Creating Account..."
-                ) : (
-                  <>
-                    Complete Account Setup <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
+            <PasswordSetupForm 
+              businessEmail={businessData.email}
+              isSubmitting={isSubmitting}
+              onSubmit={handleSubmit}
+            />
           </Card>
         </div>
       </main>
