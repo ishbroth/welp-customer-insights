@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,9 +58,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       try {
+        // Using a more direct approach since rpc function might not exist yet
         const { data, error } = await supabase
-          .rpc('user_has_active_subscription', { user_id: currentUser.id })
-          .single();
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .eq('status', 'active')
+          .maybeSingle();
         
         if (error) {
           console.error('Error checking subscription status:', error);
@@ -133,9 +138,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           address: data.address || '',
           city: data.city || '',
           state: data.state || '',
-          zipCode: data.zip_code || '',
+          zipCode: data.zipcode || '', // Note: Updated to match DB field name
           type: data.type as "customer" | "business" | "admin",
-          avatar: data.avatar_url || undefined,
+          avatar: data.avatar || undefined,
         };
         setCurrentUser(user);
       }
@@ -205,7 +210,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             address: address,
             city: city,
             state: state,
-            zip_code: zipCode,
+            zipcode: zipCode, // Note: Updated to match DB field name
             type: type,
             created_at: new Date().toISOString(),
           });
@@ -254,8 +259,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           address: updates.address,
           city: updates.city,
           state: updates.state,
-          zip_code: updates.zipCode,
-          avatar_url: updates.avatar,
+          zipcode: updates.zipCode, // Note: Updated to match DB field name
+          avatar: updates.avatar,
           updated_at: new Date().toISOString()
         })
         .eq('id', currentUser.id);
@@ -282,12 +287,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!currentUser) return;
     
     try {
-      // Store in Supabase
+      // Store in Supabase - using customer_access table instead of one_time_access
       const { error } = await supabase
-        .from('one_time_access')
+        .from('customer_access')
         .insert({
-          user_id: currentUser.id,
-          resource_id: resourceId
+          business_id: currentUser.id,
+          customer_id: resourceId,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days expiry
         });
         
       if (error) {
@@ -310,10 +316,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       try {
+        // Using customer_access table instead
         const { data, error } = await supabase
-          .from('one_time_access')
-          .select('resource_id')
-          .eq('user_id', currentUser.id);
+          .from('customer_access')
+          .select('customer_id')
+          .eq('business_id', currentUser.id);
           
         if (error) {
           console.error("Error loading one-time access resources:", error);
@@ -321,7 +328,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (data) {
-          setOneTimeAccessResources(data.map(item => item.resource_id));
+          setOneTimeAccessResources(data.map(item => item.customer_id || '').filter(Boolean));
         }
       } catch (error) {
         console.error("Error loading one-time access:", error);

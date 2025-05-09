@@ -37,10 +37,10 @@ export const handleSubscription = async (
         .from('subscriptions')
         .insert({
           user_id: userId,
-          subscription_type: subscriptionType,
-          active: true,
-          start_date: new Date().toISOString(),
-          end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+          type: subscriptionType, // Updated to match DB field
+          status: 'active', // Status is required in DB
+          started_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
         });
         
       if (error) {

@@ -24,10 +24,6 @@ export const createSearchableCustomer = async ({
     // Format phone number - remove any non-digit characters
     const formattedPhone = phone.replace(/\D/g, '');
     
-    // Since we're getting TypeScript errors with the searchable_customers table
-    // We'll temporarily use the profiles table which is defined in the Database type
-    // In a real implementation, you would create this table in Supabase
-    
     // Check if customer with this phone already exists
     const { data: existingCustomer, error: searchError } = await supabase
       .from('profiles')
@@ -50,7 +46,7 @@ export const createSearchableCustomer = async ({
           address,
           city,
           state,
-          zip_code: zipCode,
+          zipcode: zipCode, // Note: Updated to match DB field name
           updated_at: new Date().toISOString()
         })
         .eq('id', existingCustomer.id);
@@ -68,11 +64,14 @@ export const createSearchableCustomer = async ({
       .from('profiles')
       .insert({
         name: `${firstName} ${lastName}`,
+        first_name: firstName,
+        last_name: lastName,
         phone: formattedPhone,
         address,
         city,
         state,
-        zip_code: zipCode,
+        zipcode: zipCode, // Note: Updated to match DB field name
+        type: 'customer',
         created_at: new Date().toISOString()
       })
       .select('id')
@@ -93,11 +92,12 @@ export const createSearchableCustomer = async ({
 // Function to check if a user has one-time access to view a customer
 export const hasOneTimeAccessToCustomer = async (userId: string, customerId: string) => {
   try {
+    // Using customer_access table instead of one_time_access
     const { data, error } = await supabase
-      .from('one_time_access')
+      .from('customer_access')
       .select('id')
-      .eq('user_id', userId)
-      .eq('resource_id', customerId)
+      .eq('business_id', userId)
+      .eq('customer_id', customerId)
       .maybeSingle();
       
     if (error) {
