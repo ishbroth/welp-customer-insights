@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
@@ -76,7 +75,7 @@ const ProfileReviews = () => {
         throw error;
       }
       
-      // Format reviews data
+      // Format reviews data to match Review type
       const formattedReviews = reviewsData ? reviewsData.map(review => ({
         id: review.id,
         rating: review.rating,
@@ -84,7 +83,10 @@ const ProfileReviews = () => {
         date: review.created_at,
         reviewerId: review.business_id,
         reviewerName: review.profiles?.name || "Anonymous Business",
-        reactions: { like: [], funny: [], useful: [], ohNo: [] }
+        customerId: currentUser.id,
+        customerName: currentUser.name || "Anonymous Customer",
+        reactions: { like: [], funny: [], useful: [], ohNo: [] },
+        responses: []
       })) : [];
       
       setCustomerReviews(formattedReviews);
@@ -193,11 +195,12 @@ const ProfileReviews = () => {
                   or subscribe for unlimited access.
                 </p>
               </div>
-              <Button onClick={handleRefreshReviews} disabled={isLoading}>
+              <Button onClick={fetchCustomerReviews} disabled={isLoading}>
                 {isLoading ? "Loading..." : "Refresh Reviews"}
               </Button>
             </div>
             
+            {/* Subscription banners */}
             {!hasSubscription ? (
               <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
                 <div className="flex flex-col sm:flex-row justify-between items-center">
@@ -207,7 +210,7 @@ const ProfileReviews = () => {
                       Subscribe now to unlock full access to all reviews and responses.
                     </p>
                   </div>
-                  <Button onClick={handleSubscribeClick} className="bg-yellow-600 hover:bg-yellow-700">
+                  <Button onClick={() => navigate('/subscription')} className="bg-yellow-600 hover:bg-yellow-700">
                     Subscribe Now
                   </Button>
                 </div>
@@ -225,6 +228,7 @@ const ProfileReviews = () => {
               </div>
             )}
             
+            {/* Reviews display section */}
             {isLoading ? (
               <div className="text-center py-10">
                 <p className="text-gray-500 mb-2">Loading your reviews...</p>
@@ -236,7 +240,7 @@ const ProfileReviews = () => {
               <EmptyReviewsMessage type="customer" />
             ) : (
               <div className="space-y-6">
-                {currentReviews.map((review) => (
+                {customerReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
                   <CustomerReviewCard
                     key={review.id}
                     review={review}
