@@ -6,10 +6,11 @@ import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
 import { Card } from "@/components/ui/card";
 import SearchResultsList from "@/components/search/SearchResultsList";
+import { Customer } from "@/types/search";
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Extract search parameters
