@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+// Mock subscription service with localStorage persistence
 
 export const handleSubscription = async (
   setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>,
@@ -15,9 +15,10 @@ export const handleSubscription = async (
     setIsProcessing(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get mock user from localStorage
+      const storedUser = localStorage.getItem('mockUser');
       
-      if (!user) {
+      if (!storedUser) {
         toast({
           title: "Authentication Error",
           description: "Please log in to subscribe.",
@@ -28,30 +29,10 @@ export const handleSubscription = async (
         return;
       }
       
-      // Insert a new subscription record
-      const { error } = await supabase
-        .from('subscriptions')
-        .insert({
-          user_id: user.id,
-          active: true,
-          subscription_type: 'premium',
-          start_date: new Date().toISOString(),
-          // For demo purposes, no end_date means it's ongoing
-        });
-        
-      if (error) {
-        console.error("Subscription error:", error);
-        toast({
-          title: "Subscription Error",
-          description: "There was an error processing your subscription. Please try again.",
-          variant: "destructive"
-        });
-        setIsProcessing(false);
-        resolve();
-        return;
-      }
+      // Mock subscription process
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
       
-      // Update subscription status in AuthContext
+      // Update subscription status
       setIsSubscribed(true);
       
       console.log("Subscription - Set subscription status to true");
@@ -60,6 +41,10 @@ export const handleSubscription = async (
         title: "Subscription Active",
         description: "Thank you for subscribing! You now have full access to Welp.",
       });
+      
+      // Store subscription in localStorage
+      localStorage.setItem('subscription_active', 'true');
+      localStorage.setItem('subscription_date', new Date().toISOString());
       
       setIsProcessing(false);
       resolve();

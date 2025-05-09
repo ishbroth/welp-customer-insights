@@ -1,11 +1,10 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { User as SupabaseUser, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 
 interface AuthContextType {
   currentUser: User | null;
-  session: Session | null;
+  session: null; // Simplified from Supabase Session
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
@@ -27,6 +26,7 @@ interface SignupData {
   city?: string;
   state?: string;
   type: "customer" | "business";
+  businessName?: string; // Added to match usage in VerifyPhone.tsx
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,8 +41,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [session, setSession] = useState<null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   
   // Subscription state
   const [isSubscribed, setIsSubscribed] = useState<boolean>(() => {
@@ -50,170 +50,114 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return subscriptionStatus === "true";
   });
 
-  // Initialize auth state
-  useEffect(() => {
-    // First set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        
-        if (newSession?.user) {
-          // Use setTimeout to prevent potential recursive issues with Supabase auth
-          setTimeout(() => {
-            fetchUserProfile(newSession.user);
-          }, 0);
-        } else {
-          setCurrentUser(null);
-        }
-      }
-    );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      
-      if (initialSession?.user) {
-        fetchUserProfile(initialSession.user);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Fetch user profile data from profiles table
-  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user profile", error);
-        setLoading(false);
-        return;
-      }
-
-      if (data) {
-        setCurrentUser({
-          id: supabaseUser.id,
-          email: supabaseUser.email || '',
-          name: data.name || '',
-          type: data.type as "business" | "customer" | "admin",
-          phone: data.phone || '',
-          zipCode: data.zip_code || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          avatar: data.avatar_url || '',
-          bio: data.bio || '',
-        });
-      }
-    } catch (error) {
-      console.error("Error processing user profile", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Login function
+  // Login function - mock implementation
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        return { success: false, error: error.message };
+      console.log(`Mock login with email: ${email}`);
+      
+      // Simple mock validation
+      if (email && password) {
+        // Create a mock user
+        const mockUser: User = {
+          id: `mock-${Date.now()}`,
+          email: email,
+          name: email.split('@')[0], // Use part of email as name
+          type: email.includes('business') ? 'business' : 'customer',
+        };
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('mockUser', JSON.stringify(mockUser));
+        
+        // Update state
+        setCurrentUser(mockUser);
+        
+        return { success: true };
       }
-
-      return { success: true };
-    } catch (error) {
+      return { success: false, error: "Invalid email or password" };
+    } catch (error: any) {
       console.error("Login error:", error);
       return { success: false, error: "An unexpected error occurred" };
     }
   };
 
-  // Signup function - updated to skip email verification
-  const signup = async ({ email, password, name, phone, zipCode, address, city, state, type }: SignupData) => {
+  // Signup function - mock implementation
+  const signup = async ({ 
+    email, 
+    password, 
+    name, 
+    phone, 
+    zipCode, 
+    address, 
+    city, 
+    state, 
+    type 
+  }: SignupData) => {
     try {
-      // Signup with Supabase with auto-confirmation
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            phone,
-            zip_code: zipCode,
-            address,
-            city,
-            state,
-            type,
-          },
-          // Skip email verification by not providing emailRedirectTo
-          // This forces auto-confirmation of the email
-        }
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      // Update local state
+      console.log(`Mock signup with email: ${email}, type: ${type}`);
+      
+      // Create a mock user
+      const mockUser: User = {
+        id: `mock-${Date.now()}`,
+        email: email,
+        name: name || email.split('@')[0],
+        phone,
+        address,
+        city,
+        state,
+        zipCode,
+        type: type as "business" | "customer" | "admin",
+      };
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('mockUser', JSON.stringify(mockUser));
+      
+      // Update state
+      setCurrentUser(mockUser);
+      
+      // Update subscription status
       setIsSubscribed(false);
       
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
       return { success: false, error: "An unexpected error occurred" };
     }
   };
 
-  // Logout function
+  // Logout function - mock implementation
   const logout = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('mockUser');
     localStorage.removeItem("isSubscribed");
+    setCurrentUser(null);
     setIsSubscribed(false);
   };
 
-  // Update profile
+  // Update profile - mock implementation
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) return;
 
     try {
-      // Format updates for the profiles table
-      const profileUpdates = {
-        name: updates.name,
-        phone: updates.phone,
-        zip_code: updates.zipCode,
-        address: updates.address,
-        city: updates.city,
-        state: updates.state,
-        bio: updates.bio,
-        avatar_url: updates.avatar,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(profileUpdates)
-        .eq('id', currentUser.id);
-
-      if (error) {
-        console.error("Error updating profile", error);
-        return;
-      }
-
-      // Update local state
-      setCurrentUser({ ...currentUser, ...updates });
+      // Update the current user with the new values
+      const updatedUser = { ...currentUser, ...updates };
+      
+      // Store in localStorage
+      localStorage.setItem('mockUser', JSON.stringify(updatedUser));
+      
+      // Update state
+      setCurrentUser(updatedUser);
     } catch (error) {
       console.error("Error updating profile", error);
     }
   };
+
+  // Check for stored user on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('mockUser');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
 
   // Store subscription status in localStorage when it changes
   useEffect(() => {
@@ -222,31 +166,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   // One-time access functions
   const hasOneTimeAccess = (resourceId: string): boolean => {
-    // Check local storage first for offline/demo access
+    // Check local storage for access
     const hasReviewAccess = localStorage.getItem(`review_access_${resourceId}`) === "true";
     const hasCustomerAccess = localStorage.getItem(`customer_access_${resourceId}`) === "true";
     
-    if (hasReviewAccess || hasCustomerAccess) {
-      return true;
-    }
-    
-    // In production, we would check against the one_time_access table in Supabase
-    // This would be implemented when we connect the one-time access feature to Supabase
-    return false;
+    return hasReviewAccess || hasCustomerAccess;
   };
   
   const markOneTimeAccess = (resourceId: string) => {
     if (!currentUser) return;
     
-    // Store in localStorage for offline/demo access
+    // Store in localStorage
     if (resourceId.startsWith("review_")) {
       localStorage.setItem(`review_access_${resourceId.replace("review_", "")}`, "true");
     } else {
       localStorage.setItem(`customer_access_${resourceId}`, "true");
     }
-    
-    // In production, we would insert a row into the one_time_access table in Supabase
-    // This would be implemented when we connect the one-time access feature to Supabase
   };
 
   const value = {

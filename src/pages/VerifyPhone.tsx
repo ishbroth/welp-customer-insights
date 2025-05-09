@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,13 +48,13 @@ const VerifyPhone = () => {
               email, 
               password, 
               name, 
-              phoneNumber, 
-              accountType, 
-              businessName, 
-              address, 
-              city, 
-              state, 
-              zipCode
+              phone: phoneNumber, // Fixed property name to match interface
+              type: accountType as "customer" | "business", // Fixed property name
+              zipCode, 
+              address,
+              city,
+              state,
+              businessName // Added business name for completeness
             });
             
             // Create a searchable customer profile (mock for now since we've disconnected from Supabase)

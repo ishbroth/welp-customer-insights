@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -5,13 +6,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, AlertCircle } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
 import PasswordSetupForm, { PasswordFormValues } from '@/components/business/PasswordSetupForm';
 import SecurityInfoBox from '@/components/business/SecurityInfoBox';
+import { useAuth } from "@/contexts/AuthContext";
 
 const BusinessVerificationSuccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signup } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Get data from sessionStorage if available
@@ -48,28 +50,21 @@ const BusinessVerificationSuccess = () => {
     setIsSubmitting(true);
     
     try {
-      // Create the user account with Supabase with email auto-confirm
-      const { data, error } = await supabase.auth.signUp({
+      // Create the user account with mock implementation
+      const { success, error } = await signup({
         email: businessData.email,
         password: values.password,
-        options: {
-          data: {
-            name: businessData.name,
-            type: "business",
-            phone: businessData.phone,
-            address: businessData.address,
-            city: businessData.city,
-            state: businessData.state,
-            // Add verification method to user metadata
-            verification_method: businessData.verificationMethod || "license",
-            is_fully_verified: businessData.isFullyVerified !== false // true by default unless explicitly set to false
-          },
-          emailRedirectTo: window.location.origin + "/login"
-        }
+        name: businessData.name,
+        type: "business",
+        phone: businessData.phone,
+        address: businessData.address,
+        city: businessData.city,
+        state: businessData.state,
+        zipCode: businessData.zipCode
       });
       
-      if (error) {
-        throw error;
+      if (!success) {
+        throw new Error(error);
       }
       
       toast({
@@ -82,23 +77,7 @@ const BusinessVerificationSuccess = () => {
       // Clear the session storage
       sessionStorage.removeItem("businessVerificationData");
       
-      // Log the user in with their new credentials
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: businessData.email,
-        password: values.password
-      });
-      
-      if (loginError) {
-        // If login fails, redirect to login page
-        navigate("/login", { 
-          state: { 
-            message: "Your business account has been created! Please log in with your email and password." 
-          } 
-        });
-        return;
-      }
-      
-      // Redirect to profile if login succeeded
+      // Redirect to profile
       navigate("/profile");
       
     } catch (error: any) {

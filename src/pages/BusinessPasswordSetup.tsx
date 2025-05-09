@@ -1,14 +1,17 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PasswordSetupForm, { PasswordFormValues } from "@/components/business/PasswordSetupForm";
 import SecurityInfoBox from "@/components/business/SecurityInfoBox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { createSearchableCustomer } from "@/services/customerService";
 
 const BusinessPasswordSetup = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signup } = useAuth();
   
   // Extract data from location state
   const { businessEmail, phone, businessName, address, city, state, zipCode } = location.state as {
@@ -27,11 +30,22 @@ const BusinessPasswordSetup = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate account creation process
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Store the password securely (in a real app, use proper encryption)
-      localStorage.setItem('businessPassword', values.password);
+      // Use our mock signup function instead of Supabase
+      const { success, error } = await signup({
+        email: businessEmail || '',
+        password: values.password,
+        name: businessName,
+        phone,
+        address,
+        city,
+        state,
+        zipCode,
+        type: 'business',
+      });
+
+      if (!success) {
+        throw new Error(error);
+      }
       
       // Show success message
       toast({
@@ -40,7 +54,7 @@ const BusinessPasswordSetup = () => {
       });
       
       // Create a searchable customer profile (mock for now since we've disconnected from Supabase)
-      const { id: searchCustomerId } = await createSearchableCustomer({
+      await createSearchableCustomer({
         firstName: businessName || "",
         lastName: businessName || "",
         phone: phone || "",
@@ -52,11 +66,11 @@ const BusinessPasswordSetup = () => {
       
       // Redirect to business verification success page
       navigate('/business-verification-success');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Account creation failed:", error);
       toast({
         title: "Error Creating Account",
-        description: "Failed to create your business account. Please try again.",
+        description: error.message || "Failed to create your business account. Please try again.",
         variant: "destructive",
       });
     } finally {
