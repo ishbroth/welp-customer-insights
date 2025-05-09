@@ -9,114 +9,264 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      one_time_access: {
+      business_info: {
         Row: {
-          created_at: string | null
+          business_name: string
           id: string
-          resource_id: string
-          user_id: string
+          license_expiration: string | null
+          license_number: string | null
+          license_status: string | null
+          license_type: string | null
+          verified: boolean
         }
         Insert: {
-          created_at?: string | null
-          id?: string
-          resource_id: string
-          user_id: string
+          business_name: string
+          id: string
+          license_expiration?: string | null
+          license_number?: string | null
+          license_status?: string | null
+          license_type?: string | null
+          verified?: boolean
         }
         Update: {
-          created_at?: string | null
+          business_name?: string
           id?: string
-          resource_id?: string
-          user_id?: string
+          license_expiration?: string | null
+          license_number?: string | null
+          license_status?: string | null
+          license_type?: string | null
+          verified?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "business_info_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_access: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          customer_id: string | null
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          expires_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_access_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_access_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           address: string | null
-          avatar_url: string | null
+          avatar: string | null
           bio: string | null
+          business_id: string | null
           city: string | null
-          created_at: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           name: string | null
           phone: string | null
           state: string | null
           type: string
-          updated_at: string | null
-          zip_code: string | null
+          updated_at: string
+          zipcode: string | null
         }
         Insert: {
           address?: string | null
-          avatar_url?: string | null
+          avatar?: string | null
           bio?: string | null
+          business_id?: string | null
           city?: string | null
-          created_at?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
           id: string
+          last_name?: string | null
           name?: string | null
           phone?: string | null
           state?: string | null
           type?: string
-          updated_at?: string | null
-          zip_code?: string | null
+          updated_at?: string
+          zipcode?: string | null
         }
         Update: {
           address?: string | null
-          avatar_url?: string | null
+          avatar?: string | null
           bio?: string | null
+          business_id?: string | null
           city?: string | null
-          created_at?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name?: string | null
           phone?: string | null
           state?: string | null
           type?: string
-          updated_at?: string | null
-          zip_code?: string | null
+          updated_at?: string
+          zipcode?: string | null
         }
         Relationships: []
       }
-      subscriptions: {
+      responses: {
         Row: {
-          active: boolean
-          created_at: string | null
-          end_date: string | null
+          content: string
+          created_at: string
           id: string
-          start_date: string | null
-          subscription_type: string
-          updated_at: string | null
-          user_id: string
+          review_id: string | null
+          updated_at: string
         }
         Insert: {
-          active?: boolean
-          created_at?: string | null
-          end_date?: string | null
+          content: string
+          created_at?: string
           id?: string
-          start_date?: string | null
-          subscription_type?: string
-          updated_at?: string | null
-          user_id: string
+          review_id?: string | null
+          updated_at?: string
         }
         Update: {
-          active?: boolean
-          created_at?: string | null
-          end_date?: string | null
+          content?: string
+          created_at?: string
           id?: string
-          start_date?: string | null
-          subscription_type?: string
-          updated_at?: string | null
-          user_id?: string
+          review_id?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "responses_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          business_id: string | null
+          content: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          content: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          content?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          started_at: string
+          status: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          status: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      user_has_active_subscription: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
