@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
@@ -13,6 +14,7 @@ import ReviewPagination from "@/components/reviews/ReviewPagination";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfileReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,35 +59,51 @@ const ProfileReviews = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would make an API call to fetch reviews
-      // We're simulating the API call with a timeout
-      setTimeout(() => {
-        // For demo purposes, we're just creating empty reviews array
-        // In a real implementation, this would use the customer's name, address, etc.
-        // to search for matching reviews in the database
-        
-        // Example of how we would use profile info to search:
-        // const searchParams = {
-        //   firstName: currentUser.name.split(' ')[0],
-        //   lastName: currentUser.name.split(' ').slice(1).join(' '),
-        //   phone: currentUser.phone || '',
-        //   address: currentUser.address || '',
-        //   city: currentUser.city || '',
-        //   state: currentUser.state || '',
-        //   zipCode: currentUser.zipCode || ''
-        // };
-        
-        // For now, we'll just set empty array since we're not actually fetching from a database
-        setCustomerReviews([]);
-        
-        // Show a toast to inform the user what's happening
+      // Fetch reviews for this customer from Supabase
+      const { data: reviewsData, error } = await supabase
+        .from('reviews')
+        .select(`
+          id, 
+          rating, 
+          content, 
+          created_at,
+          business_id,
+          profiles!business_id(name)
+        `)
+        .eq('customer_id', currentUser.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Format reviews data
+      const formattedReviews = reviewsData ? reviewsData.map(review => ({
+        id: review.id,
+        rating: review.rating,
+        content: review.content,
+        date: review.created_at,
+        reviewerId: review.business_id,
+        reviewerName: review.profiles?.name || "Anonymous Business",
+        reactions: { like: [], funny: [], useful: [], ohNo: [] }
+      })) : [];
+      
+      setCustomerReviews(formattedReviews);
+      
+      if (reviewsData && reviewsData.length > 0) {
+        // Show a toast to inform the user
         toast({
           title: "Reviews Loaded",
-          description: "We've checked for reviews that match your profile information.",
+          description: `Found ${reviewsData.length} reviews about you.`,
         });
-        
-        setIsLoading(false);
-      }, 1000);
+      } else {
+        // Show a toast for no reviews
+        toast({
+          title: "No Reviews Found",
+          description: "We couldn't find any reviews that match your profile information.",
+        });
+      }
+      
+      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching customer reviews:", error);
       toast({

@@ -42,17 +42,26 @@ const ReviewItem = ({
     navigate(`/one-time-review?customerId=${customerId}`);
   };
 
+  // Format the review date
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (e) {
+      return "Unknown date";
+    }
+  };
+
   return (
     <div className="border-t pt-3">
       <div className="flex justify-between">
         <div className="flex items-center">
           <StarRating rating={review.rating} size="sm" />
           <span className="text-xs text-gray-500 ml-2">
-            {new Date(review.date).toLocaleDateString()}
+            {formatDate(review.date)}
           </span>
         </div>
         <div className="text-xs text-gray-500">
-          by {review.reviewerName}
+          by {review.reviewerName || "Anonymous"}
         </div>
       </div>
       <div className="mt-2">
