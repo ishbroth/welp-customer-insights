@@ -1,5 +1,5 @@
 
-// Mock subscription service with localStorage persistence
+import { supabase } from "@/integrations/supabase/client";
 
 export const handleSubscription = async (
   setIsProcessing: React.Dispatch<React.SetStateAction<boolean>>,
@@ -15,10 +15,10 @@ export const handleSubscription = async (
     setIsProcessing(true);
     
     try {
-      // Get mock user from localStorage
-      const storedUser = localStorage.getItem('mockUser');
+      // Get current user session from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!storedUser) {
+      if (!session || !session.user) {
         toast({
           title: "Authentication Error",
           description: "Please log in to subscribe.",
@@ -29,8 +29,23 @@ export const handleSubscription = async (
         return;
       }
       
-      // Mock subscription process
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      const userId = session.user.id;
+      const subscriptionType = isCustomer ? "customer" : "business";
+      
+      // Create a new subscription record
+      const { error } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: userId,
+          subscription_type: subscriptionType,
+          active: true,
+          start_date: new Date().toISOString(),
+          end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+        });
+        
+      if (error) {
+        throw error;
+      }
       
       // Update subscription status
       setIsSubscribed(true);
@@ -42,17 +57,13 @@ export const handleSubscription = async (
         description: "Thank you for subscribing! You now have full access to Welp.",
       });
       
-      // Store subscription in localStorage
-      localStorage.setItem('subscription_active', 'true');
-      localStorage.setItem('subscription_date', new Date().toISOString());
-      
       setIsProcessing(false);
       resolve();
     } catch (error) {
       console.error("Subscription error:", error);
       toast({
         title: "Subscription Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An error occurred while processing your subscription. Please try again.",
         variant: "destructive"
       });
       setIsProcessing(false);

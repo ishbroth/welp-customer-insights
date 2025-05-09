@@ -30,7 +30,7 @@ const BusinessPasswordSetup = () => {
     setIsSubmitting(true);
     
     try {
-      // Use our mock signup function instead of Supabase
+      // Use our signup function with Supabase integration
       const { success, error } = await signup({
         email: businessEmail || '',
         password: values.password,
@@ -53,7 +53,7 @@ const BusinessPasswordSetup = () => {
         description: "Your business account has been successfully created!",
       });
       
-      // Create a searchable customer profile (mock for now since we've disconnected from Supabase)
+      // Create a searchable customer profile
       await createSearchableCustomer({
         firstName: businessName || "",
         lastName: businessName || "",

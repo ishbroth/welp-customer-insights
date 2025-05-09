@@ -1,10 +1,12 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   currentUser: User | null;
-  session: null; // Simplified from Supabase Session
+  session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
@@ -26,7 +28,7 @@ interface SignupData {
   city?: string;
   state?: string;
   type: "customer" | "business";
-  businessName?: string; // Added to match usage in VerifyPhone.tsx
+  businessName?: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,146 +43,273 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [session, setSession] = useState<null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  
-  // Subscription state
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(() => {
-    const subscriptionStatus = localStorage.getItem("isSubscribed");
-    return subscriptionStatus === "true";
-  });
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
 
-  // Login function - mock implementation
+  // Fetch subscription status when user changes
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      if (!currentUser) {
+        setIsSubscribed(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .rpc('user_has_active_subscription', { user_id: currentUser.id })
+          .single();
+        
+        if (error) {
+          console.error('Error checking subscription status:', error);
+          return;
+        }
+        
+        setIsSubscribed(!!data);
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        setIsSubscribed(false);
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [currentUser]);
+
+  // Set up auth state listener on mount
+  useEffect(() => {
+    setLoading(true);
+    
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        if (session) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setCurrentUser(null);
+          setLoading(false);
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Helper function to fetch user profile from the database
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        // Map the database profile to our application User type
+        const user: User = {
+          id: data.id,
+          email: session?.user?.email || '',
+          name: data.name || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          city: data.city || '',
+          state: data.state || '',
+          zipCode: data.zip_code || '',
+          type: data.type as "customer" | "business" | "admin",
+          avatar: data.avatar_url || undefined,
+        };
+        setCurrentUser(user);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Login function using Supabase
   const login = async (email: string, password: string) => {
     try {
-      console.log(`Mock login with email: ${email}`);
-      
-      // Simple mock validation
-      if (email && password) {
-        // Create a mock user
-        const mockUser: User = {
-          id: `mock-${Date.now()}`,
-          email: email,
-          name: email.split('@')[0], // Use part of email as name
-          type: email.includes('business') ? 'business' : 'customer',
-        };
-        
-        // Store in localStorage for persistence
-        localStorage.setItem('mockUser', JSON.stringify(mockUser));
-        
-        // Update state
-        setCurrentUser(mockUser);
-        
-        return { success: true };
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+        return { success: false, error: error.message };
       }
-      return { success: false, error: "Invalid email or password" };
+
+      // Session and user will be set by the auth state listener
+      return { success: true };
     } catch (error: any) {
       console.error("Login error:", error);
       return { success: false, error: "An unexpected error occurred" };
     }
   };
 
-  // Signup function - mock implementation
-  const signup = async ({ 
-    email, 
-    password, 
-    name, 
-    phone, 
-    zipCode, 
-    address, 
-    city, 
-    state, 
-    type 
+  // Signup function using Supabase
+  const signup = async ({
+    email,
+    password,
+    name,
+    phone,
+    zipCode,
+    address,
+    city,
+    state,
+    type,
   }: SignupData) => {
     try {
-      console.log(`Mock signup with email: ${email}, type: ${type}`);
-      
-      // Create a mock user
-      const mockUser: User = {
-        id: `mock-${Date.now()}`,
+      // Sign up the user with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
         email: email,
-        name: name || email.split('@')[0],
-        phone,
-        address,
-        city,
-        state,
-        zipCode,
-        type: type as "business" | "customer" | "admin",
-      };
-      
-      // Store in localStorage for persistence
-      localStorage.setItem('mockUser', JSON.stringify(mockUser));
-      
-      // Update state
-      setCurrentUser(mockUser);
-      
-      // Update subscription status
-      setIsSubscribed(false);
-      
-      return { success: true };
+        password: password,
+        options: {
+          data: { name, type }
+        }
+      });
+
+      if (error) {
+        console.error("Signup error:", error);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        // Create a profile record in the profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name: name,
+            phone: phone,
+            address: address,
+            city: city,
+            state: state,
+            zip_code: zipCode,
+            type: type,
+            created_at: new Date().toISOString(),
+          });
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          return { success: false, error: profileError.message };
+        }
+
+        // User and session will be set by the auth state listener
+        return { success: true };
+      }
+
+      return { success: false, error: "Failed to create user" };
     } catch (error: any) {
       console.error("Signup error:", error);
       return { success: false, error: "An unexpected error occurred" };
     }
   };
 
-  // Logout function - mock implementation
+  // Logout function
   const logout = async () => {
-    localStorage.removeItem('mockUser');
-    localStorage.removeItem("isSubscribed");
-    setCurrentUser(null);
+    await supabase.auth.signOut();
     setIsSubscribed(false);
   };
 
-  // Update profile - mock implementation
+  // Update profile - now updates both auth metadata and profiles table
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) return;
 
     try {
-      // Update the current user with the new values
-      const updatedUser = { ...currentUser, ...updates };
-      
-      // Store in localStorage
-      localStorage.setItem('mockUser', JSON.stringify(updatedUser));
-      
-      // Update state
-      setCurrentUser(updatedUser);
+      // Update user metadata if needed
+      if (updates.name || updates.email) {
+        await supabase.auth.updateUser({
+          email: updates.email,
+          data: { name: updates.name }
+        });
+      }
+
+      // Update the profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: updates.name,
+          phone: updates.phone,
+          address: updates.address,
+          city: updates.city,
+          state: updates.state,
+          zip_code: updates.zipCode,
+          avatar_url: updates.avatar,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update the currentUser state
+      setCurrentUser({ ...currentUser, ...updates });
     } catch (error) {
       console.error("Error updating profile", error);
+      throw error;
     }
   };
-
-  // Check for stored user on component mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('mockUser');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-
-  // Store subscription status in localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem("isSubscribed", isSubscribed.toString());
-  }, [isSubscribed]);
   
-  // One-time access functions
-  const hasOneTimeAccess = (resourceId: string): boolean => {
-    // Check local storage for access
-    const hasReviewAccess = localStorage.getItem(`review_access_${resourceId}`) === "true";
-    const hasCustomerAccess = localStorage.getItem(`customer_access_${resourceId}`) === "true";
+  // One-time access functions, using Supabase
+  const hasOneTimeAccess = async (resourceId: string): Promise<boolean> => {
+    if (!currentUser) return false;
     
-    return hasReviewAccess || hasCustomerAccess;
+    try {
+      const { data, error } = await supabase
+        .from('one_time_access')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('resource_id', resourceId);
+        
+      if (error) {
+        console.error("Error checking one-time access:", error);
+        return false;
+      }
+      
+      return data && data.length > 0;
+    } catch (error) {
+      console.error("Error in hasOneTimeAccess:", error);
+      return false;
+    }
   };
   
-  const markOneTimeAccess = (resourceId: string) => {
+  const markOneTimeAccess = async (resourceId: string) => {
     if (!currentUser) return;
     
-    // Store in localStorage
-    if (resourceId.startsWith("review_")) {
-      localStorage.setItem(`review_access_${resourceId.replace("review_", "")}`, "true");
-    } else {
-      localStorage.setItem(`customer_access_${resourceId}`, "true");
+    try {
+      const { error } = await supabase
+        .from('one_time_access')
+        .insert({
+          user_id: currentUser.id,
+          resource_id: resourceId
+        });
+        
+      if (error) {
+        console.error("Error marking one-time access:", error);
+      }
+    } catch (error) {
+      console.error("Error in markOneTimeAccess:", error);
     }
   };
 

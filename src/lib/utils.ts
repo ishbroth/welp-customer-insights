@@ -1,34 +1,33 @@
-
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Mock functions for phone verification - would connect to a real verification service in production
-export async function verifyPhoneNumber({ 
-  phoneNumber, 
-  code 
-}: { 
-  phoneNumber: string; 
-  code: string 
-}): Promise<{ isValid: boolean }> {
-  console.log(`Verifying code ${code} for phone number ${phoneNumber}`);
-  
-  // For testing purposes, we'll consider "123456" as a valid code
-  // In a real app, this would validate against a verification service
-  return Promise.resolve({ isValid: code === "123456" });
-}
+// Functions to handle phone verification
+export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: string, code: string }) => {
+  try {
+    // In a real implementation, we would call a Supabase Edge Function or API
+    // For now, let's simulate a verification with a simple check (any 6-digit code)
+    const isValidFormat = /^\d{6}$/.test(code);
+    
+    // For demo purposes, let's consider any 6-digit code as valid
+    return { isValid: isValidFormat, error: isValidFormat ? null : 'Invalid code format' };
+  } catch (error: any) {
+    console.error('Error verifying phone number:', error);
+    return { isValid: false, error: error.message || 'Verification failed' };
+  }
+};
 
-export async function resendVerificationCode({ 
-  phoneNumber 
-}: { 
-  phoneNumber: string 
-}): Promise<{ success: boolean }> {
-  console.log(`Resending verification code to ${phoneNumber}`);
-  
-  // Mock successful resending of code
-  // In a real app, this would connect to a verification service API
-  return Promise.resolve({ success: true });
-}
+export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: string }) => {
+  try {
+    // In a real implementation, we would call a Supabase Edge Function or API
+    // For now, we'll just simulate a successful code resend
+    console.log(`Simulating code resend to ${phoneNumber}`);
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error('Error resending verification code:', error);
+    return { success: false, error: error.message || 'Failed to resend code' };
+  }
+};
