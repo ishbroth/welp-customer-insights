@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 // Array of US states for the dropdown
 const US_STATES = [
@@ -27,7 +28,6 @@ const US_STATES = [
 const CustomerSignupForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signup } = useAuth();
   
   // Customer form state
   const [customerFirstName, setCustomerFirstName] = useState("");
@@ -64,53 +64,40 @@ const CustomerSignupForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Create customer account with Supabase
-      const { success, error } = await signup({
+      // Send verification code via Edge Function
+      const { data, error } = await supabase.functions.invoke('verify-phone', {
+        body: {
+          phoneNumber: customerPhone,
+          actionType: "send"
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Store user data in URL parameters to pass to the verification page
+      const params = new URLSearchParams({
         email: customerEmail,
         password: customerPassword,
         name: `${customerFirstName} ${customerLastName}`,
         phone: customerPhone,
-        zipCode: customerZipCode,
+        accountType: "customer",
         address: customerStreet,
         city: customerCity,
         state: customerState,
-        type: "customer"
+        zipCode: customerZipCode
       });
       
-      if (success) {
-        // Store verification data in session storage for the onboarding flow
-        const customerData = {
-          firstName: customerFirstName,
-          lastName: customerLastName,
-          phone: customerPhone,
-          address: customerStreet,
-          city: customerCity,
-          state: customerState,
-          zipCode: customerZipCode,
-          email: customerEmail
-        };
-        
-        sessionStorage.setItem("customerSignupData", JSON.stringify(customerData));
-        
-        // Generate a random 6-digit verification code for demo purposes
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        sessionStorage.setItem("phoneVerificationCode", verificationCode);
-        
-        // Show a toast indicating that verification is needed
-        toast({
-          title: "Verification Code Sent",
-          description: `A verification code has been sent to ${customerPhone}. For demo purposes, the code is: ${verificationCode}`,
-        });
-        
-        // Redirect to the verification page
-        navigate("/verify-phone");
-      } else {
-        toast({
-          title: "Signup Failed",
-          description: error || "An error occurred while creating your account.",
-          variant: "destructive",
-        });
-      }
+      // Show a success toast and redirect to verification page
+      toast({
+        title: "Verification Code Sent",
+        description: `A verification code has been sent to ${customerPhone}. Please verify your phone number.`,
+      });
+      
+      // Redirect to verification page
+      navigate(`/verify-phone?${params.toString()}`);
+      
     } catch (error) {
       console.error("Signup error:", error);
       toast({
@@ -266,7 +253,7 @@ const CustomerSignupForm = () => {
             isSubmitting
           }
         >
-          {isSubmitting ? "Creating Account..." : "Create Customer Account"}
+          {isSubmitting ? "Sending Verification..." : "Continue to Verification"}
         </Button>
         
         {customerPassword !== customerConfirmPassword && customerConfirmPassword && (

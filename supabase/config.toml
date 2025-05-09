@@ -28,4 +28,4 @@ port = 54326
 
 [functions]
 [functions.verify-phone]
-verify_jwt = true
+verify_jwt = false
