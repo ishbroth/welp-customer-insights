@@ -6,10 +6,12 @@ import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
 import { Card } from "@/components/ui/card";
 import SearchResultsList from "@/components/search/SearchResultsList";
+import { searchCustomers } from "@/services/reviewService";
+import { SearchableCustomer } from "@/types/supabase";
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<SearchableCustomer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Extract search parameters
@@ -26,22 +28,45 @@ const SearchResults = () => {
   const similarityThreshold = parseFloat(searchParams.get("similarityThreshold") || "0.7");
 
   useEffect(() => {
-    // Simulate API call but return empty array (no mock data)
-    setIsLoading(true);
+    const fetchSearchResults = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Only search if we have some search parameters
+        if (!lastName && !firstName && !phone && !address && !city && !state && !zipCode) {
+          setCustomers([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        const results = await searchCustomers({
+          lastName,
+          firstName,
+          phone,
+          address,
+          city,
+          state,
+          zipCode,
+          fuzzyMatch
+        });
+        
+        setCustomers(results || []);
+      } catch (error) {
+        console.error("Error searching for customers:", error);
+        setCustomers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    setTimeout(() => {
-      // Return empty results - we've removed the mock data
-      setCustomers([]);
-      setIsLoading(false);
-    }, 500);
-  }, [lastName, firstName, phone, address, city, state, zipCode]);
+    fetchSearchResults();
+  }, [lastName, firstName, phone, address, city, state, zipCode, fuzzyMatch, similarityThreshold]);
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">
         <div className="container mx-auto px-4 py-8">
-          {/* Modified layout - making search column full width */}
           <div className="max-w-4xl mx-auto">
             <Card className="p-6 mb-8">
               <SearchBox />

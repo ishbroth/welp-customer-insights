@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -9,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { createReview, createSearchableCustomer, searchCustomers } from "@/services/reviewService";
+import { SearchableCustomer } from "@/types/supabase";
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -29,8 +33,9 @@ const NewReview = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<SearchableCustomer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rating, setRating] = useState(isEditing && reviewData ? reviewData.rating : 0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -54,22 +59,64 @@ const NewReview = () => {
       setComment(reviewData.content);
     }
     
-    if (customerId) {
-      // In a real app, this would be a fetch call to your Supabase DB
-      setIsLoading(true);
-      setTimeout(() => {
-        // Instead of using mock data, we'll assume this is a new customer
+    const fetchCustomer = async () => {
+      if (customerId) {
+        try {
+          setIsLoading(true);
+          // Search for customer in our database
+          const results = await searchCustomers({ 
+            firstName: searchParamFirstName,
+            lastName: searchParamLastName,
+            phone: searchParamPhone,
+            address: searchParamAddress,
+            city: searchParamCity,
+            zipCode: searchParamZipCode
+          });
+          
+          if (results && results.length > 0) {
+            // Use the first matching customer
+            setCustomer(results[0]);
+            setCustomerFirstName(results[0].first_name);
+            setCustomerLastName(results[0].last_name);
+            setCustomerPhone(results[0].phone || "");
+            setCustomerAddress(results[0].address || "");
+            setCustomerCity(results[0].city || "");
+            setCustomerZipCode(results[0].zip_code || "");
+            setIsNewCustomer(false);
+          } else {
+            setIsNewCustomer(true);
+          }
+        } catch (error) {
+          console.error("Error fetching customer:", error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch customer details",
+            variant: "destructive"
+          });
+          setIsNewCustomer(true);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
         setIsNewCustomer(true);
         setIsLoading(false);
-      }, 500);
-    } else {
-      setIsNewCustomer(true);
-      setIsLoading(false);
-    }
-  }, [customerId, isEditing, reviewData]);
+      }
+    };
+    
+    fetchCustomer();
+  }, [customerId, isEditing, reviewData, searchParamFirstName, searchParamLastName, searchParamPhone, searchParamAddress, searchParamCity, searchParamZipCode, toast]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to submit a review.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (rating === 0) {
       toast({
@@ -90,20 +137,67 @@ const NewReview = () => {
     
     setIsSubmitting(true);
     
-    // Simulate API call to submit review
-    setTimeout(() => {
-      toast({
-        title: isEditing ? "Review Updated" : "Review Submitted",
-        description: isEditing 
-          ? "Your customer review has been successfully updated." 
-          : "Your customer review has been successfully submitted.",
-      });
+    try {
+      let targetCustomerId = customer?.id;
       
-      setIsSubmitting(false);
+      // If it's a new customer, create them first
+      if (isNewCustomer) {
+        const newCustomer = await createSearchableCustomer({
+          first_name: customerFirstName,
+          last_name: customerLastName,
+          phone: customerPhone || undefined,
+          address: customerAddress || undefined,
+          city: customerCity || undefined,
+          state: "", // Add state field if needed
+          zip_code: customerZipCode || undefined,
+          is_business: false,
+          verification_status: "none"
+        });
+        
+        targetCustomerId = newCustomer.id;
+      }
+      
+      if (!targetCustomerId) {
+        throw new Error("Customer ID is required");
+      }
+      
+      // Create or update the review
+      if (isEditing && reviewId) {
+        // Implement update logic here - for now, we'll just redirect
+        toast({
+          title: "Review Updated",
+          description: "Your customer review has been successfully updated.",
+        });
+      } else {
+        // Create a new review
+        await createReview({
+          reviewer_id: currentUser.id,
+          customer_id: targetCustomerId,
+          rating,
+          content: comment,
+          address: customerAddress,
+          city: customerCity,
+          zip_code: customerZipCode
+        });
+        
+        toast({
+          title: "Review Submitted",
+          description: "Your customer review has been successfully submitted.",
+        });
+      }
       
       // Navigate to success page
       navigate("/review/success");
-    }, 1500);
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit review. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
