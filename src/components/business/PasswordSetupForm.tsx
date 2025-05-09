@@ -1,14 +1,29 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock } from 'lucide-react';
+import { CheckCircle2, Lock, Shield } from 'lucide-react';
 import {
   Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { passwordFormSchema, PasswordFormValues } from "@/schemas/passwordSchema";
-import PasswordInput from "@/components/ui/password-input";
+
+// Define form schema for validation
+const passwordFormSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 interface PasswordSetupFormProps {
   businessEmail?: string;
@@ -30,7 +45,7 @@ const PasswordSetupForm = ({ businessEmail, isSubmitting, onSubmit }: PasswordSe
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {businessEmail && (
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Business Email</label>
+            <FormLabel>Business Email</FormLabel>
             <Input
               type="email"
               value={businessEmail}
@@ -41,21 +56,43 @@ const PasswordSetupForm = ({ businessEmail, isSubmitting, onSubmit }: PasswordSe
           </div>
         )}
 
-        <PasswordInput
+        <FormField
           control={form.control}
           name="password"
-          label="Create Password"
-          placeholder="Create a strong password"
-          description="Password must be at least 6 characters"
-          autoComplete="new-password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Create Password</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Create a strong password"
+                  autoComplete="new-password"
+                  {...field}
+                />
+              </FormControl>
+              <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
-        <PasswordInput
+        <FormField
           control={form.control}
           name="confirmPassword"
-          label="Confirm Password"
-          placeholder="Confirm your password"
-          autoComplete="new-password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <Button

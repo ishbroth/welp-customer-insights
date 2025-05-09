@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Lock, UserPlus } from "lucide-react";
@@ -8,69 +8,21 @@ import StarRating from "@/components/StarRating";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { searchCustomers, getReviewsByCustomerId } from "@/services/reviewService";
-import { SearchableCustomer } from "@/types/supabase";
+import { Customer } from "@/types/search";
 
 interface SearchResultsListProps {
-  customers?: SearchableCustomer[];
+  customers: Customer[];
   isLoading: boolean;
-  searchParams?: Record<string, string>;
 }
 
-const SearchResultsList = ({ customers: propCustomers, isLoading: propIsLoading, searchParams = {} }: SearchResultsListProps) => {
+const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => {
   const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
-  const [customers, setCustomers] = useState<SearchableCustomer[]>(propCustomers || []);
-  const [isLoading, setIsLoading] = useState(propIsLoading);
 
-  // Fetch customers from the database if not provided as props
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      if (propCustomers) {
-        setCustomers(propCustomers);
-        return;
-      }
-      
-      // Only search if we have some search parameters
-      if (Object.keys(searchParams).length === 0) {
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        setIsLoading(true);
-        
-        const results = await searchCustomers({
-          lastName: searchParams.lastName,
-          firstName: searchParams.firstName,
-          phone: searchParams.phone,
-          address: searchParams.address,
-          city: searchParams.city,
-          state: searchParams.state,
-          zipCode: searchParams.zipCode,
-          fuzzyMatch: searchParams.fuzzyMatch === "true"
-        });
-        
-        setCustomers(results || []);
-      } catch (error) {
-        console.error("Error searching for customers:", error);
-        toast({
-          title: "Error",
-          description: "Failed to search for customers. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchSearchResults();
-  }, [propCustomers, propIsLoading, searchParams, toast]);
-
-  const handleSelectCustomer = async (customerId: string) => {
+  const handleSelectCustomer = (customerId: string) => {
     // If this customer is already expanded, collapse it
     if (expandedCustomerId === customerId) {
       setExpandedCustomerId(null);
@@ -85,38 +37,11 @@ const SearchResultsList = ({ customers: propCustomers, isLoading: propIsLoading,
       return;
     }
     
-    try {
-      const reviews = await getReviewsByCustomerId(customerId);
-      
-      // Transform the reviews for our UI format
-      const transformedReviews = reviews.map((review: any) => ({
-        id: review.id,
-        reviewerId: review.reviewer_id,
-        reviewerName: review.reviewer?.name || "Anonymous",
-        customerId: review.customer_id,
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at
-      }));
-      
-      setCustomerReviews(prev => ({
-        ...prev,
-        [customerId]: transformedReviews
-      }));
-    } catch (error) {
-      console.error("Error fetching reviews for customer:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch reviews for this customer.",
-        variant: "destructive"
-      });
-      
-      // Set empty reviews to avoid repeated fetch attempts
-      setCustomerReviews(prev => ({
-        ...prev,
-        [customerId]: []
-      }));
-    }
+    // Always return empty reviews now that mock data is removed
+    setCustomerReviews(prev => ({
+      ...prev,
+      [customerId]: []
+    }));
   };
   
   // Function to get just the first 3 words of a review
@@ -150,7 +75,7 @@ const SearchResultsList = ({ customers: propCustomers, isLoading: propIsLoading,
   };
 
   // Format address for display based on subscription status
-  const formatAddress = (customer: SearchableCustomer) => {
+  const formatAddress = (customer: Customer) => {
     // If the user is subscribed or admin, show full address
     if (currentUser?.type === "admin" || isSubscribed) {
       return customer.address;
@@ -216,20 +141,20 @@ const SearchResultsList = ({ customers: propCustomers, isLoading: propIsLoading,
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-medium">
-                  {customer.last_name}, {customer.first_name}
+                  {customer.lastName}, {customer.firstName}
                 </h4>
                 <p className="text-sm text-gray-500">
                   {formatAddress(customer)}
                   {customer.city && `, ${customer.city}`}
                   {customer.state && `, ${customer.state}`}
-                  {customer.zip_code && ` ${customer.zip_code}`}
+                  {customer.zipCode && ` ${customer.zipCode}`}
                 </p>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="text-sm text-gray-500">
-                  ({customerReviews[customer.id]?.length || 0} {(customerReviews[customer.id]?.length || 0) === 1 ? 'review' : 'reviews'})
+                  ({customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'})
                 </div>
-                <StarRating rating={0} size="sm" />
+                <StarRating rating={customer.averageRating} size="sm" />
               </div>
             </div>
             
@@ -242,15 +167,11 @@ const SearchResultsList = ({ customers: propCustomers, isLoading: propIsLoading,
                 {expandedCustomerId === customer.id ? 'Hide Reviews' : 'Show Reviews'}
               </Button>
               
-              {currentUser?.type === "business" && (
-                <Button 
-                  size="sm" 
-                  asChild
-                >
-                  <Link to={`/review/new?customerId=${customer.id}&firstName=${customer.first_name}&lastName=${customer.last_name}&phone=${customer.phone || ''}&address=${customer.address || ''}&city=${customer.city || ''}&zipCode=${customer.zip_code || ''}`}>
-                    Write Review
-                  </Link>
-                </Button>
+              {customer.isSubscriptionNeeded && !hasFullAccess(customer.id) && (
+                <div className="flex items-center text-sm text-amber-600">
+                  <Lock className="h-3 w-3 mr-1" />
+                  <span>Premium</span>
+                </div>
               )}
             </div>
             

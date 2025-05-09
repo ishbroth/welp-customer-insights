@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Review } from "@/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -23,8 +23,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getReviewsByReviewerId, deleteReview } from "@/services/reviewService";
-import { ReviewWithCustomer, ReviewResponse } from "@/types/supabase";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,58 +43,17 @@ const BusinessReviews = () => {
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   
   // State for reviews with empty initial value
-  const [workingReviews, setWorkingReviews] = useState<ReviewWithCustomer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [workingReviews, setWorkingReviews] = useState<Review[]>([]);
 
   // Add new state for content moderation
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
-  // Load reviews from Supabase
+  // Load reviews - this would be replaced with an API call
   useEffect(() => {
-    const fetchReviews = async () => {
-      if (!currentUser) return;
-      
-      try {
-        setIsLoading(true);
-        const reviews = await getReviewsByReviewerId(currentUser.id);
-        
-        // Transform reviews to match our app's expected format
-        const transformedReviews = reviews.map((review: any) => ({
-          id: review.id,
-          reviewer_id: review.reviewer_id,
-          customer_id: review.customer_id,
-          rating: review.rating,
-          content: review.content,
-          address: review.address,
-          city: review.city,
-          state: review.state,
-          zip_code: review.zip_code,
-          created_at: review.created_at,
-          updated_at: review.updated_at,
-          customer: review.customer,
-          customerName: `${review.customer.first_name} ${review.customer.last_name}`,
-          reviewer_name: currentUser.name,
-          date: review.created_at,
-          responses: [] as ReviewResponse[], // This matches our type definition now
-          reactions: { like: [], funny: [], useful: [], ohNo: [] } 
-        }));
-        
-        setWorkingReviews(transformedReviews);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load your reviews. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchReviews();
-  }, [currentUser, toast]);
+    // In a real app, this would be a fetch call to get the business's reviews
+    setWorkingReviews([]);
+  }, [currentUser]);
   
   // Pagination settings
   const reviewsPerPage = 5;
@@ -106,9 +63,9 @@ const BusinessReviews = () => {
   const currentReviews = workingReviews.slice(indexOfFirstReview, indexOfLastReview);
 
   // Function to handle editing a review
-  const handleEditReview = (review: ReviewWithCustomer) => {
+  const handleEditReview = (review: Review) => {
     // Navigate to the NewReview page with the review data
-    navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customer_id}`, {
+    navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
       state: {
         reviewData: review,
         isEditing: true
@@ -123,29 +80,18 @@ const BusinessReviews = () => {
   };
 
   // Function to handle deleting a review
-  const handleDeleteReview = async () => {
+  const handleDeleteReview = () => {
     if (!reviewToDelete) return;
 
-    try {
-      await deleteReview(reviewToDelete);
-      
-      setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
-      
-      toast({
-        title: "Review deleted",
-        description: "Your review has been successfully deleted.",
-      });
-    } catch (error) {
-      console.error("Error deleting review:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete your review. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setDeleteDialogOpen(false);
-      setReviewToDelete(null);
-    }
+    setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
+    
+    toast({
+      title: "Review deleted",
+      description: "Your review has been successfully deleted.",
+    });
+    
+    setDeleteDialogOpen(false);
+    setReviewToDelete(null);
   };
 
   // Handle toggling reactions - with content moderation 
@@ -154,14 +100,13 @@ const BusinessReviews = () => {
       prevReviews.map(review => {
         if (review.id === reviewId) {
           const userId = currentUser?.id || "";
-          const reactions = review.reactions || { like: [], funny: [], useful: [], ohNo: [] };
-          const hasReacted = reactions[reactionType as keyof typeof reactions]?.includes(userId);
+          const hasReacted = review.reactions?.[reactionType]?.includes(userId);
           
           const updatedReactions = { 
-            ...reactions,
+            ...review.reactions,
             [reactionType]: hasReacted
-              ? (reactions[reactionType as keyof typeof reactions] || []).filter(id => id !== userId)
-              : [...(reactions[reactionType as keyof typeof reactions] || []), userId]
+              ? review.reactions?.[reactionType].filter(id => id !== userId) || []
+              : [...(review.reactions?.[reactionType] || []), userId]
           };
           
           // Show notification toast for the business owner
@@ -239,11 +184,7 @@ const BusinessReviews = () => {
               </Button>
             </div>
             
-            {isLoading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading your reviews...</p>
-              </div>
-            ) : workingReviews.length === 0 ? (
+            {workingReviews.length === 0 ? (
               <EmptyReviewsMessage type="business" />
             ) : (
               <div className="space-y-6">
@@ -254,17 +195,17 @@ const BusinessReviews = () => {
                       review={{
                         id: review.id,
                         businessName: review.customerName,
-                        businessId: review.customer_id,
+                        businessId: review.customerId,
                         customerName: currentUser?.name || "",
                         customerId: currentUser?.id,
                         rating: review.rating,
                         comment: review.content,
-                        createdAt: review.created_at,
+                        createdAt: review.date,
                         location: "",
                         address: review.address || "",
                         city: review.city || "",
-                        zipCode: review.zip_code || "00000",
-                        responses: review.responses || []
+                        zipCode: review.zipCode || "00000",
+                        responses: review.responses
                       }}
                       showResponse={true}
                       hasSubscription={hasSubscription}
@@ -290,13 +231,11 @@ const BusinessReviews = () => {
                   </div>
                 ))}
                 
-                {totalPages > 1 && (
-                  <ReviewPagination 
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
-                )}
+                <ReviewPagination 
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
           </div>

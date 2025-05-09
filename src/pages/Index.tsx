@@ -75,7 +75,7 @@ const Index = () => {
                     </div>
                     
                     <div className="mt-8 border-t pt-6">
-                      <SearchBox simplified />
+                      <SearchBox simplified className="max-w-md mx-auto" />
                     </div>
                   </div>
                 </TabsContent>

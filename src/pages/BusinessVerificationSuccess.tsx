@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -7,8 +6,7 @@ import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { PasswordSetupForm } from '@/components/business';
-import { PasswordFormValues } from '@/schemas/passwordSchema';
+import PasswordSetupForm, { PasswordFormValues } from '@/components/business/PasswordSetupForm';
 import SecurityInfoBox from '@/components/business/SecurityInfoBox';
 
 const BusinessVerificationSuccess = () => {
