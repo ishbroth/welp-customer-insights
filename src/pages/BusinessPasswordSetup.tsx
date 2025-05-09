@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PasswordSetupForm, { PasswordFormValues } from "@/components/business/PasswordSetupForm";
 import SecurityInfoBox from "@/components/business/SecurityInfoBox";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { createSearchableCustomer } from "@/services/customerService";
 
 const BusinessPasswordSetup = () => {

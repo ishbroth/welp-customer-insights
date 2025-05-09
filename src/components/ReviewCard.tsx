@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import StarRating from "./StarRating";
 import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, Edit, Trash2, Eye, Lock } from "lucide-react";
 import { Link } from "react-router-dom";

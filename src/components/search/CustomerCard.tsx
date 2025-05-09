@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import StarRating from "@/components/StarRating";
 import { Lock } from "lucide-react";
 import { Customer } from "@/types/search";
 import ReviewsList from "./ReviewsList";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 interface CustomerCardProps {
   customer: Customer;

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageSquare, Eye, Lock } from "lucide-react";
 import { formatDistance } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";

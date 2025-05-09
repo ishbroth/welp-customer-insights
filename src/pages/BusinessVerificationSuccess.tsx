@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import PasswordSetupForm, { PasswordFormValues } from '@/components/business/PasswordSetupForm';
 import SecurityInfoBox from '@/components/business/SecurityInfoBox';
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 const BusinessVerificationSuccess = () => {
   const navigate = useNavigate();

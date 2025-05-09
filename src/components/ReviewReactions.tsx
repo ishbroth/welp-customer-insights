@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { ThumbsUp, Laugh, Award, Frown } from "lucide-react";
 import { cn } from "@/lib/utils";

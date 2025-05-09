@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";

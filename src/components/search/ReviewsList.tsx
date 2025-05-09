@@ -1,5 +1,4 @@
-
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import ReviewItem from "./ReviewItem";
 
 interface ReviewsListProps {
