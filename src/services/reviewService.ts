@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Review, ReviewReaction, ReviewResponse, SearchableCustomer } from "@/types/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -87,7 +88,7 @@ export const createReview = async (reviewData: Partial<Review>) => {
 
     const { data, error } = await supabase
       .from('reviews')
-      .insert([reviewData])
+      .insert(reviewData)  // Remove the array brackets here
       .select('*')
       .single();
 
@@ -267,7 +268,7 @@ export const addReviewResponse = async (responseData: Partial<ReviewResponse>) =
 
     const { data, error } = await supabase
       .from('review_responses')
-      .insert([responseData])
+      .insert(responseData)  // Remove the array brackets here
       .select('*')
       .single();
 
