@@ -22,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getReviewsByReviewerId, deleteReview } from "@/services/reviewService";
-import { ReviewWithCustomer, ReviewResponse } from "@/types/supabase";
+import { getReviewsByReviewerId, deleteReview } from "@/services";
+import { ReviewWithCustomer } from "@/types/supabase";
+import { ReviewResponse as SupabaseReviewResponse } from "@/types/supabase";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -77,7 +78,7 @@ const BusinessReviews = () => {
           customerName: `${review.customer.first_name} ${review.customer.last_name}`,
           reviewer_name: currentUser.name,
           date: review.created_at,
-          responses: [] as ReviewResponse[], // Using the updated ReviewResponse type
+          responses: [] as SupabaseReviewResponse[], // Fixed type to use the correct ReviewResponse type
           reactions: { like: [], funny: [], useful: [], ohNo: [] } 
         }));
         

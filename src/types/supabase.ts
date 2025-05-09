@@ -1,4 +1,5 @@
 
+
 // Database types for Supabase tables
 export type SearchableCustomer = {
   id: string;
@@ -66,3 +67,4 @@ export type ReviewResponse = {
   createdAt?: string; // For compatibility with existing code
   replies?: ReviewResponse[];
 };
+
