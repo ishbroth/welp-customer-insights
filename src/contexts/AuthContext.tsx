@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,7 @@ interface AuthContextType {
   isSubscribed: boolean;
   setIsSubscribed: (value: boolean) => void;
   hasOneTimeAccess: (resourceId: string) => boolean;
-  markOneTimeAccess: (resourceId: string) => void;
+  markOneTimeAccess: (resourceId: string) => Promise<void>;
 }
 
 interface SignupData {
@@ -46,6 +45,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  // For tracking one-time access resources
+  const [oneTimeAccessResources, setOneTimeAccessResources] = useState<string[]>([]);
 
   // Fetch subscription status when user changes
   useEffect(() => {
@@ -272,32 +273,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // One-time access functions, using Supabase
-  const hasOneTimeAccess = async (resourceId: string): Promise<boolean> => {
-    if (!currentUser) return false;
-    
-    try {
-      const { data, error } = await supabase
-        .from('one_time_access')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .eq('resource_id', resourceId);
-        
-      if (error) {
-        console.error("Error checking one-time access:", error);
-        return false;
-      }
-      
-      return data && data.length > 0;
-    } catch (error) {
-      console.error("Error in hasOneTimeAccess:", error);
-      return false;
-    }
+  const hasOneTimeAccess = (resourceId: string): boolean => {
+    // Check if the resourceId exists in the local state
+    return oneTimeAccessResources.includes(resourceId);
   };
   
   const markOneTimeAccess = async (resourceId: string) => {
     if (!currentUser) return;
     
     try {
+      // Store in Supabase
       const { error } = await supabase
         .from('one_time_access')
         .insert({
@@ -307,11 +292,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
       if (error) {
         console.error("Error marking one-time access:", error);
+      } else {
+        // Update local state
+        setOneTimeAccessResources(prev => [...prev, resourceId]);
       }
     } catch (error) {
       console.error("Error in markOneTimeAccess:", error);
     }
   };
+
+  // Load one-time access resources from Supabase when user changes
+  useEffect(() => {
+    const loadOneTimeAccessResources = async () => {
+      if (!currentUser) {
+        setOneTimeAccessResources([]);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('one_time_access')
+          .select('resource_id')
+          .eq('user_id', currentUser.id);
+          
+        if (error) {
+          console.error("Error loading one-time access resources:", error);
+          return;
+        }
+        
+        if (data) {
+          setOneTimeAccessResources(data.map(item => item.resource_id));
+        }
+      } catch (error) {
+        console.error("Error loading one-time access:", error);
+      }
+    };
+    
+    loadOneTimeAccessResources();
+  }, [currentUser]);
 
   const value = {
     currentUser,
