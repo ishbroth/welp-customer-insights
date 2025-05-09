@@ -83,3 +83,25 @@ export const handleRedirectAfterSubscription = (isCustomer: boolean): void => {
     }
   }, 2000);
 };
+
+export const checkSubscriptionStatus = async (userId: string): Promise<boolean> => {
+  try {
+    // Check for active subscriptions
+    const { data: subscriptions, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString());
+      
+    if (error) {
+      console.error("Error checking subscription status:", error);
+      return false;
+    }
+    
+    return subscriptions && subscriptions.length > 0;
+  } catch (error) {
+    console.error("Unexpected error in checkSubscriptionStatus:", error);
+    return false;
+  }
+};

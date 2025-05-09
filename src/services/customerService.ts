@@ -116,3 +116,28 @@ export const hasOneTimeAccessToCustomer = async (userId: string, customerId: str
     return false;
   }
 };
+
+// Function to purchase one-time access to a customer
+export const purchaseOneTimeAccess = async (businessId: string, customerId: string) => {
+  try {
+    // Create one-time access record
+    const { data, error } = await supabase
+      .from('customer_access')
+      .insert({
+        business_id: businessId,
+        customer_id: customerId,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days access
+      })
+      .select()
+      .single();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true, access: data };
+  } catch (error: any) {
+    console.error('Error purchasing one-time access:', error);
+    return { success: false, error: error.message || 'Failed to purchase access' };
+  }
+};

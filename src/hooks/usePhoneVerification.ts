@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { resendVerificationCode, verifyPhoneNumber } from "@/lib/utils";
 import { useVerificationTimer } from "./useVerificationTimer";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { createSearchableCustomer } from "@/services/customerService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VerificationParams {
   email: string | null;
@@ -20,6 +20,33 @@ interface VerificationParams {
   state: string | null;
   zipCode: string | null;
 }
+
+// Function to send verification code
+const sendVerificationCode = async ({ phoneNumber }: { phoneNumber: string }) => {
+  const { data, error } = await supabase.functions.invoke('verify-phone', {
+    body: {
+      phoneNumber,
+      actionType: "send"
+    }
+  });
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+// Function to verify phone number
+const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: string, code: string }) => {
+  const { data, error } = await supabase.functions.invoke('verify-phone', {
+    body: {
+      phoneNumber,
+      code,
+      actionType: "verify"
+    }
+  });
+  
+  if (error) throw new Error(error.message);
+  return data;
+};
 
 export const usePhoneVerification = (params: VerificationParams) => {
   const { toast } = useToast();
@@ -115,7 +142,7 @@ export const usePhoneVerification = (params: VerificationParams) => {
   
   // Mutation for resending verification code
   const { mutate: resendCode, isPending: isResending } = useMutation({
-    mutationFn: resendVerificationCode,
+    mutationFn: sendVerificationCode,
     onSuccess: () => {
       toast({
         title: "Code resent",

@@ -1,10 +1,12 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Customer } from "@/types/search";
 import CustomerCard from "./CustomerCard";
 import EmptySearchResults from "./EmptySearchResults";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SearchResultsListProps {
   customers: Customer[];
@@ -18,7 +20,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
 
-  const handleSelectCustomer = (customerId: string) => {
+  const handleSelectCustomer = async (customerId: string) => {
     // If this customer is already expanded, collapse it
     if (expandedCustomerId === customerId) {
       setExpandedCustomerId(null);
@@ -33,11 +35,54 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
       return;
     }
     
-    // Always return empty reviews now that mock data is removed
-    setCustomerReviews(prev => ({
-      ...prev,
-      [customerId]: []
-    }));
+    try {
+      // Fetch reviews for this customer from Supabase
+      const { data: reviewsData, error } = await supabase
+        .from('reviews')
+        .select(`
+          id, 
+          rating, 
+          content, 
+          created_at,
+          business_id,
+          profiles!business_id(name)
+        `)
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Format reviews data
+      const formattedReviews = reviewsData ? reviewsData.map(review => ({
+        id: review.id,
+        rating: review.rating,
+        content: review.content,
+        date: review.created_at,
+        reviewerId: review.business_id,
+        reviewerName: review.profiles?.name || "Anonymous"
+      })) : [];
+      
+      // Update state with fetched reviews
+      setCustomerReviews(prev => ({
+        ...prev,
+        [customerId]: formattedReviews
+      }));
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch customer reviews.",
+        variant: "destructive"
+      });
+      
+      // Set empty array for this customer to prevent repeated fetch attempts
+      setCustomerReviews(prev => ({
+        ...prev,
+        [customerId]: []
+      }));
+    }
   };
 
   // Check if user has access to the customer's full reviews
