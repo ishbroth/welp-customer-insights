@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
@@ -22,9 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getReviewsByReviewerId, deleteReview } from "@/services";
-import { ReviewWithCustomer } from "@/types/supabase";
-import { ReviewResponse as SupabaseReviewResponse } from "@/types/supabase";
+import { getReviewsByReviewerId, deleteReview } from "@/services/reviewService";
+import { ReviewWithCustomer, ReviewResponse } from "@/types/supabase";
 
 const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,7 +78,7 @@ const BusinessReviews = () => {
           customerName: `${review.customer.first_name} ${review.customer.last_name}`,
           reviewer_name: currentUser.name,
           date: review.created_at,
-          responses: [] as SupabaseReviewResponse[], // Fixed type to use the correct ReviewResponse type
+          responses: [] as ReviewResponse[], // This matches our type definition now
           reactions: { like: [], funny: [], useful: [], ohNo: [] } 
         }));
         
