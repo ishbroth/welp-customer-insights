@@ -42,18 +42,29 @@ const VerifyPhone = () => {
         // Proceed with signup after successful verification
         if (email && password && name && phoneNumber && accountType) {
           try {
-            // Sign up the user
-            await signup(email, password, name, phoneNumber, accountType, businessName, address, city, state, zipCode);
+            // Sign up the user with the updated signup function interface
+            await signup({
+              email, 
+              password, 
+              name, 
+              phoneNumber, 
+              accountType, 
+              businessName, 
+              address, 
+              city, 
+              state, 
+              zipCode
+            });
             
             // Create a searchable customer profile (mock for now since we've disconnected from Supabase)
-            const { id: searchCustomerId } = await createSearchableCustomer({
+            await createSearchableCustomer({
               firstName: name?.split(' ')[0] || "",
               lastName: name?.split(' ').slice(1).join(' ') || "",
               phone: phoneNumber || "",
-              address: "",
-              city: "",
-              state: "",
-              zipCode: ""
+              address: address || "",
+              city: city || "",
+              state: state || "",
+              zipCode: zipCode || ""
             });
             
             toast({
