@@ -55,7 +55,7 @@ export type ReviewReaction = {
 export type ReviewResponse = {
   id: string;
   review_id: string;
-  author_id: string;
+  author_id: string; // Using the database column name
   content: string;
   parent_id?: string;
   created_at: string;

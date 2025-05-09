@@ -86,9 +86,23 @@ export const createReview = async (reviewData: Partial<Review>) => {
       throw new Error("Missing required review data");
     }
 
+    // Create a properly typed object for insertion
+    const dataToInsert = {
+      customer_id: reviewData.customer_id,
+      reviewer_id: reviewData.reviewer_id,
+      rating: reviewData.rating,
+      content: reviewData.content || "",
+      address: reviewData.address,
+      city: reviewData.city,
+      state: reviewData.state,
+      zip_code: reviewData.zip_code,
+      created_at: reviewData.created_at,
+      updated_at: reviewData.updated_at
+    };
+
     const { data, error } = await supabase
       .from('reviews')
-      .insert(reviewData)  // Remove the array brackets here
+      .insert(dataToInsert)
       .select('*')
       .single();
 
@@ -266,9 +280,17 @@ export const addReviewResponse = async (responseData: Partial<ReviewResponse>) =
       throw new Error("Missing required response data");
     }
 
+    // Create a properly typed object for insertion
+    const dataToInsert = {
+      review_id: responseData.review_id,
+      author_id: responseData.author_id,
+      content: responseData.content,
+      parent_id: responseData.parent_id
+    };
+
     const { data, error } = await supabase
       .from('review_responses')
-      .insert(responseData)  // Remove the array brackets here
+      .insert(dataToInsert)
       .select('*')
       .single();
 
