@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
@@ -78,7 +77,7 @@ const BusinessReviews = () => {
           customerName: `${review.customer.first_name} ${review.customer.last_name}`,
           reviewer_name: currentUser.name,
           date: review.created_at,
-          responses: [] as ReviewResponse[], // This matches our type definition now
+          responses: [] as ReviewResponse[], // Using the updated ReviewResponse type
           reactions: { like: [], funny: [], useful: [], ohNo: [] } 
         }));
         

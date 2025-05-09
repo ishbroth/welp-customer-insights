@@ -56,10 +56,13 @@ export type ReviewResponse = {
   id: string;
   review_id: string;
   author_id: string; // Using the database column name
+  authorId?: string; // For compatibility with existing code
   content: string;
   parent_id?: string;
   created_at: string;
   updated_at: string;
   author_name?: string;
+  authorName?: string; // For compatibility with existing code
+  createdAt?: string; // For compatibility with existing code
   replies?: ReviewResponse[];
 };
