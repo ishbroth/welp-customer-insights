@@ -34,6 +34,14 @@ export type Review = {
 export type ReviewWithCustomer = Review & {
   customer: SearchableCustomer;
   reviewer_name: string;
+  customerName?: string; // Add missing property
+  responses?: ReviewResponse[]; // Add missing property
+  reactions?: {
+    like: string[];
+    funny: string[];
+    useful: string[];
+    ohNo: string[];
+  }; // Add missing property
 };
 
 export type ReviewReaction = {

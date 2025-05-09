@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Review, ReviewReaction, ReviewResponse, SearchableCustomer } from "@/types/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -81,6 +80,11 @@ export const searchCustomers = async (searchParams: {
 // Create a new review
 export const createReview = async (reviewData: Partial<Review>) => {
   try {
+    // Make sure required fields are present
+    if (!reviewData.customer_id || !reviewData.reviewer_id || !reviewData.rating) {
+      throw new Error("Missing required review data");
+    }
+
     const { data, error } = await supabase
       .from('reviews')
       .insert([reviewData])
@@ -256,6 +260,11 @@ export const getReviewReactions = async (reviewId: string) => {
 // Add a response to a review
 export const addReviewResponse = async (responseData: Partial<ReviewResponse>) => {
   try {
+    // Make sure required fields are present
+    if (!responseData.review_id || !responseData.author_id || !responseData.content) {
+      throw new Error("Missing required response data");
+    }
+
     const { data, error } = await supabase
       .from('review_responses')
       .insert([responseData])
