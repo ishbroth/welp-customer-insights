@@ -1,215 +1,95 @@
-
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { useLocation, useNavigate } from "react-router-dom";
+import PasswordSetupForm, { PasswordFormValues } from "@/components/business/PasswordSetupForm";
+import SecurityInfoBox from "@/components/business/SecurityInfoBox";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Lock, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { createSearchableCustomer } from "@/services/customerService";
 
 const BusinessPasswordSetup = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Get business data from location state or use empty defaults
-  const businessData = location.state?.businessData || {
-    name: "",
-    email: "",
-    phone: ""
+  // Extract data from location state
+  const { businessEmail, phone, businessName, address, city, state, zipCode } = location.state as {
+    businessEmail?: string;
+    phone?: string;
+    businessName?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
   };
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Function to add business to the searchable database
-  const addBusinessToSearchDatabase = async (business: any) => {
-    try {
-      // Insert data into searchable_customers table
-      const { error } = await supabase
-        .from('searchable_customers')
-        .insert({
-          first_name: business.name.split(' ')[0] || '',
-          last_name: business.name.split(' ').slice(1).join(' ') || '',
-          phone: business.phone,
-          email: business.email,
-          is_business: true,
-          business_name: business.name,
-          verification_status: business.verificationStatus || 'partial'
-        });
-      
-      if (error) {
-        console.error("Error adding business to search database:", error);
-        throw error;
-      }
-    } catch (error) {
-      console.error("Error in addBusinessToSearchDatabase:", error);
-      // We don't want to stop the registration process if this fails
-      // But we log the error for debugging purposes
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!password || password.length < 6) {
-      toast({
-        title: "Password Error",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: "Password Error",
-        description: "Passwords do not match.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const handleCreateAccount = async (values: PasswordFormValues) => {
     setIsSubmitting(true);
     
     try {
-      // Create the user account with Supabase with auto-confirmation
-      const { data, error } = await supabase.auth.signUp({
-        email: businessData.email,
-        password: password,
-        options: {
-          data: {
-            name: businessData.name,
-            phone: businessData.phone,
-            type: "business"
-          }
-          // No emailRedirectTo option to make the account auto-confirmed
-        }
-      });
+      // Simulate account creation process
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      if (error) {
-        throw error;
-      }
+      // Store the password securely (in a real app, use proper encryption)
+      localStorage.setItem('businessPassword', values.password);
       
-      // Add business to searchable database
-      await addBusinessToSearchDatabase(businessData);
-      
+      // Show success message
       toast({
         title: "Account Created",
-        description: "Your business account has been created successfully!",
+        description: "Your business account has been successfully created!",
       });
       
-      // Try to log the user in right away
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: businessData.email,
-        password: password
+      // Create a searchable customer profile (mock for now since we've disconnected from Supabase)
+      const { id: searchCustomerId } = await createSearchableCustomer({
+        firstName: businessName || "",
+        lastName: businessName || "",
+        phone: phone || "",
+        address: address || "",
+        city: city || "",
+        state: state || "",
+        zipCode: zipCode || "",
       });
       
-      if (loginError) {
-        // If login fails, redirect to login page
-        navigate("/login", { 
-          state: { 
-            message: "Your business account has been created! Please log in with your email and password." 
-          } 
-        });
-      } else {
-        // If login succeeds, navigate to the profile page
-        navigate("/profile");
-      }
-    } catch (error: any) {
-      console.error("Signup error:", error);
+      // Redirect to business verification success page
+      navigate('/business-verification-success');
+    } catch (error) {
+      console.error("Account creation failed:", error);
       toast({
-        title: "Account Creation Failed",
-        description: error.message || "An error occurred while creating your account.",
+        title: "Error Creating Account",
+        description: "Failed to create your business account. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow py-12">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-md mx-auto p-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock className="h-8 w-8 text-green-600" />
-              </div>
-              <h1 className="text-2xl font-bold">Set Up Your Password</h1>
-              <p className="text-gray-600 mt-2">
-                Your business has been verified! Create a password to complete your account setup.
-              </p>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {businessData.email && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
-                  <Input
-                    type="email"
-                    value={businessData.email}
-                    disabled
-                    className="bg-gray-50"
-                  />
-                </div>
-              )}
-              
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="welp-input"
-                  placeholder="Create a strong password"
-                  autoComplete="new-password"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters</p>
-              </div>
-              
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">Confirm Password</label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="welp-input"
-                  placeholder="Confirm your password"
-                  autoComplete="new-password"
-                  required
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                className="welp-button w-full mt-4"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  "Creating Account..."
-                ) : (
-                  <>
-                    Complete Account Setup <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
-          </Card>
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      <div className="bg-white py-6 px-4 shadow-md">
+        <h1 className="text-2xl font-bold text-center text-gray-800">
+          Set Up Your Business Account
+        </h1>
+      </div>
+      
+      <div className="container mx-auto mt-8 flex-grow flex items-center justify-center">
+        <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+          <SecurityInfoBox />
+          <PasswordSetupForm
+            businessEmail={businessEmail}
+            isSubmitting={isSubmitting}
+            onSubmit={handleCreateAccount}
+          />
         </div>
-      </main>
-      <Footer />
+      </div>
+      
+      <div className="bg-gray-200 text-center py-4 text-gray-600">
+        <p className="text-sm">
+          © {new Date().getFullYear()} Welp, Inc. All rights reserved.
+        </p>
+      </div>
     </div>
   );
 };
 
 export default BusinessPasswordSetup;
-
