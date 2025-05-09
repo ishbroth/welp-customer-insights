@@ -1,46 +1,15 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { Session } from "@supabase/supabase-js";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
+import { AuthContextType, SignupData } from "./types";
+import { fetchUserProfile, checkSubscriptionStatus, loadOneTimeAccessResources } from "./authUtils";
 
-interface AuthContextType {
-  currentUser: User | null;
-  session: Session | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-  updateProfile: (updates: Partial<User>) => Promise<void>;
-  isSubscribed: boolean;
-  setIsSubscribed: (value: boolean) => void;
-  hasOneTimeAccess: (resourceId: string) => boolean;
-  markOneTimeAccess: (resourceId: string) => Promise<void>;
-}
-
-interface SignupData {
-  email: string;
-  password: string;
-  name?: string;
-  phone?: string;
-  zipCode?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  type: "customer" | "business";
-  businessName?: string;
-}
-
+// Create the Auth Context
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
-
+// Auth Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -51,34 +20,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Fetch subscription status when user changes
   useEffect(() => {
-    const checkSubscriptionStatus = async () => {
+    const checkUserSubscription = async () => {
       if (!currentUser) {
         setIsSubscribed(false);
         return;
       }
       
-      try {
-        // Using a more direct approach since rpc function might not exist yet
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .eq('status', 'active')
-          .maybeSingle();
-        
-        if (error) {
-          console.error('Error checking subscription status:', error);
-          return;
-        }
-        
-        setIsSubscribed(!!data);
-      } catch (error) {
-        console.error('Error checking subscription:', error);
-        setIsSubscribed(false);
-      }
+      const hasSubscription = await checkSubscriptionStatus(currentUser.id);
+      setIsSubscribed(hasSubscription);
     };
 
-    checkSubscriptionStatus();
+    checkUserSubscription();
   }, [currentUser]);
 
   // Set up auth state listener on mount
@@ -89,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        fetchUserProfile(session.user.id);
+        initUserData(session.user.id);
       } else {
         setLoading(false);
       }
@@ -100,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (_event, session) => {
         setSession(session);
         if (session) {
-          await fetchUserProfile(session.user.id);
+          await initUserData(session.user.id);
         } else {
           setCurrentUser(null);
           setLoading(false);
@@ -113,39 +65,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Helper function to fetch user profile from the database
-  const fetchUserProfile = async (userId: string) => {
+  // Initialize user data - profile and one-time access resources
+  const initUserData = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        setLoading(false);
-        return;
+      const [userProfile, accessResources] = await Promise.all([
+        fetchUserProfile(userId),
+        loadOneTimeAccessResources(userId)
+      ]);
+      
+      if (userProfile) {
+        setCurrentUser(userProfile);
       }
-
-      if (data) {
-        // Map the database profile to our application User type
-        const user: User = {
-          id: data.id,
-          email: session?.user?.email || '',
-          name: data.name || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          zipCode: data.zipcode || '', // Note: Updated to match DB field name
-          type: data.type as "customer" | "business" | "admin",
-          avatar: data.avatar || undefined,
-        };
-        setCurrentUser(user);
-      }
+      
+      setOneTimeAccessResources(accessResources);
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error("Error initializing user data:", error);
     } finally {
       setLoading(false);
     }
@@ -307,37 +241,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load one-time access resources from Supabase when user changes
-  useEffect(() => {
-    const loadOneTimeAccessResources = async () => {
-      if (!currentUser) {
-        setOneTimeAccessResources([]);
-        return;
-      }
-      
-      try {
-        // Using customer_access table instead
-        const { data, error } = await supabase
-          .from('customer_access')
-          .select('customer_id')
-          .eq('business_id', currentUser.id);
-          
-        if (error) {
-          console.error("Error loading one-time access resources:", error);
-          return;
-        }
-        
-        if (data) {
-          setOneTimeAccessResources(data.map(item => item.customer_id || '').filter(Boolean));
-        }
-      } catch (error) {
-        console.error("Error loading one-time access:", error);
-      }
-    };
-    
-    loadOneTimeAccessResources();
-  }, [currentUser]);
-
   const value = {
     currentUser,
     session,
@@ -357,4 +260,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Create and export the useAuth hook
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

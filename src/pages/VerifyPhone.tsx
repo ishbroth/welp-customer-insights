@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Phone, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useMutation } from "@tanstack/react-query";
 import { resendVerificationCode, verifyPhoneNumber } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { createSearchableCustomer } from "@/services/customerService";
 
 const VerifyPhone = () => {

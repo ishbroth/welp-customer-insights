@@ -59,10 +59,15 @@ export const createSearchableCustomer = async ({
       return { success: true, customerId: existingCustomer.id };
     }
     
+    // If customer doesn't exist, prepare a new profile data
+    // Note: We need to generate a UUID for the customer since id is required
+    const uuid = crypto.randomUUID();
+    
     // If customer doesn't exist, create a new record
     const { data, error: insertError } = await supabase
       .from('profiles')
       .insert({
+        id: uuid, // Required field for profiles table
         name: `${firstName} ${lastName}`,
         first_name: firstName,
         last_name: lastName,
