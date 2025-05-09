@@ -146,8 +146,9 @@ const VerifyPhone = () => {
   // Function to add customer to the searchable database
   const addCustomerToSearchDatabase = async (customer: any) => {
     try {
-      // Insert data into searchable_customers table
-      const { error } = await supabase
+      // Insert data into searchable_customers table using type assertion
+      // This is a workaround until the types are updated
+      const { error } = await (supabase as any)
         .from('searchable_customers')
         .insert({
           first_name: customer.firstName,
@@ -273,4 +274,3 @@ const VerifyPhone = () => {
 };
 
 export default VerifyPhone;
-

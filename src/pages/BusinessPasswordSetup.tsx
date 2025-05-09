@@ -28,8 +28,9 @@ const BusinessPasswordSetup = () => {
   // Function to add business to the searchable database
   const addBusinessToSearchDatabase = async (business: any) => {
     try {
-      // Insert data into searchable_customers table
-      const { error } = await supabase
+      // Insert data into searchable_customers table using type assertion
+      // This is a workaround until the types are updated
+      const { error } = await (supabase as any)
         .from('searchable_customers')
         .insert({
           first_name: business.name.split(' ')[0] || '',
@@ -212,4 +213,3 @@ const BusinessPasswordSetup = () => {
 };
 
 export default BusinessPasswordSetup;
-
