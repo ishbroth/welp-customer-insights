@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,9 @@ const VerifyPhone = () => {
         throw error;
       }
       
+      // Add customer to searchable database
+      await addCustomerToSearchDatabase(customerData);
+      
       // Clean up session storage
       sessionStorage.removeItem("customerSignupData");
       sessionStorage.removeItem("phoneVerificationCode");
@@ -136,6 +140,34 @@ const VerifyPhone = () => {
         variant: "destructive",
       });
       navigate("/signup", { replace: true });
+    }
+  };
+  
+  // Function to add customer to the searchable database
+  const addCustomerToSearchDatabase = async (customer: any) => {
+    try {
+      // Insert data into searchable_customers table
+      const { error } = await supabase
+        .from('searchable_customers')
+        .insert({
+          first_name: customer.firstName,
+          last_name: customer.lastName,
+          phone: customer.phone,
+          address: customer.address,
+          city: customer.city,
+          state: customer.state,
+          zip_code: customer.zipCode,
+          email: customer.email,
+        });
+      
+      if (error) {
+        console.error("Error adding customer to search database:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error in addCustomerToSearchDatabase:", error);
+      // We don't want to stop the registration process if this fails
+      // But we log the error for debugging purposes
     }
   };
 
@@ -241,3 +273,4 @@ const VerifyPhone = () => {
 };
 
 export default VerifyPhone;
+

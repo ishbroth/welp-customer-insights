@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,33 @@ const BusinessPasswordSetup = () => {
     name: "",
     email: "",
     phone: ""
+  };
+
+  // Function to add business to the searchable database
+  const addBusinessToSearchDatabase = async (business: any) => {
+    try {
+      // Insert data into searchable_customers table
+      const { error } = await supabase
+        .from('searchable_customers')
+        .insert({
+          first_name: business.name.split(' ')[0] || '',
+          last_name: business.name.split(' ').slice(1).join(' ') || '',
+          phone: business.phone,
+          email: business.email,
+          is_business: true,
+          business_name: business.name,
+          verification_status: business.verificationStatus || 'partial'
+        });
+      
+      if (error) {
+        console.error("Error adding business to search database:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error in addBusinessToSearchDatabase:", error);
+      // We don't want to stop the registration process if this fails
+      // But we log the error for debugging purposes
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +93,9 @@ const BusinessPasswordSetup = () => {
       if (error) {
         throw error;
       }
+      
+      // Add business to searchable database
+      await addBusinessToSearchDatabase(businessData);
       
       toast({
         title: "Account Created",
@@ -181,3 +212,4 @@ const BusinessPasswordSetup = () => {
 };
 
 export default BusinessPasswordSetup;
+
