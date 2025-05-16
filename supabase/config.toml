@@ -4,7 +4,7 @@ project_id = "yftvcixhifvrovwhtgtj"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage", "graphql_public"]
+schemas = ["public", "storage"]
 
 [db]
 port = 54322
@@ -12,20 +12,13 @@ port = 54322
 [studio]
 enabled = true
 port = 54323
-api_url = "http://localhost"
 
-[inbucket]
-enabled = true
-port = 54324
+# Configure each edge function
+[functions.create-checkout]
+verify_jwt = true
 
-[auth]
-enabled = true
-port = 54325
+[functions.check-subscription]
+verify_jwt = true
 
-[storage]
-enabled = true
-port = 54326
-
-[functions]
-[functions.verify-phone]
-verify_jwt = false
+[functions.customer-portal]
+verify_jwt = true

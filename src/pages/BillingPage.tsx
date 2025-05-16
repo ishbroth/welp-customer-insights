@@ -15,6 +15,7 @@ import { toast } from "@/components/ui/sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { openCustomerPortal } from "@/services/subscriptionService";
 
 const BillingPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,6 +23,7 @@ const BillingPage = () => {
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [isProcessingCancel, setIsProcessingCancel] = useState(false);
   const [isProcessingRenew, setIsProcessingRenew] = useState(false);
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   
   // Mock subscription status - in a real app, this would come from your backend
   const [isSubscriptionCancelled, setIsSubscriptionCancelled] = useState(false);
@@ -45,10 +47,10 @@ const BillingPage = () => {
         { id: "t118", date: "2023-11-22", amount: "$19.95", description: "Business Pro Plan - Monthly" }
       ]
     : [
-        { id: "t234", date: "2024-04-15", amount: "$9.99", description: "Premium Customer Plan - Monthly" },
-        { id: "t233", date: "2024-03-15", amount: "$9.99", description: "Premium Customer Plan - Monthly" },
-        { id: "t232", date: "2024-02-15", amount: "$9.99", description: "Premium Customer Plan - Monthly" },
-        { id: "t231", date: "2024-01-15", amount: "$9.99", description: "Premium Customer Plan - Monthly" }
+        { id: "t234", date: "2024-04-15", amount: "$11.99", description: "Premium Customer Plan - Monthly" },
+        { id: "t233", date: "2024-03-15", amount: "$11.99", description: "Premium Customer Plan - Monthly" },
+        { id: "t232", date: "2024-02-15", amount: "$11.99", description: "Premium Customer Plan - Monthly" },
+        { id: "t231", date: "2024-01-15", amount: "$11.99", description: "Premium Customer Plan - Monthly" }
       ];
 
   const visibleTransactions = showAllTransactions 
@@ -95,36 +97,27 @@ const BillingPage = () => {
     });
   };
 
-  // Handle subscription cancellation
-  const handleCancelSubscription = () => {
-    setIsProcessingCancel(true);
-    
-    // Simulate API call to cancel subscription
-    setTimeout(() => {
-      setIsProcessingCancel(false);
-      setIsSubscriptionCancelled(true);
-      
-      // Show success message
-      toast("Subscription cancelled", {
-        description: "Your subscription has been cancelled successfully. You will still have access until the end of your current billing period.",
-      });
-    }, 1500);
+  // Handle opening Stripe customer portal
+  const handleManageSubscription = async () => {
+    try {
+      setIsLoadingPortal(true);
+      await openCustomerPortal();
+      // The user will be redirected to Stripe, so we don't need to reset isLoadingPortal
+    } catch (error) {
+      console.error("Error opening customer portal:", error);
+      toast.error("Could not open subscription management portal. Please try again.");
+      setIsLoadingPortal(false);
+    }
   };
 
-  // Handle subscription renewal
-  const handleRenewSubscription = () => {
-    setIsProcessingRenew(true);
-    
-    // Simulate API call to renew subscription
-    setTimeout(() => {
-      setIsProcessingRenew(false);
-      setIsSubscriptionCancelled(false);
-      
-      // Show success message
-      toast("Subscription renewed", {
-        description: "Your subscription has been renewed successfully. Your billing cycle will resume at the end of your current period.",
-      });
-    }, 1500);
+  // Handle subscription cancellation (now through Stripe portal)
+  const handleCancelSubscription = async () => {
+    await handleManageSubscription();
+  };
+
+  // Handle subscription renewal (now through Stripe portal)
+  const handleRenewSubscription = async () => {
+    await handleManageSubscription();
   };
 
   return (
@@ -157,74 +150,18 @@ const BillingPage = () => {
                       {currentUser?.type === "business" ? "Business Pro Plan" : "Premium Customer Plan"}
                     </p>
                     <p className="text-gray-600">
-                      {currentUser?.type === "business" ? "$19.95/month" : "$9.99/month"}
+                      {currentUser?.type === "business" ? "$11.99/month" : "$11.99/month"}
                     </p>
                     <p className="text-sm text-gray-500 mt-2">Next billing date: May 15, 2024</p>
                     
                     <div className="mt-4 flex items-center justify-end">
-                      {isSubscriptionCancelled ? (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="default" 
-                              className="bg-green-600 hover:bg-green-700" 
-                              size="sm"
-                            >
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Renew Subscription
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="flex items-center gap-2">
-                                <RefreshCw className="h-5 w-5 text-green-600" />
-                                Renew Subscription?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Would you like to renew your subscription? Your billing cycle will resume at the end of your current period.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={handleRenewSubscription}
-                                disabled={isProcessingRenew}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                {isProcessingRenew ? "Processing..." : "Yes, Renew Subscription"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      ) : (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              Cancel Subscription
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertCircle className="h-5 w-5 text-destructive" />
-                                Cancel Subscription?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={handleCancelSubscription}
-                                disabled={isProcessingCancel}
-                              >
-                                {isProcessingCancel ? "Processing..." : "Yes, Cancel Subscription"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
+                      <Button
+                        variant="default"
+                        onClick={handleManageSubscription}
+                        disabled={isLoadingPortal}
+                      >
+                        {isLoadingPortal ? "Loading..." : "Manage Subscription"}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -249,131 +186,13 @@ const BillingPage = () => {
                       </div>
                     </div>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline">
-                          Edit Payment Method
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>Update Payment Method</DialogTitle>
-                          <DialogDescription>
-                            Enter your credit card information
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <Form {...form}>
-                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="cardholderName"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Cardholder Name</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="John Doe" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="cardNumber"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Card Number</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="1234 5678 9012 3456" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <div className="grid grid-cols-3 gap-4">
-                              <FormField
-                                control={form.control}
-                                name="expiryMonth"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Month</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="MM" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        {Array.from({ length: 12 }, (_, i) => {
-                                          const month = (i + 1).toString().padStart(2, '0');
-                                          return (
-                                            <SelectItem key={month} value={month}>{month}</SelectItem>
-                                          );
-                                        })}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="expiryYear"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Year</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="YYYY" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        {Array.from({ length: 10 }, (_, i) => {
-                                          const year = (new Date().getFullYear() + i).toString();
-                                          return (
-                                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                                          );
-                                        })}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="cvv"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>CVV</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="123" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            
-                            <DialogFooter>
-                              <Button type="submit">Save Changes</Button>
-                            </DialogFooter>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      variant="outline"
+                      onClick={handleManageSubscription}
+                      disabled={isLoadingPortal}
+                    >
+                      {isLoadingPortal ? "Loading..." : "Manage Payment Methods"}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

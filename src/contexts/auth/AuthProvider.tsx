@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // For tracking one-time access resources
   const [oneTimeAccessResources, setOneTimeAccessResources] = useState<string[]>([]);
 
-  // Fetch subscription status when user changes
+  // Fetch subscription status from Stripe when user changes
   useEffect(() => {
     const checkUserSubscription = async () => {
       if (!currentUser) {
@@ -26,8 +26,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      const hasSubscription = await checkSubscriptionStatus(currentUser.id);
-      setIsSubscribed(hasSubscription);
+      try {
+        // Call our new edge function to check subscription status
+        const { data, error } = await supabase.functions.invoke("check-subscription");
+        
+        if (error) {
+          console.error("Error checking subscription with Stripe:", error);
+          return;
+        }
+        
+        setIsSubscribed(data?.subscribed || false);
+        console.log("Subscription status updated from Stripe:", data?.subscribed);
+      } catch (error) {
+        console.error("Error in checkUserSubscription:", error);
+      }
     };
 
     checkUserSubscription();

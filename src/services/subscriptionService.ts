@@ -29,34 +29,26 @@ export const handleSubscription = async (
         return;
       }
       
-      const userId = session.user.id;
-      const subscriptionType = isCustomer ? "customer" : "business";
+      // Call the create-checkout edge function
+      const userType = isCustomer ? "customer" : "business";
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { userType },
+      });
       
-      // Create a new subscription record
-      const { error } = await supabase
-        .from('subscriptions')
-        .insert({
-          user_id: userId,
-          type: subscriptionType, // Updated to match DB field
-          status: 'active', // Status is required in DB
-          started_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-        });
-        
       if (error) {
         throw error;
       }
       
-      // Update subscription status
-      setIsSubscribed(true);
+      if (!data?.url) {
+        throw new Error("No checkout URL returned");
+      }
       
-      console.log("Subscription - Set subscription status to true");
+      // Open Stripe checkout in a new window
+      window.location.href = data.url;
       
-      toast({
-        title: "Subscription Active",
-        description: "Thank you for subscribing! You now have full access to Welp.",
-      });
+      console.log("Subscription - Redirecting to Stripe checkout");
       
+      // We'll set subscription status after returning from Stripe
       setIsProcessing(false);
       resolve();
     } catch (error) {
@@ -73,35 +65,44 @@ export const handleSubscription = async (
 };
 
 export const handleRedirectAfterSubscription = (isCustomer: boolean): void => {
-  setTimeout(() => {
-    if (isCustomer) {
-      // For customers, redirect to their reviews page
-      window.location.href = "/profile/reviews?subscribed=true";
-    } else {
-      // For businesses, redirect to their profile page instead of business-dashboard
-      window.location.href = "/profile/business-reviews?subscribed=true";
-    }
-  }, 2000);
+  // No immediate redirect - the user will be redirected by Stripe to the success_url
+  // This function is kept for API compatibility but is now a no-op
+  console.log("Subscription redirect handled by Stripe");
 };
 
 export const checkSubscriptionStatus = async (userId: string): Promise<boolean> => {
   try {
-    // Check for active subscriptions
-    const { data: subscriptions, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .gt('expires_at', new Date().toISOString());
-      
+    // Call the check-subscription edge function
+    const { data, error } = await supabase.functions.invoke("check-subscription");
+    
     if (error) {
       console.error("Error checking subscription status:", error);
       return false;
     }
     
-    return subscriptions && subscriptions.length > 0;
+    return data?.subscribed || false;
   } catch (error) {
     console.error("Unexpected error in checkSubscriptionStatus:", error);
     return false;
+  }
+};
+
+export const openCustomerPortal = async (): Promise<void> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("customer-portal");
+    
+    if (error) {
+      throw error;
+    }
+    
+    if (!data?.url) {
+      throw new Error("No portal URL returned");
+    }
+    
+    // Open Stripe customer portal in the current window
+    window.location.href = data.url;
+  } catch (error) {
+    console.error("Error opening customer portal:", error);
+    throw error;
   }
 };

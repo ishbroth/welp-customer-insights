@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import SubscriptionFAQ from "@/components/subscription/SubscriptionFAQ";
-import { handleSubscription, handleRedirectAfterSubscription } from "@/services/subscriptionService";
+import { handleSubscription } from "@/services/subscriptionService";
 
 const Subscription = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -22,14 +22,22 @@ const Subscription = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const reviewId = params.get("reviewId");
+    const canceled = params.get("canceled");
+    
     if (reviewId) {
       setFromReviewId(reviewId);
+    }
+    
+    if (canceled) {
+      toast({
+        title: "Subscription Canceled",
+        description: "Your subscription process was canceled. You can try again when you're ready.",
+      });
     }
   }, [location]);
 
   const handleSubscribeClick = async () => {
     await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer);
-    handleRedirectAfterSubscription(isCustomer);
   };
 
   return (
