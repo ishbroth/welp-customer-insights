@@ -38,7 +38,7 @@ const ReviewItem = ({
       description: "You'll be redirected to the payment page to access all reviews for this customer.",
     });
     
-    // Redirect directly to one-time payment page with customerId instead of reviewId
+    // Redirect to one-time payment page with customerId
     navigate(`/one-time-review?customerId=${customerId}`);
   };
 

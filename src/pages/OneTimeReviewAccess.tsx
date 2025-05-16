@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -7,11 +8,15 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Lock } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const OneTimeReviewAccess = () => {
   const [searchParams] = useSearchParams();
   const customerId = searchParams.get("customerId");
   const reviewId = searchParams.get("reviewId");
+  const success = searchParams.get("success");
+  const canceled = searchParams.get("canceled");
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -20,21 +25,11 @@ const OneTimeReviewAccess = () => {
   useEffect(() => {
     if (!customerId && !reviewId) {
       navigate("/search");
+      return;
     }
-  }, [customerId, reviewId, navigate]);
-
-  const handleSubscription = () => {
-    navigate("/subscription");
-  };
-
-  const handlePayment = () => {
-    setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      
-      // Simulate successful payment and mark access granted
+    // Handle success payment return from Stripe
+    if (success === "true") {
       if (reviewId) {
         markOneTimeAccess(`review_${reviewId}`);
         toast({
@@ -48,18 +43,83 @@ const OneTimeReviewAccess = () => {
           description: "You now have access to all reviews for this customer.",
         });
       }
-      
       // Navigate back to search results
       navigate(-1);
-    }, 2000);
+    }
+    
+    // Handle canceled payment
+    if (canceled) {
+      toast({
+        title: "Payment Canceled",
+        description: "Your payment was canceled. You can try again when you're ready.",
+        variant: "destructive"
+      });
+    }
+  }, [success, canceled, customerId, reviewId, navigate, toast, markOneTimeAccess]);
+
+  const handleSubscription = () => {
+    navigate("/subscription");
+  };
+
+  const handlePayment = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to make a purchase.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    try {
+      // Prepare the request payload
+      const payload = {
+        customerId,
+        reviewId,
+        amount: getPrice(true) // Get price in cents
+      };
+      
+      // Call the create-payment edge function
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: payload
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (!data?.url) {
+        throw new Error("No checkout URL returned");
+      }
+      
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
+      console.log("OneTimeReviewAccess - Redirecting to Stripe checkout");
+      
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "An error occurred while processing your payment. Please try again.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+    }
   };
 
   // Determine appropriate pricing based on user type and what's being purchased
-  const getPrice = () => {
+  const getPrice = (inCents = false) => {
+    let price = 0;
+    
     if (currentUser?.type === "business") {
-      return reviewId ? "$2.00" : "$3.00"; // Business pays less for reviews
+      price = reviewId ? 200 : 300; // Business pays $2 for a review, $3 for all customer reviews
+    } else {
+      price = reviewId ? 300 : 500; // Customers pay $3 for a review, $5 for all customer reviews
     }
-    return reviewId ? "$3.00" : "$5.00"; // Customers pay more for reviews
+    
+    return inCents ? price : (price / 100).toFixed(2);
   };
 
   return (
@@ -108,7 +168,7 @@ const OneTimeReviewAccess = () => {
                       className="w-full welp-button"
                       onClick={handleSubscription}
                     >
-                      Subscribe for {currentUser?.type === "business" ? "$19.95" : "$9.95"}/month
+                      Subscribe for {currentUser?.type === "business" ? "$11.99" : "$11.99"}/month
                     </Button>
                   </div>
                   
@@ -143,7 +203,7 @@ const OneTimeReviewAccess = () => {
                   
                   <div className="flex justify-between items-center p-4 border-t border-b">
                     <span className="text-lg font-medium">Total</span>
-                    <span className="text-2xl font-bold">{getPrice()}</span>
+                    <span className="text-2xl font-bold">${getPrice()}</span>
                   </div>
                   
                   <div className="space-y-4">
@@ -153,7 +213,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handlePayment}
                     >
-                      {isProcessing ? "Processing..." : `Pay ${getPrice()}`}
+                      {isProcessing ? "Processing..." : `Pay $${getPrice()}`}
                     </Button>
                     
                     <p className="text-sm text-gray-500 text-center">
