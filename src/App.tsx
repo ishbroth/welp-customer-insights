@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,6 +33,7 @@ import Verification from "./pages/Verification";
 import CustomerVerification from "./pages/CustomerVerification";
 import CustomerBenefits from "./pages/CustomerBenefits";
 import CustomerStories from "./pages/CustomerStories";
+import ForgotPassword from "./pages/ForgotPassword";
 
 // Protected route component that allows access if user is logged in
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -86,6 +88,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/review/success" element={<ReviewSuccess />} />

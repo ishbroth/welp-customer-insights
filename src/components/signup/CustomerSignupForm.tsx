@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 // Array of US states for the dropdown
 const US_STATES = [
@@ -42,6 +44,41 @@ const CustomerSignupForm = () => {
   const [customerConfirmPassword, setCustomerConfirmPassword] = useState("");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingEmailError, setExistingEmailError] = useState(false);
+  
+  // Email validation to check if it's already registered
+  const checkEmailExists = async (email: string) => {
+    try {
+      // Check if the email already exists in auth
+      const { error, data } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false
+        }
+      });
+      
+      // If there's no error when trying to send a one-time password to the email,
+      // it means the email exists
+      if (!error) {
+        setExistingEmailError(true);
+        return true;
+      }
+      
+      // If error contains "Email not confirmed" or "Invalid login credentials", 
+      // it means the email exists but password is wrong
+      if (error.message.includes("Email not confirmed") || 
+          error.message.includes("Invalid login credentials")) {
+        setExistingEmailError(true);
+        return true;
+      }
+      
+      setExistingEmailError(false);
+      return false;
+    } catch (error) {
+      console.error("Error checking email:", error);
+      return false;
+    }
+  };
   
   const handleCreateCustomerAccount = async () => {
     // Validate customer information
@@ -64,6 +101,15 @@ const CustomerSignupForm = () => {
     setIsSubmitting(true);
     
     try {
+      // First, check if email is already registered
+      const emailExists = await checkEmailExists(customerEmail);
+      
+      if (emailExists) {
+        setIsSubmitting(false);
+        // No need for toast here as we'll show an inline error message
+        return;
+      }
+      
       // Send verification code via Edge Function
       const { data, error } = await supabase.functions.invoke('verify-phone', {
         body: {
@@ -110,6 +156,13 @@ const CustomerSignupForm = () => {
     }
   };
   
+  // Email blur handler to check if email exists
+  const handleEmailBlur = async () => {
+    if (customerEmail) {
+      await checkEmailExists(customerEmail);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold mb-4">Create Customer Account</h2>
@@ -138,7 +191,7 @@ const CustomerSignupForm = () => {
         />
       </div>
       
-      {/* Email field moved up to here, right after last name */}
+      {/* Email field with validation for existing emails */}
       <div>
         <label htmlFor="customerEmail" className="block text-sm font-medium mb-1">Email Address</label>
         <Input
@@ -146,11 +199,33 @@ const CustomerSignupForm = () => {
           type="email"
           placeholder="customer@example.com"
           value={customerEmail}
-          onChange={(e) => setCustomerEmail(e.target.value)}
-          className="welp-input"
+          onChange={(e) => {
+            setCustomerEmail(e.target.value);
+            if (existingEmailError) setExistingEmailError(false);
+          }}
+          onBlur={handleEmailBlur}
+          className={`welp-input ${existingEmailError ? 'border-red-500' : ''}`}
           required
         />
         <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
+        
+        {existingEmailError && (
+          <Alert className="mt-2 bg-amber-50 border-amber-200">
+            <Info className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-2">
+              <span>This email is already registered.</span>
+              <div>
+                <Link to="/login" className="text-welp-primary hover:underline font-medium">
+                  Sign in instead
+                </Link>
+                {" or "}
+                <Link to="/forgot-password" className="text-welp-primary hover:underline font-medium">
+                  Reset password
+                </Link>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
       
       <div>
@@ -250,7 +325,8 @@ const CustomerSignupForm = () => {
             !customerEmail || 
             !customerPassword || 
             customerPassword !== customerConfirmPassword ||
-            isSubmitting
+            isSubmitting ||
+            existingEmailError
           }
         >
           {isSubmitting ? "Sending Verification..." : "Continue to Verification"}
