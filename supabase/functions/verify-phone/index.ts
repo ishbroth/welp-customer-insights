@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
+import { Twilio } from "https://esm.sh/twilio@4.26.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,16 +23,20 @@ serve(async (req) => {
       throw new Error("Phone number is required");
     }
 
+    // Initialize Twilio client
+    const twilioClient = new Twilio(
+      Deno.env.get("TWILIO_ACCOUNT_SID") ?? "",
+      Deno.env.get("TWILIO_AUTH_TOKEN") ?? ""
+    );
+    
+    const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER") ?? "";
+    
     // For actionType "send" we send a verification code
     // For actionType "verify" we verify the code
     if (actionType === "send") {
-      // Generate a random 6-digit code for demo purposes
+      // Generate a random 6-digit code
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       
-      // In a real implementation, this would use Twilio, AWS SNS, or similar service
-      // to actually send the SMS with the code
-      
-      // For demo, we'll just store the code in a database
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -50,12 +55,29 @@ serve(async (req) => {
         throw error;
       }
       
-      console.log(`Sending code ${verificationCode} to ${phoneNumber}`);
-      
-      return new Response(
-        JSON.stringify({ success: true, message: `Verification code sent to ${phoneNumber}` }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Send SMS using Twilio
+      try {
+        console.log(`Sending verification code to ${phoneNumber}`);
+        
+        await twilioClient.messages.create({
+          body: `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`,
+          from: fromNumber,
+          to: phoneNumber
+        });
+        
+        console.log(`Verification code sent successfully to ${phoneNumber}`);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Verification code sent to ${phoneNumber}` 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (twilioError) {
+        console.error("Twilio error:", twilioError);
+        throw new Error(`Failed to send verification code: ${twilioError.message}`);
+      }
     } 
     else if (actionType === "verify") {
       if (!code) {
@@ -107,6 +129,8 @@ serve(async (req) => {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error in verify-phone function:", errorMessage);
+    
     return new Response(
       JSON.stringify({ success: false, message: errorMessage }),
       { 

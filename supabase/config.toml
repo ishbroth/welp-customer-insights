@@ -26,3 +26,5 @@ verify_jwt = true
 [functions.create-payment]
 verify_jwt = true
 
+[functions.verify-phone]
+verify_jwt = false

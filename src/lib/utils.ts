@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -8,12 +9,24 @@ export function cn(...inputs: ClassValue[]) {
 // Functions to handle phone verification
 export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: string, code: string }) => {
   try {
-    // In a real implementation, we would call a Supabase Edge Function or API
-    // For now, let's simulate a verification with a simple check (any 6-digit code)
-    const isValidFormat = /^\d{6}$/.test(code);
+    const { data, error } = await fetch(`https://yftvcixhifvrovwhtgtj.functions.supabase.co/verify-phone`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phoneNumber,
+        code,
+        actionType: "verify"
+      })
+    }).then(res => res.json());
     
-    // For demo purposes, let's consider any 6-digit code as valid
-    return { isValid: isValidFormat, error: isValidFormat ? null : 'Invalid code format' };
+    if (error) {
+      throw new Error(error.message || 'Verification failed');
+    }
+    
+    return { 
+      isValid: data?.isValid || false, 
+      error: data?.isValid ? null : 'Invalid verification code' 
+    };
   } catch (error: any) {
     console.error('Error verifying phone number:', error);
     return { isValid: false, error: error.message || 'Verification failed' };
@@ -22,9 +35,19 @@ export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: st
 
 export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: string }) => {
   try {
-    // In a real implementation, we would call a Supabase Edge Function or API
-    // For now, we'll just simulate a successful code resend
-    console.log(`Simulating code resend to ${phoneNumber}`);
+    const { data, error } = await fetch(`https://yftvcixhifvrovwhtgtj.functions.supabase.co/verify-phone`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phoneNumber,
+        actionType: "send"
+      })
+    }).then(res => res.json());
+    
+    if (error) {
+      throw new Error(error.message || 'Failed to send code');
+    }
+    
     return { success: true, error: null };
   } catch (error: any) {
     console.error('Error resending verification code:', error);
