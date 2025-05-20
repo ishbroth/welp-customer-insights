@@ -27,45 +27,94 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
     
-    // Create a profile record in the profiles table
-    const { error: profileError } = await supabase
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
       .from('profiles')
-      .insert({
-        id: userId,
-        name: name,
-        phone: phone,
-        address: address,
-        city: city,
-        state: state,
-        zipcode: zipCode,
-        type: type,
-        created_at: new Date().toISOString(),
-      });
-
-    if (profileError) {
-      console.error("Profile creation error:", profileError);
-      throw new Error(`Failed to create profile: ${profileError.message}`);
-    }
-
-    // If it's a business account, create business info record
-    if (type === "business" && businessName) {
-      const { error: businessError } = await supabase
-        .from('business_info')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    let profileOperation;
+    
+    if (existingProfile) {
+      // Profile exists, update it
+      profileOperation = supabase
+        .from('profiles')
+        .update({
+          name: name,
+          phone: phone,
+          address: address,
+          city: city,
+          state: state,
+          zipcode: zipCode,
+          type: type,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+    } else {
+      // Profile doesn't exist, insert it
+      profileOperation = supabase
+        .from('profiles')
         .insert({
           id: userId,
-          business_name: businessName,
+          name: name,
+          phone: phone,
+          address: address,
+          city: city,
+          state: state,
+          zipcode: zipCode,
+          type: type,
+          created_at: new Date().toISOString(),
         });
+    }
+
+    const { error: profileError } = await profileOperation;
+
+    if (profileError) {
+      console.error("Profile creation/update error:", profileError);
+      throw new Error(`Failed to create/update profile: ${profileError.message}`);
+    }
+
+    // If it's a business account, check if business info exists and create/update
+    if (type === "business" && businessName) {
+      const { data: existingBusiness } = await supabase
+        .from('business_info')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      let businessOperation;
+      
+      if (existingBusiness) {
+        // Business info exists, update it
+        businessOperation = supabase
+          .from('business_info')
+          .update({
+            business_name: businessName,
+          })
+          .eq('id', userId);
+      } else {
+        // Business info doesn't exist, insert it
+        businessOperation = supabase
+          .from('business_info')
+          .insert({
+            id: userId,
+            business_name: businessName,
+          });
+      }
+
+      const { error: businessError } = await businessOperation;
 
       if (businessError) {
-        console.error("Business info creation error:", businessError);
-        throw new Error(`Failed to create business info: ${businessError.message}`);
+        console.error("Business info creation/update error:", businessError);
+        throw new Error(`Failed to create/update business info: ${businessError.message}`);
       }
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Profile created successfully" 
+        message: "Profile created/updated successfully" 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
