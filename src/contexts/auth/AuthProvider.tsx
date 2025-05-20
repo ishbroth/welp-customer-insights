@@ -129,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     city,
     state,
     type,
+    businessName,
   }: SignupData) => {
     try {
       // Sign up the user with Supabase Auth
@@ -136,7 +137,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: email,
         password: password,
         options: {
-          data: { name, type }
+          data: { 
+            name, 
+            type,
+            address,
+            city,
+            state,
+            zipCode,
+            phone
+          }
         }
       });
 
@@ -146,20 +155,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        // Create a profile record in the profiles table
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
+        // Use functions.invoke to create profile through an edge function
+        // This bypasses RLS policies by using service role
+        const { error: profileError } = await supabase.functions.invoke('create-profile', {
+          body: {
+            userId: data.user.id,
             name: name,
             phone: phone,
             address: address,
             city: city,
             state: state,
-            zipcode: zipCode, // Note: Updated to match DB field name
+            zipCode: zipCode,
             type: type,
-            created_at: new Date().toISOString(),
-          });
+            businessName: businessName
+          }
+        });
 
         if (profileError) {
           console.error("Profile creation error:", profileError);
