@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
-import { Twilio } from "https://esm.sh/twilio@4.26.1";
+import { Twilio } from "https://esm.sh/twilio@4.20.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
