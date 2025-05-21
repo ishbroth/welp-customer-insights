@@ -15,11 +15,50 @@ export const useAuthMethods = (
   // Login function using Supabase
   const login = async (email: string, password: string) => {
     try {
+      // First attempt a regular login
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
       });
 
+      // If login failed due to unconfirmed email, handle it separately
+      if (error && error.message === "Email not confirmed") {
+        console.log("Email not confirmed, attempting to confirm and login");
+        
+        // Get the user by email
+        const { data: userData } = await supabase.auth.admin.listUsers({
+          filter: {
+            email: email
+          }
+        });
+        
+        // If we found the user, try to confirm their email and login again
+        if (userData && userData.users && userData.users.length > 0) {
+          const userId = userData.users[0].id;
+          
+          // Attempt to update user to confirm email
+          await supabase.functions.invoke('confirm-email', {
+            body: { userId, email }
+          });
+          
+          // Try login again
+          const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
+          
+          if (confirmedError) {
+            console.error("Login error after email confirmation:", confirmedError);
+            return { success: false, error: confirmedError.message };
+          }
+          
+          // Session and user will be set by the auth state listener
+          return { success: true };
+        }
+        
+        return { success: false, error: "Unable to verify account. Please contact support." };
+      }
+      
       if (error) {
         console.error("Login error:", error);
         return { success: false, error: error.message };
@@ -60,7 +99,8 @@ export const useAuthMethods = (
             state,
             zipCode,
             phone
-          }
+          },
+          emailRedirectTo: window.location.origin + '/login',
         }
       });
 
