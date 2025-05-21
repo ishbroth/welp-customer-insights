@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 // Functions to handle phone verification
 export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: string, code: string }) => {
   try {
-    const response = await fetch(`${window.location.protocol}//${window.location.host}/functions/verify-phone`, {
+    const response = await fetch(`https://yftvcixhifvrovwhtgtj.functions.supabase.co/verify-phone`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -42,7 +42,7 @@ export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: st
 
 export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: string }) => {
   try {
-    const response = await fetch(`${window.location.protocol}//${window.location.host}/functions/verify-phone`, {
+    const response = await fetch(`https://yftvcixhifvrovwhtgtj.functions.supabase.co/verify-phone`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
