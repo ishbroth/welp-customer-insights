@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
-import { Twilio } from "https://esm.sh/twilio@4.20.0";
+import twilio from "https://esm.sh/twilio@4.20.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,10 +24,9 @@ serve(async (req) => {
     }
 
     // Initialize Twilio client
-    const twilioClient = new Twilio(
-      Deno.env.get("TWILIO_ACCOUNT_SID") ?? "",
-      Deno.env.get("TWILIO_AUTH_TOKEN") ?? ""
-    );
+    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID") ?? "";
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
+    const twilioClient = twilio(accountSid, authToken);
     
     const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER") ?? "";
     
