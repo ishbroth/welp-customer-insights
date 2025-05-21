@@ -14,10 +14,11 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email } = await req.json();
+    const body = await req.json();
+    const { userId, email } = body;
     
-    if (!userId || !email) {
-      throw new Error("User ID and email are required");
+    if (!email && !userId) {
+      throw new Error("User ID or email is required");
     }
     
     // Initialize Supabase admin client with service role key
@@ -32,9 +33,26 @@ serve(async (req) => {
       }
     );
     
+    let userIdToUpdate = userId;
+    
+    // If only email is provided, get the user ID
+    if (!userId && email) {
+      const { data: userData, error: fetchError } = await supabaseAdmin.auth.admin.listUsers({
+        filter: {
+          email: email
+        }
+      });
+      
+      if (fetchError || !userData || !userData.users || userData.users.length === 0) {
+        throw new Error("User not found with the provided email");
+      }
+      
+      userIdToUpdate = userData.users[0].id;
+    }
+    
     // Update the user to confirm their email
     const { error } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
+      userIdToUpdate,
       { email_confirm: true }
     );
     

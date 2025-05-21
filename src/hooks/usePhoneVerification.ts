@@ -39,7 +39,7 @@ export const usePhoneVerification = ({
   const navigate = useNavigate();
   
   const { 
-    isResendDisabled, 
+    isDisabled: isResendDisabled, 
     timer, 
     startTimer 
   } = useVerificationTimer();

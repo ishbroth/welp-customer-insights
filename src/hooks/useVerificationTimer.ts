@@ -26,6 +26,7 @@ export const useVerificationTimer = (initialSeconds = 60) => {
   
   return {
     isDisabled,
+    isResendDisabled: isDisabled, // Added for backward compatibility
     timer,
     startTimer
   };

@@ -1,19 +1,28 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, AlertCircle } from 'lucide-react';
-import PasswordSetupForm, { PasswordFormValues } from '@/components/business/PasswordSetupForm';
-import SecurityInfoBox from '@/components/business/SecurityInfoBox';
-import { useAuth } from "@/contexts/auth";
+import { CheckCircle2, Phone } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { resendVerificationCode } from "@/lib/utils";
+import { useVerificationTimer } from "@/hooks/useVerificationTimer";
 
 const BusinessVerificationSuccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signup } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationSent, setVerificationSent] = useState(false);
+  
+  const { 
+    isDisabled: isResendDisabled, 
+    timer, 
+    startTimer 
+  } = useVerificationTimer();
   
   // Get data from sessionStorage if available
   const [businessData, setBusinessData] = useState(() => {
@@ -33,61 +42,73 @@ const BusinessVerificationSuccess = () => {
         variant: "destructive"
       });
       navigate('/signup?type=business');
+    } else {
+      // Pre-fill the phone number if available
+      if (businessData.phone) {
+        setPhoneNumber(businessData.phone);
+      }
     }
   }, [businessData, navigate, toast]);
 
-  const handleSubmit = async (values: PasswordFormValues) => {
-    if (!businessData?.email) {
+  const handleSendVerification = async () => {
+    if (!phoneNumber) {
       toast({
         title: "Error",
-        description: "Business email is required.",
+        description: "Please enter a valid phone number.",
         variant: "destructive"
       });
       return;
     }
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     
     try {
-      // Create the user account with mock implementation
-      const { success, error } = await signup({
-        email: businessData.email,
-        password: values.password,
-        name: businessData.name,
-        type: "business",
-        phone: businessData.phone,
-        address: businessData.address,
-        city: businessData.city,
-        state: businessData.state,
-        zipCode: businessData.zipCode
-      });
+      const { success, error } = await resendVerificationCode({ phoneNumber });
       
-      if (!success) {
-        throw new Error(error);
+      if (success) {
+        startTimer();
+        setVerificationSent(true);
+        
+        // Update the business data with the phone number
+        const updatedBusinessData = { ...businessData, phone: phoneNumber };
+        sessionStorage.setItem("businessVerificationData", JSON.stringify(updatedBusinessData));
+        
+        toast({
+          title: "Verification Code Sent",
+          description: `A verification code has been sent to ${phoneNumber}.`,
+        });
+        
+        // Redirect to the verification page with necessary parameters
+        const params = new URLSearchParams({
+          email: businessData.email,
+          password: businessData.password || "",
+          name: businessData.name,
+          phone: phoneNumber,
+          accountType: "business",
+          businessName: businessData.businessName || businessData.name,
+          address: businessData.address || "",
+          city: businessData.city || "",
+          state: businessData.state || "",
+          zipCode: businessData.zipCode || ""
+        });
+        
+        navigate(`/verify-phone?${params.toString()}`);
+      } else {
+        toast({
+          title: "Error",
+          description: error || "Failed to send verification code. Please try again.",
+          variant: "destructive",
+        });
       }
-      
+    } catch (error) {
+      console.error("Error sending verification code:", error);
       toast({
-        title: "Account Created",
-        description: businessData.isFullyVerified === false
-          ? "Your business account has been created with limited access. Complete verification for full access."
-          : "Your business account has been set up successfully!"
-      });
-      
-      // Clear the session storage
-      sessionStorage.removeItem("businessVerificationData");
-      
-      // Redirect to profile
-      navigate("/profile");
-      
-    } catch (error: any) {
-      console.error("Account creation error:", error);
-      toast({
-        title: "Account Creation Failed",
-        description: error.message || "An error occurred while creating your account.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
   
@@ -106,41 +127,52 @@ const BusinessVerificationSuccess = () => {
             </h1>
             
             <p className="text-center text-gray-600 mb-6">
-              Complete your account setup by creating a secure password.
+              Complete your account setup by verifying your phone number.
             </p>
 
             {businessData?.isFullyVerified === false && (
               <div className="mb-6 p-4 border border-amber-300 bg-amber-50 rounded-md">
                 <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 mr-2" />
                   <div>
                     <h3 className="font-medium text-amber-800">Limited Access Account</h3>
                     <p className="text-sm text-amber-700 mt-1">
                       Your account will have limited functionality until your business is fully verified with a license number or EIN.
-                    </p>
-                    <div className="mt-2 text-sm text-amber-700">
-                      <strong>You can:</strong>
-                      <ul className="list-disc pl-5 mt-1">
-                        <li>Search the customer database</li>
-                        <li>Purchase one-time access to view specific reviews</li>
-                        <li>Subscribe to view all customer reviews</li>
-                      </ul>
-                    </div>
-                    <p className="text-sm text-amber-700 mt-2">
-                      You can complete full verification through your profile page after login.
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <PasswordSetupForm 
-              businessEmail={businessData?.email}
-              isSubmitting={isSubmitting}
-              onSubmit={handleSubmit}
-            />
-            
-            <SecurityInfoBox />
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Phone className="h-5 w-5 text-gray-500" />
+                <h3 className="font-medium">Phone Verification</h3>
+              </div>
+              
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
+                  Phone Number
+                </label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="welp-input"
+                  disabled={isLoading || verificationSent}
+                  required
+                />
+              </div>
+              
+              <Button
+                onClick={handleSendVerification}
+                className="welp-button w-full"
+                disabled={isLoading || isResendDisabled || !phoneNumber}
+              >
+                {isLoading ? "Sending..." : isResendDisabled ? `Resend Code (${timer}s)` : "Send Verification Code"}
+              </Button>
+            </div>
           </Card>
         </div>
       </main>

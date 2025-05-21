@@ -1,4 +1,3 @@
-
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { SignupData } from "./types";
@@ -25,20 +24,11 @@ export const useAuthMethods = (
       if (error && error.message === "Email not confirmed") {
         console.log("Email not confirmed, attempting to confirm and login");
         
-        // Get the user by email
-        const { data: userData } = await supabase.auth.admin.listUsers({
-          filter: {
-            email: email
-          }
-        });
-        
-        // If we found the user, try to confirm their email and login again
-        if (userData && userData.users && userData.users.length > 0) {
-          const userId = userData.users[0].id;
-          
-          // Attempt to update user to confirm email
+        // Use the functions invoke method instead of admin.listUsers which requires admin privileges
+        try {
+          // Try to confirm the email directly
           await supabase.functions.invoke('confirm-email', {
-            body: { userId, email }
+            body: { email }
           });
           
           // Try login again
@@ -54,9 +44,10 @@ export const useAuthMethods = (
           
           // Session and user will be set by the auth state listener
           return { success: true };
+        } catch (confirmError) {
+          console.error("Error confirming email:", confirmError);
+          return { success: false, error: "Unable to verify account. Please contact support." };
         }
-        
-        return { success: false, error: "Unable to verify account. Please contact support." };
       }
       
       if (error) {
