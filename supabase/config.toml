@@ -31,3 +31,6 @@ verify_jwt = false
 
 [functions.create-profile]
 verify_jwt = true
+
+[functions.confirm-email]
+verify_jwt = false
