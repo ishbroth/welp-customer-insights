@@ -16,31 +16,55 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { setCurrentUser } = useAuth();
   const navigate = useNavigate();
   
-  const VALID_ACCOUNTS = [
+  const TEST_ACCOUNTS = [
     {
       type: "Business Owner",
       email: "business@example.com",
-      password: "password123"
+      password: "password123",
+      userData: {
+        id: "test-business-id",
+        name: "Business Owner",
+        email: "business@example.com",
+        type: "business",
+        created_at: new Date().toISOString(),
+        address: "123 Business St",
+        city: "Business City",
+        state: "BS",
+        zipCode: "12345",
+        phone: "555-123-4567"
+      }
     },
     {
       type: "Customer",
       email: "customer@example.com",
-      password: "password123"
+      password: "password123",
+      userData: {
+        id: "test-customer-id",
+        name: "Test Customer",
+        email: "customer@example.com",
+        type: "customer",
+        created_at: new Date().toISOString(),
+        address: "456 Customer Ave",
+        city: "Customer City",
+        state: "CS",
+        zipCode: "67890",
+        phone: "555-987-6543"
+      }
     }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if this is one of our valid test accounts
-    const validAccount = VALID_ACCOUNTS.find(
+    // Find matching test account
+    const testAccount = TEST_ACCOUNTS.find(
       account => account.email === email && account.password === password
     );
 
-    if (!validAccount) {
+    if (!testAccount) {
       toast({
         title: "Invalid Credentials",
         description: "Please use one of the test accounts shown below.",
@@ -52,26 +76,16 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // Instead of just calling login, we need to handle the response properly
-      const result = await login(email, password);
+      // Set the current user directly without actual Supabase authentication
+      setCurrentUser(testAccount.userData);
       
-      if (result.success) {
-        toast({
-          title: "Admin Login Successful",
-          description: `You are now logged in as a ${validAccount.type}.`,
-        });
-        
-        // Add a delay to allow auth state to update before redirecting
-        setTimeout(() => {
-          navigate("/profile");
-        }, 500);
-      } else {
-        toast({
-          title: "Login Failed",
-          description: result.error || `Failed to log in as ${validAccount.type}.`,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Admin Login Successful",
+        description: `You are now logged in as a ${testAccount.type}.`,
+      });
+      
+      // Navigate to the profile page
+      navigate("/profile");
     } catch (error) {
       toast({
         title: "Error",
@@ -131,7 +145,7 @@ const AdminLogin = () => {
             <div className="mt-6 text-center text-sm">
               <p className="text-gray-600 font-semibold mb-2">Valid Test Accounts:</p>
               <div className="space-y-2">
-                {VALID_ACCOUNTS.map((account) => (
+                {TEST_ACCOUNTS.map((account) => (
                   <div key={account.email} className="text-left p-2 bg-gray-50 border rounded-md">
                     <p className="font-semibold">{account.type}</p>
                     <p className="text-gray-600">Email: {account.email}</p>
