@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -9,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -29,6 +32,7 @@ const NewReview = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +72,7 @@ const NewReview = () => {
     }
   }, [customerId, isEditing, reviewData]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (rating === 0) {
@@ -88,10 +92,49 @@ const NewReview = () => {
       return;
     }
     
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to submit a review.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call to submit review
-    setTimeout(() => {
+    try {
+      // Prepare review data
+      const reviewData = {
+        business_id: currentUser.id,
+        rating: rating,
+        content: comment,
+        customer_name: `${customerFirstName} ${customerLastName}`.trim(),
+        customer_address: customerAddress,
+        customer_city: customerCity,
+        customer_zipcode: customerZipCode,
+        customer_phone: customerPhone,
+      };
+      
+      let result;
+      
+      if (isEditing && reviewId) {
+        // Update existing review
+        result = await supabase
+          .from('reviews')
+          .update(reviewData)
+          .eq('id', reviewId);
+      } else {
+        // Insert new review
+        result = await supabase
+          .from('reviews')
+          .insert([reviewData]);
+      }
+      
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      
       toast({
         title: isEditing ? "Review Updated" : "Review Submitted",
         description: isEditing 
@@ -99,11 +142,18 @@ const NewReview = () => {
           : "Your customer review has been successfully submitted.",
       });
       
-      setIsSubmitting(false);
-      
       // Navigate to success page
       navigate("/review/success");
-    }, 1500);
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Error",
+        description: `Failed to submit review: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
