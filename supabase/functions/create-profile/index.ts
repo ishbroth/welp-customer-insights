@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, name, phone, address, city, state, zipCode, type, businessName } = await req.json();
+    const { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar } = await req.json();
     
     // Simple validation
     if (!userId || !type) {
@@ -48,6 +48,9 @@ serve(async (req) => {
           state: state,
           zipcode: zipCode,
           type: type,
+          bio: bio,
+          avatar: avatar,
+          business_id: businessId,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
@@ -64,6 +67,9 @@ serve(async (req) => {
           state: state,
           zipcode: zipCode,
           type: type,
+          bio: bio,
+          avatar: avatar,
+          business_id: businessId,
           created_at: new Date().toISOString(),
         });
     }

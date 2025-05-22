@@ -139,33 +139,35 @@ export const useAuthMethods = (
     setIsSubscribed(false);
   };
 
-  // Update profile - now updates both auth metadata and profiles table
+  // Update profile - now updates both auth metadata and calls the edge function
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) return;
 
     try {
       // Update user metadata if needed
-      if (updates.name || updates.email) {
+      if (updates.email) {
         await supabase.auth.updateUser({
           email: updates.email,
-          data: { name: updates.name }
         });
       }
 
-      // Update the profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: updates.name,
-          phone: updates.phone,
-          address: updates.address,
-          city: updates.city,
-          state: updates.state,
-          zipcode: updates.zipCode, // Note: Updated to match DB field name
-          avatar: updates.avatar,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentUser.id);
+      // Use the edge function to update the profile in the database
+      const { error } = await supabase.functions.invoke('create-profile', {
+        body: {
+          userId: currentUser.id,
+          name: updates.name || currentUser.name,
+          phone: updates.phone || currentUser.phone,
+          address: updates.address || currentUser.address,
+          city: updates.city || currentUser.city,
+          state: updates.state || currentUser.state,
+          zipCode: updates.zipCode || currentUser.zipCode,
+          type: currentUser.type,
+          bio: updates.bio || currentUser.bio,
+          businessId: updates.businessId || currentUser.businessId,
+          avatar: updates.avatar || currentUser.avatar,
+          businessName: currentUser.type === 'business' ? updates.name || currentUser.name : null
+        }
+      });
 
       if (error) {
         throw error;
