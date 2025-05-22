@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, setCurrentUser } = useAuth();
   const navigate = useNavigate();
   
   // Define test accounts with correctly typed values
@@ -30,7 +29,6 @@ const AdminLogin = () => {
         id: "test-business-id",
         name: "Business Owner",
         email: "business@example.com",
-        // Here was the error: type was a string, not a valid union type
         type: "business" as const,
         address: "123 Business St",
         city: "Business City",
@@ -47,7 +45,6 @@ const AdminLogin = () => {
         id: "test-customer-id",
         name: "Test Customer",
         email: "customer@example.com",
-        // Here was the error: type was a string, not a valid union type
         type: "customer" as const,
         address: "456 Customer Ave",
         city: "Customer City",
@@ -78,18 +75,16 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // Use the mock login approach by adding to window
-      // This is a workaround to simulate login without using setCurrentUser directly
-      window.__CURRENT_USER__ = testAccount.userData;
-      
-      // Force a page reload to simulate auth state change
-      // This will trigger the auth state provider to load the user from window.__CURRENT_USER__
-      window.location.href = "/profile";
+      // Set the current user directly in the auth context
+      setCurrentUser(testAccount.userData);
       
       toast({
         title: "Admin Login Successful",
         description: `You are now logged in as a ${testAccount.type}.`,
       });
+      
+      // Redirect to profile page
+      navigate("/profile");
     } catch (error) {
       toast({
         title: "Error",
