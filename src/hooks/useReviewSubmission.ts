@@ -65,20 +65,42 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // Generate a valid UUID if the currentUser.id is not in UUID format (test account)
-      let businessId;
+      // For test accounts or normal users, ensure we're using their ID
+      const businessId = currentUser.id;
       
-      // Check if currentUser.id is a valid UUID
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(currentUser.id)) {
-        businessId = currentUser.id;
-      } else {
-        // For test accounts, generate a valid UUID
-        businessId = uuidv4();
-        console.log("Using generated UUID for test account:", businessId);
+      console.log("Current user ID:", businessId);
+      
+      // First, check if a profile exists with this ID
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', businessId)
+        .single();
+        
+      console.log("Existing profile check:", existingProfile, profileError);
+      
+      // If no profile exists and we're using a test account, create one
+      if (!existingProfile && profileError) {
+        console.log("Creating profile for test account");
+        
+        // Create a profile for the test user to satisfy foreign key constraints
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert([{ 
+            id: businessId,
+            name: 'Test Business Account',
+            type: 'business'
+          }]);
+          
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          throw new Error(`Failed to create user profile: ${insertError.message}`);
+        }
+        
+        console.log("Test profile created successfully");
       }
       
-      // Prepare review data with valid UUID
+      // Prepare review data with the business ID
       const supabaseReviewData = {
         business_id: businessId,
         rating: rating,
