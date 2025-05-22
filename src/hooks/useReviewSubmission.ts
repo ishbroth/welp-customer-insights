@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { v4 as uuidv4 } from "uuid";
 
 export const useReviewSubmission = (isEditing: boolean, reviewId: string | null) => {
   const { toast } = useToast();
@@ -64,10 +65,22 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // Prepare review data
-      // Use currentUser.id which should be a valid UUID instead of any test values
+      // Generate a valid UUID if the currentUser.id is not in UUID format (test account)
+      let businessId;
+      
+      // Check if currentUser.id is a valid UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(currentUser.id)) {
+        businessId = currentUser.id;
+      } else {
+        // For test accounts, generate a valid UUID
+        businessId = uuidv4();
+        console.log("Using generated UUID for test account:", businessId);
+      }
+      
+      // Prepare review data with valid UUID
       const supabaseReviewData = {
-        business_id: currentUser.id, // This should be a valid UUID from the authenticated user
+        business_id: businessId,
         rating: rating,
         content: comment,
         customer_name: `${customerFirstName} ${customerLastName}`.trim(),
