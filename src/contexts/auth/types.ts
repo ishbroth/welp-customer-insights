@@ -14,6 +14,7 @@ export interface AuthContextType {
   setIsSubscribed: (value: boolean) => void;
   hasOneTimeAccess: (resourceId: string) => boolean;
   markOneTimeAccess: (resourceId: string) => Promise<void>;
+  setCurrentUser: (user: User | null) => void;
 }
 
 export interface SignupData {

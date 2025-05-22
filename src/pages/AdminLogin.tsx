@@ -16,7 +16,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { setCurrentUser } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   const navigate = useNavigate();
   
   const TEST_ACCOUNTS = [
@@ -76,16 +76,18 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // Set the current user directly without actual Supabase authentication
-      setCurrentUser(testAccount.userData);
+      // Use the mock login approach by adding to window
+      // This is a workaround to simulate login without using setCurrentUser directly
+      window.__CURRENT_USER__ = testAccount.userData;
+      
+      // Force a page reload to simulate auth state change
+      // This will trigger the auth state provider to load the user from window.__CURRENT_USER__
+      window.location.href = "/profile";
       
       toast({
         title: "Admin Login Successful",
         description: `You are now logged in as a ${testAccount.type}.`,
       });
-      
-      // Navigate to the profile page
-      navigate("/profile");
     } catch (error) {
       toast({
         title: "Error",

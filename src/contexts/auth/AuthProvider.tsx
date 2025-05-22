@@ -41,7 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isSubscribed,
     setIsSubscribed,
     hasOneTimeAccess,
-    markOneTimeAccess
+    markOneTimeAccess,
+    setCurrentUser
   };
 
   return (

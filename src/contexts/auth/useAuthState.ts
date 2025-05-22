@@ -5,6 +5,13 @@ import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserProfile, loadOneTimeAccessResources } from "./authUtils";
 
+// Define the global window object with our custom property
+declare global {
+  interface Window {
+    __CURRENT_USER__?: User;
+  }
+}
+
 /**
  * Hook for managing authentication state
  */
@@ -38,6 +45,15 @@ export const useAuthState = () => {
   // Set up auth state listener on mount
   useEffect(() => {
     setLoading(true);
+    
+    // Check for mock user first (for admin testing)
+    if (window.__CURRENT_USER__) {
+      setCurrentUser(window.__CURRENT_USER__);
+      setLoading(false);
+      // Clean up mock user after setting it
+      delete window.__CURRENT_USER__;
+      return;
+    }
     
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
