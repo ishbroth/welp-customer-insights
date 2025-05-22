@@ -2,19 +2,24 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle } from "lucide-react";
 
 const AdminLogin = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const ADMIN_ACCOUNTS = [
+  
+  const VALID_ACCOUNTS = [
     {
       type: "Business Owner",
       email: "business@example.com",
@@ -27,7 +32,23 @@ const AdminLogin = () => {
     }
   ];
 
-  const handleLogin = async (email: string, password: string, type: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Check if this is one of our valid test accounts
+    const validAccount = VALID_ACCOUNTS.find(
+      account => account.email === email && account.password === password
+    );
+
+    if (!validAccount) {
+      toast({
+        title: "Invalid Credentials",
+        description: "Please use one of the test accounts shown below.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -36,13 +57,13 @@ const AdminLogin = () => {
       if (success) {
         toast({
           title: "Admin Login Successful",
-          description: `You are now logged in as a ${type}.`,
+          description: `You are now logged in as a ${validAccount.type}.`,
         });
         navigate("/profile");
       } else {
         toast({
           title: "Login Failed",
-          description: error || `Failed to log in as ${type}.`,
+          description: error || `Failed to log in as ${validAccount.type}.`,
           variant: "destructive",
         });
       }
@@ -64,26 +85,55 @@ const AdminLogin = () => {
         <div className="container mx-auto px-4">
           <Card className="max-w-md mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-6">Admin Access</h1>
-            <p className="text-center mb-8 text-gray-600">
-              Use these accounts to bypass registration and verification.
-            </p>
             
-            <div className="space-y-4">
-              {ADMIN_ACCOUNTS.map((account) => (
-                <div key={account.email} className="border p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">{account.type} Account</h3>
-                  <p className="text-sm text-gray-600 mb-1">Email: {account.email}</p>
-                  <p className="text-sm text-gray-600 mb-4">Password: {account.password}</p>
-                  
-                  <Button
-                    className="w-full"
-                    onClick={() => handleLogin(account.email, account.password, account.type)}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Logging in..." : `Login as ${account.type}`}
-                  </Button>
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="welp-input"
+                    required
+                  />
                 </div>
-              ))}
+                
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="welp-input"
+                    required
+                  />
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="welp-button w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Log In"}
+                </Button>
+              </div>
+            </form>
+            
+            <div className="mt-6 text-center text-sm">
+              <p className="text-gray-600 font-semibold mb-2">Valid Test Accounts:</p>
+              <div className="space-y-2">
+                {VALID_ACCOUNTS.map((account) => (
+                  <div key={account.email} className="text-left p-2 bg-gray-50 border rounded-md">
+                    <p className="font-semibold">{account.type}</p>
+                    <p className="text-gray-600">Email: {account.email}</p>
+                    <p className="text-gray-600">Password: {account.password}</p>
+                  </div>
+                ))}
+              </div>
             </div>
             
             <div className="mt-6 text-center text-sm text-gray-600">
