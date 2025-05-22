@@ -7,6 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { v4 as uuidv4 } from "uuid";
 
+// Map for storing consistent UUIDs for test accounts
+const TEST_ACCOUNT_UUIDS = {
+  "test-business-id": "c5f7b41e-c199-4ba0-a15c-e8846952ae9a",
+  "test-customer-id": "d83af1f8-57f1-4b07-aec1-c5478d1cfa3a"
+};
+
 export const useReviewSubmission = (isEditing: boolean, reviewId: string | null) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,30 +71,38 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // For test accounts or normal users, ensure we're using their ID
-      const businessId = currentUser.id;
+      // Get a valid UUID for the business ID
+      // If it's a test account, use the mapped UUID
+      let businessId: string;
       
-      console.log("Current user ID:", businessId);
+      if (TEST_ACCOUNT_UUIDS[currentUser.id]) {
+        businessId = TEST_ACCOUNT_UUIDS[currentUser.id];
+        console.log("Using mapped UUID for test account:", businessId);
+      } else {
+        // For regular accounts, use their ID (which should be a valid UUID)
+        businessId = currentUser.id;
+        console.log("Using current user ID as UUID:", businessId);
+      }
       
-      // First, check if a profile exists with this ID
+      // Check if a profile exists with this UUID
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', businessId)
         .single();
-        
-      console.log("Existing profile check:", existingProfile, profileError);
       
-      // If no profile exists and we're using a test account, create one
+      console.log("Profile check result:", existingProfile, profileError);
+      
+      // If no profile exists, create one
       if (!existingProfile && profileError) {
-        console.log("Creating profile for test account");
+        console.log("Creating profile with UUID:", businessId);
         
-        // Create a profile for the test user to satisfy foreign key constraints
+        // Create a profile with the valid UUID
         const { error: insertError } = await supabase
           .from('profiles')
           .insert([{ 
             id: businessId,
-            name: 'Test Business Account',
+            name: currentUser.name || 'Test Business Account',
             type: 'business'
           }]);
           
@@ -97,10 +111,10 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
           throw new Error(`Failed to create user profile: ${insertError.message}`);
         }
         
-        console.log("Test profile created successfully");
+        console.log("Profile created successfully");
       }
       
-      // Prepare review data with the business ID
+      // Prepare review data with the valid business ID
       const supabaseReviewData = {
         business_id: businessId,
         rating: rating,
