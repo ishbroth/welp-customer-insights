@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,9 @@ const CustomerCard = ({
     }
     return '';
   };
+
+  // Check if this is a customer found from review data (has ID starting with "review-customer-")
+  const isReviewCustomer = customer.id.startsWith('review-customer-');
 
   return (
     <Card className="p-4">
@@ -85,6 +89,7 @@ const CustomerCard = ({
           customerId={customer.id}
           reviews={customerReviews[customer.id] || []}
           hasFullAccess={hasFullAccess}
+          isReviewCustomer={isReviewCustomer}
         />
       )}
     </Card>

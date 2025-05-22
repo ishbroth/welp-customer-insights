@@ -36,22 +36,74 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     }
     
     try {
-      // Fetch reviews for this customer from Supabase
-      const { data: reviewsData, error } = await supabase
-        .from('reviews')
-        .select(`
-          id, 
-          rating, 
-          content, 
-          created_at,
-          business_id,
-          profiles!business_id(name)
-        `)
-        .eq('customer_id', customerId)
-        .order('created_at', { ascending: false });
+      let reviewsData = [];
       
-      if (error) {
-        throw error;
+      // If this is a review-based customer (ID starts with "review-customer-")
+      if (customerId.startsWith('review-customer-')) {
+        const actualReviewId = customerId.replace('review-customer-', '');
+        
+        // First get the specific review that this customer was found from
+        const { data: reviewData, error: reviewError } = await supabase
+          .from('reviews')
+          .select(`
+            id, 
+            rating, 
+            content, 
+            created_at,
+            business_id,
+            customer_name,
+            customer_phone,
+            profiles!business_id(name)
+          `)
+          .eq('id', actualReviewId);
+          
+        if (reviewError) {
+          throw reviewError;
+        }
+        
+        if (reviewData && reviewData.length > 0) {
+          const review = reviewData[0];
+          
+          // Find other reviews for same customer name
+          const { data: similarReviews, error: similarError } = await supabase
+            .from('reviews')
+            .select(`
+              id, 
+              rating, 
+              content, 
+              created_at,
+              business_id,
+              profiles!business_id(name)
+            `)
+            .ilike('customer_name', `%${review.customer_name}%`)
+            .order('created_at', { ascending: false });
+            
+          if (similarError) {
+            throw similarError;
+          }
+          
+          reviewsData = similarReviews || [];
+        }
+      } else {
+        // This is a regular customer from profiles, fetch their reviews
+        const { data, error } = await supabase
+          .from('reviews')
+          .select(`
+            id, 
+            rating, 
+            content, 
+            created_at,
+            business_id,
+            profiles!business_id(name)
+          `)
+          .eq('customer_id', customerId)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        reviewsData = data || [];
       }
       
       // Format reviews data
@@ -89,6 +141,9 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   const hasFullAccess = (customerId: string) => {
     // If the user is logged in and has a subscription, they have access
     if (currentUser && isSubscribed) return true;
+    
+    // If the user is an admin, they have access
+    if (currentUser?.type === "admin") return true;
     
     // Check if the user has paid for one-time access to this specific customer
     return hasOneTimeAccess(customerId);

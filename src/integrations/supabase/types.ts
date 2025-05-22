@@ -180,7 +180,12 @@ export type Database = {
           business_id: string | null
           content: string
           created_at: string
+          customer_address: string | null
+          customer_city: string | null
           customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          customer_zipcode: string | null
           id: string
           rating: number
           updated_at: string
@@ -189,7 +194,12 @@ export type Database = {
           business_id?: string | null
           content: string
           created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_zipcode?: string | null
           id?: string
           rating: number
           updated_at?: string
@@ -198,7 +208,12 @@ export type Database = {
           business_id?: string | null
           content?: string
           created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_zipcode?: string | null
           id?: string
           rating?: number
           updated_at?: string
