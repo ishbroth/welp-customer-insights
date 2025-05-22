@@ -34,6 +34,7 @@ import CustomerVerification from "./pages/CustomerVerification";
 import CustomerBenefits from "./pages/CustomerBenefits";
 import CustomerStories from "./pages/CustomerStories";
 import ForgotPassword from "./pages/ForgotPassword";
+import AdminLogin from "./pages/AdminLogin";
 
 // Protected route component that allows access if user is logged in
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -101,6 +102,7 @@ const AppRoutes = () => {
       <Route path="/terms" element={<Terms />} />
       <Route path="/success-stories" element={<SuccessStories />} />
       <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
+      <Route path="/admin" element={<AdminLogin />} />
       
       {/* Customer pages */}
       <Route path="/customer-verification" element={<CustomerVerification />} />
