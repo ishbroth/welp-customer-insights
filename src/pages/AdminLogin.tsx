@@ -52,18 +52,23 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      const { success, error } = await login(email, password);
+      // Instead of just calling login, we need to handle the response properly
+      const result = await login(email, password);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Admin Login Successful",
           description: `You are now logged in as a ${validAccount.type}.`,
         });
-        navigate("/profile");
+        
+        // Add a delay to allow auth state to update before redirecting
+        setTimeout(() => {
+          navigate("/profile");
+        }, 500);
       } else {
         toast({
           title: "Login Failed",
-          description: error || `Failed to log in as ${validAccount.type}.`,
+          description: result.error || `Failed to log in as ${validAccount.type}.`,
           variant: "destructive",
         });
       }
