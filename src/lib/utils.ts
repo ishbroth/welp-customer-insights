@@ -9,9 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 // Functions to handle phone verification
 export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: string, code: string }) => {
   try {
-    const response = await fetch(`https://yftvcixhifvrovwhtgtj.functions.supabase.co/verify-phone`, {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-phone`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      },
       body: JSON.stringify({
         phoneNumber,
         code,
@@ -42,9 +45,12 @@ export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: st
 
 export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: string }) => {
   try {
-    const response = await fetch(`https://yftvcixhifvrovwhtgtj.functions.supabase.co/verify-phone`, {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-phone`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      },
       body: JSON.stringify({
         phoneNumber,
         actionType: "send"
