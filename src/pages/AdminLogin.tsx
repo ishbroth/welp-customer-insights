@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
+import { User } from "@/types";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +20,7 @@ const AdminLogin = () => {
   const { currentUser, updateProfile } = useAuth();
   const navigate = useNavigate();
   
+  // Define test accounts with correctly typed values
   const TEST_ACCOUNTS = [
     {
       type: "Business Owner",
@@ -28,14 +30,14 @@ const AdminLogin = () => {
         id: "test-business-id",
         name: "Business Owner",
         email: "business@example.com",
-        type: "business",
-        created_at: new Date().toISOString(),
+        // Here was the error: type was a string, not a valid union type
+        type: "business" as const,
         address: "123 Business St",
         city: "Business City",
         state: "BS",
         zipCode: "12345",
         phone: "555-123-4567"
-      }
+      } as User
     },
     {
       type: "Customer",
@@ -45,14 +47,14 @@ const AdminLogin = () => {
         id: "test-customer-id",
         name: "Test Customer",
         email: "customer@example.com",
-        type: "customer",
-        created_at: new Date().toISOString(),
+        // Here was the error: type was a string, not a valid union type
+        type: "customer" as const,
         address: "456 Customer Ave",
         city: "Customer City",
         state: "CS",
         zipCode: "67890",
         phone: "555-987-6543"
-      }
+      } as User
     }
   ];
 
