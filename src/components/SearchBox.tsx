@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -26,13 +26,16 @@ const SearchBox = ({
   buttonText = "Search a Customer"
 }: SearchBoxProps) => {
   const navigate = useNavigate();
-  const [lastName, setLastName] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
+  const [currentSearchParams] = useSearchParams();
+  
+  // Initialize state from URL parameters if available
+  const [lastName, setLastName] = useState(currentSearchParams.get("lastName") || "");
+  const [firstName, setFirstName] = useState(currentSearchParams.get("firstName") || "");
+  const [phone, setPhone] = useState(currentSearchParams.get("phone") || "");
+  const [address, setAddress] = useState(currentSearchParams.get("address") || "");
+  const [city, setCity] = useState(currentSearchParams.get("city") || "");
+  const [state, setState] = useState(currentSearchParams.get("state") || "");
+  const [zipCode, setZipCode] = useState(currentSearchParams.get("zipCode") || "");
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

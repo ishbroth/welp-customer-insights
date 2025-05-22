@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -61,6 +60,14 @@ const NewReview = () => {
       setComment(reviewData.content);
     }
     
+    // Pre-fill form with search parameters from URL
+    setCustomerFirstName(searchParamFirstName);
+    setCustomerLastName(searchParamLastName);
+    setCustomerPhone(searchParamPhone);
+    setCustomerAddress(searchParamAddress);
+    setCustomerCity(searchParamCity);
+    setCustomerZipCode(searchParamZipCode);
+    
     if (customerId) {
       // In a real app, this would be a fetch call to your Supabase DB
       setIsLoading(true);
@@ -73,7 +80,17 @@ const NewReview = () => {
       setIsNewCustomer(true);
       setIsLoading(false);
     }
-  }, [customerId, isEditing, reviewData]);
+  }, [
+    customerId, 
+    isEditing, 
+    reviewData, 
+    searchParamFirstName, 
+    searchParamLastName, 
+    searchParamPhone, 
+    searchParamAddress, 
+    searchParamCity, 
+    searchParamZipCode
+  ]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

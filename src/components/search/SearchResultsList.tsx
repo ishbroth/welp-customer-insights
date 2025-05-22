@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Customer } from "@/types/search";
@@ -17,6 +17,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
 
