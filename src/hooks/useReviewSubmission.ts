@@ -65,8 +65,9 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     
     try {
       // Prepare review data
+      // Use currentUser.id which should be a valid UUID instead of any test values
       const supabaseReviewData = {
-        business_id: currentUser.id,
+        business_id: currentUser.id, // This should be a valid UUID from the authenticated user
         rating: rating,
         content: comment,
         customer_name: `${customerFirstName} ${customerLastName}`.trim(),
@@ -75,6 +76,8 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
         customer_zipcode: customerZipCode,
         customer_phone: customerPhone,
       };
+      
+      console.log("Submitting review with data:", supabaseReviewData);
       
       let result;
       
