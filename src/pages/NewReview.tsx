@@ -1,17 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Star } from "lucide-react";
-import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
+import RatingInput from "@/components/reviews/RatingInput";
+import ReviewTextInput from "@/components/reviews/ReviewTextInput";
+import { useReviewSubmission } from "@/hooks/useReviewSubmission";
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -30,7 +29,6 @@ const NewReview = () => {
   const location = useLocation();
   const reviewData = location.state?.reviewData;
   
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
@@ -46,9 +44,14 @@ const NewReview = () => {
   const [customerCity, setCustomerCity] = useState(searchParamCity);
   const [customerZipCode, setCustomerZipCode] = useState(searchParamZipCode);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
-  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
+  
+  const { 
+    isSubmitting, 
+    rejectionReason, 
+    showRejectionDialog, 
+    setShowRejectionDialog, 
+    submitReview 
+  } = useReviewSubmission(isEditing, reviewId);
   
   useEffect(() => {
     // Handle pre-filling data if we're editing
@@ -75,85 +78,16 @@ const NewReview = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (rating === 0) {
-      toast({
-        title: "Rating Required",
-        description: "Please select a star rating for this customer.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Add content moderation check
-    const moderationResult = moderateContent(comment);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-    
-    if (!currentUser) {
-      toast({
-        title: "Authentication Required",
-        description: "You must be logged in to submit a review.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Prepare review data
-      const reviewData = {
-        business_id: currentUser.id,
-        rating: rating,
-        content: comment,
-        customer_name: `${customerFirstName} ${customerLastName}`.trim(),
-        customer_address: customerAddress,
-        customer_city: customerCity,
-        customer_zipcode: customerZipCode,
-        customer_phone: customerPhone,
-      };
-      
-      let result;
-      
-      if (isEditing && reviewId) {
-        // Update existing review
-        result = await supabase
-          .from('reviews')
-          .update(reviewData)
-          .eq('id', reviewId);
-      } else {
-        // Insert new review
-        result = await supabase
-          .from('reviews')
-          .insert([reviewData]);
-      }
-      
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-      
-      toast({
-        title: isEditing ? "Review Updated" : "Review Submitted",
-        description: isEditing 
-          ? "Your customer review has been successfully updated." 
-          : "Your customer review has been successfully submitted.",
-      });
-      
-      // Navigate to success page
-      navigate("/review/success");
-    } catch (error: any) {
-      console.error("Error submitting review:", error);
-      toast({
-        title: "Error",
-        description: `Failed to submit review: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    await submitReview({
+      rating,
+      comment,
+      customerFirstName,
+      customerLastName,
+      customerPhone,
+      customerAddress,
+      customerCity,
+      customerZipCode
+    });
   };
 
   return (
@@ -172,128 +106,36 @@ const NewReview = () => {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
                   {/* Customer Information */}
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Customer Information</h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
-                        <Input
-                          id="customerFirstName"
-                          value={customerFirstName}
-                          onChange={(e) => setCustomerFirstName(e.target.value)}
-                          className="welp-input"
-                          disabled={!isNewCustomer && !!customer}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
-                        <Input
-                          id="customerLastName"
-                          value={customerLastName}
-                          onChange={(e) => setCustomerLastName(e.target.value)}
-                          className="welp-input"
-                          disabled={!isNewCustomer && !!customer}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">Phone Number (if known)</label>
-                      <Input
-                        id="customerPhone"
-                        value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
-                        className="welp-input"
-                        disabled={!isNewCustomer && !!customer}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="customerAddress" className="block text-sm font-medium mb-1">Address (if service was performed here)</label>
-                      <Input
-                        id="customerAddress"
-                        value={customerAddress}
-                        onChange={(e) => setCustomerAddress(e.target.value)}
-                        className="welp-input"
-                        disabled={!isNewCustomer && !!customer}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
-                      <Input
-                        id="customerCity"
-                        value={customerCity}
-                        onChange={(e) => setCustomerCity(e.target.value)}
-                        className="welp-input"
-                        disabled={!isNewCustomer && !!customer}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="customerZipCode" className="block text-sm font-medium mb-1">ZIP Code (where experience took place)</label>
-                      <Input
-                        id="customerZipCode"
-                        value={customerZipCode}
-                        onChange={(e) => setCustomerZipCode(e.target.value)}
-                        className="welp-input"
-                        disabled={!isNewCustomer && !!customer}
-                        required
-                      />
-                    </div>
-                  </div>
+                  <CustomerInfoForm 
+                    customerFirstName={customerFirstName}
+                    customerLastName={customerLastName}
+                    customerPhone={customerPhone}
+                    customerAddress={customerAddress}
+                    customerCity={customerCity}
+                    customerZipCode={customerZipCode}
+                    isNewCustomer={isNewCustomer}
+                    customer={customer}
+                    setCustomerFirstName={setCustomerFirstName}
+                    setCustomerLastName={setCustomerLastName}
+                    setCustomerPhone={setCustomerPhone}
+                    setCustomerAddress={setCustomerAddress}
+                    setCustomerCity={setCustomerCity}
+                    setCustomerZipCode={setCustomerZipCode}
+                  />
                   
                   {/* Rating */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Rating</label>
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-10 w-10 cursor-pointer ${
-                            star <= (hoverRating || rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                          onMouseEnter={() => setHoverRating(star)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          onClick={() => setRating(star)}
-                        />
-                      ))}
-                      
-                      <span className="ml-4 text-lg">
-                        {rating > 0 ? (
-                          <span>
-                            <span className="font-medium">{rating}</span>/5
-                          </span>
-                        ) : (
-                          "Select a rating"
-                        )}
-                      </span>
-                    </div>
-                  </div>
+                  <RatingInput 
+                    rating={rating}
+                    setRating={setRating}
+                    hoverRating={hoverRating}
+                    setHoverRating={setHoverRating}
+                  />
                   
                   {/* Review Text */}
-                  <div>
-                    <label htmlFor="reviewText" className="block text-sm font-medium mb-2">
-                      Review
-                    </label>
-                    <textarea
-                      id="reviewText"
-                      rows={6}
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="Describe your experience with this customer..."
-                      className="w-full p-3 border rounded-md focus:ring-2 focus:ring-welp-primary focus:border-transparent"
-                      maxLength={1500}
-                    />
-                    <div className="text-xs text-gray-500 mt-1">
-                      {comment.length}/1500 characters
-                    </div>
-                  </div>
+                  <ReviewTextInput 
+                    comment={comment}
+                    setComment={setComment}
+                  />
                   
                   <div className="pt-4">
                     <Button
