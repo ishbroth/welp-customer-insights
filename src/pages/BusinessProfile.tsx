@@ -11,6 +11,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 
+interface BusinessInfo {
+  id: string;
+  business_name: string;
+  license_expiration: string;
+  license_number: string;
+  license_status: string;
+  license_type: string;
+  verified: boolean;
+  website?: string; // Make website optional since it may not exist in the database
+}
+
+interface BusinessProfile {
+  id: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  avatar?: string;
+  bio?: string;
+  business_info?: BusinessInfo;
+}
+
 const BusinessProfile = () => {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
@@ -46,7 +70,7 @@ const BusinessProfile = () => {
           .single();
         
         if (error) throw error;
-        return data;
+        return data as BusinessProfile;
       } catch (error) {
         console.error("Error fetching business profile:", error);
         toast({
@@ -184,10 +208,16 @@ const BusinessProfile = () => {
                             <p className="text-gray-500">{businessProfile.business_info.business_name}</p>
                           </div>
                         )}
+                        {/* Only show website if it exists in the business_info object */}
                         {businessProfile.business_info.website && (
                           <div>
                             <p className="font-medium">Website</p>
-                            <a href={businessProfile.business_info.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            <a 
+                              href={businessProfile.business_info.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-blue-600 hover:underline"
+                            >
                               {businessProfile.business_info.website}
                             </a>
                           </div>
