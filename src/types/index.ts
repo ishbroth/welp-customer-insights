@@ -18,6 +18,7 @@ export interface Review {
   id: string;
   reviewerId: string;
   reviewerName: string;
+  reviewerAvatar?: string;
   customerId: string;
   customerName: string;
   rating: number;
