@@ -5,13 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { v4 as uuidv4 } from "uuid";
-
-// Map for storing consistent UUIDs for test accounts
-const TEST_ACCOUNT_UUIDS = {
-  "test-business-id": "c5f7b41e-c199-4ba0-a15c-e8846952ae9a",
-  "test-customer-id": "d83af1f8-57f1-4b07-aec1-c5478d1cfa3a"
-};
 
 export const useReviewSubmission = (isEditing: boolean, reviewId: string | null) => {
   const { toast } = useToast();
@@ -71,18 +64,9 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // Get a valid UUID for the business ID
-      // If it's a test account, use the mapped UUID
-      let businessId: string;
-      
-      if (TEST_ACCOUNT_UUIDS[currentUser.id]) {
-        businessId = TEST_ACCOUNT_UUIDS[currentUser.id];
-        console.log("Using mapped UUID for test account:", businessId);
-      } else {
-        // For regular accounts, use their ID (which should be a valid UUID)
-        businessId = currentUser.id;
-        console.log("Using current user ID as UUID:", businessId);
-      }
+      // Always use the current user's ID directly - this fixes the foreign key constraint issue
+      const businessId = currentUser.id;
+      console.log("Using business ID for review:", businessId);
       
       // Prepare review data with the valid business ID
       const supabaseReviewData = {
