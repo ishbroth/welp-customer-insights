@@ -36,6 +36,7 @@ import CustomerStories from "./pages/CustomerStories";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminLogin from "./pages/AdminLogin";
 import CustomerProfile from "./pages/CustomerProfile";
+import BusinessProfile from "./pages/BusinessProfile";
 
 // Protected route component that allows access if user is logged in
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -118,6 +119,13 @@ const AppRoutes = () => {
         <BusinessOrAdminRoute>
           <CustomerProfile />
         </BusinessOrAdminRoute>
+      } />
+      
+      {/* Business profile viewing for customer users with subscription or one-time access */}
+      <Route path="/business/:businessId" element={
+        <ProtectedRoute>
+          <BusinessProfile />
+        </ProtectedRoute>
       } />
       
       {/* Business owner specific routes */}
