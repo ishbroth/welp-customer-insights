@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ProfileLoadingState from "@/components/business/ProfileLoadingState";
 import ProfileNotFoundState from "@/components/business/ProfileNotFoundState";
+import ProfileErrorState from "@/components/business/ProfileErrorState";
 import BusinessBasicInfo from "@/components/business/BusinessBasicInfo";
 import BusinessContactInfo from "@/components/business/BusinessContactInfo";
 import BusinessDetailsInfo from "@/components/business/BusinessDetailsInfo";
@@ -22,7 +23,7 @@ const BusinessProfile = () => {
   const hasAccess = isSubscribed || hasOneTimeAccess(businessId || "");
   
   // Fetch business profile data using the custom hook
-  const { businessProfile, isLoading } = useBusinessProfile(businessId, hasAccess);
+  const { businessProfile, isLoading, error, refetch } = useBusinessProfile(businessId, hasAccess);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -44,9 +45,18 @@ const BusinessProfile = () => {
           
           <ProfileLoadingState isLoading={isLoading} />
           
-          <ProfileNotFoundState profile={businessProfile} />
+          <ProfileErrorState 
+            error={error && !error.message.includes("No rows returned") && !error.message.includes("Subscription required") ? error : null} 
+            onRetry={refetch} 
+          />
           
-          {!isLoading && businessProfile && (
+          <ProfileNotFoundState 
+            profile={businessProfile} 
+            error={error}
+            hasAccess={hasAccess}
+          />
+          
+          {!isLoading && !error && businessProfile && (
             <div className="max-w-3xl mx-auto">
               <Card className="mb-6">
                 <CardHeader className="pb-4">
