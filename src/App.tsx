@@ -35,6 +35,7 @@ import CustomerBenefits from "./pages/CustomerBenefits";
 import CustomerStories from "./pages/CustomerStories";
 import ForgotPassword from "./pages/ForgotPassword";
 import AdminLogin from "./pages/AdminLogin";
+import CustomerProfile from "./pages/CustomerProfile";
 
 // Protected route component that allows access if user is logged in
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -111,6 +112,13 @@ const AppRoutes = () => {
       
       {/* Search page is now accessible to all users */}
       <Route path="/search" element={<SearchResults />} />
+      
+      {/* Customer profile viewing for business owners */}
+      <Route path="/customer/:customerId" element={
+        <BusinessOrAdminRoute>
+          <CustomerProfile />
+        </BusinessOrAdminRoute>
+      } />
       
       {/* Business owner specific routes */}
       <Route path="/review/new" element={

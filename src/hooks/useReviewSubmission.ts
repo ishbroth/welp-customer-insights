@@ -84,9 +84,6 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
         console.log("Using current user ID as UUID:", businessId);
       }
       
-      // Skip profile creation which is failing due to RLS
-      // Instead, just proceed with submitting the review
-      
       // Prepare review data with the valid business ID
       const supabaseReviewData = {
         business_id: businessId,
