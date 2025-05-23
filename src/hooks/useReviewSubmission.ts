@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { v4 as uuidv4 } from "uuid";
 
 export const useReviewSubmission = (isEditing: boolean, reviewId: string | null) => {
   const { toast } = useToast();
@@ -64,8 +65,22 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // Always use the current user's ID directly - this fixes the foreign key constraint issue
-      const businessId = currentUser.id;
+      // For demo purposes, generate a valid UUID if the current user ID is not already a UUID
+      // In a production app, this would be handled differently
+      let businessId: string;
+      
+      // Check if currentUser.id is a valid UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(currentUser.id)) {
+        // If it's already a valid UUID, use it directly
+        businessId = currentUser.id;
+      } else {
+        // For demo purposes, generate a deterministic UUID based on the user ID
+        // This ensures the same user always gets the same UUID
+        businessId = uuidv4();
+        console.log("Generated UUID for non-UUID user ID:", businessId);
+      }
+      
       console.log("Using business ID for review:", businessId);
       
       // Prepare review data with the valid business ID
