@@ -1,13 +1,8 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import StarRating from "./StarRating";
-import { formatDistance } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Edit, Trash2, Eye, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { formatDistance } from "date-fns";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import {
@@ -20,6 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// Import our new components
+import ReviewHeader from "./review/ReviewHeader";
+import ReviewResponseForm from "./review/ReviewResponseForm";
+import ReviewResponses from "./review/ReviewResponses";
 
 interface ReviewResponse {
   id: string;
@@ -318,14 +318,14 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   return (
     <Card className="mb-4 overflow-hidden">
       <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-2">
-            <div className="font-bold text-lg">{review.businessName}</div>
-            <StarRating rating={review.rating} size="md" />
-          </div>
-          <div className="text-sm text-gray-500">{formattedLocation()}</div>
-        </div>
+        {/* Review Header */}
+        <ReviewHeader 
+          businessName={review.businessName}
+          rating={review.rating}
+          location={formattedLocation()}
+        />
         
+        {/* Review Content */}
         <div className="mb-4">
           <p className="text-gray-700 whitespace-pre-line">{review.comment}</p>
         </div>
@@ -338,164 +338,38 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           </span>
         </div>
         
-        {/* Display existing responses with ability to edit/delete */}
-        {responses.length > 0 && (
-          <div className="mt-4 border-t pt-4">
-            <h4 className="text-md font-semibold mb-3">Responses</h4>
-            {responses.map((resp) => (
-              <div key={resp.id} className="bg-gray-50 p-3 rounded-md mb-3">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{resp.authorName}</span>
-                  <span className="text-xs text-gray-500">
-                    {formatDistance(new Date(resp.createdAt), new Date(), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-                
-                {/* If in edit mode for this response, show edit form */}
-                {editResponseId === resp.id ? (
-                  <div>
-                    <Textarea
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full p-2 text-sm min-h-[80px] mb-2"
-                      maxLength={1500}
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={handleSaveEdit}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
-                )}
-                
-                {/* Show edit/delete buttons for business owner's own responses */}
-                {resp.authorId === currentUser?.id && editResponseId !== resp.id && (
-                  <div className="mt-2 flex justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-gray-600 hover:bg-gray-100 h-8 px-2 py-1"
-                      onClick={() => handleEditResponse(resp.id)}
-                      disabled={!hasSubscription}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      {hasSubscription ? 'Edit' : <Lock className="h-3 w-3" />}
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2 py-1"
-                      onClick={() => {
-                        if (hasSubscription) {
-                          setResponseToDeleteId(resp.id);
-                          setDeleteDialogOpen(true);
-                        } else {
-                          toast({
-                            title: "Subscription required",
-                            description: "You need an active subscription to delete responses.",
-                            variant: "destructive"
-                          });
-                        }
-                      }}
-                      disabled={!hasSubscription}
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      {hasSubscription ? 'Delete' : <Lock className="h-3 w-3" />}
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Display replies to this response */}
-                {resp.replies && resp.replies.length > 0 && (
-                  <div className="mt-3 pl-4 border-l-2 border-gray-200">
-                    {resp.replies.map(reply => (
-                      <div key={reply.id} className="bg-white p-2 rounded-md mb-2 border border-gray-100">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-medium text-xs">{reply.authorName}</span>
-                          <span className="text-xs text-gray-500">
-                            {formatDistance(new Date(reply.createdAt), new Date(), {
-                              addSuffix: true,
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 text-xs">{reply.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Review Responses Section */}
+        <ReviewResponses
+          responses={responses}
+          currentUserId={currentUser?.id}
+          hasSubscription={hasSubscription}
+          showResponse={showResponse}
+          isResponseVisible={isResponseVisible}
+          setIsResponseVisible={setIsResponseVisible}
+          editResponseId={editResponseId}
+          editContent={editContent}
+          setEditContent={setEditContent}
+          handleSaveEdit={handleSaveEdit}
+          handleCancelEdit={handleCancelEdit}
+          replyToResponseId={replyToResponseId}
+          setReplyToResponseId={setReplyToResponseId}
+          replyContent={replyContent}
+          setReplyContent={setReplyContent}
+          handleSubmitReply={handleSubmitReply}
+          canBusinessRespond={canBusinessRespond}
+          handleEditResponse={handleEditResponse}
+          setResponseToDeleteId={setResponseToDeleteId}
+          setDeleteDialogOpen={setDeleteDialogOpen}
+        />
         
-        {/* Show different UI based on subscription status AND who sent the last message */}
-        {showResponse ? (
-          hasSubscription ? (
-            /* If user has subscription, show respond button when appropriate */
-            canBusinessRespond() && (
-              <div className="mt-4 flex justify-end">
-                <Button 
-                  onClick={() => setIsResponseVisible(!isResponseVisible)}
-                >
-                  {isResponseVisible ? "Cancel" : "Respond"}
-                </Button>
-              </div>
-            )
-          ) : (
-            /* If user doesn't have subscription, show link to subscription page */
-            <div className="mt-4 flex justify-end">
-              <Button 
-                variant="outline"
-                asChild
-                className="flex items-center gap-1 text-sm"
-              >
-                <Link to="/subscription">
-                  <Lock className="h-4 w-4 mr-1" />
-                  Subscribe to respond
-                </Link>
-              </Button>
-            </div>
-          )
-        ) : null}
-        
-        {/* Response form - only shown when clicked respond and has subscription */}
+        {/* Response Form */}
         {isResponseVisible && hasSubscription && (
-          <form onSubmit={handleSubmitResponse} className="mt-4 border-t pt-4">
-            <Textarea
-              value={response}
-              onChange={(e) => setResponse(e.target.value)}
-              placeholder="Write your response to this review..."
-              className="w-full p-3 border rounded-md min-h-[100px] focus:ring-2 focus:ring-welp-primary focus:border-transparent"
-              maxLength={1500}
-              required
-            />
-            <div className="flex justify-between items-center mt-2">
-              <div className="text-xs text-gray-500">
-                {response.length}/1500 characters
-              </div>
-              <Button 
-                type="submit" 
-                className="welp-button" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Response"}
-              </Button>
-            </div>
-          </form>
+          <ReviewResponseForm
+            response={response}
+            setResponse={setResponse}
+            handleSubmitResponse={handleSubmitResponse}
+            isSubmitting={isSubmitting}
+          />
         )}
       </div>
       
