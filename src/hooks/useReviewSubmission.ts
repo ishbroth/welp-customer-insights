@@ -65,20 +65,34 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // For demo purposes, generate a valid UUID if the current user ID is not already a UUID
-      // In a production app, this would be handled differently
-      let businessId: string;
+      // First, check if a profile exists or create one if it doesn't
+      // This is a workaround for demo purposes since we don't have proper authentication
+      let businessId = uuidv4();
+      console.log("Generated UUID for review:", businessId);
       
-      // Check if currentUser.id is a valid UUID
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(currentUser.id)) {
-        // If it's already a valid UUID, use it directly
-        businessId = currentUser.id;
-      } else {
-        // For demo purposes, generate a deterministic UUID based on the user ID
-        // This ensures the same user always gets the same UUID
-        businessId = uuidv4();
-        console.log("Generated UUID for non-UUID user ID:", businessId);
+      // First check if the current user exists in profiles
+      const { data: existingProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', businessId)
+        .limit(1);
+      
+      // If profile doesn't exist, create one
+      if (!existingProfiles || existingProfiles.length === 0) {
+        // Create a temporary profile for demo purposes
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{ 
+            id: businessId, 
+            first_name: 'Demo', 
+            last_name: 'User',
+            type: 'business'
+          }]);
+          
+        if (profileError) {
+          console.error("Error creating temp profile:", profileError);
+          throw new Error(`Failed to create temporary profile: ${profileError.message}`);
+        }
       }
       
       console.log("Using business ID for review:", businessId);
