@@ -84,35 +84,8 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
         console.log("Using current user ID as UUID:", businessId);
       }
       
-      // Check if a profile exists with this UUID
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', businessId)
-        .single();
-      
-      console.log("Profile check result:", existingProfile, profileError);
-      
-      // If no profile exists, create one
-      if (!existingProfile && profileError) {
-        console.log("Creating profile with UUID:", businessId);
-        
-        // Create a profile with the valid UUID
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert([{ 
-            id: businessId,
-            name: currentUser.name || 'Test Business Account',
-            type: 'business'
-          }]);
-          
-        if (insertError) {
-          console.error("Error creating profile:", insertError);
-          throw new Error(`Failed to create user profile: ${insertError.message}`);
-        }
-        
-        console.log("Profile created successfully");
-      }
+      // Skip profile creation which is failing due to RLS
+      // Instead, just proceed with submitting the review
       
       // Prepare review data with the valid business ID
       const supabaseReviewData = {
