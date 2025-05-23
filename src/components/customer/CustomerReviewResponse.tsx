@@ -1,13 +1,10 @@
+
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Eye, Lock } from "lucide-react";
-import { formatDistance } from "date-fns";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
-import { moderateContent } from "@/utils/contentModeration";
-import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import CustomerResponseList from "./CustomerResponseList";
+import CustomerResponseForm from "./CustomerResponseForm";
+import CustomerResponseActions from "./CustomerResponseActions";
 
 interface Response {
   id: string;
@@ -33,10 +30,7 @@ const CustomerReviewResponse = ({
   hideReplyOption = false
 }: CustomerReviewResponseProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
-  const [responseText, setResponseText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
-  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   
@@ -60,15 +54,10 @@ const CustomerReviewResponse = ({
     return lastResponse.authorId !== currentUser.id;
   };
   
-  const handleSubmitResponse = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!responseText.trim()) {
-      toast({
-        title: "Empty response",
-        description: "Please write something before submitting.",
-        variant: "destructive"
-      });
+  const handleSubmitResponse = (responseText: string) => {
+    // If empty string is passed, it means cancel was clicked
+    if (responseText === "") {
+      setIsResponseVisible(false);
       return;
     }
     
@@ -79,14 +68,6 @@ const CustomerReviewResponse = ({
         description: "You need a subscription or one-time access to respond to reviews.",
         variant: "destructive"
       });
-      return;
-    }
-    
-    // Add content moderation check
-    const moderationResult = moderateContent(responseText);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
       return;
     }
     
@@ -101,7 +82,6 @@ const CustomerReviewResponse = ({
       
       setIsSubmitting(false);
       setIsResponseVisible(false);
-      setResponseText("");
     }, 1000);
   };
   
@@ -109,96 +89,24 @@ const CustomerReviewResponse = ({
   
   return (
     <div className="mt-4">
-      {responses.length > 0 && (
-        <div className="border-t pt-3 mb-3">
-          <h4 className="font-medium text-sm mb-2">Responses:</h4>
-          {responses.map((response) => (
-            <div key={response.id} className="bg-gray-50 p-3 rounded-md mb-2">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-medium text-sm">{response.authorName}</span>
-                <span className="text-xs text-gray-500">
-                  {formatDistance(new Date(response.createdAt), new Date(), {
-                    addSuffix: true,
-                  })}
-                </span>
-              </div>
-              <p className="text-sm text-gray-700">{response.content}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Display existing responses */}
+      <CustomerResponseList responses={responses} />
       
-      {/* Show different UI based on subscription status AND who sent the last message */}
-      {!hideReplyOption && (
-        <>
-          {canRespond ? (
-            /* If user has subscription, show respond button only if they can respond */
-            !isResponseVisible && canCustomerRespond() && (
-              <Button 
-                onClick={() => setIsResponseVisible(true)}
-                className="welp-button"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Respond
-              </Button>
-            )
-          ) : (
-            /* If user doesn't have subscription, show link to subscription page */
-            <Button 
-              variant="outline"
-              asChild
-              className="flex items-center gap-1 text-sm"
-            >
-              <Link to="/subscription">
-                <Lock className="h-4 w-4 mr-1" />
-                Subscribe to respond
-              </Link>
-            </Button>
-          )}
-          
-          {/* Response form - only shown when clicked respond */}
-          {isResponseVisible && (
-            <form onSubmit={handleSubmitResponse} className="mt-3">
-              <Textarea
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Write your response to this review..."
-                className="w-full min-h-[100px] mb-2"
-                required
-              />
-              <div className="flex justify-between items-center">
-                <div className="text-xs text-gray-500">
-                  {responseText.length}/1000 characters
-                </div>
-                <div className="space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsResponseVisible(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="welp-button" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Response"}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          )}
-        </>
-      )}
-      
-      {/* Add Content Rejection Dialog */}
-      <ContentRejectionDialog 
-        open={showRejectionDialog}
-        onOpenChange={setShowRejectionDialog}
-        reason={rejectionReason || ""}
-        onClose={() => setShowRejectionDialog(false)}
+      {/* Show response actions based on subscription status */}
+      <CustomerResponseActions 
+        canRespond={canRespond}
+        isResponseVisible={isResponseVisible}
+        setIsResponseVisible={setIsResponseVisible}
+        hideReplyOption={hideReplyOption}
       />
+      
+      {/* Response form - only shown when clicked respond */}
+      {isResponseVisible && (
+        <CustomerResponseForm
+          onSubmit={handleSubmitResponse}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </div>
   );
 };
