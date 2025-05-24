@@ -1,19 +1,37 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Fetch user profile from the database
+ * Fetch user profile from database with fresh data
  */
 export const fetchUserProfile = async (userId: string): Promise<User | null> => {
   try {
-    console.log("Fetching profile for user ID:", userId);
+    console.log("Fetching fresh user profile for userId:", userId);
     
+    // Always fetch fresh data from the database, no caching
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        id,
+        name,
+        first_name,
+        last_name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        zipcode,
+        type,
+        bio,
+        business_id,
+        avatar,
+        created_at,
+        updated_at
+      `)
       .eq('id', userId)
-      .single(); // Use single() instead of maybeSingle() to ensure we get the profile
+      .single();
 
     if (error) {
       console.error("Error fetching user profile:", error);
@@ -21,35 +39,28 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
     }
 
     if (!profile) {
-      console.log("No profile found for user ID:", userId);
+      console.log("No profile found for userId:", userId);
       return null;
     }
 
-    console.log("Raw profile data from database:", profile);
+    console.log("Fresh profile data fetched:", profile);
 
-    // Validate and ensure type is one of the allowed values
-    let userType: "customer" | "business" | "admin" = "customer";
-    if (profile.type === "business" || profile.type === "admin" || profile.type === "customer") {
-      userType = profile.type;
-    }
-
-    // Transform database profile to User type - ensure all fields are properly mapped
+    // Transform database profile to User type
     const user: User = {
       id: profile.id,
+      name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || '',
       email: profile.email || '',
-      name: profile.name || '',
       phone: profile.phone || '',
       address: profile.address || '',
       city: profile.city || '',
       state: profile.state || '',
-      zipCode: profile.zipcode || '', // Note: database column is 'zipcode'
-      type: userType,
+      zipCode: profile.zipcode || '', // Note: database uses 'zipcode', User type uses 'zipCode'
+      type: (profile.type as "business" | "customer" | "admin") || "customer",
       bio: profile.bio || '',
       businessId: profile.business_id || '',
       avatar: profile.avatar || ''
     };
 
-    console.log("Transformed user object:", user);
     return user;
   } catch (error) {
     console.error("Error in fetchUserProfile:", error);
@@ -58,14 +69,26 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
 };
 
 /**
+ * Force refresh user profile from database (no caching)
+ */
+export const refreshUserProfile = async (userId: string): Promise<User | null> => {
+  console.log("Force refreshing user profile for userId:", userId);
+  // This function is identical to fetchUserProfile but semantically different
+  // It's used when we explicitly want to bypass any potential caching
+  return fetchUserProfile(userId);
+};
+
+/**
  * Load one-time access resources for a user
  */
 export const loadOneTimeAccessResources = async (userId: string): Promise<string[]> => {
   try {
+    console.log("Loading one-time access resources for userId:", userId);
+    
     const { data, error } = await supabase
       .from('customer_access')
-      .select('business_id')
-      .eq('customer_id', userId)
+      .select('customer_id')
+      .eq('business_id', userId)
       .gt('expires_at', new Date().toISOString());
 
     if (error) {
@@ -73,17 +96,11 @@ export const loadOneTimeAccessResources = async (userId: string): Promise<string
       return [];
     }
 
-    return data?.map(item => item.business_id) || [];
+    const resources = data?.map(item => item.customer_id) || [];
+    console.log("Loaded one-time access resources:", resources);
+    return resources;
   } catch (error) {
     console.error("Error in loadOneTimeAccessResources:", error);
     return [];
   }
-};
-
-/**
- * Refresh user profile data from database - forces a fresh fetch
- */
-export const refreshUserProfile = async (userId: string): Promise<User | null> => {
-  console.log("Refreshing user profile from database for:", userId);
-  return await fetchUserProfile(userId);
 };

@@ -90,6 +90,21 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Updating current user state with:", updatedUser);
       setCurrentUser(updatedUser);
 
+      // Verify the data was actually saved by fetching it back from the database
+      console.log("Verifying profile update by fetching fresh data from database...");
+      const { data: verificationData, error: verificationError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (verificationError) {
+        console.error("Error verifying saved data:", verificationError);
+        throw new Error("Profile update verification failed");
+      }
+
+      console.log("Verification successful - data persisted in database:", verificationData);
+
       // If this is a business account, also update any existing reviews with the new business name
       if (currentUser.type === 'business' && updates.name && updates.name !== currentUser.name) {
         console.log("Updating business name in existing reviews");

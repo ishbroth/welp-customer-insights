@@ -27,11 +27,9 @@ export const useAuthState = () => {
     try {
       console.log("Initializing user data for:", userId, "forceRefresh:", forceRefresh);
       
-      // Use refreshUserProfile if we want to force a fresh fetch, otherwise use cached
-      const fetchFunction = forceRefresh ? refreshUserProfile : fetchUserProfile;
-      
+      // Always force refresh to get the latest data from database
       const [userProfile, accessResources] = await Promise.all([
-        fetchFunction(userId),
+        refreshUserProfile(userId), // Always use refreshUserProfile to ensure fresh data
         loadOneTimeAccessResources(userId)
       ]);
       
@@ -97,7 +95,24 @@ export const useAuthState = () => {
       return;
     }
     
-    // Get initial session and refresh user data
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change:", event, session);
+        setSession(session);
+        
+        if (session) {
+          // Always force refresh on auth state changes to ensure we have latest data
+          await initUserData(session.user.id, true);
+        } else {
+          setCurrentUser(null);
+          setIsSubscribed(false);
+          setLoading(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session:", session);
       setSession(session);
@@ -108,22 +123,6 @@ export const useAuthState = () => {
         setLoading(false);
       }
     });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state change:", event, session);
-        setSession(session);
-        if (session) {
-          // Force refresh on auth state changes to ensure we have latest data
-          await initUserData(session.user.id, true);
-        } else {
-          setCurrentUser(null);
-          setIsSubscribed(false);
-          setLoading(false);
-        }
-      }
-    );
     
     return () => {
       subscription.unsubscribe();

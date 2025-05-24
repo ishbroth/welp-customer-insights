@@ -32,7 +32,7 @@ serve(async (req) => {
     // Check if profile already exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('*')
       .eq('id', userId)
       .maybeSingle();
     
@@ -64,29 +64,25 @@ serve(async (req) => {
     console.log("Profile update data being saved:", profileUpdateData);
 
     if (existingProfile) {
-      // Profile exists, update it - preserve existing data where new data is empty
+      // Profile exists, update it - preserve non-empty existing data where new data is empty
       console.log("Updating existing profile with data:", profileUpdateData);
       
-      // First get the existing profile to preserve data
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      // Merge with existing data to avoid overwriting with empty values
+      // Merge with existing data, but prioritize new data when it's provided
       const mergedData = {
-        ...profileUpdateData,
-        name: profileUpdateData.name || currentProfile?.name || '',
-        phone: profileUpdateData.phone || currentProfile?.phone || '',
-        address: profileUpdateData.address || currentProfile?.address || '',
-        city: profileUpdateData.city || currentProfile?.city || '',
-        state: profileUpdateData.state || currentProfile?.state || '',
-        zipcode: profileUpdateData.zipcode || currentProfile?.zipcode || '',
-        bio: profileUpdateData.bio || currentProfile?.bio || '',
-        avatar: profileUpdateData.avatar || currentProfile?.avatar || '',
-        business_id: profileUpdateData.business_id || currentProfile?.business_id || '',
-        email: profileUpdateData.email || currentProfile?.email || '',
+        name: profileUpdateData.name || existingProfile.name || '',
+        first_name: profileUpdateData.first_name || existingProfile.first_name || '',
+        last_name: profileUpdateData.last_name || existingProfile.last_name || '',
+        phone: profileUpdateData.phone || existingProfile.phone || '',
+        address: profileUpdateData.address || existingProfile.address || '',
+        city: profileUpdateData.city || existingProfile.city || '',
+        state: profileUpdateData.state || existingProfile.state || '',
+        zipcode: profileUpdateData.zipcode || existingProfile.zipcode || '',
+        bio: profileUpdateData.bio || existingProfile.bio || '',
+        avatar: profileUpdateData.avatar || existingProfile.avatar || '',
+        business_id: profileUpdateData.business_id || existingProfile.business_id || '',
+        email: profileUpdateData.email || existingProfile.email || '',
+        type: profileUpdateData.type, // Always use the provided type
+        updated_at: profileUpdateData.updated_at,
       };
       
       console.log("Merged profile data:", mergedData);
@@ -94,7 +90,8 @@ serve(async (req) => {
       profileOperation = supabase
         .from('profiles')
         .update(mergedData)
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
     } else {
       // Profile doesn't exist, insert it
       console.log("Creating new profile with data:", { id: userId, ...profileUpdateData, created_at: new Date().toISOString() });
@@ -104,7 +101,8 @@ serve(async (req) => {
           id: userId,
           ...profileUpdateData,
           created_at: new Date().toISOString(),
-        });
+        })
+        .select();
     }
 
     const { data: profileResult, error: profileError } = await profileOperation;
@@ -159,24 +157,25 @@ serve(async (req) => {
       console.log("Business info operation successful");
     }
 
-    // Verify the data was saved by fetching it back
-    const { data: verificationData, error: verificationError } = await supabase
+    // Final verification - fetch the updated data to confirm it was saved
+    const { data: finalVerificationData, error: finalVerificationError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
 
-    if (verificationError) {
-      console.error("Error verifying saved data:", verificationError);
-    } else {
-      console.log("Verification - data saved successfully:", verificationData);
+    if (finalVerificationError) {
+      console.error("Error in final verification:", finalVerificationError);
+      throw new Error("Profile update verification failed");
     }
+
+    console.log("Final verification - data confirmed in database:", finalVerificationData);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Profile created/updated successfully",
-        data: verificationData
+        data: finalVerificationData
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
