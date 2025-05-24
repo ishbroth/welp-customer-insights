@@ -13,19 +13,51 @@ interface PersonalInfoFormProps {
 const PersonalInfoForm = ({ form, isBusinessAccount }: PersonalInfoFormProps) => {
   return (
     <>
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{isBusinessAccount ? "Business name" : "Name"}</FormLabel>
-            <FormControl>
-              <Input placeholder={isBusinessAccount ? "Your business name" : "Your name"} {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {isBusinessAccount ? (
+        <FormField
+          control={form.control}
+          name="firstName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Business name</FormLabel>
+              <FormControl>
+                <Input placeholder="Your business name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your first name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your last name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
       
       <FormField
         control={form.control}

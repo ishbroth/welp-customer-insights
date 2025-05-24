@@ -29,6 +29,11 @@ export const useProfileUpdate = (currentUser: User | null) => {
         }
       }
 
+      // Split name into first_name and last_name for database storage
+      const nameParts = (updates.name || currentUser.name || '').trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       // Prepare the complete profile data for the edge function
       const profileData = {
         userId: currentUser.id,
@@ -43,7 +48,9 @@ export const useProfileUpdate = (currentUser: User | null) => {
         businessId: updates.businessId || currentUser.businessId || '',
         avatar: updates.avatar || currentUser.avatar || '',
         email: updates.email || currentUser.email || '',
-        businessName: currentUser.type === 'business' ? (updates.name || currentUser.name) : null
+        businessName: currentUser.type === 'business' ? (updates.name || currentUser.name) : null,
+        firstName: firstName,
+        lastName: lastName
       };
 
       console.log("Calling create-profile edge function with data:", profileData);

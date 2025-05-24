@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email } = await req.json();
+    const { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email, firstName, lastName } = await req.json();
     
-    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email });
+    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email, firstName, lastName });
     
     // Simple validation
     if (!userId || !type) {
@@ -41,6 +41,8 @@ serve(async (req) => {
     // Prepare profile data - ensure all fields are properly mapped
     const profileUpdateData = {
       name: name || '',
+      first_name: firstName || '',
+      last_name: lastName || '',
       phone: phone || '',
       address: address || '',
       city: city || '',
@@ -54,16 +56,11 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
-    // For customer accounts, ensure first_name and last_name are properly set
-    if (type === 'customer' && name) {
-      const nameParts = name.trim().split(' ');
-      profileUpdateData.first_name = nameParts[0] || '';
-      profileUpdateData.last_name = nameParts.slice(1).join(' ') || '';
-    }
-
     // For business accounts, ensure business name is saved in the name field
     if (type === 'business' && businessName) {
       profileUpdateData.name = businessName;
+      profileUpdateData.first_name = businessName;
+      profileUpdateData.last_name = '';
     }
 
     console.log("Profile update data being saved:", profileUpdateData);

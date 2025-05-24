@@ -20,6 +20,11 @@ export const useAuthSignup = () => {
     businessName,
   }: SignupData) => {
     try {
+      // Split name into first and last name
+      const nameParts = (name || '').trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       // Sign up the user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: email,
@@ -32,7 +37,9 @@ export const useAuthSignup = () => {
             city,
             state,
             zipCode,
-            phone
+            phone,
+            first_name: firstName,
+            last_name: lastName
           },
           emailRedirectTo: window.location.origin + '/login',
         }
@@ -50,6 +57,8 @@ export const useAuthSignup = () => {
           body: {
             userId: data.user.id,
             name: name,
+            firstName: firstName,
+            lastName: lastName,
             phone: phone,
             address: address,
             city: city,

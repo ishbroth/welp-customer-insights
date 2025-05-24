@@ -22,10 +22,22 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
   const navigate = useNavigate();
   const { setCurrentUser } = useAuth();
 
+  // Split the current user's name for default values
+  const getNameParts = (fullName: string = "") => {
+    const nameParts = fullName.trim().split(' ');
+    return {
+      firstName: nameParts[0] || '',
+      lastName: nameParts.slice(1).join(' ') || ''
+    };
+  };
+
+  const { firstName, lastName } = getNameParts(currentUser?.name);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: currentUser?.name || "",
+      firstName: firstName,
+      lastName: isBusinessAccount ? "" : lastName,
       email: currentUser?.email || "",
       bio: currentUser?.bio || "",
       businessId: currentUser?.businessId || "",
@@ -41,9 +53,14 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
     try {
       console.log("Submitting profile data:", data);
       
+      // Combine firstName and lastName for the name field or use firstName for business
+      const combinedName = isBusinessAccount 
+        ? data.firstName 
+        : `${data.firstName} ${data.lastName}`.trim();
+      
       // Ensure all fields are included in the update
       const updateData = {
-        name: data.name,
+        name: combinedName,
         email: data.email,
         bio: data.bio,
         businessId: data.businessId,
