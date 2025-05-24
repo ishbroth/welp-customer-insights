@@ -1,5 +1,5 @@
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
@@ -39,7 +39,8 @@ const ProfileEdit = () => {
 
   const handleSavePhoto = async (croppedImage: string) => {
     try {
-      console.log("Saving cropped profile photo");
+      console.log("=== SAVING PHOTO ===");
+      console.log("Cropped image length:", croppedImage.length);
       
       // Update profile with the cropped image
       await updateProfile({ avatar: croppedImage });
@@ -53,7 +54,10 @@ const ProfileEdit = () => {
         title: "Profile photo updated",
         description: "Your profile photo has been successfully updated.",
       });
+      
+      console.log("=== PHOTO SAVE SUCCESS ===");
     } catch (error) {
+      console.error("=== PHOTO SAVE ERROR ===");
       console.error("Error saving profile photo:", error);
       toast({
         title: "Error",

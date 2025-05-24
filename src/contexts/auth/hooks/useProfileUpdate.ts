@@ -9,7 +9,8 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
     }
 
     try {
-      console.log("Starting profile update for user:", currentUser.id);
+      console.log("=== PROFILE UPDATE START ===");
+      console.log("Current user:", currentUser.id);
       console.log("Updates to apply:", updates);
 
       // Update user metadata if email has changed
@@ -30,58 +31,76 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      // Prepare the complete profile data
+      // Prepare the complete profile data with all current values
       const profileData = {
         userId: currentUser.id,
-        name: updates.name || currentUser.name || '',
-        phone: updates.phone || currentUser.phone || '',
-        address: updates.address || currentUser.address || '',
-        city: updates.city || currentUser.city || '',
-        state: updates.state || currentUser.state || '',
-        zipCode: updates.zipCode || currentUser.zipCode || '',
+        name: updates.name ?? currentUser.name ?? '',
+        phone: updates.phone ?? currentUser.phone ?? '',
+        address: updates.address ?? currentUser.address ?? '',
+        city: updates.city ?? currentUser.city ?? '',
+        state: updates.state ?? currentUser.state ?? '',
+        zipCode: updates.zipCode ?? currentUser.zipCode ?? '',
         type: currentUser.type,
-        bio: updates.bio || currentUser.bio || '',
-        businessId: updates.businessId || currentUser.businessId || '',
-        avatar: updates.avatar || currentUser.avatar || '',
-        email: updates.email || currentUser.email || '',
-        businessName: currentUser.type === 'business' ? (updates.name || currentUser.name) : null,
+        bio: updates.bio ?? currentUser.bio ?? '',
+        businessId: updates.businessId ?? currentUser.businessId ?? '',
+        avatar: updates.avatar ?? currentUser.avatar ?? '',
+        email: updates.email ?? currentUser.email ?? '',
+        businessName: currentUser.type === 'business' ? (updates.name ?? currentUser.name) : null,
         firstName: firstName,
         lastName: lastName
       };
 
-      console.log("Calling create-profile edge function with data:", profileData);
+      console.log("Complete profile data being sent:", profileData);
 
       // Use the edge function to update the profile in the database
       const { data, error } = await supabase.functions.invoke('create-profile', {
         body: profileData
       });
 
+      console.log("Edge function response:", { data, error });
+
       if (error) {
         console.error("Edge function error:", error);
         throw new Error(`Failed to update profile: ${error.message}`);
       }
 
-      console.log("Profile update successful:", data);
-
-      // Verify the update by checking the response
-      if (!data.success) {
-        throw new Error(data.message || "Profile update failed");
+      // Check if the response indicates success
+      if (!data || !data.success) {
+        console.error("Profile update failed:", data);
+        throw new Error(data?.message || "Profile update failed");
       }
 
-      // Update the current user state with the new data immediately
+      console.log("Profile update successful:", data);
+
+      // Update the current user state with the merged data immediately
       const updatedUser: User = {
         ...currentUser,
         ...updates
       };
 
-      console.log("Updating current user state with:", updatedUser);
+      console.log("Setting updated user in state:", updatedUser);
       setCurrentUser(updatedUser);
 
-      console.log("Profile update completed successfully");
+      // Verify the data was saved by fetching it back
+      console.log("Verifying saved data...");
+      const { data: verificationData, error: verifyError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (verifyError) {
+        console.error("Verification error:", verifyError);
+      } else {
+        console.log("Verified data in database:", verificationData);
+      }
+
+      console.log("=== PROFILE UPDATE COMPLETE ===");
       
       return data;
 
     } catch (error) {
+      console.error("=== PROFILE UPDATE ERROR ===");
       console.error("Error in updateProfile:", error);
       throw error;
     }

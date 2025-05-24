@@ -39,49 +39,58 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      console.log("Submitting profile data:", data);
+      console.log("=== FORM SUBMIT START ===");
+      console.log("Form data submitted:", data);
       
-      // Ensure all fields are included in the update
-      const updateData = {
-        name: data.name,
-        email: data.email,
-        bio: data.bio,
-        businessId: data.businessId,
-        phone: data.phone,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        zipCode: data.zipCode,
-        // Include avatar and type from current user to preserve them
-        avatar: currentUser?.avatar || '',
-        type: currentUser?.type || 'customer'
-      };
+      // Create update object with only the fields that have values
+      const updateData: any = {};
       
-      console.log("Update data being sent:", updateData);
+      if (data.name) updateData.name = data.name;
+      if (data.email) updateData.email = data.email;
+      if (data.bio !== undefined) updateData.bio = data.bio;
+      if (data.businessId !== undefined) updateData.businessId = data.businessId;
+      if (data.phone) updateData.phone = data.phone;
+      if (data.address) updateData.address = data.address;
+      if (data.city) updateData.city = data.city;
+      if (data.state) updateData.state = data.state;
+      if (data.zipCode) updateData.zipCode = data.zipCode;
+      
+      // Always preserve current avatar and type
+      updateData.avatar = currentUser?.avatar || '';
+      updateData.type = currentUser?.type || 'customer';
+      
+      console.log("Processed update data:", updateData);
       
       await updateProfile(updateData);
       
-      // Update the current user in the auth context with the new data
-      setCurrentUser({
+      // Update the current user in the auth context
+      const updatedUser = {
         ...currentUser,
         ...updateData
-      });
+      };
+      
+      console.log("Updating auth context with:", updatedUser);
+      setCurrentUser(updatedUser);
       
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been successfully updated.",
+        title: "Profile updated successfully",
+        description: "Your profile information has been saved.",
       });
+
+      console.log("=== FORM SUBMIT SUCCESS ===");
 
       // Navigate back to profile page after successful update
       setTimeout(() => {
         navigate('/profile');
-      }, 1000);
+      }, 1500);
       
     } catch (error) {
+      console.error("=== FORM SUBMIT ERROR ===");
       console.error("Error updating profile:", error);
+      
       toast({
         title: "Update failed",
-        description: "There was an error updating your profile. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error updating your profile. Please try again.",
         variant: "destructive",
       });
     }
