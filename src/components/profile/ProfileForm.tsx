@@ -1,9 +1,11 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
 import { profileSchema, ProfileFormValues } from "./types";
 import PersonalInfoForm from "./PersonalInfoForm";
 import ContactInfoForm from "./ContactInfoForm";
@@ -17,6 +19,8 @@ interface ProfileFormProps {
 
 const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileFormProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -57,10 +61,19 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
       
       await updateProfile(updateData);
       
+      // Refresh the user data in the auth context
+      await refreshUser();
+      
       toast({
         title: "Profile updated",
         description: "Your profile information has been successfully updated.",
       });
+
+      // Navigate back to profile page after successful update
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1000);
+      
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -81,9 +94,19 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
         {/* Only render businessId field for business accounts */}
         {isBusinessAccount && <BusinessInfoForm form={form} />}
         
-        <Button type="submit" className="w-full md:w-auto">
-          Save Changes
-        </Button>
+        <div className="flex gap-4">
+          <Button type="submit" className="w-full md:w-auto">
+            Save Changes
+          </Button>
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full md:w-auto"
+            onClick={() => navigate('/profile')}
+          >
+            Cancel
+          </Button>
+        </div>
       </form>
     </Form>
   );

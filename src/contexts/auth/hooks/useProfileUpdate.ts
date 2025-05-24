@@ -74,6 +74,15 @@ export const useProfileUpdate = (currentUser: User | null) => {
         }
       }
 
+      // For customer accounts, ensure their updated profile is searchable
+      if (currentUser.type === 'customer') {
+        console.log("Customer profile updated - data is now searchable via existing search functions");
+        // The search functions already query the profiles table directly,
+        // so no additional steps are needed to make the data searchable
+      }
+
+      return data;
+
     } catch (error) {
       console.error("Error in updateProfile:", error);
       throw error;

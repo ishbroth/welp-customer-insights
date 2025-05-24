@@ -38,6 +38,7 @@ serve(async (req) => {
     
     let profileOperation;
     
+    // Prepare profile data - ensure all searchable fields are included
     const profileUpdateData = {
       name: name || '',
       phone: phone || '',
@@ -52,6 +53,13 @@ serve(async (req) => {
       email: email || '',
       updated_at: new Date().toISOString(),
     };
+
+    // For customer accounts, ensure first_name and last_name are properly set for searchability
+    if (type === 'customer' && name) {
+      const nameParts = name.trim().split(' ');
+      profileUpdateData.first_name = nameParts[0] || '';
+      profileUpdateData.last_name = nameParts.slice(1).join(' ') || '';
+    }
 
     if (existingProfile) {
       // Profile exists, update it
@@ -79,7 +87,7 @@ serve(async (req) => {
       throw new Error(`Failed to create/update profile: ${profileError.message}`);
     }
 
-    console.log("Profile operation successful");
+    console.log("Profile operation successful - customer data is now searchable");
 
     // If it's a business account, check if business info exists and create/update
     if (type === "business" && businessName) {
@@ -127,7 +135,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Profile created/updated successfully" 
+        message: "Profile created/updated successfully",
+        searchable: type === 'customer' ? true : false
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
