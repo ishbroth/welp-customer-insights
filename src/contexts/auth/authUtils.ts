@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 
@@ -12,7 +13,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .maybeSingle();
+      .single(); // Use single() instead of maybeSingle() to ensure we get the profile
 
     if (error) {
       console.error("Error fetching user profile:", error);
@@ -32,7 +33,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       userType = profile.type;
     }
 
-    // Transform database profile to User type
+    // Transform database profile to User type - ensure all fields are properly mapped
     const user: User = {
       id: profile.id,
       email: profile.email || '',
@@ -77,4 +78,12 @@ export const loadOneTimeAccessResources = async (userId: string): Promise<string
     console.error("Error in loadOneTimeAccessResources:", error);
     return [];
   }
+};
+
+/**
+ * Refresh user profile data from database - forces a fresh fetch
+ */
+export const refreshUserProfile = async (userId: string): Promise<User | null> => {
+  console.log("Refreshing user profile from database for:", userId);
+  return await fetchUserProfile(userId);
 };

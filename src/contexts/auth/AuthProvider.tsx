@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateProfile,
     hasOneTimeAccess,
     markOneTimeAccess
-  } = useAuthMethods(setIsSubscribed, oneTimeAccessResources, setOneTimeAccessResources, currentUser);
+  } = useAuthMethods(setIsSubscribed, oneTimeAccessResources, setOneTimeAccessResources, currentUser, setCurrentUser);
 
   const value = {
     currentUser,

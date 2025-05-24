@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Hook for handling profile update functionality
  */
-export const useProfileUpdate = (currentUser: User | null) => {
+export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user: User | null) => void) => {
   // Update profile - now updates both auth metadata and calls the edge function
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) {
@@ -71,6 +71,24 @@ export const useProfileUpdate = (currentUser: User | null) => {
       if (!data.success) {
         throw new Error(data.message || "Profile update failed");
       }
+
+      // Update the current user state with the new data immediately
+      const updatedUser: User = {
+        ...currentUser,
+        name: updates.name !== undefined ? updates.name : currentUser.name,
+        phone: updates.phone !== undefined ? updates.phone : currentUser.phone,
+        address: updates.address !== undefined ? updates.address : currentUser.address,
+        city: updates.city !== undefined ? updates.city : currentUser.city,
+        state: updates.state !== undefined ? updates.state : currentUser.state,
+        zipCode: updates.zipCode !== undefined ? updates.zipCode : currentUser.zipCode,
+        bio: updates.bio !== undefined ? updates.bio : currentUser.bio,
+        businessId: updates.businessId !== undefined ? updates.businessId : currentUser.businessId,
+        avatar: updates.avatar !== undefined ? updates.avatar : currentUser.avatar,
+        email: updates.email !== undefined ? updates.email : currentUser.email,
+      };
+
+      console.log("Updating current user state with:", updatedUser);
+      setCurrentUser(updatedUser);
 
       // If this is a business account, also update any existing reviews with the new business name
       if (currentUser.type === 'business' && updates.name && updates.name !== currentUser.name) {

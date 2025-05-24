@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Session } from "@supabase/supabase-js";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserProfile, loadOneTimeAccessResources } from "./authUtils";
+import { fetchUserProfile, loadOneTimeAccessResources, refreshUserProfile } from "./authUtils";
 
 // Define the global window object with our custom property
 declare global {
@@ -23,12 +23,15 @@ export const useAuthState = () => {
   const [oneTimeAccessResources, setOneTimeAccessResources] = useState<string[]>([]);
 
   // Initialize user data - profile and one-time access resources
-  const initUserData = async (userId: string) => {
+  const initUserData = async (userId: string, forceRefresh: boolean = false) => {
     try {
-      console.log("Initializing user data for:", userId);
+      console.log("Initializing user data for:", userId, "forceRefresh:", forceRefresh);
+      
+      // Use refreshUserProfile if we want to force a fresh fetch, otherwise use cached
+      const fetchFunction = forceRefresh ? refreshUserProfile : fetchUserProfile;
       
       const [userProfile, accessResources] = await Promise.all([
-        fetchUserProfile(userId),
+        fetchFunction(userId),
         loadOneTimeAccessResources(userId)
       ]);
       
@@ -94,12 +97,13 @@ export const useAuthState = () => {
       return;
     }
     
-    // Get initial session
+    // Get initial session and refresh user data
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session:", session);
       setSession(session);
       if (session) {
-        initUserData(session.user.id);
+        // Force refresh on initial load to get latest data
+        initUserData(session.user.id, true);
       } else {
         setLoading(false);
       }
@@ -111,7 +115,8 @@ export const useAuthState = () => {
         console.log("Auth state change:", event, session);
         setSession(session);
         if (session) {
-          await initUserData(session.user.id);
+          // Force refresh on auth state changes to ensure we have latest data
+          await initUserData(session.user.id, true);
         } else {
           setCurrentUser(null);
           setIsSubscribed(false);

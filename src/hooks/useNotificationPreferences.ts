@@ -39,6 +39,8 @@ export const useNotificationPreferences = () => {
     try {
       setIsLoading(true);
       
+      console.log("Fetching notification preferences for user:", currentUser.id);
+      
       const { data, error } = await supabase
         .from('notification_preferences')
         .select('*')
@@ -50,6 +52,7 @@ export const useNotificationPreferences = () => {
       }
 
       if (data) {
+        console.log("Loaded notification preferences:", data);
         setNotificationPrefs({
           reviewReactions: data.review_reactions,
           customerResponses: data.customer_responses,
@@ -58,6 +61,8 @@ export const useNotificationPreferences = () => {
           emailNotifications: data.email_notifications,
           pushNotifications: data.push_notifications,
         });
+      } else {
+        console.log("No notification preferences found, using defaults");
       }
     } catch (error) {
       console.error("Error fetching notification preferences:", error);
@@ -74,6 +79,8 @@ export const useNotificationPreferences = () => {
 
     try {
       setIsSaving(true);
+      
+      console.log("Saving notification preferences for user:", currentUser.id, newPrefs);
 
       const { error } = await supabase
         .from('notification_preferences')
@@ -92,6 +99,7 @@ export const useNotificationPreferences = () => {
         throw error;
       }
 
+      console.log("Notification preferences saved successfully");
       setNotificationPrefs(newPrefs);
       
       toast.success("Notification preferences saved successfully", {

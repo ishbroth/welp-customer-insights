@@ -43,7 +43,7 @@ serve(async (req) => {
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
     
-    // Prepare profile data - ensure all fields are properly mapped
+    // Prepare profile data - ensure all fields are properly mapped and preserved
     const profileUpdateData = {
       name: name || '',
       first_name: firstName,
@@ -64,11 +64,36 @@ serve(async (req) => {
     console.log("Profile update data being saved:", profileUpdateData);
 
     if (existingProfile) {
-      // Profile exists, update it
+      // Profile exists, update it - preserve existing data where new data is empty
       console.log("Updating existing profile with data:", profileUpdateData);
+      
+      // First get the existing profile to preserve data
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      // Merge with existing data to avoid overwriting with empty values
+      const mergedData = {
+        ...profileUpdateData,
+        name: profileUpdateData.name || currentProfile?.name || '',
+        phone: profileUpdateData.phone || currentProfile?.phone || '',
+        address: profileUpdateData.address || currentProfile?.address || '',
+        city: profileUpdateData.city || currentProfile?.city || '',
+        state: profileUpdateData.state || currentProfile?.state || '',
+        zipcode: profileUpdateData.zipcode || currentProfile?.zipcode || '',
+        bio: profileUpdateData.bio || currentProfile?.bio || '',
+        avatar: profileUpdateData.avatar || currentProfile?.avatar || '',
+        business_id: profileUpdateData.business_id || currentProfile?.business_id || '',
+        email: profileUpdateData.email || currentProfile?.email || '',
+      };
+      
+      console.log("Merged profile data:", mergedData);
+      
       profileOperation = supabase
         .from('profiles')
-        .update(profileUpdateData)
+        .update(mergedData)
         .eq('id', userId);
     } else {
       // Profile doesn't exist, insert it
