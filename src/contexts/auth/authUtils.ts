@@ -135,3 +135,53 @@ export const validateProfileData = (profile: Partial<User>): string[] => {
 
   return errors;
 };
+
+/**
+ * Ensure profile exists in database, create if missing
+ */
+export const ensureProfileExists = async (userId: string, userData?: any): Promise<boolean> => {
+  try {
+    console.log("Ensuring profile exists for userId:", userId);
+    
+    // Check if profile exists
+    const existingProfile = await fetchUserProfile(userId);
+    
+    if (existingProfile) {
+      console.log("Profile already exists");
+      return true;
+    }
+    
+    // Profile doesn't exist, create it
+    console.log("Creating missing profile for userId:", userId);
+    
+    const profileData = {
+      userId: userId,
+      name: userData?.name || userData?.first_name || '',
+      email: userData?.email || '',
+      phone: userData?.phone || '',
+      type: userData?.type || 'customer',
+      address: userData?.address || '',
+      city: userData?.city || '',
+      state: userData?.state || '',
+      zipCode: userData?.zipCode || '',
+      bio: '',
+      businessId: '',
+      avatar: ''
+    };
+    
+    const { data, error } = await supabase.functions.invoke('create-profile', {
+      body: profileData
+    });
+    
+    if (error) {
+      console.error("Error creating profile:", error);
+      return false;
+    }
+    
+    console.log("Profile created successfully:", data);
+    return true;
+  } catch (error) {
+    console.error("Error in ensureProfileExists:", error);
+    return false;
+  }
+};

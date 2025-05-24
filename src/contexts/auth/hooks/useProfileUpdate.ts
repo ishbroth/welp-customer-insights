@@ -1,6 +1,7 @@
 
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { validateProfileData } from "../authUtils";
 
 export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user: User | null) => void) => {
   const updateProfile = async (updates: Partial<User>) => {
@@ -13,13 +14,10 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Current user:", currentUser.id);
       console.log("Updates to apply:", updates);
 
-      // Validate required fields
-      if (updates.name && updates.name.trim().length === 0) {
-        throw new Error("Name cannot be empty");
-      }
-
-      if (updates.email && !updates.email.includes('@')) {
-        throw new Error("Invalid email format");
+      // Validate the update data
+      const validationErrors = validateProfileData({ ...currentUser, ...updates });
+      if (validationErrors.length > 0) {
+        throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
       }
 
       // Update user metadata if email has changed
@@ -90,18 +88,56 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Setting updated user in state:", updatedUser);
       setCurrentUser(updatedUser);
 
-      // Verify the data was saved by fetching it back
+      // Double-check: Verify the data was saved by fetching it back
       console.log("Verifying saved data...");
       const { data: verificationData, error: verifyError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          name,
+          first_name,
+          last_name,
+          email,
+          phone,
+          address,
+          city,
+          state,
+          zipcode,
+          type,
+          bio,
+          business_id,
+          avatar,
+          created_at,
+          updated_at
+        `)
         .eq('id', currentUser.id)
         .single();
 
       if (verifyError) {
         console.error("Verification error:", verifyError);
+        throw new Error("Failed to verify profile update");
       } else {
         console.log("Verified data in database:", verificationData);
+        
+        // Ensure the local state matches database state
+        const verifiedUser: User = {
+          id: verificationData.id,
+          name: verificationData.name || '',
+          email: verificationData.email || '',
+          phone: verificationData.phone || '',
+          address: verificationData.address || '',
+          city: verificationData.city || '',
+          state: verificationData.state || '',
+          zipCode: verificationData.zipcode || '',
+          type: (verificationData.type as "business" | "customer" | "admin") || "customer",
+          bio: verificationData.bio || '',
+          businessId: verificationData.business_id || '',
+          avatar: verificationData.avatar || ''
+        };
+        
+        // Update state with verified data to ensure consistency
+        setCurrentUser(verifiedUser);
+        console.log("Updated local state with verified database data");
       }
 
       console.log("=== PROFILE UPDATE COMPLETE ===");
