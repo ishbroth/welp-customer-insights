@@ -20,7 +20,7 @@ interface ProfileFormProps {
 const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
+  const { setCurrentUser } = useAuth();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -61,8 +61,11 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
       
       await updateProfile(updateData);
       
-      // Refresh the user data in the auth context
-      await refreshUser();
+      // Update the current user in the auth context with the new data
+      setCurrentUser({
+        ...currentUser,
+        ...updateData
+      });
       
       toast({
         title: "Profile updated",
