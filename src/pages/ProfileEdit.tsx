@@ -1,3 +1,4 @@
+
 import { useState, useRef, ChangeEvent } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +23,7 @@ const ProfileEdit = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       setAvatarPreview(reader.result as string);
+      setRotation(0); // Reset rotation when new file is selected
       setIsEditingPhoto(true);
     };
     reader.readAsDataURL(file);
@@ -35,15 +37,30 @@ const ProfileEdit = () => {
     setRotation((prev) => (prev + 90) % 360);
   };
 
-  const handleSavePhoto = () => {
-    // In a real application, you would upload the cropped/rotated image here
-    // For now, we'll just use the preview as the new avatar
-    updateProfile({ avatar: avatarPreview });
-    setIsEditingPhoto(false);
-    toast({
-      title: "Profile photo updated",
-      description: "Your profile photo has been successfully updated.",
-    });
+  const handleSavePhoto = async (croppedImage: string) => {
+    try {
+      console.log("Saving cropped profile photo");
+      
+      // Update profile with the cropped image
+      await updateProfile({ avatar: croppedImage });
+      
+      // Update local state
+      setAvatarPreview(croppedImage);
+      setIsEditingPhoto(false);
+      setRotation(0);
+      
+      toast({
+        title: "Profile photo updated",
+        description: "Your profile photo has been successfully updated.",
+      });
+    } catch (error) {
+      console.error("Error saving profile photo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile photo. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Check if user is a business type

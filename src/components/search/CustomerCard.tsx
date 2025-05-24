@@ -50,6 +50,16 @@ const CustomerCard = ({
     return `${firstInitial}${lastInitial}`.toUpperCase();
   };
 
+  // Get customer avatar - use actual avatar if customer has profile, otherwise use generic
+  const getCustomerAvatar = () => {
+    // If this is a review-generated customer (no actual profile), return null for generic avatar
+    if (isReviewCustomer) {
+      return null;
+    }
+    // If this is a real customer profile, return their avatar
+    return customer.avatar || null;
+  };
+
   return (
     <Card 
       className={`p-4 transition-shadow hover:shadow-md ${isExpanded ? 'shadow-md' : ''}`}
@@ -59,12 +69,16 @@ const CustomerCard = ({
       <div className="flex justify-between items-start">
         <div className="flex items-center space-x-3">
           {/* Add avatar for customer */}
-          {isBusinessUser && !isReviewCustomer && (
+          {isBusinessUser && (
             <div onClick={handleViewProfile} className="cursor-pointer">
               <Avatar className="h-10 w-10 border border-gray-200">
-                <AvatarFallback className="bg-gray-200 text-gray-800">
-                  {getInitials()}
-                </AvatarFallback>
+                {getCustomerAvatar() ? (
+                  <AvatarImage src={getCustomerAvatar()!} alt={`${customer.firstName} ${customer.lastName}`} />
+                ) : (
+                  <AvatarFallback className="bg-gray-200 text-gray-800">
+                    {getInitials()}
+                  </AvatarFallback>
+                )}
               </Avatar>
             </div>
           )}

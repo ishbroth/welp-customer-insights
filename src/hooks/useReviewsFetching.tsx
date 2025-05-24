@@ -38,7 +38,7 @@ export const useReviewsFetching = (
               business_id,
               customer_name,
               customer_phone,
-              profiles!business_id(name)
+              profiles!business_id(name, avatar)
             `)
             .eq('id', actualReviewId);
 
@@ -60,7 +60,7 @@ export const useReviewsFetching = (
               content, 
               created_at,
               business_id,
-              profiles!business_id(name)
+              profiles!business_id(name, avatar)
             `)
             .ilike('customer_name', `%${review.customer_name}%`)
             .order('created_at', { ascending: false });
@@ -77,7 +77,8 @@ export const useReviewsFetching = (
             date: rev.created_at,
             reviewerId: rev.business_id,
             // Use the updated profile name if available, otherwise use the stored customer_name
-            reviewerName: rev.profiles?.name || "The Painted Painter"
+            reviewerName: rev.profiles?.name || "The Painted Painter",
+            reviewerAvatar: rev.profiles?.avatar || ""
           })) : [];
 
           setProcessedReviews(formattedReviews);
@@ -106,7 +107,7 @@ export const useReviewsFetching = (
             content, 
             created_at,
             business_id,
-            profiles!business_id(name)
+            profiles!business_id(name, avatar)
           `)
           .eq('customer_id', customerId);
 
@@ -122,7 +123,8 @@ export const useReviewsFetching = (
           date: review.created_at,
           reviewerId: review.business_id,
           // Use the updated profile name if available
-          reviewerName: review.profiles?.name || "The Painted Painter"
+          reviewerName: review.profiles?.name || "The Painted Painter",
+          reviewerAvatar: review.profiles?.avatar || ""
         })) : [];
 
         setProcessedReviews(formattedReviews);

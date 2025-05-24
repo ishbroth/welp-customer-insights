@@ -3,21 +3,29 @@ export interface Customer {
   id: string;
   firstName: string;
   lastName: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  averageRating: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   totalReviews: number;
-  isSubscriptionNeeded: boolean;
+  averageRating: number;
+  isSubscriptionNeeded?: boolean;
+  avatar?: string; // Add avatar field
 }
 
-export interface CustomerReview {
-  id: string;
-  rating: number;
-  content: string;
-  reviewerId: string;
-  reviewerName: string;
-  date: string;
+export interface SearchFilters {
+  state?: string;
+  city?: string;
+  rating?: number;
+  sortBy?: 'name' | 'rating' | 'reviews';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SearchResults {
+  customers: Customer[];
+  totalCount: number;
+  hasMore: boolean;
 }

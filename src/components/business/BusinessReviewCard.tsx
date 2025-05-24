@@ -56,7 +56,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           onClick={handleCustomerClick}
         >
           <Avatar className="h-12 w-12">
-            <AvatarImage src="" alt={review.customerName} />
+            {/* Show customer avatar if available, otherwise show initials */}
+            <AvatarImage src={review.customerAvatar || ""} alt={review.customerName} />
             <AvatarFallback className="bg-gray-200 text-gray-800">
               {getCustomerInitials()}
             </AvatarFallback>
