@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import ReactionButton from "./reactions/ReactionButton";
 import { useReactionPermissions } from "./reactions/useReactionPermissions";
+import { useAuth } from "@/contexts/auth";
 
 interface ReviewReactionsProps {
   reviewId: string;
@@ -30,7 +31,6 @@ const ReviewReactions = ({
   reactions, 
   onReactionToggle 
 }: ReviewReactionsProps) => {
-  const { useAuth } = require("@/contexts/auth");
   const { currentUser, hasOneTimeAccess, isSubscribed } = useAuth();
   const userId = currentUser?.id || "";
   const { checkPermissions } = useReactionPermissions({ customerId });
