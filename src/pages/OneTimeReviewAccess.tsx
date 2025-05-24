@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Lock } from "lucide-react";
+import { Lock, User, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,7 +20,7 @@ const OneTimeReviewAccess = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
-  const { currentUser, markOneTimeAccess } = useAuth();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     if (!customerId && !reviewId) {
@@ -30,19 +30,12 @@ const OneTimeReviewAccess = () => {
     
     // Handle success payment return from Stripe
     if (success === "true") {
-      if (reviewId) {
-        markOneTimeAccess(`review_${reviewId}`);
-        toast({
-          title: "Payment Successful",
-          description: "You now have access to this review and can respond once.",
-        });
-      } else if (customerId) {
-        markOneTimeAccess(customerId);
-        toast({
-          title: "Payment Successful",
-          description: "You now have access to all reviews for this customer.",
-        });
-      }
+      toast({
+        title: "Payment Successful",
+        description: reviewId 
+          ? "You now have access to this review and can respond once."
+          : "You now have access to all reviews for this customer.",
+      });
       // Navigate back to search results
       navigate(-1);
     }
@@ -55,9 +48,25 @@ const OneTimeReviewAccess = () => {
         variant: "destructive"
       });
     }
-  }, [success, canceled, customerId, reviewId, navigate, toast, markOneTimeAccess]);
+  }, [success, canceled, customerId, reviewId, navigate, toast]);
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleSignup = (type: 'business' | 'customer') => {
+    navigate(`/signup?type=${type}`);
+  };
 
   const handleSubscription = () => {
+    if (!currentUser) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to subscribe.",
+        variant: "destructive"
+      });
+      return;
+    }
     navigate("/subscription");
   };
 
@@ -74,11 +83,11 @@ const OneTimeReviewAccess = () => {
     setIsProcessing(true);
     
     try {
-      // Prepare the request payload
+      // Prepare the request payload with correct pricing
       const payload = {
         customerId,
         reviewId,
-        amount: getPrice(true) // Get price in cents
+        amount: 300 // Always $3.00 for one-time access
       };
       
       // Call the create-payment edge function
@@ -94,7 +103,7 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Redirect to Stripe checkout
+      // Redirect to Stripe checkout - this will automatically save payment methods for future use
       window.location.href = data.url;
       console.log("OneTimeReviewAccess - Redirecting to Stripe checkout");
       
@@ -109,18 +118,84 @@ const OneTimeReviewAccess = () => {
     }
   };
 
-  // Determine appropriate pricing based on user type and what's being purchased
-  const getPrice = (inCents = false) => {
-    let price = 0;
-    
-    if (currentUser?.type === "business") {
-      price = reviewId ? 200 : 300; // Business pays $2 for a review, $3 for all customer reviews
-    } else {
-      price = reviewId ? 300 : 500; // Customers pay $3 for a review, $5 for all customer reviews
-    }
-    
-    return inCents ? price : (price / 100).toFixed(2);
-  };
+  // If user is not logged in, show authentication prompt
+  if (!currentUser) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-md mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold">
+                    <div className="flex items-center">
+                      <Lock className="w-6 h-6 mr-2 text-welp-primary" />
+                      Authentication Required
+                    </div>
+                  </CardTitle>
+                  <CardDescription>
+                    Please log in or create an account to access this review content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-4">
+                        You need to be logged in to purchase one-time access for <strong>$3.00</strong>
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      className="w-full welp-button"
+                      onClick={handleLogin}
+                    >
+                      Log In to Existing Account
+                    </Button>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Or create new account</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleSignup('business')}
+                        className="flex items-center justify-center"
+                      >
+                        <Building2 className="w-4 h-4 mr-2" />
+                        Business Owner
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleSignup('customer')}
+                        className="flex items-center justify-center"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Customer
+                      </Button>
+                    </div>
+                    
+                    <div className="text-center pt-4">
+                      <p className="text-xs text-gray-500">
+                        Your payment information will be securely stored for future purchases
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -163,12 +238,16 @@ const OneTimeReviewAccess = () => {
                         <span className="text-green-500 mr-2">✓</span>
                         Unlimited responses to business replies
                       </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        Secure payment information storage for quick renewals
+                      </li>
                     </ul>
                     <Button 
                       className="w-full welp-button"
                       onClick={handleSubscription}
                     >
-                      Subscribe for {currentUser?.type === "business" ? "$11.99" : "$11.99"}/month
+                      Subscribe for $11.99/month
                     </Button>
                   </div>
                   
@@ -193,6 +272,12 @@ const OneTimeReviewAccess = () => {
                         </li>
                       )}
                       <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span className="text-gray-600">
+                          Payment information securely stored for future purchases
+                        </span>
+                      </li>
+                      <li className="flex items-start">
                         <span className="text-red-500 mr-2">✗</span>
                         <span className="text-gray-500">
                           You'll need to pay again to respond to any future business replies
@@ -203,7 +288,7 @@ const OneTimeReviewAccess = () => {
                   
                   <div className="flex justify-between items-center p-4 border-t border-b">
                     <span className="text-lg font-medium">Total</span>
-                    <span className="text-2xl font-bold">${getPrice()}</span>
+                    <span className="text-2xl font-bold">$3.00</span>
                   </div>
                   
                   <div className="space-y-4">
@@ -213,7 +298,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handlePayment}
                     >
-                      {isProcessing ? "Processing..." : `Pay $${getPrice()}`}
+                      {isProcessing ? "Processing..." : "Pay $3.00"}
                     </Button>
                     
                     <p className="text-sm text-gray-500 text-center">
@@ -221,11 +306,17 @@ const OneTimeReviewAccess = () => {
                       <Button 
                         variant="link" 
                         className="p-0 h-auto text-welp-primary"
-                        onClick={() => navigate("/subscription")}
+                        onClick={handleSubscription}
                       >
                         monthly subscription
                       </Button>
                     </p>
+                    
+                    <div className="text-center pt-2">
+                      <p className="text-xs text-gray-400">
+                        🔒 Payments secured by Stripe. Your payment information is safely stored for future purchases.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
