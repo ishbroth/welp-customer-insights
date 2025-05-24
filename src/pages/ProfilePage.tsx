@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import StarRating from "@/components/StarRating";
-import { Edit, MapPin, Phone, Search, Settings, Shield, User as UserIcon } from "lucide-react";
+import { MapPin, Phone, Search, Settings, Shield, User as UserIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -109,12 +110,6 @@ const ProfilePage = () => {
                     </p>
                   </div>
                 </div>
-                <Button className="mt-4 md:mt-0" asChild>
-                  <Link to="/profile/edit">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Edit Profile
-                  </Link>
-                </Button>
               </div>
               
               {/* Admin Dashboard Panel */}
@@ -198,14 +193,6 @@ const ProfilePage = () => {
                         )}
                       </div>
                     </div>
-                    <div className="mt-4 flex justify-end">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/profile/edit">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Business Information
-                        </Link>
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -260,14 +247,6 @@ const ProfilePage = () => {
                           </div>
                         )}
                       </div>
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/profile/edit">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Profile
-                        </Link>
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
