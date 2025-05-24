@@ -38,54 +38,54 @@ import AdminLogin from "./pages/AdminLogin";
 import CustomerProfile from "./pages/CustomerProfile";
 import BusinessProfile from "./pages/BusinessProfile";
 
-// Protected route component that allows access if user is logged in
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser } = useAuth();
-  
-  // Allow access if user is logged in
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Business owner route component that allows access only for business owners
-const BusinessOwnerRoute = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser } = useAuth();
-  
-  // Redirect to login if not logged in
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Redirect if not a business owner
-  if (currentUser.type === "customer") {
-    return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Business owner or admin route component
-const BusinessOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser } = useAuth();
-  
-  // Redirect to login if not logged in
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Redirect if not a business owner or admin
-  if (currentUser.type === "customer") {
-    return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 // Routes component that uses the AuthContext
 const AppRoutes = () => {
+  // Protected route component that allows access if user is logged in
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const { currentUser } = useAuth();
+    
+    // Allow access if user is logged in
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
+  // Business owner route component that allows access only for business owners
+  const BusinessOwnerRoute = ({ children }: { children: React.ReactNode }) => {
+    const { currentUser } = useAuth();
+    
+    // Redirect to login if not logged in
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    // Redirect if not a business owner
+    if (currentUser.type === "customer") {
+      return <Navigate to="/" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
+  // Business owner or admin route component
+  const BusinessOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
+    const { currentUser } = useAuth();
+    
+    // Redirect to login if not logged in
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    // Redirect if not a business owner or admin
+    if (currentUser.type === "customer") {
+      return <Navigate to="/" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
   return (
     <Routes>
       <Route path="/" element={<Index />} />
