@@ -60,6 +60,12 @@ export const useAuthState = () => {
     // Check for mock user first (for admin testing)
     if (window.__CURRENT_USER__) {
       const mockUser = window.__CURRENT_USER__;
+      
+      // Update the business admin profile if it's the business admin account
+      if (mockUser.id === "10000000-0000-0000-0000-000000000001") {
+        mockUser.name = "The Painted Painter";
+      }
+      
       setCurrentUser(mockUser);
       
       // Check if this is an admin account and set subscription accordingly
