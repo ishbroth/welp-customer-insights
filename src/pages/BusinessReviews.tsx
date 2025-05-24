@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
@@ -10,9 +11,10 @@ import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
-import ReviewCard from "@/components/ReviewCard";
+import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import { moderateContent } from "@/utils/contentModeration";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,29 +33,94 @@ const BusinessReviews = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Set hasSubscription based on auth context
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+  const [workingReviews, setWorkingReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Add new state for content moderation
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   // Update local state when subscription changes
   useEffect(() => {
     setHasSubscription(isSubscribed);
   }, [isSubscribed]);
   
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
-  
-  // State for reviews with empty initial value
-  const [workingReviews, setWorkingReviews] = useState<Review[]>([]);
-
-  // Add new state for content moderation
-  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
-  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
-  
-  // Load reviews - this would be replaced with an API call
+  // Fetch reviews from database
   useEffect(() => {
-    // In a real app, this would be a fetch call to get the business's reviews
-    setWorkingReviews([]);
+    if (currentUser) {
+      fetchBusinessReviews();
+    }
   }, [currentUser]);
+
+  const fetchBusinessReviews = async () => {
+    if (!currentUser) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Fetch reviews written by this business
+      const { data: reviewsData, error } = await supabase
+        .from('reviews')
+        .select(`
+          id,
+          rating,
+          content,
+          created_at,
+          customer_id,
+          customer_name,
+          customer_address,
+          customer_city,
+          customer_zipcode,
+          customer_phone
+        `)
+        .eq('business_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      // Format reviews data to match Review type
+      const formattedReviews = reviewsData ? reviewsData.map(review => ({
+        id: review.id,
+        reviewerId: currentUser.id,
+        reviewerName: currentUser.name || "Anonymous Business",
+        reviewerAvatar: currentUser.avatar,
+        customerId: review.customer_id || '',
+        customerName: review.customer_name || "Anonymous Customer",
+        rating: review.rating,
+        content: review.content,
+        date: review.created_at,
+        address: review.customer_address,
+        city: review.customer_city,
+        zipCode: review.customer_zipcode,
+        reactions: { like: [], funny: [], useful: [], ohNo: [] },
+        responses: []
+      })) : [];
+
+      setWorkingReviews(formattedReviews);
+      
+      if (reviewsData && reviewsData.length > 0) {
+        toast({
+          title: "Reviews Loaded",
+          description: `Found ${reviewsData.length} reviews you've written.`,
+        });
+      }
+      
+    } catch (error) {
+      console.error("Error fetching business reviews:", error);
+      toast({
+        title: "Error",
+        description: "There was an error fetching your reviews. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Pagination settings
   const reviewsPerPage = 5;
@@ -80,15 +147,34 @@ const BusinessReviews = () => {
   };
 
   // Function to handle deleting a review
-  const handleDeleteReview = () => {
+  const handleDeleteReview = async () => {
     if (!reviewToDelete) return;
 
-    setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
-    
-    toast({
-      title: "Review deleted",
-      description: "Your review has been successfully deleted.",
-    });
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .delete()
+        .eq('id', reviewToDelete);
+
+      if (error) {
+        throw error;
+      }
+
+      setWorkingReviews(prev => prev.filter(review => review.id !== reviewToDelete));
+      
+      toast({
+        title: "Review deleted",
+        description: "Your review has been successfully deleted.",
+      });
+      
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the review. Please try again.",
+        variant: "destructive"
+      });
+    }
     
     setDeleteDialogOpen(false);
     setReviewToDelete(null);
@@ -136,11 +222,16 @@ const BusinessReviews = () => {
         
         <main className="flex-1 p-6">
           <div className="container mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">My Customer Reviews</h1>
-              <p className="text-gray-600">
-                Manage the reviews you've written about customers.
-              </p>
+            <div className="mb-6 flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">My Customer Reviews</h1>
+                <p className="text-gray-600">
+                  Manage the reviews you've written about customers.
+                </p>
+              </div>
+              <Button onClick={fetchBusinessReviews} disabled={isLoading}>
+                {isLoading ? "Loading..." : "Refresh Reviews"}
+              </Button>
             </div>
             
             {!hasSubscription ? (
@@ -184,58 +275,32 @@ const BusinessReviews = () => {
               </Button>
             </div>
             
-            {workingReviews.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-10">
+                <p className="text-gray-500">Loading your reviews...</p>
+              </div>
+            ) : workingReviews.length === 0 ? (
               <EmptyReviewsMessage type="business" />
             ) : (
               <div className="space-y-6">
                 {currentReviews.map((review) => (
-                  <div key={review.id} className="relative">
-                    <ReviewCard 
-                      key={review.id}
-                      review={{
-                        id: review.id,
-                        businessName: review.customerName,
-                        businessId: review.customerId,
-                        customerName: currentUser?.name || "",
-                        customerId: currentUser?.id,
-                        rating: review.rating,
-                        comment: review.content,
-                        createdAt: review.date,
-                        location: "",
-                        address: review.address || "",
-                        city: review.city || "",
-                        zipCode: review.zipCode || "00000",
-                        responses: review.responses
-                      }}
-                      showResponse={true}
-                      hasSubscription={hasSubscription}
-                    />
-                    <div className="absolute top-4 right-4 flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleEditReview(review)}
-                        className="bg-white hover:bg-gray-100"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => openDeleteDialog(review.id)}
-                        className="bg-white hover:bg-gray-100 text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  <BusinessReviewCard
+                    key={review.id}
+                    review={review}
+                    hasSubscription={hasSubscription}
+                    onEdit={handleEditReview}
+                    onDelete={openDeleteDialog}
+                    onReactionToggle={handleReactionToggle}
+                  />
                 ))}
                 
-                <ReviewPagination 
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
+                {totalPages > 1 && (
+                  <ReviewPagination 
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
               </div>
             )}
           </div>
