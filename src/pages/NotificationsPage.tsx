@@ -1,43 +1,47 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/sonner";
-import { Bell, BellRing } from "lucide-react";
+import { Bell, BellRing, Loader2 } from "lucide-react";
 import NotificationTypes from "@/components/notifications/NotificationTypes";
 import NotificationChannels from "@/components/notifications/NotificationChannels";
+import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 
 const NotificationsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useAuth();
   
-  // Notification preferences state
-  const [notificationPrefs, setNotificationPrefs] = useState({
-    reviewReactions: true,
-    customerResponses: true,
-    newReviews: true, // For customers only
-    reviewResponses: true, // For customers only
-    emailNotifications: true,
-    pushNotifications: false,
-  });
+  const {
+    notificationPrefs,
+    isLoading,
+    isSaving,
+    handleToggleChange,
+    savePreferences
+  } = useNotificationPreferences();
 
-  // Handle toggle changes
-  const handleToggleChange = (key: keyof typeof notificationPrefs) => {
-    setNotificationPrefs(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-  // Save notification preferences
-  const handleSavePreferences = () => {
-    // In a real app, this would save to a database
-    toast("Notification preferences saved successfully", {
-      description: "Your notification settings have been updated",
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex-grow flex flex-col md:flex-row">
+          <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
+          
+          <main className="flex-1 p-6">
+            <div className="container mx-auto max-w-3xl">
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading notification preferences...</span>
+              </div>
+            </div>
+          </main>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -73,9 +77,22 @@ const NotificationsPage = () => {
               />
 
               <div className="flex justify-end">
-                <Button onClick={handleSavePreferences} className="px-6">
-                  <BellRing className="mr-2 h-4 w-4" />
-                  Save Preferences
+                <Button 
+                  onClick={savePreferences} 
+                  className="px-6"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <BellRing className="mr-2 h-4 w-4" />
+                      Save Preferences
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

@@ -34,3 +34,6 @@ verify_jwt = true
 
 [functions.confirm-email]
 verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = true

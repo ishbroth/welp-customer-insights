@@ -86,6 +86,81 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          customer_responses: boolean
+          email_notifications: boolean
+          id: string
+          new_reviews: boolean
+          push_notifications: boolean
+          review_reactions: boolean
+          review_responses: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_responses?: boolean
+          email_notifications?: boolean
+          id?: string
+          new_reviews?: boolean
+          push_notifications?: boolean
+          review_reactions?: boolean
+          review_responses?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_responses?: boolean
+          email_notifications?: boolean
+          id?: string
+          new_reviews?: boolean
+          push_notifications?: boolean
+          review_reactions?: boolean
+          review_responses?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications_log: {
+        Row: {
+          channel: string
+          content: string
+          error_message: string | null
+          id: string
+          notification_type: string
+          sent_at: string
+          status: string
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          content: string
+          error_message?: string | null
+          id?: string
+          notification_type: string
+          sent_at?: string
+          status?: string
+          subject?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          content?: string
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          sent_at?: string
+          status?: string
+          subject?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
