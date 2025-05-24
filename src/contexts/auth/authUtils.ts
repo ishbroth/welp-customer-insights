@@ -27,6 +27,12 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
 
     console.log("Raw profile data from database:", profile);
 
+    // Validate and ensure type is one of the allowed values
+    let userType: "customer" | "business" | "admin" = "customer";
+    if (profile.type === "business" || profile.type === "admin" || profile.type === "customer") {
+      userType = profile.type;
+    }
+
     // Transform database profile to User type
     const user: User = {
       id: profile.id,
@@ -39,7 +45,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       city: profile.city || '',
       state: profile.state || '',
       zipCode: profile.zipcode || '', // Note: database column is 'zipcode'
-      type: profile.type || 'customer',
+      type: userType,
       bio: profile.bio || '',
       businessId: profile.business_id || '',
       avatar: profile.avatar || ''
