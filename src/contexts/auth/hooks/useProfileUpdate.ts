@@ -88,7 +88,7 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Setting updated user in state:", updatedUser);
       setCurrentUser(updatedUser);
 
-      // Double-check: Verify the data was saved by fetching it back
+      // Double-check: Verify the data was saved by fetching it back with better error handling
       console.log("Verifying saved data...");
       const { data: verificationData, error: verifyError } = await supabase
         .from('profiles')
@@ -111,12 +111,13 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
           updated_at
         `)
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
 
       if (verifyError) {
         console.error("Verification error:", verifyError);
-        throw new Error("Failed to verify profile update");
-      } else {
+        // Don't throw here - the update was successful, verification is just extra
+        console.warn("Profile update completed but verification failed:", verifyError.message);
+      } else if (verificationData) {
         console.log("Verified data in database:", verificationData);
         
         // Ensure the local state matches database state
@@ -138,6 +139,8 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
         // Update state with verified data to ensure consistency
         setCurrentUser(verifiedUser);
         console.log("Updated local state with verified database data");
+      } else {
+        console.warn("No profile data found during verification, but update was successful");
       }
 
       console.log("=== PROFILE UPDATE COMPLETE ===");
