@@ -63,6 +63,12 @@ export const useAuthState = () => {
     }
   };
 
+  // Enhanced setCurrentUser function that also persists to database
+  const enhancedSetCurrentUser = (user: User | null) => {
+    console.log("Enhanced setCurrentUser called with:", user);
+    setCurrentUser(user);
+  };
+
   // Set up auth state listener on mount
   useEffect(() => {
     setLoading(true);
@@ -170,7 +176,7 @@ export const useAuthState = () => {
 
   return {
     currentUser,
-    setCurrentUser,
+    setCurrentUser: enhancedSetCurrentUser,
     session,
     loading,
     isSubscribed,
