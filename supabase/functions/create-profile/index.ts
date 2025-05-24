@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email, firstName, lastName } = await req.json();
+    const { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email } = await req.json();
     
-    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email, firstName, lastName });
+    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email });
     
     // Simple validation
     if (!userId || !type) {
@@ -38,11 +38,16 @@ serve(async (req) => {
     
     let profileOperation;
     
+    // Split name into first_name and last_name for database storage
+    const nameParts = (name || '').trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
     // Prepare profile data - ensure all fields are properly mapped
     const profileUpdateData = {
       name: name || '',
-      first_name: firstName || '',
-      last_name: lastName || '',
+      first_name: firstName,
+      last_name: lastName,
       phone: phone || '',
       address: address || '',
       city: city || '',
@@ -55,13 +60,6 @@ serve(async (req) => {
       email: email || '',
       updated_at: new Date().toISOString(),
     };
-
-    // For business accounts, ensure business name is saved in the name field
-    if (type === 'business' && businessName) {
-      profileUpdateData.name = businessName;
-      profileUpdateData.first_name = businessName;
-      profileUpdateData.last_name = '';
-    }
 
     console.log("Profile update data being saved:", profileUpdateData);
 
@@ -94,8 +92,8 @@ serve(async (req) => {
     console.log("Profile operation successful, result:", profileResult);
 
     // If it's a business account, check if business info exists and create/update
-    if (type === "business" && businessName) {
-      console.log("Processing business info for business name:", businessName);
+    if (type === "business" && name) {
+      console.log("Processing business info for business name:", name);
       
       const { data: existingBusiness } = await supabase
         .from('business_info')
@@ -111,7 +109,7 @@ serve(async (req) => {
         businessOperation = supabase
           .from('business_info')
           .update({
-            business_name: businessName,
+            business_name: name,
           })
           .eq('id', userId);
       } else {
@@ -121,7 +119,7 @@ serve(async (req) => {
           .from('business_info')
           .insert({
             id: userId,
-            business_name: businessName,
+            business_name: name,
             verified: false,
           });
       }

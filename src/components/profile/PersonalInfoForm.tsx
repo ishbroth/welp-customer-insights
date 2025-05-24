@@ -12,53 +12,28 @@ interface PersonalInfoFormProps {
 
 const PersonalInfoForm = ({ form, isBusinessAccount }: PersonalInfoFormProps) => {
   return (
-    <>
-      {isBusinessAccount ? (
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Business name</FormLabel>
-              <FormControl>
-                <Input placeholder="Your business name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your first name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      )}
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Personal Information</h3>
       
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              {isBusinessAccount ? "Business Name" : "Full Name"}
+            </FormLabel>
+            <FormControl>
+              <Input 
+                placeholder={isBusinessAccount ? "Enter business name" : "Enter your full name"} 
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormField
         control={form.control}
         name="email"
@@ -66,7 +41,7 @@ const PersonalInfoForm = ({ form, isBusinessAccount }: PersonalInfoFormProps) =>
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input placeholder="Your email" {...field} />
+              <Input placeholder="Enter your email" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -81,8 +56,8 @@ const PersonalInfoForm = ({ form, isBusinessAccount }: PersonalInfoFormProps) =>
             <FormLabel>Bio</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Tell us a bit about yourself..." 
-                className="min-h-32"
+                placeholder={isBusinessAccount ? "Tell us about your business..." : "Tell us about yourself..."} 
+                className="min-h-[100px]"
                 {...field} 
               />
             </FormControl>
@@ -90,7 +65,7 @@ const PersonalInfoForm = ({ form, isBusinessAccount }: PersonalInfoFormProps) =>
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 };
 
