@@ -49,26 +49,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border relative">
-      {/* Action buttons in top right */}
-      <div className="absolute top-4 right-4 flex space-x-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onEdit(review)}
-          className="bg-white hover:bg-gray-100 shadow-sm"
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onDelete(review.id)}
-          className="bg-white hover:bg-gray-100 text-red-500 hover:text-red-700 shadow-sm"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-
       {/* Review header */}
       <div className="flex items-start space-x-4 mb-4">
         <div 
@@ -121,7 +101,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       </div>
 
       {/* Reactions section */}
-      <div className="border-t pt-4">
+      <div className="border-t pt-4 mb-4">
         <div className="text-sm text-gray-500 mb-2">Your reactions:</div>
         <ReviewReactions 
           reviewId={review.id}
@@ -132,6 +112,26 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
           onReactionToggle={onReactionToggle}
         />
+      </div>
+
+      {/* Action buttons moved to bottom */}
+      <div className="flex justify-end space-x-2 pt-2 border-t">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => onEdit(review)}
+          className="bg-white hover:bg-gray-100 shadow-sm"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => onDelete(review.id)}
+          className="bg-white hover:bg-gray-100 text-red-500 hover:text-red-700 shadow-sm"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Responses section would go here if implemented */}
