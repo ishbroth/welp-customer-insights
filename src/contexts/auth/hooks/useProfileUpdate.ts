@@ -77,48 +77,7 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Updating current user state with:", updatedUser);
       setCurrentUser(updatedUser);
 
-      // Verify the data was actually saved by making a direct database query
-      console.log("Verifying profile data was saved to database...");
-      const { data: verificationData, error: verificationError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (verificationError) {
-        console.error("Verification query failed:", verificationError);
-        throw new Error("Could not verify profile was saved");
-      }
-
-      console.log("Database verification successful:", verificationData);
-
-      // Double-check that the changes we made are actually in the database
-      const expectedChanges = Object.keys(updates);
-      const savedCorrectly = expectedChanges.every(key => {
-        const expectedValue = updates[key as keyof User];
-        let actualValue;
-        
-        // Map User type fields to database fields
-        if (key === 'zipCode') {
-          actualValue = verificationData.zipcode;
-        } else if (key === 'businessId') {
-          actualValue = verificationData.business_id;
-        } else {
-          actualValue = verificationData[key];
-        }
-        
-        const matches = actualValue === expectedValue;
-        if (!matches) {
-          console.warn(`Field ${key} mismatch: expected ${expectedValue}, got ${actualValue}`);
-        }
-        return matches;
-      });
-
-      if (!savedCorrectly) {
-        throw new Error("Profile update verification failed - data not saved correctly");
-      }
-
-      console.log("Profile update completed and verified successfully");
+      console.log("Profile update completed successfully");
       
       return data;
 
