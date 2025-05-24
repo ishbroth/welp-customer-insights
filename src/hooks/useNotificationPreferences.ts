@@ -61,9 +61,8 @@ export const useNotificationPreferences = () => {
       }
     } catch (error) {
       console.error("Error fetching notification preferences:", error);
-      toast("Error loading notification preferences", {
+      toast.error("Error loading notification preferences", {
         description: "We'll use default settings for now.",
-        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -95,15 +94,14 @@ export const useNotificationPreferences = () => {
 
       setNotificationPrefs(newPrefs);
       
-      toast("Notification preferences saved successfully", {
+      toast.success("Notification preferences saved successfully", {
         description: "Your notification settings have been updated",
       });
 
     } catch (error) {
       console.error("Error saving notification preferences:", error);
-      toast("Error saving notification preferences", {
+      toast.error("Error saving notification preferences", {
         description: "Please try again later.",
-        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
