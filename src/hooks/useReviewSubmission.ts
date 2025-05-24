@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { v4 as uuidv4 } from "uuid";
 
 export const useReviewSubmission = (isEditing: boolean, reviewId: string | null) => {
   const { toast } = useToast();
@@ -65,15 +64,12 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      // Instead of creating a profile, use a direct insert with the review data
-      // For demo purposes, we'll use a hardcoded business ID that already exists in the database
-      // In a production app, this would come from the authenticated user's profile
-      const demoBusinessId = "00000000-0000-0000-0000-000000000000"; // Using a fixed UUID for demo
+      // Use the current user's ID as the business_id (for business owners submitting reviews)
+      const businessId = currentUser.id;
       
       // Prepare review data
       const supabaseReviewData = {
-        // Use a fixed business_id for demo purposes
-        business_id: demoBusinessId,
+        business_id: businessId,
         rating: rating,
         content: comment,
         customer_name: `${customerFirstName} ${customerLastName}`.trim(),
@@ -83,27 +79,37 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
         customer_phone: customerPhone,
       };
       
-      console.log("Attempting to submit review with data:", supabaseReviewData);
+      console.log("Submitting review with data:", supabaseReviewData);
       
       let result;
       
-      // Skip RLS by using a special endpoint or direct database insert
-      // In a real app, you'd use proper authentication
-      // For this demo, we're bypassing the database entirely
+      if (isEditing && reviewId) {
+        // Update existing review
+        result = await supabase
+          .from('reviews')
+          .update(supabaseReviewData)
+          .eq('id', reviewId);
+      } else {
+        // Insert new review
+        result = await supabase
+          .from('reviews')
+          .insert([supabaseReviewData]);
+      }
       
-      // Simulate a successful submission
-      setTimeout(() => {
-        toast({
-          title: isEditing ? "Review Updated" : "Review Submitted",
-          description: isEditing 
-            ? "Your customer review has been successfully updated." 
-            : "Your customer review has been successfully submitted.",
-        });
-        
-        // Navigate to success page
-        navigate("/review/success");
-      }, 1000);
+      if (result.error) {
+        console.error("Database error:", result.error);
+        throw new Error(result.error.message);
+      }
       
+      toast({
+        title: isEditing ? "Review Updated" : "Review Submitted",
+        description: isEditing 
+          ? "Your customer review has been successfully updated." 
+          : "Your customer review has been successfully submitted.",
+      });
+      
+      // Navigate to success page
+      navigate("/review/success");
       return true;
     } catch (error: any) {
       console.error("Error submitting review:", error);

@@ -20,6 +20,8 @@ export const useBusinessProfile = (businessId: string | undefined, hasAccess: bo
         throw new Error('Subscription required to view business profiles');
       }
       
+      console.log("Fetching business profile for ID:", businessId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -38,7 +40,12 @@ export const useBusinessProfile = (businessId: string | undefined, hasAccess: bo
         .eq('type', 'business')
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching business profile:", error);
+        throw error;
+      }
+      
+      console.log("Business profile data:", data);
       return data as BusinessProfile;
     },
     enabled: !!businessId && hasAccess,
@@ -47,6 +54,7 @@ export const useBusinessProfile = (businessId: string | undefined, hasAccess: bo
 
   // Show toast only for certain types of errors, not for profile not found
   if (error && !error.message.includes('No rows returned')) {
+    console.error("Business profile query error:", error);
     toast({
       title: "Error",
       description: "Failed to load business profile information.",

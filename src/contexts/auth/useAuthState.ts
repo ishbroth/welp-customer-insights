@@ -32,6 +32,17 @@ export const useAuthState = () => {
       
       if (userProfile) {
         setCurrentUser(userProfile);
+        
+        // Check if this is one of the admin accounts with permanent subscription
+        const adminAccountIds = [
+          "10000000-0000-0000-0000-000000000001", // Business Admin
+          "10000000-0000-0000-0000-000000000002"  // Customer Admin
+        ];
+        
+        if (adminAccountIds.includes(userId)) {
+          setIsSubscribed(true);
+          console.log("Admin account detected, setting subscription to true");
+        }
       }
       
       setOneTimeAccessResources(accessResources);
@@ -48,7 +59,20 @@ export const useAuthState = () => {
     
     // Check for mock user first (for admin testing)
     if (window.__CURRENT_USER__) {
-      setCurrentUser(window.__CURRENT_USER__);
+      const mockUser = window.__CURRENT_USER__;
+      setCurrentUser(mockUser);
+      
+      // Check if this is an admin account and set subscription accordingly
+      const adminAccountIds = [
+        "10000000-0000-0000-0000-000000000001", // Business Admin
+        "10000000-0000-0000-0000-000000000002"  // Customer Admin
+      ];
+      
+      if (adminAccountIds.includes(mockUser.id)) {
+        setIsSubscribed(true);
+        console.log("Mock admin account detected, setting subscription to true");
+      }
+      
       setLoading(false);
       // Clean up mock user after setting it
       delete window.__CURRENT_USER__;
@@ -73,6 +97,7 @@ export const useAuthState = () => {
           await initUserData(session.user.id);
         } else {
           setCurrentUser(null);
+          setIsSubscribed(false);
           setLoading(false);
         }
       }
@@ -83,7 +108,7 @@ export const useAuthState = () => {
     };
   }, []);
 
-  // Fetch subscription status from Stripe when user changes
+  // Fetch subscription status from Stripe when user changes (skip for admin accounts)
   useEffect(() => {
     const checkUserSubscription = async () => {
       if (!currentUser) {
@@ -91,8 +116,20 @@ export const useAuthState = () => {
         return;
       }
       
+      // Skip subscription check for admin accounts
+      const adminAccountIds = [
+        "10000000-0000-0000-0000-000000000001", // Business Admin
+        "10000000-0000-0000-0000-000000000002"  // Customer Admin
+      ];
+      
+      if (adminAccountIds.includes(currentUser.id)) {
+        setIsSubscribed(true);
+        console.log("Admin account detected, skipping Stripe subscription check");
+        return;
+      }
+      
       try {
-        // Call our new edge function to check subscription status
+        // Call our edge function to check subscription status for regular users
         const { data, error } = await supabase.functions.invoke("check-subscription");
         
         if (error) {

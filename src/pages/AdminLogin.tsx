@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,38 +20,40 @@ const AdminLogin = () => {
   const { currentUser, setCurrentUser } = useAuth();
   const navigate = useNavigate();
   
-  // Define test accounts with correctly typed values
-  const TEST_ACCOUNTS = [
+  // Define the permanent admin accounts created in the database
+  const ADMIN_ACCOUNTS = [
     {
-      type: "Business Owner",
+      type: "Business Admin",
       email: "business@example.com",
       password: "password123",
       userData: {
-        id: "test-business-id",
-        name: "Business Owner",
+        id: "10000000-0000-0000-0000-000000000001",
+        name: "Business Admin",
         email: "business@example.com",
         type: "business" as const,
-        address: "123 Business St",
+        address: "123 Business Street",
         city: "Business City",
-        state: "BS",
-        zipCode: "12345",
-        phone: "555-123-4567"
+        state: "CA",
+        zipCode: "90210",
+        phone: "555-123-4567",
+        isSubscribed: true
       } as User
     },
     {
-      type: "Customer",
+      type: "Customer Admin",
       email: "customer@example.com",
       password: "password123",
       userData: {
-        id: "test-customer-id",
-        name: "Test Customer",
+        id: "10000000-0000-0000-0000-000000000002",
+        name: "Customer Admin",
         email: "customer@example.com",
         type: "customer" as const,
-        address: "456 Customer Ave",
+        address: "456 Customer Avenue",
         city: "Customer City",
-        state: "CS",
-        zipCode: "67890",
-        phone: "555-987-6543"
+        state: "CA",
+        zipCode: "90211",
+        phone: "555-987-6543",
+        isSubscribed: true
       } as User
     }
   ];
@@ -58,15 +61,15 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Find matching test account
-    const testAccount = TEST_ACCOUNTS.find(
+    // Find matching admin account
+    const adminAccount = ADMIN_ACCOUNTS.find(
       account => account.email === email && account.password === password
     );
 
-    if (!testAccount) {
+    if (!adminAccount) {
       toast({
         title: "Invalid Credentials",
-        description: "Please use one of the test accounts shown below.",
+        description: "Please use one of the admin accounts shown below.",
         variant: "destructive",
       });
       return;
@@ -76,11 +79,11 @@ const AdminLogin = () => {
     
     try {
       // Set the current user directly in the auth context
-      setCurrentUser(testAccount.userData);
+      setCurrentUser(adminAccount.userData);
       
       toast({
         title: "Admin Login Successful",
-        description: `You are now logged in as a ${testAccount.type}.`,
+        description: `You are now logged in as ${adminAccount.type}.`,
       });
       
       // Redirect to profile page
@@ -142,20 +145,21 @@ const AdminLogin = () => {
             </form>
             
             <div className="mt-6 text-center text-sm">
-              <p className="text-gray-600 font-semibold mb-2">Valid Test Accounts:</p>
+              <p className="text-gray-600 font-semibold mb-2">Permanent Admin Accounts:</p>
               <div className="space-y-2">
-                {TEST_ACCOUNTS.map((account) => (
+                {ADMIN_ACCOUNTS.map((account) => (
                   <div key={account.email} className="text-left p-2 bg-gray-50 border rounded-md">
                     <p className="font-semibold">{account.type}</p>
                     <p className="text-gray-600">Email: {account.email}</p>
                     <p className="text-gray-600">Password: {account.password}</p>
+                    <p className="text-xs text-green-600">✓ Permanent Database Account</p>
                   </div>
                 ))}
               </div>
             </div>
             
             <div className="mt-6 text-center text-sm text-gray-600">
-              <p>This page is for development purposes only.</p>
+              <p>These are permanent admin accounts stored in the database.</p>
             </div>
           </Card>
         </div>
