@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import StarRating from "@/components/StarRating";
 import { Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
 
 interface ReviewItemProps {
   review: any;
@@ -20,6 +21,11 @@ const ReviewItem = ({
 }: ReviewItemProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { currentUser, isSubscribed } = useAuth();
+  
+  // Check if user is admin account with permanent subscription
+  const isAdminAccount = currentUser?.id === "10000000-0000-0000-0000-000000000001" || 
+                        currentUser?.id === "10000000-0000-0000-0000-000000000002";
   
   // Function to get just the first 3 words of a review
   const getFirstThreeWords = (text: string) => {
@@ -51,6 +57,9 @@ const ReviewItem = ({
     }
   };
 
+  // Admin accounts and subscribed users should see full reviews without purchase prompts
+  const shouldShowPurchasePrompt = shouldShowLimitedReview && !hasFullAccess(customerId) && !isAdminAccount && !isSubscribed;
+
   return (
     <div className="border-t pt-3">
       <div className="flex justify-between">
@@ -65,7 +74,7 @@ const ReviewItem = ({
         </div>
       </div>
       <div className="mt-2">
-        {shouldShowLimitedReview && !hasFullAccess(customerId) ? (
+        {shouldShowPurchasePrompt ? (
           <div>
             <p className="text-sm line-clamp-1">
               {getFirstThreeWords(review.content)}
