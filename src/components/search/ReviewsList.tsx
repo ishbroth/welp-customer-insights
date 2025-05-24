@@ -19,11 +19,17 @@ const ReviewsList = ({
   isReviewCustomer = false,
   customerProfile
 }: ReviewsListProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
   const { processedReviews } = useReviewsFetching(customerId, reviews, isReviewCustomer);
   
-  // Non-logged in users and customers who haven't subscribed only see truncated reviews
-  const shouldShowLimitedReview = !currentUser || (currentUser?.type === "customer" && !hasFullAccess(customerId));
+  // Check if user is admin account with permanent subscription
+  const isAdminAccount = currentUser?.id === "10000000-0000-0000-0000-000000000001" || 
+                        currentUser?.id === "10000000-0000-0000-0000-000000000002";
+  
+  // Admin accounts and subscribed users should see full reviews
+  const shouldShowLimitedReview = !currentUser || 
+    (currentUser?.type === "customer" && !isSubscribed && !isAdminAccount && !hasFullAccess(customerId)) ||
+    (currentUser?.type === "business" && !isSubscribed && !isAdminAccount);
 
   if (processedReviews?.length === 0) {
     return customerProfile ? <NoReviews customerProfile={customerProfile} /> : (

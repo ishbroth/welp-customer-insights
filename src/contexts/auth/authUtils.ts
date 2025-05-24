@@ -22,6 +22,14 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
         .from('business_info')
         .update({ business_name: 'The Painted Painter' })
         .eq('id', userId);
+      
+      // Update any existing reviews where this business is the reviewer
+      await supabase
+        .from('reviews')
+        .update({ 
+          customer_name: 'The Painted Painter' // This field stores the business name when business reviews customer
+        })
+        .eq('business_id', userId);
     }
     
     const { data, error } = await supabase

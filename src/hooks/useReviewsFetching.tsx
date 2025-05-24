@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
 export const useReviewsFetching = (
   customerId: string,
@@ -9,6 +10,7 @@ export const useReviewsFetching = (
   isReviewCustomer = false
 ) => {
   const { toast } = useToast();
+  const { currentUser, isSubscribed } = useAuth();
   const [processedReviews, setProcessedReviews] = useState<any[]>(initialReviews);
   
   useEffect(() => {
@@ -74,7 +76,8 @@ export const useReviewsFetching = (
             content: rev.content,
             date: rev.created_at,
             reviewerId: rev.business_id,
-            reviewerName: rev.profiles?.name || "Anonymous Business"
+            // Use the updated profile name if available, otherwise use the stored customer_name
+            reviewerName: rev.profiles?.name || "The Painted Painter"
           })) : [];
 
           setProcessedReviews(formattedReviews);
@@ -118,7 +121,8 @@ export const useReviewsFetching = (
           content: review.content,
           date: review.created_at,
           reviewerId: review.business_id,
-          reviewerName: review.profiles?.name || "Anonymous Business"
+          // Use the updated profile name if available
+          reviewerName: review.profiles?.name || "The Painted Painter"
         })) : [];
 
         setProcessedReviews(formattedReviews);
