@@ -13,6 +13,15 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Current user:", currentUser.id);
       console.log("Updates to apply:", updates);
 
+      // Validate required fields
+      if (updates.name && updates.name.trim().length === 0) {
+        throw new Error("Name cannot be empty");
+      }
+
+      if (updates.email && !updates.email.includes('@')) {
+        throw new Error("Invalid email format");
+      }
+
       // Update user metadata if email has changed
       if (updates.email && updates.email !== currentUser.email) {
         console.log("Updating email in auth metadata");

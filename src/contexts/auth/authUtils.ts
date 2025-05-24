@@ -45,8 +45,8 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
 
     console.log("Fresh profile data fetched from database:", profile);
 
-    // Transform database profile to User type
-    const user: User = {
+    // Validate and clean profile data
+    const cleanedProfile = {
       id: profile.id,
       name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || '',
       email: profile.email || '',
@@ -61,8 +61,13 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       avatar: profile.avatar || ''
     };
 
-    console.log("Transformed user profile:", user);
-    return user;
+    // Additional validation
+    if (cleanedProfile.type === 'business' && !cleanedProfile.name) {
+      console.warn("Business profile missing name, this may cause issues");
+    }
+
+    console.log("Cleaned and validated user profile:", cleanedProfile);
+    return cleanedProfile;
   } catch (error) {
     console.error("Error in fetchUserProfile:", error);
     return null;
@@ -104,4 +109,29 @@ export const loadOneTimeAccessResources = async (userId: string): Promise<string
     console.error("Error in loadOneTimeAccessResources:", error);
     return [];
   }
+};
+
+/**
+ * Validate profile data integrity
+ */
+export const validateProfileData = (profile: Partial<User>): string[] => {
+  const errors: string[] = [];
+
+  if (profile.email && !profile.email.includes('@')) {
+    errors.push("Invalid email format");
+  }
+
+  if (profile.phone && profile.phone.replace(/\D/g, '').length < 10) {
+    errors.push("Phone number must be at least 10 digits");
+  }
+
+  if (profile.type === 'business' && (!profile.name || profile.name.trim().length === 0)) {
+    errors.push("Business name is required for business accounts");
+  }
+
+  if (profile.zipCode && !/^\d{5}(-\d{4})?$/.test(profile.zipCode)) {
+    errors.push("Invalid ZIP code format");
+  }
+
+  return errors;
 };
