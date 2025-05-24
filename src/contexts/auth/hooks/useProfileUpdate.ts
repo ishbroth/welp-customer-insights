@@ -60,6 +60,11 @@ export const useProfileUpdate = (currentUser: User | null) => {
 
       console.log("Profile update successful:", data);
 
+      // Verify the update by checking the response
+      if (!data.success) {
+        throw new Error(data.message || "Profile update failed");
+      }
+
       // If this is a business account, also update any existing reviews with the new business name
       if (currentUser.type === 'business' && updates.name && updates.name !== currentUser.name) {
         console.log("Updating business name in existing reviews");
@@ -72,13 +77,6 @@ export const useProfileUpdate = (currentUser: User | null) => {
           console.error("Error updating review business names:", reviewUpdateError);
           // Don't throw here as the main profile update succeeded
         }
-      }
-
-      // For customer accounts, ensure their updated profile is searchable
-      if (currentUser.type === 'customer') {
-        console.log("Customer profile updated - data is now searchable via existing search functions");
-        // The search functions already query the profiles table directly,
-        // so no additional steps are needed to make the data searchable
       }
 
       return data;

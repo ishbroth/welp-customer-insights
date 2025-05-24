@@ -38,14 +38,14 @@ serve(async (req) => {
     
     let profileOperation;
     
-    // Prepare profile data - ensure all searchable fields are included
+    // Prepare profile data - ensure all fields are properly mapped
     const profileUpdateData = {
       name: name || '',
       phone: phone || '',
       address: address || '',
       city: city || '',
       state: state || '',
-      zipcode: zipCode || '',
+      zipcode: zipCode || '', // Note: database column is 'zipcode', not 'zipCode'
       type: type,
       bio: bio || '',
       avatar: avatar || '',
@@ -54,12 +54,19 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
-    // For customer accounts, ensure first_name and last_name are properly set for searchability
+    // For customer accounts, ensure first_name and last_name are properly set
     if (type === 'customer' && name) {
       const nameParts = name.trim().split(' ');
       profileUpdateData.first_name = nameParts[0] || '';
       profileUpdateData.last_name = nameParts.slice(1).join(' ') || '';
     }
+
+    // For business accounts, ensure business name is saved in the name field
+    if (type === 'business' && businessName) {
+      profileUpdateData.name = businessName;
+    }
+
+    console.log("Profile update data being saved:", profileUpdateData);
 
     if (existingProfile) {
       // Profile exists, update it
@@ -80,14 +87,14 @@ serve(async (req) => {
         });
     }
 
-    const { error: profileError } = await profileOperation;
+    const { data: profileResult, error: profileError } = await profileOperation;
 
     if (profileError) {
       console.error("Profile creation/update error:", profileError);
       throw new Error(`Failed to create/update profile: ${profileError.message}`);
     }
 
-    console.log("Profile operation successful - customer data is now searchable");
+    console.log("Profile operation successful, result:", profileResult);
 
     // If it's a business account, check if business info exists and create/update
     if (type === "business" && businessName) {
@@ -132,11 +139,24 @@ serve(async (req) => {
       console.log("Business info operation successful");
     }
 
+    // Verify the data was saved by fetching it back
+    const { data: verificationData, error: verificationError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (verificationError) {
+      console.error("Error verifying saved data:", verificationError);
+    } else {
+      console.log("Verification - data saved successfully:", verificationData);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Profile created/updated successfully",
-        searchable: type === 'customer' ? true : false
+        data: verificationData
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
