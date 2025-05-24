@@ -99,7 +99,11 @@ export const useReviewsFetching = (
     // If no reviews are passed as props and this is a regular customer, fetch them from Supabase
     const fetchReviews = async () => {
       try {
-        const { data, error } = await supabase
+        console.log("=== FETCHING REVIEWS FOR CUSTOMER ===");
+        console.log("Customer ID:", customerId);
+        
+        // First try to fetch by customer_id
+        const { data: directReviews, error: directError } = await supabase
           .from('reviews')
           .select(`
             id, 
@@ -111,12 +115,46 @@ export const useReviewsFetching = (
           `)
           .eq('customer_id', customerId);
 
-        if (error) {
-          throw error;
+        if (directError) {
+          console.error("Error fetching direct reviews:", directError);
         }
 
+        console.log("Direct reviews found:", directReviews?.length || 0);
+        let allReviews = directReviews || [];
+
+        // If no direct reviews and we have a current user with a name, search by name
+        if ((!directReviews || directReviews.length === 0) && currentUser?.name) {
+          console.log("Searching by customer name:", currentUser.name);
+          
+          const { data: nameReviews, error: nameError } = await supabase
+            .from('reviews')
+            .select(`
+              id, 
+              rating, 
+              content, 
+              created_at,
+              business_id,
+              profiles!business_id(name, avatar)
+            `)
+            .ilike('customer_name', `%${currentUser.name}%`);
+
+          if (nameError) {
+            console.error("Error fetching reviews by name:", nameError);
+          } else {
+            console.log("Reviews found by name:", nameReviews?.length || 0);
+            allReviews = [...allReviews, ...(nameReviews || [])];
+          }
+        }
+
+        // Remove duplicates based on review ID
+        const uniqueReviews = allReviews.filter((review, index, self) => 
+          index === self.findIndex(r => r.id === review.id)
+        );
+
+        console.log("Total unique reviews:", uniqueReviews.length);
+
         // Format the reviews data
-        const formattedReviews = data ? data.map(review => ({
+        const formattedReviews = uniqueReviews.map(review => ({
           id: review.id,
           rating: review.rating,
           content: review.content,
@@ -125,9 +163,10 @@ export const useReviewsFetching = (
           // Use the updated profile name if available
           reviewerName: review.profiles?.name || "The Painted Painter",
           reviewerAvatar: review.profiles?.avatar || ""
-        })) : [];
+        }));
 
         setProcessedReviews(formattedReviews);
+        console.log("=== REVIEW FETCH COMPLETE ===");
       } catch (error) {
         console.error("Error fetching reviews:", error);
         toast({
@@ -139,7 +178,7 @@ export const useReviewsFetching = (
     };
 
     fetchReviews();
-  }, [customerId, initialReviews, toast, isReviewCustomer]);
+  }, [customerId, initialReviews, toast, isReviewCustomer, currentUser?.name]);
 
   return { processedReviews };
 };

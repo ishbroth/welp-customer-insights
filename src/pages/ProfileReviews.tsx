@@ -58,8 +58,11 @@ const ProfileReviews = () => {
     setIsLoading(true);
     
     try {
-      // Fetch reviews for this customer from Supabase
-      const { data: reviewsData, error } = await supabase
+      console.log("=== FETCHING CUSTOMER REVIEWS ===");
+      console.log("Current user:", currentUser);
+      
+      // First, try to fetch reviews by customer_id
+      const { data: directReviews, error: directError } = await supabase
         .from('reviews')
         .select(`
           id, 
@@ -67,35 +70,72 @@ const ProfileReviews = () => {
           content, 
           created_at,
           business_id,
-          profiles!business_id(name)
+          profiles!business_id(name, avatar)
         `)
         .eq('customer_id', currentUser.id);
       
-      if (error) {
-        throw error;
+      if (directError) {
+        console.error("Error fetching direct reviews:", directError);
       }
       
+      console.log("Direct reviews found:", directReviews?.length || 0);
+      
+      let allReviews = directReviews || [];
+      
+      // If no direct reviews found and user has a name, also search by customer_name
+      if ((!directReviews || directReviews.length === 0) && currentUser.name) {
+        console.log("Searching for reviews by customer name:", currentUser.name);
+        
+        const { data: nameReviews, error: nameError } = await supabase
+          .from('reviews')
+          .select(`
+            id, 
+            rating, 
+            content, 
+            created_at,
+            business_id,
+            customer_name,
+            profiles!business_id(name, avatar)
+          `)
+          .ilike('customer_name', `%${currentUser.name}%`);
+        
+        if (nameError) {
+          console.error("Error fetching reviews by name:", nameError);
+        } else {
+          console.log("Reviews found by name:", nameReviews?.length || 0);
+          allReviews = [...allReviews, ...(nameReviews || [])];
+        }
+      }
+      
+      // Remove duplicates based on review ID
+      const uniqueReviews = allReviews.filter((review, index, self) => 
+        index === self.findIndex(r => r.id === review.id)
+      );
+      
+      console.log("Total unique reviews found:", uniqueReviews.length);
+      
       // Format reviews data to match Review type
-      const formattedReviews = reviewsData ? reviewsData.map(review => ({
+      const formattedReviews = uniqueReviews.map(review => ({
         id: review.id,
         rating: review.rating,
         content: review.content,
         date: review.created_at,
         reviewerId: review.business_id,
         reviewerName: review.profiles?.name || "Anonymous Business",
+        reviewerAvatar: review.profiles?.avatar || "",
         customerId: currentUser.id,
         customerName: currentUser.name || "Anonymous Customer",
         reactions: { like: [], funny: [], useful: [], ohNo: [] },
         responses: []
-      })) : [];
+      }));
       
       setCustomerReviews(formattedReviews);
       
-      if (reviewsData && reviewsData.length > 0) {
+      if (formattedReviews.length > 0) {
         // Show a toast to inform the user
         toast({
           title: "Reviews Loaded",
-          description: `Found ${reviewsData.length} reviews about you.`,
+          description: `Found ${formattedReviews.length} reviews about you.`,
         });
       } else {
         // Show a toast for no reviews
@@ -105,6 +145,7 @@ const ProfileReviews = () => {
         });
       }
       
+      console.log("=== REVIEW FETCH COMPLETE ===");
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching customer reviews:", error);
