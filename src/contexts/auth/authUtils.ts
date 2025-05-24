@@ -43,7 +43,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       return null;
     }
 
-    console.log("Fresh profile data fetched:", profile);
+    console.log("Fresh profile data fetched from database:", profile);
 
     // Transform database profile to User type
     const user: User = {
@@ -61,6 +61,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       avatar: profile.avatar || ''
     };
 
+    console.log("Transformed user profile:", user);
     return user;
   } catch (error) {
     console.error("Error in fetchUserProfile:", error);
