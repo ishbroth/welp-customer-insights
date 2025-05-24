@@ -25,13 +25,18 @@ export const useAuthState = () => {
   // Initialize user data - profile and one-time access resources
   const initUserData = async (userId: string) => {
     try {
+      console.log("Initializing user data for:", userId);
+      
       const [userProfile, accessResources] = await Promise.all([
         fetchUserProfile(userId),
         loadOneTimeAccessResources(userId)
       ]);
       
+      console.log("Fetched user profile:", userProfile);
+      
       if (userProfile) {
         setCurrentUser(userProfile);
+        console.log("Set current user:", userProfile);
         
         // Check if this is one of the admin accounts with permanent subscription
         const adminAccountIds = [
@@ -43,11 +48,15 @@ export const useAuthState = () => {
           setIsSubscribed(true);
           console.log("Admin account detected, setting subscription to true");
         }
+      } else {
+        console.error("No user profile found for userId:", userId);
+        setCurrentUser(null);
       }
       
       setOneTimeAccessResources(accessResources);
     } catch (error) {
       console.error("Error initializing user data:", error);
+      setCurrentUser(null);
     } finally {
       setLoading(false);
     }
@@ -87,6 +96,7 @@ export const useAuthState = () => {
     
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session:", session);
       setSession(session);
       if (session) {
         initUserData(session.user.id);
@@ -97,7 +107,8 @@ export const useAuthState = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        console.log("Auth state change:", event, session);
         setSession(session);
         if (session) {
           await initUserData(session.user.id);
