@@ -22,6 +22,7 @@ export const useAuthMethods = (
   const { logout } = useLogout(setIsSubscribed);
   const { updateProfile } = useProfileUpdate(currentUser, setCurrentUser);
   const { hasOneTimeAccess, markOneTimeAccess } = useAccessControl(
+    currentUser,
     oneTimeAccessResources,
     setOneTimeAccessResources
   );
