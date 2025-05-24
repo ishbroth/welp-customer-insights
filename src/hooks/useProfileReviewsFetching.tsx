@@ -5,6 +5,37 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Review } from "@/types";
 
+// Define types for different review query results
+type DirectReview = {
+  id: string;
+  rating: number;
+  content: string;
+  created_at: string;
+  business_id: string;
+  customer_id: string;
+  profiles: { name: string; avatar: string; } | null;
+};
+
+type NameReview = {
+  id: string;
+  rating: number;
+  content: string;
+  created_at: string;
+  business_id: string;
+  customer_name: string;
+  profiles: { name: string; avatar: string; } | null;
+};
+
+type PhoneReview = {
+  id: string;
+  rating: number;
+  content: string;
+  created_at: string;
+  business_id: string;
+  customer_phone: string;
+  profiles: { name: string; avatar: string; } | null;
+};
+
 export const useProfileReviewsFetching = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -40,7 +71,7 @@ export const useProfileReviewsFetching = () => {
       }
       
       console.log("Direct reviews found:", directReviews?.length || 0);
-      let allReviews = directReviews || [];
+      let allReviews: (DirectReview | NameReview | PhoneReview)[] = directReviews || [];
       
       // Fallback method: search by customer name if no direct reviews found
       if ((!directReviews || directReviews.length === 0) && currentUser.name) {
