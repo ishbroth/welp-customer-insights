@@ -14,7 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar } = await req.json();
+    const { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email } = await req.json();
+    
+    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, businessName, bio, businessId, avatar, email });
     
     // Simple validation
     if (!userId || !type) {
@@ -36,40 +38,36 @@ serve(async (req) => {
     
     let profileOperation;
     
+    const profileUpdateData = {
+      name: name || '',
+      phone: phone || '',
+      address: address || '',
+      city: city || '',
+      state: state || '',
+      zipcode: zipCode || '',
+      type: type,
+      bio: bio || '',
+      avatar: avatar || '',
+      business_id: businessId || '',
+      email: email || '',
+      updated_at: new Date().toISOString(),
+    };
+
     if (existingProfile) {
       // Profile exists, update it
+      console.log("Updating existing profile with data:", profileUpdateData);
       profileOperation = supabase
         .from('profiles')
-        .update({
-          name: name,
-          phone: phone,
-          address: address,
-          city: city,
-          state: state,
-          zipcode: zipCode,
-          type: type,
-          bio: bio,
-          avatar: avatar,
-          business_id: businessId,
-          updated_at: new Date().toISOString(),
-        })
+        .update(profileUpdateData)
         .eq('id', userId);
     } else {
       // Profile doesn't exist, insert it
+      console.log("Creating new profile with data:", { id: userId, ...profileUpdateData, created_at: new Date().toISOString() });
       profileOperation = supabase
         .from('profiles')
         .insert({
           id: userId,
-          name: name,
-          phone: phone,
-          address: address,
-          city: city,
-          state: state,
-          zipcode: zipCode,
-          type: type,
-          bio: bio,
-          avatar: avatar,
-          business_id: businessId,
+          ...profileUpdateData,
           created_at: new Date().toISOString(),
         });
     }
@@ -81,8 +79,12 @@ serve(async (req) => {
       throw new Error(`Failed to create/update profile: ${profileError.message}`);
     }
 
+    console.log("Profile operation successful");
+
     // If it's a business account, check if business info exists and create/update
     if (type === "business" && businessName) {
+      console.log("Processing business info for business name:", businessName);
+      
       const { data: existingBusiness } = await supabase
         .from('business_info')
         .select('id')
@@ -93,6 +95,7 @@ serve(async (req) => {
       
       if (existingBusiness) {
         // Business info exists, update it
+        console.log("Updating existing business info");
         businessOperation = supabase
           .from('business_info')
           .update({
@@ -101,11 +104,13 @@ serve(async (req) => {
           .eq('id', userId);
       } else {
         // Business info doesn't exist, insert it
+        console.log("Creating new business info");
         businessOperation = supabase
           .from('business_info')
           .insert({
             id: userId,
             business_name: businessName,
+            verified: false,
           });
       }
 
@@ -115,6 +120,8 @@ serve(async (req) => {
         console.error("Business info creation/update error:", businessError);
         throw new Error(`Failed to create/update business info: ${businessError.message}`);
       }
+
+      console.log("Business info operation successful");
     }
 
     return new Response(

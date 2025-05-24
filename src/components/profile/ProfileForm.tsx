@@ -33,24 +33,42 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
     },
   });
 
-  const onSubmit = (data: ProfileFormValues) => {
-    // In a real application, you would send this data to your backend
-    updateProfile({
-      name: data.name,
-      email: data.email,
-      businessId: data.businessId,
-      phone: data.phone,
-      address: data.address,
-      city: data.city,
-      state: data.state,
-      zipCode: data.zipCode,
-      bio: data.bio
-    });
-    
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been successfully updated.",
-    });
+  const onSubmit = async (data: ProfileFormValues) => {
+    try {
+      console.log("Submitting profile data:", data);
+      
+      // Ensure all fields are included in the update
+      const updateData = {
+        name: data.name,
+        email: data.email,
+        bio: data.bio,
+        businessId: data.businessId,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        // Include avatar and type from current user to preserve them
+        avatar: currentUser?.avatar || '',
+        type: currentUser?.type || 'customer'
+      };
+      
+      console.log("Update data being sent:", updateData);
+      
+      await updateProfile(updateData);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been successfully updated.",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
