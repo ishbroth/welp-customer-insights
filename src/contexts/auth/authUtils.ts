@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 
@@ -38,8 +37,6 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       id: profile.id,
       email: profile.email || '',
       name: profile.name || '',
-      firstName: profile.first_name || '',
-      lastName: profile.last_name || '',
       phone: profile.phone || '',
       address: profile.address || '',
       city: profile.city || '',
