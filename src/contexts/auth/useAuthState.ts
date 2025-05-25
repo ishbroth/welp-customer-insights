@@ -33,11 +33,20 @@ export const useAuthState = () => {
     try {
       console.log("Initializing user data for:", userId, "forceRefresh:", forceRefresh);
       
-      // Always force refresh to get the latest data from database
-      const [userProfile, accessResources] = await Promise.all([
-        refreshUserProfile(userId), // Always use refreshUserProfile to ensure fresh data
+      // Use Promise.race with a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+      );
+      
+      const dataPromise = Promise.all([
+        refreshUserProfile(userId),
         loadOneTimeAccessResources(userId)
       ]);
+      
+      const [userProfile, accessResources] = await Promise.race([
+        dataPromise,
+        timeoutPromise
+      ]) as [any, string[]];
       
       console.log("Fetched user profile:", userProfile);
       
@@ -58,6 +67,7 @@ export const useAuthState = () => {
       setOneTimeAccessResources(accessResources);
     } catch (error) {
       console.error("Error initializing user data:", error);
+      // Don't block login on profile fetch errors
       setCurrentUser(null);
     } finally {
       setLoading(false);
@@ -99,14 +109,15 @@ export const useAuthState = () => {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state change event:", event, "session user id:", session?.user?.id);
         setSession(session);
         
         if (session?.user) {
-          // Always force refresh on any auth state change to ensure we have latest data
-          console.log("User authenticated, refreshing profile data from database");
-          await initUserData(session.user.id, true);
+          // Don't await this to prevent blocking the auth state change
+          setTimeout(() => {
+            initUserData(session.user.id, true);
+          }, 0);
         } else {
           console.log("No session, clearing user data");
           setCurrentUser(null);
@@ -121,9 +132,10 @@ export const useAuthState = () => {
       console.log("Initial session check:", session?.user?.id);
       setSession(session);
       if (session?.user) {
-        // Force refresh on initial load to get latest data
-        console.log("Initial session found, refreshing profile data from database");
-        initUserData(session.user.id, true);
+        // Don't await this to prevent blocking initial load
+        setTimeout(() => {
+          initUserData(session.user.id, true);
+        }, 0);
       } else {
         setLoading(false);
       }
