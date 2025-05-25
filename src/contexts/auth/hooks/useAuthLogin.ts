@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
  * Hook for handling login-related functionality
  */
 export const useAuthLogin = () => {
+  // List of permanent accounts that bypass email verification
+  const permanentAccountEmails = [
+    'iw@thepaintedpainter.com',
+    'isaac.wiley99@gmail.com'
+  ];
+
   // Login function using Supabase
   const login = async (email: string, password: string) => {
     try {
@@ -18,29 +24,58 @@ export const useAuthLogin = () => {
       if (error && error.message === "Email not confirmed") {
         console.log("Email not confirmed, attempting to confirm and login");
         
-        // Use the functions invoke method instead of admin.listUsers which requires admin privileges
-        try {
-          // Try to confirm the email directly
-          await supabase.functions.invoke('confirm-email', {
-            body: { email }
-          });
+        // For permanent accounts, bypass email confirmation
+        if (permanentAccountEmails.includes(email.toLowerCase())) {
+          console.log("Permanent account detected, bypassing email confirmation");
           
-          // Try login again
-          const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-          });
-          
-          if (confirmedError) {
-            console.error("Login error after email confirmation:", confirmedError);
-            return { success: false, error: confirmedError.message };
+          try {
+            // Try to confirm the email directly for permanent accounts
+            await supabase.functions.invoke('confirm-email', {
+              body: { email }
+            });
+            
+            // Try login again
+            const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
+            
+            if (confirmedError) {
+              console.error("Login error after email confirmation:", confirmedError);
+              return { success: false, error: confirmedError.message };
+            }
+            
+            // Session and user will be set by the auth state listener
+            return { success: true };
+          } catch (confirmError) {
+            console.error("Error confirming email:", confirmError);
+            return { success: false, error: "Unable to verify account. Please contact support." };
           }
-          
-          // Session and user will be set by the auth state listener
-          return { success: true };
-        } catch (confirmError) {
-          console.error("Error confirming email:", confirmError);
-          return { success: false, error: "Unable to verify account. Please contact support." };
+        } else {
+          // For regular accounts, use the standard confirmation process
+          try {
+            // Try to confirm the email directly
+            await supabase.functions.invoke('confirm-email', {
+              body: { email }
+            });
+            
+            // Try login again
+            const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
+            
+            if (confirmedError) {
+              console.error("Login error after email confirmation:", confirmedError);
+              return { success: false, error: confirmedError.message };
+            }
+            
+            // Session and user will be set by the auth state listener
+            return { success: true };
+          } catch (confirmError) {
+            console.error("Error confirming email:", confirmError);
+            return { success: false, error: "Unable to verify account. Please contact support." };
+          }
         }
       }
       
