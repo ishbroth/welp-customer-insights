@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,14 +6,38 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
-import { UserRound, Building2 } from "lucide-react";
+import { UserRound, Building2, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
 const Index = () => {
   const [accountType, setAccountType] = useState<"customer" | "business">("business");
+  const { currentUser, logout } = useAuth();
+
+  const handleEmergencyLogout = () => {
+    logout();
+    window.location.reload();
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      
+      {/* Temporary logout button for debugging */}
+      {currentUser && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 text-center">
+          <p className="mb-2">Debug: You appear to be logged in as {currentUser.name}. Click below to sign out:</p>
+          <Button 
+            onClick={handleEmergencyLogout}
+            variant="outline" 
+            size="sm"
+            className="bg-white"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
+      )}
+      
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="bg-[#ea384c] text-white py-16 md:py-24">
