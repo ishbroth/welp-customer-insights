@@ -89,9 +89,11 @@ export const checkSubscriptionStatus = async (userId: string): Promise<boolean> 
 
 export const openCustomerPortal = async (): Promise<void> => {
   try {
+    console.log("Attempting to open customer portal...");
     const { data, error } = await supabase.functions.invoke("customer-portal");
     
     if (error) {
+      console.error("Customer portal error:", error);
       throw error;
     }
     
@@ -99,6 +101,7 @@ export const openCustomerPortal = async (): Promise<void> => {
       throw new Error("No portal URL returned");
     }
     
+    console.log("Opening customer portal URL:", data.url);
     // Open Stripe customer portal in the current window
     window.location.href = data.url;
   } catch (error) {

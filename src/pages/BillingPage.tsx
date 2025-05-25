@@ -86,6 +86,7 @@ const BillingPage = () => {
         console.log("Billing data:", billingData);
         setPaymentMethods(billingData?.payment_methods || []);
         setTransactions(billingData?.transactions || []);
+        setHasStripeCustomer(true);
       }
     } catch (error) {
       console.error("Error in loadBillingData:", error);
@@ -108,10 +109,18 @@ const BillingPage = () => {
 
     try {
       setIsLoadingPortal(true);
+      console.log("Opening customer portal for user:", currentUser?.email);
       await openCustomerPortal();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error opening customer portal:", error);
-      toast.error("Could not open subscription management portal. Please try again.");
+      
+      // Handle specific error cases
+      if (error.message?.includes("No Stripe customer found")) {
+        toast.error("You need to subscribe first to manage your billing settings.");
+        setHasStripeCustomer(false);
+      } else {
+        toast.error("Could not open subscription management portal. Please try again.");
+      }
       setIsLoadingPortal(false);
     }
   };
@@ -207,7 +216,7 @@ const BillingPage = () => {
                       )}
                       
                       <div className="mt-4 flex items-center justify-end">
-                        {hasStripeCustomer ? (
+                        {hasStripeCustomer && subscriptionData?.subscribed ? (
                           <Button
                             variant="default"
                             onClick={handleManageSubscription}
