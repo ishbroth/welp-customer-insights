@@ -40,18 +40,23 @@ import BusinessProfile from "./pages/BusinessProfile";
 
 // Routes component that uses the AuthContext
 const AppRoutes = () => {
-  // Protected route component that allows access if user has a session
+  // Protected route component that allows access if user is logged in
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { session, loading } = useAuth();
+    const { currentUser, session, loading } = useAuth();
     
     // Show loading while auth state is being determined
     if (loading) {
       return <div>Loading...</div>;
     }
     
-    // Allow access if user has a session (don't wait for profile data)
+    // Redirect to login if no session
     if (!session?.user) {
       return <Navigate to="/login" replace />;
+    }
+    
+    // If we have a session but no profile yet, show loading
+    if (!currentUser) {
+      return <div>Loading profile...</div>;
     }
     
     return <>{children}</>;
