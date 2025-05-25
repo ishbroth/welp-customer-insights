@@ -1,7 +1,6 @@
 
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { validateProfileData } from "../authUtils";
 
 export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user: User | null) => void) => {
   const updateProfile = async (updates: Partial<User>) => {
@@ -13,12 +12,6 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("=== PROFILE UPDATE START ===");
       console.log("Current user:", currentUser.id);
       console.log("Updates to apply:", updates);
-
-      // Validate the update data
-      const validationErrors = validateProfileData({ ...currentUser, ...updates });
-      if (validationErrors.length > 0) {
-        throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
-      }
 
       // Update user metadata if email has changed
       if (updates.email && updates.email !== currentUser.email) {
@@ -88,59 +81,18 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.log("Setting updated user in state:", updatedUser);
       setCurrentUser(updatedUser);
 
-      // Double-check: Verify the data was saved by fetching it back with better error handling
+      // Verify the data was saved by fetching it back
       console.log("Verifying saved data...");
       const { data: verificationData, error: verifyError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          name,
-          first_name,
-          last_name,
-          email,
-          phone,
-          address,
-          city,
-          state,
-          zipcode,
-          type,
-          bio,
-          business_id,
-          avatar,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .eq('id', currentUser.id)
-        .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
+        .single();
 
       if (verifyError) {
         console.error("Verification error:", verifyError);
-        // Don't throw here - the update was successful, verification is just extra
-        console.warn("Profile update completed but verification failed:", verifyError.message);
-      } else if (verificationData) {
-        console.log("Verified data in database:", verificationData);
-        
-        // Ensure the local state matches database state
-        const verifiedUser: User = {
-          id: verificationData.id,
-          name: verificationData.name || '',
-          email: verificationData.email || '',
-          phone: verificationData.phone || '',
-          address: verificationData.address || '',
-          city: verificationData.city || '',
-          state: verificationData.state || '',
-          zipCode: verificationData.zipcode || '',
-          type: (verificationData.type as "business" | "customer" | "admin") || "customer",
-          bio: verificationData.bio || '',
-          businessId: verificationData.business_id || '',
-          avatar: verificationData.avatar || ''
-        };
-        
-        // Update state with verified data to ensure consistency
-        setCurrentUser(verifiedUser);
-        console.log("Updated local state with verified database data");
       } else {
-        console.warn("No profile data found during verification, but update was successful");
+        console.log("Verified data in database:", verificationData);
       }
 
       console.log("=== PROFILE UPDATE COMPLETE ===");

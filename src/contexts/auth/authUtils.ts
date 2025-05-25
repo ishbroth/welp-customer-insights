@@ -45,8 +45,8 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
 
     console.log("Fresh profile data fetched from database:", profile);
 
-    // Validate and clean profile data
-    const cleanedProfile = {
+    // Transform database profile to User type
+    const user: User = {
       id: profile.id,
       name: profile.name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || '',
       email: profile.email || '',
@@ -61,13 +61,8 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       avatar: profile.avatar || ''
     };
 
-    // Additional validation
-    if (cleanedProfile.type === 'business' && !cleanedProfile.name) {
-      console.warn("Business profile missing name, this may cause issues");
-    }
-
-    console.log("Cleaned and validated user profile:", cleanedProfile);
-    return cleanedProfile;
+    console.log("Transformed user profile:", user);
+    return user;
   } catch (error) {
     console.error("Error in fetchUserProfile:", error);
     return null;
@@ -108,80 +103,5 @@ export const loadOneTimeAccessResources = async (userId: string): Promise<string
   } catch (error) {
     console.error("Error in loadOneTimeAccessResources:", error);
     return [];
-  }
-};
-
-/**
- * Validate profile data integrity
- */
-export const validateProfileData = (profile: Partial<User>): string[] => {
-  const errors: string[] = [];
-
-  if (profile.email && !profile.email.includes('@')) {
-    errors.push("Invalid email format");
-  }
-
-  if (profile.phone && profile.phone.replace(/\D/g, '').length < 10) {
-    errors.push("Phone number must be at least 10 digits");
-  }
-
-  if (profile.type === 'business' && (!profile.name || profile.name.trim().length === 0)) {
-    errors.push("Business name is required for business accounts");
-  }
-
-  if (profile.zipCode && !/^\d{5}(-\d{4})?$/.test(profile.zipCode)) {
-    errors.push("Invalid ZIP code format");
-  }
-
-  return errors;
-};
-
-/**
- * Ensure profile exists in database, create if missing
- */
-export const ensureProfileExists = async (userId: string, userData?: any): Promise<boolean> => {
-  try {
-    console.log("Ensuring profile exists for userId:", userId);
-    
-    // Check if profile exists
-    const existingProfile = await fetchUserProfile(userId);
-    
-    if (existingProfile) {
-      console.log("Profile already exists");
-      return true;
-    }
-    
-    // Profile doesn't exist, create it
-    console.log("Creating missing profile for userId:", userId);
-    
-    const profileData = {
-      userId: userId,
-      name: userData?.name || userData?.first_name || '',
-      email: userData?.email || '',
-      phone: userData?.phone || '',
-      type: userData?.type || 'customer',
-      address: userData?.address || '',
-      city: userData?.city || '',
-      state: userData?.state || '',
-      zipCode: userData?.zipCode || '',
-      bio: '',
-      businessId: '',
-      avatar: ''
-    };
-    
-    const { data, error } = await supabase.functions.invoke('create-profile', {
-      body: profileData
-    });
-    
-    if (error) {
-      console.error("Error creating profile:", error);
-      return false;
-    }
-    
-    console.log("Profile created successfully:", data);
-    return true;
-  } catch (error) {
-    console.error("Error in ensureProfileExists:", error);
-    return false;
   }
 };

@@ -5,37 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Review } from "@/types";
 
-// Define types for different review query results
-type DirectReview = {
-  id: string;
-  rating: number;
-  content: string;
-  created_at: string;
-  business_id: string;
-  customer_id: string;
-  profiles: { name: string; avatar: string; } | null;
-};
-
-type NameReview = {
-  id: string;
-  rating: number;
-  content: string;
-  created_at: string;
-  business_id: string;
-  customer_name: string;
-  profiles: { name: string; avatar: string; } | null;
-};
-
-type PhoneReview = {
-  id: string;
-  rating: number;
-  content: string;
-  created_at: string;
-  business_id: string;
-  customer_phone: string;
-  profiles: { name: string; avatar: string; } | null;
-};
-
 export const useProfileReviewsFetching = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -52,7 +21,7 @@ export const useProfileReviewsFetching = () => {
       console.log("=== FETCHING CUSTOMER REVIEWS ===");
       console.log("Current user:", currentUser);
       
-      // Primary method: fetch reviews by customer_id (direct link to profiles)
+      // First, try to fetch reviews by customer_id
       const { data: directReviews, error: directError } = await supabase
         .from('reviews')
         .select(`
@@ -61,7 +30,6 @@ export const useProfileReviewsFetching = () => {
           content, 
           created_at,
           business_id,
-          customer_id,
           profiles!business_id(name, avatar)
         `)
         .eq('customer_id', currentUser.id);
@@ -71,9 +39,10 @@ export const useProfileReviewsFetching = () => {
       }
       
       console.log("Direct reviews found:", directReviews?.length || 0);
-      let allReviews: (DirectReview | NameReview | PhoneReview)[] = directReviews || [];
       
-      // Fallback method: search by customer name if no direct reviews found
+      let allReviews = directReviews || [];
+      
+      // If no direct reviews found and user has a name, also search by customer_name
       if ((!directReviews || directReviews.length === 0) && currentUser.name) {
         console.log("Searching for reviews by customer name:", currentUser.name);
         
@@ -88,40 +57,13 @@ export const useProfileReviewsFetching = () => {
             customer_name,
             profiles!business_id(name, avatar)
           `)
-          .ilike('customer_name', `%${currentUser.name}%`)
-          .is('customer_id', null); // Only get reviews without proper customer_id linking
+          .ilike('customer_name', `%${currentUser.name}%`);
         
         if (nameError) {
           console.error("Error fetching reviews by name:", nameError);
         } else {
           console.log("Reviews found by name:", nameReviews?.length || 0);
           allReviews = [...allReviews, ...(nameReviews || [])];
-        }
-      }
-      
-      // Additional fallback: search by phone number if available
-      if (allReviews.length === 0 && currentUser.phone) {
-        console.log("Searching for reviews by phone:", currentUser.phone);
-        
-        const { data: phoneReviews, error: phoneError } = await supabase
-          .from('reviews')
-          .select(`
-            id, 
-            rating, 
-            content, 
-            created_at,
-            business_id,
-            customer_phone,
-            profiles!business_id(name, avatar)
-          `)
-          .eq('customer_phone', currentUser.phone.replace(/\D/g, ''))
-          .is('customer_id', null); // Only get reviews without proper customer_id linking
-        
-        if (phoneError) {
-          console.error("Error fetching reviews by phone:", phoneError);
-        } else {
-          console.log("Reviews found by phone:", phoneReviews?.length || 0);
-          allReviews = [...allReviews, ...(phoneReviews || [])];
         }
       }
       
@@ -154,6 +96,12 @@ export const useProfileReviewsFetching = () => {
         toast({
           title: "Reviews Loaded",
           description: `Found ${formattedReviews.length} reviews about you.`,
+        });
+      } else {
+        // Show a toast for no reviews
+        toast({
+          title: "No Reviews Found",
+          description: "We couldn't find any reviews that match your profile information.",
         });
       }
       

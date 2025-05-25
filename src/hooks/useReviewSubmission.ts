@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { moderateContent } from "@/utils/contentModeration";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { createSearchableCustomer } from "@/services/customerService";
 
 export const useReviewSubmission = (isEditing: boolean, reviewId: string | null) => {
   const { toast } = useToast();
@@ -65,32 +64,12 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setIsSubmitting(true);
     
     try {
-      console.log("=== REVIEW SUBMISSION START ===");
-      
-      // First, create or find the customer profile
-      const customerResult = await createSearchableCustomer({
-        firstName: customerFirstName,
-        lastName: customerLastName,
-        phone: customerPhone,
-        address: customerAddress,
-        city: customerCity,
-        state: "", // TODO: Add state field to form if needed
-        zipCode: customerZipCode,
-      });
-      
-      if (!customerResult.success) {
-        throw new Error(customerResult.error || "Failed to create customer profile");
-      }
-      
-      console.log("Customer profile created/found:", customerResult.customerId);
-      
       // Use the current user's ID as the business_id (for business owners submitting reviews)
       const businessId = currentUser.id;
       
-      // Prepare review data with proper customer_id linking
+      // Prepare review data
       const supabaseReviewData = {
         business_id: businessId,
-        customer_id: customerResult.customerId, // Proper foreign key reference
         rating: rating,
         content: comment,
         customer_name: `${customerFirstName} ${customerLastName}`.trim(),
@@ -121,8 +100,6 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
         console.error("Database error:", result.error);
         throw new Error(result.error.message);
       }
-      
-      console.log("Review submitted successfully");
       
       toast({
         title: isEditing ? "Review Updated" : "Review Submitted",

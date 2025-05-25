@@ -63,65 +63,10 @@ export const useAuthState = () => {
     }
   };
 
-  // Enhanced setCurrentUser function that persists changes to database
-  const enhancedSetCurrentUser = async (user: User | null) => {
+  // Enhanced setCurrentUser function that also persists to database
+  const enhancedSetCurrentUser = (user: User | null) => {
     console.log("Enhanced setCurrentUser called with:", user);
     setCurrentUser(user);
-    
-    // If user is being set and has changes, persist to database
-    if (user && session?.user) {
-      try {
-        console.log("Persisting user changes to database");
-        
-        // Verify the data was saved by fetching it back from database
-        const { data: verificationData, error: verifyError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (verifyError) {
-          console.error("Error verifying saved data:", verifyError);
-        } else {
-          console.log("Verified data in database:", verificationData);
-          
-          // If there's a mismatch, update local state with database data
-          if (verificationData) {
-            const dbUser: User = {
-              id: verificationData.id,
-              name: verificationData.name || '',
-              email: verificationData.email || '',
-              phone: verificationData.phone || '',
-              address: verificationData.address || '',
-              city: verificationData.city || '',
-              state: verificationData.state || '',
-              zipCode: verificationData.zipcode || '',
-              type: (verificationData.type as "business" | "customer" | "admin") || "customer",
-              bio: verificationData.bio || '',
-              businessId: verificationData.business_id || '',
-              avatar: verificationData.avatar || ''
-            };
-            
-            // Only update if there are differences
-            if (JSON.stringify(user) !== JSON.stringify(dbUser)) {
-              console.log("Syncing local state with database data");
-              setCurrentUser(dbUser);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error in data verification:", error);
-      }
-    }
-  };
-
-  // Clear all user data on logout
-  const clearUserData = () => {
-    console.log("Clearing all user data");
-    setCurrentUser(null);
-    setIsSubscribed(false);
-    setOneTimeAccessResources([]);
-    setLoading(false);
   };
 
   // Set up auth state listener on mount
@@ -168,7 +113,9 @@ export const useAuthState = () => {
           await initUserData(session.user.id, true);
         } else {
           console.log("No session, clearing user data");
-          clearUserData();
+          setCurrentUser(null);
+          setIsSubscribed(false);
+          setLoading(false);
         }
       }
     );
