@@ -2,6 +2,7 @@
 import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -26,6 +27,8 @@ const CurrentSubscriptionCard = ({
   currentUserType,
   onManageSubscription
 }: CurrentSubscriptionCardProps) => {
+  const navigate = useNavigate();
+
   const getSubscriptionPlanName = () => {
     if (!subscriptionData?.subscribed) return "No Active Subscription";
     
@@ -39,6 +42,10 @@ const CurrentSubscriptionCard = ({
   const getNextBillingDate = () => {
     if (!subscriptionData?.subscription_end) return "N/A";
     return new Date(subscriptionData.subscription_end).toLocaleDateString();
+  };
+
+  const handleSubscribeNow = () => {
+    navigate('/subscription?from=billing');
   };
 
   return (
@@ -85,7 +92,7 @@ const CurrentSubscriptionCard = ({
               ) : (
                 <Button
                   variant="default"
-                  onClick={() => window.location.href = '/subscription'}
+                  onClick={handleSubscribeNow}
                 >
                   Subscribe Now
                 </Button>
