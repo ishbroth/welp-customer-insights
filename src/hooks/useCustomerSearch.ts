@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 export const useCustomerSearch = () => {
   const [searchParams] = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
   // Extract search parameters
@@ -25,14 +25,29 @@ export const useCustomerSearch = () => {
   const similarityThreshold = parseFloat(searchParams.get("similarityThreshold") || "0.7");
 
   useEffect(() => {
+    // Check if we have any search parameters
+    const hasSearchParams = [lastName, firstName, phone, address, city, state, zipCode].some(param => param.trim() !== "");
+    
+    console.log("Search parameters:", { lastName, firstName, phone, address, city, state, zipCode });
+    console.log("Has search params:", hasSearchParams);
+    
+    if (!hasSearchParams) {
+      console.log("No search parameters, skipping search");
+      setIsLoading(false);
+      setCustomers([]);
+      return;
+    }
+
     // Perform search with Supabase
     const fetchSearchResults = async () => {
+      console.log("Starting search...");
       setIsLoading(true);
       
       try {
         // Format phone for search by removing non-digit characters
         const formattedPhone = phone ? phone.replace(/\D/g, '') : '';
 
+        console.log("Searching profiles table...");
         // First check for profile matches (existing customers in the database)
         let profileQuery = supabase
           .from('profiles')
@@ -73,9 +88,13 @@ export const useCustomerSearch = () => {
         const { data: profilesData, error: profileError } = await profileQuery;
 
         if (profileError) {
+          console.error("Profile search error:", profileError);
           throw profileError;
         }
         
+        console.log("Profile search results:", profilesData);
+
+        console.log("Searching reviews table...");
         // Now also search in reviews for customer information
         let reviewQuery = supabase
           .from('reviews')
@@ -110,8 +129,11 @@ export const useCustomerSearch = () => {
         const { data: reviewsData, error: reviewError } = await reviewQuery;
 
         if (reviewError) {
+          console.error("Review search error:", reviewError);
           throw reviewError;
         }
+        
+        console.log("Review search results:", reviewsData);
         
         // Get all unique customer IDs to fetch review counts and ratings
         const allProfileIds = profilesData?.map(profile => profile.id) || [];
@@ -119,6 +141,7 @@ export const useCustomerSearch = () => {
         // Get reviews count and average rating for each customer from profiles
         let reviewsForProfilesData = [];
         if (allProfileIds.length > 0) {
+          console.log("Fetching reviews for profiles...");
           const { data: profileReviews, error: profileReviewsError } = await supabase
             .from('reviews')
             .select('customer_id, rating')
@@ -128,6 +151,7 @@ export const useCustomerSearch = () => {
             console.error('Error fetching profile reviews:', profileReviewsError);
           } else {
             reviewsForProfilesData = profileReviews || [];
+            console.log("Profile reviews data:", reviewsForProfilesData);
           }
         }
         
@@ -136,6 +160,7 @@ export const useCustomerSearch = () => {
         
         // Add customers from profiles
         if (profilesData) {
+          console.log("Processing profile customers...");
           const profileCustomers = profilesData.map(profile => {
             // Get all reviews for this profile
             const customerReviews = reviewsForProfilesData.filter(review => 
@@ -164,10 +189,12 @@ export const useCustomerSearch = () => {
           });
           
           combinedCustomers = [...profileCustomers];
+          console.log("Profile customers processed:", profileCustomers);
         }
         
         // Add customers from reviews (that are not already in profiles)
         if (reviewsData) {
+          console.log("Processing review customers...");
           // Group reviews by customer info to avoid duplicates
           const reviewsByCustomerInfo = new Map();
           
@@ -229,8 +256,11 @@ export const useCustomerSearch = () => {
               });
             }
           });
+          
+          console.log("Review customers processed, total customers:", combinedCustomers.length);
         }
         
+        console.log("Final combined customers:", combinedCustomers);
         setCustomers(combinedCustomers);
         
       } catch (error) {
@@ -242,6 +272,7 @@ export const useCustomerSearch = () => {
         });
         setCustomers([]);
       } finally {
+        console.log("Search completed, setting loading to false");
         setIsLoading(false);
       }
     };
