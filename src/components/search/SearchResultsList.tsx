@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -154,8 +153,9 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     return <div className="text-center py-8">Loading...</div>;
   }
 
+  // Don't render anything if there are no customers - let the parent component handle the empty state
   if (customers.length === 0) {
-    return <EmptySearchResults isBusinessUser={currentUser?.type === "business"} />;
+    return null;
   }
 
   return (
