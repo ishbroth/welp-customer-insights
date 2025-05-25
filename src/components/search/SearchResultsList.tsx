@@ -20,6 +20,11 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
 
+  // Check if any search parameters are present to determine if a search has been performed
+  const hasSearchParams = Array.from(searchParams.entries()).some(([key, value]) => 
+    value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
+  );
+
   const handleSelectCustomer = async (customerId: string) => {
     // If this customer is already expanded, collapse it
     if (expandedCustomerId === customerId) {
@@ -149,12 +154,13 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     return hasOneTimeAccess(customerId);
   };
 
-  if (isLoading) {
+  // Only show loading if a search has been performed and is currently loading
+  if (isLoading && hasSearchParams) {
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  // Don't render anything if there are no customers - let the parent component handle the empty state
-  if (customers.length === 0) {
+  // Don't render anything if no search has been performed or there are no customers
+  if (!hasSearchParams || customers.length === 0) {
     return null;
   }
 
