@@ -43,16 +43,7 @@ export const handleSubscription = async (
         throw new Error("No checkout URL returned");
       }
       
-      // Determine success URL based on current page
-      const currentUrl = window.location.href;
-      const fromBilling = currentUrl.includes('from=billing');
-      
-      // Store the return context in sessionStorage for after Stripe redirect
-      if (fromBilling) {
-        sessionStorage.setItem('returnToBilling', 'true');
-      }
-      
-      // Open Stripe checkout in current window
+      // Open Stripe checkout in a new window
       window.location.href = data.url;
       
       console.log("Subscription - Redirecting to Stripe checkout");

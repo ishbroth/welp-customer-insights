@@ -86,15 +86,6 @@ serve(async (req) => {
     
     const origin = req.headers.get("origin") || "http://localhost:5173";
     
-    // Determine success URL - check if coming from billing
-    const referer = req.headers.get("referer") || "";
-    const fromBilling = referer.includes("from=billing");
-    const successUrl = fromBilling 
-      ? `${origin}/profile?subscribed=true&from=billing`
-      : `${origin}/profile?subscribed=true`;
-    
-    logStep("Redirect URLs determined", { successUrl, fromBilling });
-    
     // Create a checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -115,8 +106,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: successUrl,
-      cancel_url: `${origin}/subscription?canceled=true&from=${fromBilling ? 'billing' : 'page'}`,
+      success_url: `${origin}/profile?subscribed=true`,
+      cancel_url: `${origin}/subscription?canceled=true`,
     });
 
     logStep("Created checkout session", { sessionId: session.id });
