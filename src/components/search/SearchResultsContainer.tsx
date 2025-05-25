@@ -7,6 +7,7 @@ import SearchBox from "@/components/SearchBox";
 import SearchResultsList from "@/components/search/SearchResultsList";
 import { Customer } from "@/types/search";
 import { useAuth } from "@/contexts/auth";
+import { useSearchParams } from "react-router-dom";
 
 interface SearchResultsContainerProps {
   customers: Customer[];
@@ -15,8 +16,15 @@ interface SearchResultsContainerProps {
 
 const SearchResultsContainer = ({ customers, isLoading }: SearchResultsContainerProps) => {
   const { currentUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const isBusinessUser = currentUser?.type === "business";
-  const hasSearched = !isLoading; // Assuming if not loading, a search has been performed
+  
+  // Check if any search parameters are present to determine if a search has been performed
+  const hasSearchParams = Array.from(searchParams.entries()).some(([key, value]) => 
+    value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
+  );
+  
+  const hasSearched = hasSearchParams && !isLoading;
   const hasNoResults = hasSearched && customers.length === 0;
 
   return (
