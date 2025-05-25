@@ -10,13 +10,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -24,6 +25,19 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(
     location.state?.message || null
   );
+
+  // Force logout on page load to clear any residual auth state
+  useEffect(() => {
+    const forceLogout = async () => {
+      console.log("Login page: Forcing complete logout to clear any residual auth state");
+      await supabase.auth.signOut();
+      // Also clear any local storage that might be holding auth state
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('sb-yftvcixhifvrovwhtgtj-auth-token');
+    };
+    
+    forceLogout();
+  }, []);
 
   // Clear the success message after 10 seconds
   useEffect(() => {
@@ -34,6 +48,14 @@ const Login = () => {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  // If somehow still logged in, redirect to profile
+  useEffect(() => {
+    if (currentUser) {
+      console.log("User still logged in, redirecting to profile");
+      navigate("/profile");
+    }
+  }, [currentUser, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +72,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login for:", email);
       const { success, error } = await login(email, password);
       
       if (success) {
@@ -59,6 +82,7 @@ const Login = () => {
         });
         navigate("/profile");
       } else {
+        console.error("Login failed:", error);
         toast({
           title: "Login Failed",
           description: error || "Invalid email or password. Please try again.",
@@ -66,6 +90,7 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
