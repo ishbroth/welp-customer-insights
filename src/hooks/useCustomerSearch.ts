@@ -52,7 +52,8 @@ export const useCustomerSearch = () => {
         let profileQuery = supabase
           .from('profiles')
           .select('id, first_name, last_name, phone, address, city, state, zipcode')
-          .eq('type', 'customer');
+          .eq('type', 'customer')
+          .limit(50); // Add limit to prevent large queries
         
         // Add filters for each provided parameter for profiles
         if (firstName) {
@@ -98,7 +99,8 @@ export const useCustomerSearch = () => {
         // Now also search in reviews for customer information
         let reviewQuery = supabase
           .from('reviews')
-          .select('id, customer_name, customer_address, customer_city, customer_zipcode, customer_phone, rating');
+          .select('id, customer_name, customer_address, customer_city, customer_zipcode, customer_phone, rating')
+          .limit(50); // Add limit to prevent large queries
         
         // Add filters for each provided parameter for reviews
         if (firstName || lastName) {
@@ -135,35 +137,23 @@ export const useCustomerSearch = () => {
         
         console.log("Review search results:", reviewsData);
         
-        // Get all unique customer IDs to fetch review counts and ratings
-        const allProfileIds = profilesData?.map(profile => profile.id) || [];
-        
-        // Get reviews count and average rating for each customer from profiles
-        let reviewsForProfilesData = [];
-        if (allProfileIds.length > 0) {
-          console.log("Fetching reviews for profiles...");
-          const { data: profileReviews, error: profileReviewsError } = await supabase
-            .from('reviews')
-            .select('customer_id, rating')
-            .in('customer_id', allProfileIds);
-          
-          if (profileReviewsError) {
-            console.error('Error fetching profile reviews:', profileReviewsError);
-          } else {
-            reviewsForProfilesData = profileReviews || [];
-            console.log("Profile reviews data:", reviewsForProfilesData);
-          }
-        }
-        
         // Combine both data sources into customers
         let combinedCustomers: Customer[] = [];
         
         // Add customers from profiles
-        if (profilesData) {
+        if (profilesData && profilesData.length > 0) {
           console.log("Processing profile customers...");
+          
+          // Get reviews for these profiles in a single query
+          const profileIds = profilesData.map(profile => profile.id);
+          const { data: profileReviews } = await supabase
+            .from('reviews')
+            .select('customer_id, rating')
+            .in('customer_id', profileIds);
+          
           const profileCustomers = profilesData.map(profile => {
             // Get all reviews for this profile
-            const customerReviews = reviewsForProfilesData.filter(review => 
+            const customerReviews = profileReviews?.filter(review => 
               review.customer_id === profile.id
             ) || [];
             
@@ -193,7 +183,7 @@ export const useCustomerSearch = () => {
         }
         
         // Add customers from reviews (that are not already in profiles)
-        if (reviewsData) {
+        if (reviewsData && reviewsData.length > 0) {
           console.log("Processing review customers...");
           // Group reviews by customer info to avoid duplicates
           const reviewsByCustomerInfo = new Map();
