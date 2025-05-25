@@ -97,7 +97,20 @@ export const useAuthState = () => {
       return;
     }
     
-    // Set up auth state listener FIRST
+    // First check for existing session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.id);
+      setSession(session);
+      if (session?.user) {
+        console.log("Initial session found, initializing user data");
+        initUserData(session.user.id, true);
+      } else {
+        console.log("No initial session found");
+        setLoading(false);
+      }
+    });
+    
+    // Then set up auth state listener for future changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change event:", event, "session user id:", session?.user?.id);
@@ -105,29 +118,16 @@ export const useAuthState = () => {
         
         if (session?.user) {
           // Always force refresh on any auth state change to ensure we have latest data
-          console.log("User authenticated, refreshing profile data from database");
+          console.log("User authenticated via state change, refreshing profile data from database");
           await initUserData(session.user.id, true);
         } else {
-          console.log("No session, clearing user data");
+          console.log("No session in state change, clearing user data");
           setCurrentUser(null);
           setIsSubscribed(false);
           setLoading(false);
         }
       }
     );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session?.user?.id);
-      setSession(session);
-      if (session?.user) {
-        // Force refresh on initial load to get latest data
-        console.log("Initial session found, refreshing profile data from database");
-        initUserData(session.user.id, true);
-      } else {
-        setLoading(false);
-      }
-    });
     
     return () => {
       subscription.unsubscribe();
