@@ -16,7 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -24,6 +24,14 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(
     location.state?.message || null
   );
+
+  // Navigate to profile when session is established (regardless of profile loading status)
+  useEffect(() => {
+    if (session?.user) {
+      console.log("Session established, navigating to profile");
+      navigate("/profile");
+    }
+  }, [session, navigate]);
 
   // Clear the success message after 10 seconds
   useEffect(() => {
@@ -57,7 +65,7 @@ const Login = () => {
           title: "Logged In",
           description: "Welcome back to Welp.",
         });
-        navigate("/profile");
+        // Navigation will happen automatically via the useEffect above when session is set
       } else {
         toast({
           title: "Login Failed",

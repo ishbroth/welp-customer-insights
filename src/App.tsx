@@ -40,12 +40,17 @@ import BusinessProfile from "./pages/BusinessProfile";
 
 // Routes component that uses the AuthContext
 const AppRoutes = () => {
-  // Protected route component that allows access if user is logged in
+  // Protected route component that allows access if user has a session
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { currentUser } = useAuth();
+    const { session, loading } = useAuth();
     
-    // Allow access if user is logged in
-    if (!currentUser) {
+    // Show loading while auth state is being determined
+    if (loading) {
+      return <div>Loading...</div>;
+    }
+    
+    // Allow access if user has a session (don't wait for profile data)
+    if (!session?.user) {
       return <Navigate to="/login" replace />;
     }
     
@@ -54,11 +59,21 @@ const AppRoutes = () => {
 
   // Business owner route component that allows access only for business owners
   const BusinessOwnerRoute = ({ children }: { children: React.ReactNode }) => {
-    const { currentUser } = useAuth();
+    const { currentUser, session, loading } = useAuth();
+    
+    // Show loading while auth state is being determined
+    if (loading) {
+      return <div>Loading...</div>;
+    }
     
     // Redirect to login if not logged in
-    if (!currentUser) {
+    if (!session?.user) {
       return <Navigate to="/login" replace />;
+    }
+    
+    // Allow access if we have a session but profile is still loading
+    if (!currentUser) {
+      return <div>Loading profile...</div>;
     }
     
     // Redirect if not a business owner
@@ -71,11 +86,21 @@ const AppRoutes = () => {
 
   // Business owner or admin route component
   const BusinessOrAdminRoute = ({ children }: { children: React.ReactNode }) => {
-    const { currentUser } = useAuth();
+    const { currentUser, session, loading } = useAuth();
+    
+    // Show loading while auth state is being determined
+    if (loading) {
+      return <div>Loading...</div>;
+    }
     
     // Redirect to login if not logged in
-    if (!currentUser) {
+    if (!session?.user) {
       return <Navigate to="/login" replace />;
+    }
+    
+    // Allow access if we have a session but profile is still loading
+    if (!currentUser) {
+      return <div>Loading profile...</div>;
     }
     
     // Redirect if not a business owner or admin
