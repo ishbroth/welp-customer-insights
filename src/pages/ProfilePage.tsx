@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -21,15 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useAuth();
   
+  // Fetch customer reviews using the hook
+  const { customerReviews, isLoading } = useProfileReviewsFetching();
+  
   // Since we don't have the actual reviews structure, initialize with empty arrays
   const businessReviews: any[] = [];
-  const customerReviews: any[] = [];
   const allReviews: any[] = [];
   
   // Function to get the first sentence of a text
@@ -279,7 +281,11 @@ const ProfilePage = () => {
                     </Button>
                   </div>
                   
-                  {customerReviews.length > 0 ? (
+                  {isLoading ? (
+                    <div className="text-center p-4">
+                      <p className="text-gray-500">Loading your reviews...</p>
+                    </div>
+                  ) : customerReviews.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -292,11 +298,17 @@ const ProfilePage = () => {
                       <TableBody>
                         {customerReviews.slice(0, 3).map((review) => (
                           <TableRow key={review.id}>
-                            <TableCell className="font-medium">{review.reviewerName}</TableCell>
+                            <TableCell className="font-medium">
+                              <Link 
+                                to={`/business/${review.reviewerId}`}
+                                className="hover:text-welp-primary hover:underline"
+                              >
+                                {review.reviewerName}
+                              </Link>
+                            </TableCell>
                             <TableCell><StarRating rating={review.rating} /></TableCell>
                             <TableCell>
                               <div>
-                                <p className="font-semibold">{review.title}</p>
                                 <p className="text-sm text-gray-600">
                                   {getFirstFiveWords(review.content)}
                                   <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
@@ -305,7 +317,7 @@ const ProfilePage = () => {
                                 </p>
                               </div>
                             </TableCell>
-                            <TableCell>{review.date}</TableCell>
+                            <TableCell>{new Date(review.date).toLocaleDateString()}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
