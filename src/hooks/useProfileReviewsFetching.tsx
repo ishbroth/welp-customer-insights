@@ -71,6 +71,21 @@ export const useProfileReviewsFetching = () => {
 
       console.log("Total unique reviews:", uniqueReviews.length);
 
+      // Debug: Let's see what profiles exist in the database
+      console.log("=== DEBUGGING PROFILES ===");
+      const { data: allProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, type');
+      
+      if (profilesError) {
+        console.error("Error fetching all profiles:", profilesError);
+      } else {
+        console.log("All profiles in database:", allProfiles);
+        console.log("Looking for business profiles specifically:");
+        const businessProfiles = allProfiles?.filter(p => p.type === 'business');
+        console.log("Business profiles:", businessProfiles);
+      }
+
       // Now fetch business profiles for each review separately
       const reviewsWithProfiles = await Promise.all(
         uniqueReviews.map(async (review) => {
@@ -90,22 +105,23 @@ export const useProfileReviewsFetching = () => {
 
             console.log("Business profile by ID:", businessProfile);
 
-            // If no profile found by ID, try to find by admin email for permanent accounts
+            // If no profile found by ID, try to find ANY business profile with the admin email
             if (!businessProfile) {
-              console.log("No profile found by ID, checking for admin business account...");
+              console.log("No profile found by ID, checking for any admin account...");
               
               const { data: adminProfile, error: adminError } = await supabase
                 .from('profiles')
                 .select('name, avatar, email, id')
                 .eq('email', 'iw@thepaintedpainter.com')
-                .eq('type', 'business')
                 .maybeSingle();
 
               if (adminError) {
-                console.error("Error fetching admin business profile:", adminError);
+                console.error("Error fetching admin profile:", adminError);
               } else if (adminProfile) {
-                console.log("Found admin business profile:", adminProfile);
+                console.log("Found admin profile:", adminProfile);
                 businessProfile = adminProfile;
+              } else {
+                console.log("No admin profile found with email iw@thepaintedpainter.com");
               }
             }
 
