@@ -1,26 +1,18 @@
+
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { User, mockUsers } from "@/data/mockUsers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
-import SearchBox from "@/components/SearchBox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import StarRating from "@/components/StarRating";
-import { MapPin, Phone, Search, Settings, Shield, User as UserIcon } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
 import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
+import WelcomeSection from "@/components/profile/WelcomeSection";
+import AdminDashboard from "@/components/profile/AdminDashboard";
+import BusinessInfoCard from "@/components/profile/BusinessInfoCard";
+import CustomerInfoCard from "@/components/profile/CustomerInfoCard";
+import RateCustomerSection from "@/components/profile/RateCustomerSection";
+import CustomerReviewsSection from "@/components/profile/CustomerReviewsSection";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -29,27 +21,6 @@ const ProfilePage = () => {
   
   // Fetch customer reviews using the hook
   const { customerReviews, isLoading } = useProfileReviewsFetching();
-  
-  // Since we don't have the actual reviews structure, initialize with empty arrays
-  const businessReviews: any[] = [];
-  const allReviews: any[] = [];
-  
-  // Function to get the first sentence of a text
-  const getFirstSentence = (content: string) => {
-    const match = content.match(/^.*?[.!?](?:\s|$)/);
-    return match ? match[0] : `${content.substring(0, 80)}...`;
-  };
-  
-  // Function to get the first five words for customer accounts
-  const getFirstFiveWords = (text: string): string => {
-    if (!text) return "";
-    
-    // Split the text into words and take the first 5
-    const words = text.split(/\s+/);
-    const firstFiveWords = words.slice(0, 5).join(" ");
-    
-    return `${firstFiveWords}...`;
-  };
 
   // Handle search in "Rate a Customer" section
   const handleCustomerSearch = (searchParams: Record<string, string>) => {
@@ -83,257 +54,36 @@ const ProfilePage = () => {
           <div className="container mx-auto">
             <div className="grid grid-cols-1 gap-8">
               {/* Welcome section */}
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 border-2 border-white shadow-md">
-                    {currentUser?.avatar ? (
-                      <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                    ) : (
-                      <AvatarFallback className="text-xl bg-welp-primary text-white">
-                        {currentUser?.name?.[0] || "U"}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">
-                      Welcome, {currentUser?.name}
-                      {currentUser?.type === "admin" && (
-                        <span className="inline-flex items-center ml-2 text-lg bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md">
-                          <Shield className="h-4 w-4 mr-1" /> Administrator
-                        </span>
-                      )}
-                    </h1>
-                    <p className="text-gray-600">
-                      {currentUser?.type === "admin" 
-                        ? "Administrator access - You can manage all aspects of the application"
-                        : currentUser?.type === "customer"
-                        ? "View what businesses are saying about you"
-                        : "Manage your profile and customer reviews"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <WelcomeSection currentUser={currentUser} />
               
               {/* Admin Dashboard Panel */}
-              {currentUser?.type === "admin" && (
-                <Card className="p-6 bg-gradient-to-r from-yellow-100 to-yellow-50">
-                  <h2 className="text-xl font-semibold mb-4">Administrator Dashboard</h2>
-                  <p className="text-gray-600 mb-6">
-                    As an administrator, you have full access to all parts of the application.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Button variant="secondary" asChild>
-                      <Link to="/review/new">Create Review</Link>
-                    </Button>
-                    <Button variant="secondary" asChild>
-                      <Link to="/search">Search Users</Link>
-                    </Button>
-                    <Button variant="secondary" asChild>
-                      <Link to="/subscription">Manage Subscriptions</Link>
-                    </Button>
-                  </div>
-                </Card>
-              )}
+              {currentUser?.type === "admin" && <AdminDashboard />}
 
               {/* Business Owner Profile Card - for business owners only */}
               {currentUser?.type === "business" && (
-                <Card className="p-6">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xl font-semibold">Business Information</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <UserIcon className="h-5 w-5 text-gray-500" />
-                          <div>
-                            <p className="text-sm text-gray-500">Business Name</p>
-                            <p className="font-medium">{currentUser?.name}</p>
-                          </div>
-                        </div>
-                        {currentUser?.businessId && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <Shield className="h-5 w-5 text-gray-500" />
-                            <div>
-                              <p className="text-sm text-gray-500">Business ID</p>
-                              <p className="font-medium">{currentUser?.businessId}</p>
-                            </div>
-                          </div>
-                        )}
-                        {currentUser?.phone && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <Phone className="h-5 w-5 text-gray-500" />
-                            <div>
-                              <p className="text-sm text-gray-500">Phone Number</p>
-                              <p className="font-medium">{currentUser?.phone}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        {(currentUser?.address || currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <MapPin className="h-5 w-5 text-gray-500" />
-                            <div>
-                              <p className="text-sm text-gray-500">Address</p>
-                              {currentUser?.address && (
-                                <p className="font-medium">{currentUser.address}</p>
-                              )}
-                              {(currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
-                                <p className="font-medium">
-                                  {currentUser?.city}{currentUser?.city && currentUser?.state ? ', ' : ''}{currentUser?.state} {currentUser?.zipCode}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {currentUser?.bio && (
-                          <div className="mt-4">
-                            <p className="text-sm text-gray-500 mb-1">About Business</p>
-                            <p>{currentUser.bio}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <BusinessInfoCard currentUser={currentUser} />
               )}
 
               {/* Customer Profile Information Section - for customers only */}
               {currentUser?.type === "customer" && (
-                <Card className="p-6">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xl font-semibold">My Profile Information</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <UserIcon className="h-5 w-5 text-gray-500" />
-                          <div>
-                            <p className="text-sm text-gray-500">Full Name</p>
-                            <p className="font-medium">{currentUser?.name}</p>
-                          </div>
-                        </div>
-                        {currentUser?.phone && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <Phone className="h-5 w-5 text-gray-500" />
-                            <div>
-                              <p className="text-sm text-gray-500">Phone Number</p>
-                              <p className="font-medium">{currentUser?.phone}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        {(currentUser?.address || currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <MapPin className="h-5 w-5 text-gray-500" />
-                            <div>
-                              <p className="text-sm text-gray-500">Address</p>
-                              {currentUser?.address && (
-                                <p className="font-medium">{currentUser.address}</p>
-                              )}
-                              {(currentUser?.city || currentUser?.state || currentUser?.zipCode) && (
-                                <p className="font-medium">
-                                  {currentUser?.city}{currentUser?.city && currentUser?.state ? ', ' : ''}{currentUser?.state} {currentUser?.zipCode}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {currentUser?.bio && (
-                          <div className="mt-4">
-                            <p className="text-sm text-gray-500 mb-1">About Me</p>
-                            <p>{currentUser.bio}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CustomerInfoCard currentUser={currentUser} />
               )}
               
               {/* Search section - only show for business users */}
               {currentUser?.type === "business" && (
-                <Card className="p-6 bg-gradient-to-r from-welp-primary/10 to-welp-primary/5">
-                  <h2 className="text-xl font-semibold mb-4">Rate a Customer</h2>
-                  <p className="text-gray-600 mb-6">
-                    Search for customers to review and help other businesses make informed decisions.
-                  </p>
-                  <SearchBox 
-                    simplified={true} 
-                    onSearch={handleCustomerSearch}
-                    buttonText="Find Customer"
-                  />
-                </Card>
+                <RateCustomerSection onCustomerSearch={handleCustomerSearch} />
               )}
               
               {/* Customer Reviews Section - for customers only */}
               {currentUser?.type === "customer" && (
-                <Card className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">What Businesses Say About You</h2>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/profile/reviews">
-                        See All Reviews
-                      </Link>
-                    </Button>
-                  </div>
-                  
-                  {isLoading ? (
-                    <div className="text-center p-4">
-                      <p className="text-gray-500">Loading your reviews...</p>
-                    </div>
-                  ) : customerReviews.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Business</TableHead>
-                          <TableHead>Rating</TableHead>
-                          <TableHead>Feedback</TableHead>
-                          <TableHead>Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {customerReviews.slice(0, 3).map((review) => (
-                          <TableRow key={review.id}>
-                            <TableCell className="font-medium">
-                              <Link 
-                                to={`/business/${review.reviewerId}`}
-                                className="hover:text-welp-primary hover:underline"
-                              >
-                                {review.reviewerName}
-                              </Link>
-                            </TableCell>
-                            <TableCell><StarRating rating={review.rating} /></TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="text-sm text-gray-600">
-                                  {getFirstFiveWords(review.content)}
-                                  <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
-                                    Show more
-                                  </Link>
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>{new Date(review.date).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center p-4">
-                      <p className="text-gray-500">
-                        No businesses have written reviews about you yet.
-                      </p>
-                    </div>
-                  )}
-                </Card>
+                <CustomerReviewsSection 
+                  customerReviews={customerReviews} 
+                  isLoading={isLoading} 
+                />
               )}
               
               {/* No reviews message for customers */}
-              {currentUser?.type === "customer" && customerReviews.length === 0 && (
+              {currentUser?.type === "customer" && customerReviews.length === 0 && !isLoading && (
                 <Card className="p-6 text-center">
                   <p className="text-gray-500 mb-4">
                     No businesses have written reviews about you yet.
