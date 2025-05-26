@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Eye, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,26 +30,57 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   onPurchase,
   onReactionToggle,
 }) => {
+  const [localReview, setLocalReview] = useState(review);
+
   const handlePurchaseClick = () => {
     onPurchase(review.id);
   };
 
   const getBusinessInitials = () => {
-    if (review.reviewerName) {
-      const names = review.reviewerName.split(' ');
+    if (localReview.reviewerName) {
+      const names = localReview.reviewerName.split(' ');
       return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
     }
     return "B";
+  };
+
+  const handleReactionToggle = (reviewId: string, reactionType: string) => {
+    // Update local state to reflect the reaction change
+    setLocalReview(prev => {
+      const userId = "current-user-id"; // This should come from auth context
+      const currentReactions = prev.reactions || { like: [], funny: [], useful: [], ohNo: [] };
+      const hasReacted = currentReactions[reactionType]?.includes(userId);
+      
+      const updatedReactions = {
+        ...currentReactions,
+        [reactionType]: hasReacted
+          ? currentReactions[reactionType].filter(id => id !== userId)
+          : [...(currentReactions[reactionType] || []), userId]
+      };
+      
+      return { ...prev, reactions: updatedReactions };
+    });
+    
+    // Call the parent's reaction toggle handler
+    onReactionToggle(reviewId, reactionType);
+  };
+
+  const handleResponseSubmitted = (newResponse: any) => {
+    // Update local review state to include the new response
+    setLocalReview(prev => ({
+      ...prev,
+      responses: [...(prev.responses || []), newResponse]
+    }));
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4">
       <div className="flex justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <Link to={`/business/${review.reviewerId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+          <Link to={`/business/${localReview.reviewerId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
             <Avatar className="h-10 w-10">
-              {review.reviewerAvatar ? (
-                <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+              {localReview.reviewerAvatar ? (
+                <AvatarImage src={localReview.reviewerAvatar} alt={localReview.reviewerName} />
               ) : (
                 <AvatarFallback className="bg-blue-100 text-blue-800">
                   {getBusinessInitials()}
@@ -57,9 +88,9 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
               )}
             </Avatar>
             <div>
-              <h3 className="font-semibold hover:text-blue-600 transition-colors">{review.reviewerName}</h3>
+              <h3 className="font-semibold hover:text-blue-600 transition-colors">{localReview.reviewerName}</h3>
               <p className="text-sm text-gray-500">
-                {new Date(review.date).toLocaleDateString()}
+                {new Date(localReview.date).toLocaleDateString()}
               </p>
             </div>
           </Link>
@@ -68,7 +99,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
 
       {isUnlocked ? (
         <div>
-          <p className="text-gray-700">{review.content}</p>
+          <p className="text-gray-700">{localReview.content}</p>
           <div className="mt-2 text-sm text-green-600 flex items-center">
             <Eye className="h-4 w-4 mr-1" />
             Full review unlocked
@@ -78,28 +109,29 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
           <div className="mt-4 border-t pt-3">
             <div className="text-sm text-gray-500 mb-1">React to this review:</div>
             <ReviewReactions 
-              reviewId={review.id}
-              customerId={review.customerId}
-              businessId={review.reviewerId}
-              businessName={review.reviewerName}
-              businessAvatar={review.reviewerAvatar}
-              reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
-              onReactionToggle={onReactionToggle}
+              reviewId={localReview.id}
+              customerId={localReview.customerId}
+              businessId={localReview.reviewerId}
+              businessName={localReview.reviewerName}
+              businessAvatar={localReview.reviewerAvatar}
+              reactions={localReview.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
+              onReactionToggle={handleReactionToggle}
             />
           </div>
           
           {/* Customer review responses component */}
           <CustomerReviewResponse 
-            reviewId={review.id}
-            responses={review.responses || []}
+            reviewId={localReview.id}
+            responses={localReview.responses || []}
             hasSubscription={hasSubscription}
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
-            hideReplyOption={!hasSubscription} // Hide reply option if no subscription
+            hideReplyOption={!hasSubscription && !isUnlocked}
+            onResponseSubmitted={handleResponseSubmitted}
           />
         </div>
       ) : (
         <div>
-          <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
+          <p className="text-gray-700">{getFirstThreeWords(localReview.content)}</p>
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center text-gray-600">

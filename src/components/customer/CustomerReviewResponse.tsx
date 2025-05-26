@@ -20,17 +20,20 @@ interface CustomerReviewResponseProps {
   hasSubscription: boolean;
   isOneTimeUnlocked: boolean;
   hideReplyOption?: boolean;
+  onResponseSubmitted?: (newResponse: Response) => void;
 }
 
 const CustomerReviewResponse = ({ 
   reviewId, 
-  responses, 
+  responses: initialResponses, 
   hasSubscription, 
   isOneTimeUnlocked,
-  hideReplyOption = false
+  hideReplyOption = false,
+  onResponseSubmitted
 }: CustomerReviewResponseProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [responses, setResponses] = useState<Response[]>(initialResponses);
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   
@@ -71,10 +74,36 @@ const CustomerReviewResponse = ({
       return;
     }
     
+    if (!currentUser) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to respond.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
+    
+    // Create new response
+    const newResponse: Response = {
+      id: `resp-${Date.now()}`,
+      authorId: currentUser.id,
+      authorName: currentUser.name || "Customer",
+      content: responseText,
+      createdAt: new Date().toISOString()
+    };
     
     // Simulate API call with setTimeout
     setTimeout(() => {
+      // Update local state
+      setResponses(prev => [...prev, newResponse]);
+      
+      // Notify parent component if callback provided
+      if (onResponseSubmitted) {
+        onResponseSubmitted(newResponse);
+      }
+      
       toast({
         title: "Response submitted",
         description: "Your response has been added successfully!"
@@ -85,7 +114,7 @@ const CustomerReviewResponse = ({
     }, 1000);
   };
   
-  const canRespond = hasSubscription || isOneTimeUnlocked || hasReviewAccess;
+  const canRespond = (hasSubscription || isOneTimeUnlocked || hasReviewAccess) && canCustomerRespond();
   
   return (
     <div className="mt-4">

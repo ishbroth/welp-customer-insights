@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Lock, Eye } from "lucide-react";
+import { MessageSquare, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface CustomerResponseActionsProps {
