@@ -75,9 +75,12 @@ export const useProfileReviewsFetching = () => {
       const reviewsWithProfiles = await Promise.all(
         uniqueReviews.map(async (review) => {
           if (review.business_id) {
-            const { data: businessProfile, error: profileError } = await supabase
+            console.log("Looking up business profile for ID:", review.business_id);
+            
+            // First try to get profile by business_id
+            let { data: businessProfile, error: profileError } = await supabase
               .from('profiles')
-              .select('name, avatar')
+              .select('name, avatar, email')
               .eq('id', review.business_id)
               .maybeSingle();
 
@@ -85,7 +88,26 @@ export const useProfileReviewsFetching = () => {
               console.error("Error fetching business profile for:", review.business_id, profileError);
             }
 
-            console.log("Business profile for review:", review.id, businessProfile);
+            console.log("Business profile by ID:", businessProfile);
+
+            // If no profile found by ID, try to find by admin email for permanent accounts
+            if (!businessProfile) {
+              console.log("No profile found by ID, checking for admin business account...");
+              
+              const { data: adminProfile, error: adminError } = await supabase
+                .from('profiles')
+                .select('name, avatar, email, id')
+                .eq('email', 'iw@thepaintedpainter.com')
+                .eq('type', 'business')
+                .maybeSingle();
+
+              if (adminError) {
+                console.error("Error fetching admin business profile:", adminError);
+              } else if (adminProfile) {
+                console.log("Found admin business profile:", adminProfile);
+                businessProfile = adminProfile;
+              }
+            }
 
             return {
               ...review,
@@ -111,7 +133,7 @@ export const useProfileReviewsFetching = () => {
           content: review.content,
           date: review.created_at,
           reviewerId: review.business_id,
-          // Use the business profile name and avatar from the separate fetch
+          // Use the business profile name and avatar from the lookup
           reviewerName: businessProfile?.name || "Anonymous Business",
           reviewerAvatar: businessProfile?.avatar || "",
           customerId: currentUser.id,
