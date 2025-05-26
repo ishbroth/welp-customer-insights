@@ -80,9 +80,11 @@ export const searchProfiles = async (searchParams: SearchParams) => {
         matches++;
       }
       
-      // Check for house number match
-      const addressNumbers = address.match(/\d+/g) || [];
-      const profileNumbers = profile.address.match(/\d+/g) || [];
+      // Check for house number match - safely handle regex match results
+      const addressMatches = address.match(/\d+/g);
+      const profileMatches = profile.address.match(/\d+/g);
+      const addressNumbers: string[] = addressMatches || [];
+      const profileNumbers: string[] = profileMatches || [];
       
       for (const num of addressNumbers) {
         if (profileNumbers.includes(num)) {
