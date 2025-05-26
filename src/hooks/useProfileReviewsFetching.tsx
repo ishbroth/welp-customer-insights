@@ -31,9 +31,10 @@ export const useProfileReviewsFetching = () => {
           content, 
           created_at,
           business_id,
-          business_profile:profiles!reviews_business_id_fkey(name, avatar)
+          business_profile:profiles!inner(name, avatar)
         `)
-        .eq('customer_id', currentUser.id);
+        .eq('customer_id', currentUser.id)
+        .eq('profiles.id', supabase.rpc('business_id'));
 
       if (directError) {
         console.error("Error fetching direct reviews:", directError);
@@ -54,9 +55,10 @@ export const useProfileReviewsFetching = () => {
             content, 
             created_at,
             business_id,
-            business_profile:profiles!reviews_business_id_fkey(name, avatar)
+            business_profile:profiles!inner(name, avatar)
           `)
-          .ilike('customer_name', `%${currentUser.name}%`);
+          .ilike('customer_name', `%${currentUser.name}%`)
+          .eq('profiles.id', supabase.rpc('business_id'));
 
         if (nameError) {
           console.error("Error fetching reviews by name:", nameError);
