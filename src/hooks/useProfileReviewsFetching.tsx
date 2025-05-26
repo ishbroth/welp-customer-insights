@@ -71,47 +71,32 @@ export const useProfileReviewsFetching = () => {
 
       console.log("Total unique reviews:", uniqueReviews.length);
 
-      // Debug: Let's see what profiles exist in the database
-      console.log("=== DEBUGGING PROFILES ===");
-      const { data: allProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, name, email, type');
-      
-      if (profilesError) {
-        console.error("Error fetching all profiles:", profilesError);
-      } else {
-        console.log("All profiles in database:", allProfiles);
-        console.log("Looking for business profiles specifically:");
-        const businessProfiles = allProfiles?.filter(p => p.type === 'business');
-        console.log("Business profiles:", businessProfiles);
-      }
-
       // Now fetch business profiles for each review separately
       const reviewsWithProfiles = await Promise.all(
         uniqueReviews.map(async (review) => {
           if (review.business_id) {
             console.log("Looking up business profile for ID:", review.business_id);
             
-            // First try to get profile by business_id
+            // First try to get any profile by business_id (regardless of type)
             let { data: businessProfile, error: profileError } = await supabase
               .from('profiles')
-              .select('name, avatar, email')
+              .select('name, avatar, email, type')
               .eq('id', review.business_id)
               .maybeSingle();
 
             if (profileError) {
-              console.error("Error fetching business profile for:", review.business_id, profileError);
+              console.error("Error fetching profile for:", review.business_id, profileError);
             }
 
-            console.log("Business profile by ID:", businessProfile);
+            console.log("Profile found by ID:", businessProfile);
 
-            // If no profile found by ID, try to find ANY business profile with the admin email
+            // If no profile found by ID, check for admin account by email
             if (!businessProfile) {
-              console.log("No profile found by ID, checking for any admin account...");
+              console.log("No profile found by ID, checking for admin account by email...");
               
               const { data: adminProfile, error: adminError } = await supabase
                 .from('profiles')
-                .select('name, avatar, email, id')
+                .select('name, avatar, email, type, id')
                 .eq('email', 'iw@thepaintedpainter.com')
                 .maybeSingle();
 
@@ -120,9 +105,18 @@ export const useProfileReviewsFetching = () => {
               } else if (adminProfile) {
                 console.log("Found admin profile:", adminProfile);
                 businessProfile = adminProfile;
-              } else {
-                console.log("No admin profile found with email iw@thepaintedpainter.com");
               }
+            }
+
+            // Additional fallback: check if this is your main admin account
+            if (!businessProfile && review.business_id === currentUser.id) {
+              console.log("Review written by current user, using current user profile");
+              businessProfile = {
+                name: currentUser.name || "The Painted Painter",
+                avatar: currentUser.avatar || "",
+                email: currentUser.email,
+                type: currentUser.type
+              };
             }
 
             return {
@@ -143,14 +137,23 @@ export const useProfileReviewsFetching = () => {
       const formattedReviews = reviewsWithProfiles.map(review => {
         const businessProfile = review.business_profile;
         
+        // Use proper business name for admin account
+        let businessName = "Anonymous Business";
+        if (businessProfile) {
+          if (businessProfile.email === 'iw@thepaintedpainter.com') {
+            businessName = "The Painted Painter";
+          } else {
+            businessName = businessProfile.name || "Anonymous Business";
+          }
+        }
+        
         return {
           id: review.id,
           rating: review.rating,
           content: review.content,
           date: review.created_at,
           reviewerId: review.business_id,
-          // Use the business profile name and avatar from the lookup
-          reviewerName: businessProfile?.name || "Anonymous Business",
+          reviewerName: businessName,
           reviewerAvatar: businessProfile?.avatar || "",
           customerId: currentUser.id,
           customerName: currentUser.name || "Anonymous Customer",
