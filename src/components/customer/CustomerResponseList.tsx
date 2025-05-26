@@ -1,5 +1,7 @@
 
 import { formatDistance } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Response {
   id: string;
@@ -11,9 +13,21 @@ interface Response {
 
 interface CustomerResponseListProps {
   responses: Response[];
+  editingResponseId?: string | null;
+  editContent?: string;
+  setEditContent?: (content: string) => void;
+  onSaveEdit?: () => void;
+  onCancelEdit?: () => void;
 }
 
-const CustomerResponseList = ({ responses }: CustomerResponseListProps) => {
+const CustomerResponseList = ({ 
+  responses, 
+  editingResponseId,
+  editContent,
+  setEditContent,
+  onSaveEdit,
+  onCancelEdit
+}: CustomerResponseListProps) => {
   if (responses.length === 0) {
     return null;
   }
@@ -31,7 +45,35 @@ const CustomerResponseList = ({ responses }: CustomerResponseListProps) => {
               })}
             </span>
           </div>
-          <p className="text-sm text-gray-700">{response.content}</p>
+          
+          {/* If in edit mode for this response, show edit form */}
+          {editingResponseId === response.id ? (
+            <div>
+              <Textarea
+                value={editContent || ""}
+                onChange={(e) => setEditContent?.(e.target.value)}
+                className="w-full p-2 text-sm min-h-[80px] mb-2"
+                maxLength={1500}
+              />
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={onCancelEdit}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={onSaveEdit}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-700">{response.content}</p>
+          )}
         </div>
       ))}
     </div>

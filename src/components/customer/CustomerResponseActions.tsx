@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Lock } from "lucide-react";
+import { MessageSquare, Lock, Edit, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface CustomerResponseActionsProps {
@@ -8,16 +8,54 @@ interface CustomerResponseActionsProps {
   isResponseVisible: boolean;
   setIsResponseVisible: (visible: boolean) => void;
   hideReplyOption: boolean;
+  hasUserResponded?: boolean;
+  currentUserId?: string;
+  onEditResponse?: () => void;
+  onDeleteResponse?: () => void;
+  hasSubscription?: boolean;
 }
 
 const CustomerResponseActions = ({
   canRespond,
   isResponseVisible,
   setIsResponseVisible,
-  hideReplyOption
+  hideReplyOption,
+  hasUserResponded = false,
+  currentUserId,
+  onEditResponse,
+  onDeleteResponse,
+  hasSubscription = false
 }: CustomerResponseActionsProps) => {
   if (hideReplyOption) {
     return null;
+  }
+  
+  // If user has already responded, show edit/delete icons
+  if (hasUserResponded && currentUserId) {
+    return (
+      <div className="flex justify-end gap-2 mt-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-gray-600 hover:bg-gray-100 h-8 px-2 py-1"
+          onClick={onEditResponse}
+          disabled={!hasSubscription}
+        >
+          <Edit className="h-3 w-3 mr-1" />
+          {hasSubscription ? 'Edit' : <Lock className="h-3 w-3" />}
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2 py-1"
+          onClick={onDeleteResponse}
+          disabled={!hasSubscription}
+        >
+          <Trash2 className="h-3 w-3 mr-1" />
+          {hasSubscription ? 'Delete' : <Lock className="h-3 w-3" />}
+        </Button>
+      </div>
+    );
   }
   
   if (canRespond) {

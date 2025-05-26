@@ -34,11 +34,19 @@ const CustomerReviewResponse = ({
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responses, setResponses] = useState<Response[]>(initialResponses);
+  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   
   // Use the AuthContext to check if this specific review has one-time access
   const hasReviewAccess = hasOneTimeAccess(reviewId);
+  
+  // Check if the current user has already responded
+  const hasUserResponded = () => {
+    if (!currentUser) return false;
+    return responses.some(response => response.authorId === currentUser.id);
+  };
   
   // Check if the customer can respond based on who sent the last message
   const canCustomerRespond = () => {
@@ -113,13 +121,67 @@ const CustomerReviewResponse = ({
       setIsResponseVisible(false);
     }, 1000);
   };
+
+  const handleEditResponse = () => {
+    if (!currentUser) return;
+    
+    const userResponse = responses.find(r => r.authorId === currentUser.id);
+    if (userResponse) {
+      setEditingResponseId(userResponse.id);
+      setEditContent(userResponse.content);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingResponseId || !currentUser) return;
+    
+    setResponses(prev => prev.map(response => 
+      response.id === editingResponseId 
+        ? { ...response, content: editContent }
+        : response
+    ));
+    
+    setEditingResponseId(null);
+    setEditContent("");
+    
+    toast({
+      title: "Response updated",
+      description: "Your response has been updated successfully!"
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingResponseId(null);
+    setEditContent("");
+  };
+
+  const handleDeleteResponse = () => {
+    if (!currentUser) return;
+    
+    const userResponseId = responses.find(r => r.authorId === currentUser.id)?.id;
+    if (userResponseId) {
+      setResponses(prev => prev.filter(response => response.id !== userResponseId));
+      
+      toast({
+        title: "Response deleted",
+        description: "Your response has been deleted successfully!"
+      });
+    }
+  };
   
-  const canRespond = (hasSubscription || isOneTimeUnlocked || hasReviewAccess) && canCustomerRespond();
+  const canRespond = (hasSubscription || isOneTimeUnlocked || hasReviewAccess) && canCustomerRespond() && !hasUserResponded();
   
   return (
     <div className="mt-4">
       {/* Display existing responses */}
-      <CustomerResponseList responses={responses} />
+      <CustomerResponseList 
+        responses={responses} 
+        editingResponseId={editingResponseId}
+        editContent={editContent}
+        setEditContent={setEditContent}
+        onSaveEdit={handleSaveEdit}
+        onCancelEdit={handleCancelEdit}
+      />
       
       {/* Show response actions based on subscription status */}
       <CustomerResponseActions 
@@ -127,6 +189,11 @@ const CustomerReviewResponse = ({
         isResponseVisible={isResponseVisible}
         setIsResponseVisible={setIsResponseVisible}
         hideReplyOption={hideReplyOption}
+        hasUserResponded={hasUserResponded()}
+        currentUserId={currentUser?.id}
+        onEditResponse={handleEditResponse}
+        onDeleteResponse={handleDeleteResponse}
+        hasSubscription={hasSubscription}
       />
       
       {/* Response form - only shown when clicked respond */}
