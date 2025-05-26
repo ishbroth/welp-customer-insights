@@ -85,7 +85,7 @@ export const useProfileReviewsFetching = () => {
           content: review.content,
           date: review.created_at,
           reviewerId: review.business_id,
-          // Use the business profile name and avatar from the join
+          // Use the business profile name and avatar from the join - fix the mapping here
           reviewerName: businessProfile?.name || "Anonymous Business",
           reviewerAvatar: businessProfile?.avatar || "",
           customerId: currentUser.id,
