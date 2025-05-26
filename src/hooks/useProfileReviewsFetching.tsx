@@ -71,20 +71,7 @@ export const useProfileReviewsFetching = () => {
 
       console.log("Total unique reviews:", uniqueReviews.length);
 
-      // Debug: Check what profiles exist and specifically look for the admin account
-      console.log("=== DEBUGGING PROFILE LOOKUP ===");
-      const { data: adminCheck, error: adminCheckError } = await supabase
-        .from('profiles')
-        .select('id, name, email, type, avatar')
-        .eq('email', 'iw@thepaintedpainter.com')
-        .maybeSingle();
-      
-      console.log("Admin profile check result:", adminCheck);
-      if (adminCheckError) {
-        console.error("Admin profile check error:", adminCheckError);
-      }
-
-      // Now fetch business profiles for each review separately
+      // Now fetch business profiles for each review
       const reviewsWithProfiles = await Promise.all(
         uniqueReviews.map(async (review) => {
           if (review.business_id) {
@@ -92,7 +79,7 @@ export const useProfileReviewsFetching = () => {
             
             let businessProfile = null;
             
-            // Strategy 1: Direct ID lookup
+            // Strategy 1: Direct ID lookup with avatar
             const { data: profileById, error: profileError } = await supabase
               .from('profiles')
               .select('id, name, email, type, avatar')
@@ -106,7 +93,7 @@ export const useProfileReviewsFetching = () => {
               businessProfile = profileById;
             }
 
-            // Strategy 2: If no profile found and this is the admin business ID, look up by email
+            // Strategy 2: If no profile found, look up by admin email
             if (!businessProfile) {
               console.log("No profile found by ID, checking admin email...");
               
@@ -132,9 +119,11 @@ export const useProfileReviewsFetching = () => {
                 name: "The Painted Painter",
                 email: "iw@thepaintedpainter.com",
                 type: "business",
-                avatar: ""
+                avatar: "" // This will be empty if no avatar is set in the profile
               };
             }
+
+            console.log("Final business profile with avatar:", businessProfile);
 
             return {
               ...review,
@@ -154,7 +143,7 @@ export const useProfileReviewsFetching = () => {
       const formattedReviews = reviewsWithProfiles.map(review => {
         const businessProfile = review.business_profile;
         
-        // Determine business name with proper fallbacks
+        // Determine business name and avatar with proper fallbacks
         let businessName = "Anonymous Business";
         let businessAvatar = "";
         
@@ -163,13 +152,16 @@ export const useProfileReviewsFetching = () => {
           if (businessProfile.email === 'iw@thepaintedpainter.com' || 
               businessProfile.id === 'be76ebe3-4b67-4f11-bf4b-2dcb297f1fb7') {
             businessName = "The Painted Painter";
+            // Use the avatar from the profile if it exists
+            businessAvatar = businessProfile.avatar || "";
           } else if (businessProfile.name) {
             businessName = businessProfile.name;
+            businessAvatar = businessProfile.avatar || "";
           }
-          businessAvatar = businessProfile.avatar || "";
         }
         
         console.log("Final business name for review:", businessName);
+        console.log("Final business avatar for review:", businessAvatar);
         
         return {
           id: review.id,

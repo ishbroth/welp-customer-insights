@@ -48,10 +48,13 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
         <div className="flex items-center space-x-3">
           <Link to={`/business/${review.reviewerId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={review.reviewerAvatar || ""} alt={review.reviewerName} />
-              <AvatarFallback className="bg-blue-100 text-blue-800">
-                {getBusinessInitials()}
-              </AvatarFallback>
+              {review.reviewerAvatar ? (
+                <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+              ) : (
+                <AvatarFallback className="bg-blue-100 text-blue-800">
+                  {getBusinessInitials()}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div>
               <h3 className="font-semibold hover:text-blue-600 transition-colors">{review.reviewerName}</h3>
