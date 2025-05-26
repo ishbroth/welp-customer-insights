@@ -5,11 +5,13 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import DuplicateReviewDialog from "@/components/reviews/DuplicateReviewDialog";
 import { useAuth } from "@/contexts/auth";
 import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
 import RatingInput from "@/components/reviews/RatingInput";
 import ReviewTextInput from "@/components/reviews/ReviewTextInput";
 import { useReviewSubmission } from "@/hooks/useReviewSubmission";
+import { useDuplicateReviewCheck } from "@/hooks/useDuplicateReviewCheck";
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -44,6 +46,10 @@ const NewReview = () => {
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   
+  // Duplicate review check states
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [existingReview, setExistingReview] = useState<any>(null);
+  
   const { 
     isSubmitting, 
     rejectionReason, 
@@ -51,6 +57,8 @@ const NewReview = () => {
     setShowRejectionDialog, 
     submitReview 
   } = useReviewSubmission(isEditing, reviewId);
+
+  const { checkForDuplicateReview, isChecking } = useDuplicateReviewCheck();
   
   useEffect(() => {
     console.log("NewReview useEffect - isEditing:", isEditing, "reviewData:", reviewData);
@@ -119,6 +127,25 @@ const NewReview = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Skip duplicate check if we're editing an existing review
+    if (!isEditing) {
+      // Check for duplicate review before submitting
+      const duplicate = await checkForDuplicateReview({
+        firstName: customerFirstName,
+        lastName: customerLastName,
+        phone: customerPhone,
+        address: customerAddress,
+        city: customerCity,
+        zipCode: customerZipCode
+      });
+
+      if (duplicate) {
+        setExistingReview(duplicate);
+        setShowDuplicateDialog(true);
+        return;
+      }
+    }
+    
     await submitReview({
       rating,
       comment,
@@ -129,6 +156,35 @@ const NewReview = () => {
       customerCity,
       customerZipCode
     });
+  };
+
+  const handleEditExisting = () => {
+    setShowDuplicateDialog(false);
+    if (existingReview) {
+      // Navigate to edit the existing review
+      const reviewDataForEdit = {
+        id: existingReview.id,
+        rating: existingReview.rating,
+        content: existingReview.content,
+        customerName: existingReview.customer_name,
+        address: existingReview.customer_address || "",
+        city: existingReview.customer_city || "",
+        zipCode: existingReview.customer_zipcode || "",
+        phone: existingReview.customer_phone || ""
+      };
+      
+      navigate(`/review/new?edit=true&reviewId=${existingReview.id}`, {
+        state: {
+          reviewData: reviewDataForEdit,
+          isEditing: true
+        }
+      });
+    }
+  };
+
+  const handleCancelDuplicate = () => {
+    setShowDuplicateDialog(false);
+    navigate("/profile");
   };
 
   return (
@@ -182,10 +238,11 @@ const NewReview = () => {
                     <Button
                       type="submit"
                       className="welp-button w-full"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isChecking}
                     >
                       {isSubmitting ? 
                         (isEditing ? "Updating..." : "Submitting...") : 
+                        isChecking ? "Checking..." :
                         (isEditing ? "Update Review" : "Submit Review")}
                     </Button>
                   </div>
@@ -197,12 +254,21 @@ const NewReview = () => {
       </main>
       <Footer />
       
-      {/* Add Content Rejection Dialog */}
+      {/* Content Rejection Dialog */}
       <ContentRejectionDialog 
         open={showRejectionDialog}
         onOpenChange={setShowRejectionDialog}
         reason={rejectionReason || ""}
         onClose={() => setShowRejectionDialog(false)}
+      />
+
+      {/* Duplicate Review Dialog */}
+      <DuplicateReviewDialog
+        open={showDuplicateDialog}
+        onOpenChange={setShowDuplicateDialog}
+        onEditExisting={handleEditExisting}
+        onCancel={handleCancelDuplicate}
+        customerName={`${customerFirstName} ${customerLastName}`.trim()}
       />
     </div>
   );
