@@ -159,9 +159,14 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  // Don't render anything if no search has been performed or there are no customers
-  if (!hasSearchParams || customers.length === 0) {
+  // Don't render anything if no search has been performed
+  if (!hasSearchParams) {
     return null;
+  }
+
+  // Show empty results component when search has been performed but no customers found
+  if (customers.length === 0) {
+    return <EmptySearchResults isBusinessUser={currentUser?.type === "business"} />;
   }
 
   return (
