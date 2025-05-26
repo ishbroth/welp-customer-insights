@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
@@ -94,9 +93,12 @@ const BusinessReviews = () => {
         rating: review.rating,
         content: review.content,
         date: review.created_at,
-        address: review.customer_address,
-        city: review.customer_city,
-        zipCode: review.customer_zipcode,
+        // Map database fields correctly to Review interface
+        address: review.customer_address || "",
+        city: review.customer_city || "",
+        zipCode: review.customer_zipcode || "",
+        // Store phone in a custom field since Review interface doesn't have it
+        phone: review.customer_phone || "",
         reactions: { like: [], funny: [], useful: [], ohNo: [] },
         responses: []
       })) : [];
@@ -131,10 +133,28 @@ const BusinessReviews = () => {
 
   // Function to handle editing a review
   const handleEditReview = (review: Review) => {
+    console.log("Editing review with data:", review);
+    
+    // Create a proper review data object with all necessary fields from the database
+    const reviewDataForEdit = {
+      id: review.id,
+      rating: review.rating,
+      content: review.content,
+      customerName: review.customerName,
+      // Map the review fields correctly - these come from the database
+      address: review.address || "",
+      city: review.city || "",
+      zipCode: review.zipCode || "",
+      // Get phone from the custom field we stored
+      phone: (review as any).phone || ""
+    };
+    
+    console.log("Passing review data to edit form:", reviewDataForEdit);
+    
     // Navigate to the NewReview page with the review data
     navigate(`/review/new?edit=true&reviewId=${review.id}&customerId=${review.customerId}`, {
       state: {
-        reviewData: review,
+        reviewData: reviewDataForEdit,
         isEditing: true
       }
     });
@@ -334,7 +354,7 @@ const BusinessReviews = () => {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogFooter>
       </AlertDialog>
     </div>
   );

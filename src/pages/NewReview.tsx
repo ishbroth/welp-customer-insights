@@ -33,15 +33,15 @@ const NewReview = () => {
   
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [rating, setRating] = useState(isEditing && reviewData ? reviewData.rating : 0);
+  const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState(isEditing && reviewData ? reviewData.content : "");
-  const [customerFirstName, setCustomerFirstName] = useState(searchParamFirstName);
-  const [customerLastName, setCustomerLastName] = useState(searchParamLastName);
-  const [customerPhone, setCustomerPhone] = useState(searchParamPhone);
-  const [customerAddress, setCustomerAddress] = useState(searchParamAddress);
-  const [customerCity, setCustomerCity] = useState(searchParamCity);
-  const [customerZipCode, setCustomerZipCode] = useState(searchParamZipCode);
+  const [comment, setComment] = useState("");
+  const [customerFirstName, setCustomerFirstName] = useState("");
+  const [customerLastName, setCustomerLastName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerZipCode, setCustomerZipCode] = useState("");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   
   const { 
@@ -53,20 +53,44 @@ const NewReview = () => {
   } = useReviewSubmission(isEditing, reviewId);
   
   useEffect(() => {
+    console.log("NewReview useEffect - isEditing:", isEditing, "reviewData:", reviewData);
+    
     // Handle pre-filling data if we're editing
     if (isEditing && reviewData) {
       // Pre-fill review content and rating
       setRating(reviewData.rating);
       setComment(reviewData.content);
+      
+      // Parse customer name and pre-fill customer information
+      const customerName = reviewData.customerName || "";
+      const nameParts = customerName.split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+      
+      setCustomerFirstName(firstName);
+      setCustomerLastName(lastName);
+      setCustomerPhone(reviewData.phone || "");
+      setCustomerAddress(reviewData.address || "");
+      setCustomerCity(reviewData.city || "");
+      setCustomerZipCode(reviewData.zipCode || "");
+      
+      console.log("Pre-filled customer data:", {
+        firstName,
+        lastName,
+        phone: reviewData.phone,
+        address: reviewData.address,
+        city: reviewData.city,
+        zipCode: reviewData.zipCode
+      });
+    } else {
+      // Pre-fill form with search parameters from URL if not editing
+      setCustomerFirstName(searchParamFirstName);
+      setCustomerLastName(searchParamLastName);
+      setCustomerPhone(searchParamPhone);
+      setCustomerAddress(searchParamAddress);
+      setCustomerCity(searchParamCity);
+      setCustomerZipCode(searchParamZipCode);
     }
-    
-    // Pre-fill form with search parameters from URL
-    setCustomerFirstName(searchParamFirstName);
-    setCustomerLastName(searchParamLastName);
-    setCustomerPhone(searchParamPhone);
-    setCustomerAddress(searchParamAddress);
-    setCustomerCity(searchParamCity);
-    setCustomerZipCode(searchParamZipCode);
     
     if (customerId) {
       // In a real app, this would be a fetch call to your Supabase DB
