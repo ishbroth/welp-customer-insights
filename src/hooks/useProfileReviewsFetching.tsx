@@ -31,7 +31,7 @@ export const useProfileReviewsFetching = () => {
           content, 
           created_at,
           business_id,
-          profiles!business_id(name, avatar)
+          business_profile:profiles!business_id(name, avatar)
         `)
         .eq('customer_id', currentUser.id);
 
@@ -54,7 +54,7 @@ export const useProfileReviewsFetching = () => {
             content, 
             created_at,
             business_id,
-            profiles!business_id(name, avatar)
+            business_profile:profiles!business_id(name, avatar)
           `)
           .ilike('customer_name', `%${currentUser.name}%`);
 
@@ -72,25 +72,32 @@ export const useProfileReviewsFetching = () => {
       );
 
       console.log("Total unique reviews:", uniqueReviews.length);
+      console.log("Reviews with business profile data:", uniqueReviews);
 
       // Format the reviews data
-      const formattedReviews = uniqueReviews.map(review => ({
-        id: review.id,
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at,
-        reviewerId: review.business_id,
-        // Use the business profile name and avatar from the join
-        reviewerName: review.profiles?.name || "Anonymous Business",
-        reviewerAvatar: review.profiles?.avatar || "",
-        customerId: currentUser.id,
-        customerName: currentUser.name || "Anonymous Customer",
-        reactions: { like: [], funny: [], useful: [], ohNo: [] },
-        responses: []
-      }));
+      const formattedReviews = uniqueReviews.map(review => {
+        const businessProfile = review.business_profile;
+        console.log("Business profile for review:", review.id, businessProfile);
+        
+        return {
+          id: review.id,
+          rating: review.rating,
+          content: review.content,
+          date: review.created_at,
+          reviewerId: review.business_id,
+          // Use the business profile name and avatar from the join
+          reviewerName: businessProfile?.name || "Anonymous Business",
+          reviewerAvatar: businessProfile?.avatar || "",
+          customerId: currentUser.id,
+          customerName: currentUser.name || "Anonymous Customer",
+          reactions: { like: [], funny: [], useful: [], ohNo: [] },
+          responses: []
+        };
+      });
 
       setCustomerReviews(formattedReviews);
       console.log("=== REVIEW FETCH COMPLETE ===");
+      console.log("Formatted reviews:", formattedReviews);
     } catch (error) {
       console.error("Error fetching reviews:", error);
       toast({
