@@ -79,7 +79,7 @@ export const useProfileReviewsFetching = () => {
               .from('profiles')
               .select('name, avatar')
               .eq('id', review.business_id)
-              .single();
+              .maybeSingle();
 
             if (profileError) {
               console.error("Error fetching business profile for:", review.business_id, profileError);
