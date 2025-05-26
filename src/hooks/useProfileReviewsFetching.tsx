@@ -22,7 +22,7 @@ export const useProfileReviewsFetching = () => {
       console.log("=== FETCHING REVIEWS FOR CUSTOMER ===");
       console.log("Customer ID:", currentUser.id);
       
-      // First try to fetch by customer_id with proper join
+      // First try to fetch by customer_id
       const { data: directReviews, error: directError } = await supabase
         .from('reviews')
         .select(`
@@ -30,8 +30,7 @@ export const useProfileReviewsFetching = () => {
           rating, 
           content, 
           created_at,
-          business_id,
-          business_profile:profiles!reviews_business_id_fkey(name, avatar)
+          business_id
         `)
         .eq('customer_id', currentUser.id);
 
@@ -53,8 +52,7 @@ export const useProfileReviewsFetching = () => {
             rating, 
             content, 
             created_at,
-            business_id,
-            business_profile:profiles!reviews_business_id_fkey(name, avatar)
+            business_id
           `)
           .ilike('customer_name', `%${currentUser.name}%`);
 
@@ -72,12 +70,40 @@ export const useProfileReviewsFetching = () => {
       );
 
       console.log("Total unique reviews:", uniqueReviews.length);
-      console.log("Reviews with business profile data:", uniqueReviews);
+
+      // Now fetch business profiles for each review separately
+      const reviewsWithProfiles = await Promise.all(
+        uniqueReviews.map(async (review) => {
+          if (review.business_id) {
+            const { data: businessProfile, error: profileError } = await supabase
+              .from('profiles')
+              .select('name, avatar')
+              .eq('id', review.business_id)
+              .single();
+
+            if (profileError) {
+              console.error("Error fetching business profile for:", review.business_id, profileError);
+            }
+
+            console.log("Business profile for review:", review.id, businessProfile);
+
+            return {
+              ...review,
+              business_profile: businessProfile
+            };
+          }
+          return {
+            ...review,
+            business_profile: null
+          };
+        })
+      );
+
+      console.log("Reviews with business profile data:", reviewsWithProfiles);
 
       // Format the reviews data
-      const formattedReviews = uniqueReviews.map(review => {
+      const formattedReviews = reviewsWithProfiles.map(review => {
         const businessProfile = review.business_profile;
-        console.log("Business profile for review:", review.id, businessProfile);
         
         return {
           id: review.id,
@@ -85,7 +111,7 @@ export const useProfileReviewsFetching = () => {
           content: review.content,
           date: review.created_at,
           reviewerId: review.business_id,
-          // Use the business profile name and avatar from the join
+          // Use the business profile name and avatar from the separate fetch
           reviewerName: businessProfile?.name || "Anonymous Business",
           reviewerAvatar: businessProfile?.avatar || "",
           customerId: currentUser.id,
