@@ -22,7 +22,7 @@ export const useProfileReviewsFetching = () => {
       console.log("=== FETCHING REVIEWS FOR CUSTOMER ===");
       console.log("Customer ID:", currentUser.id);
       
-      // First try to fetch by customer_id
+      // First try to fetch by customer_id with proper join
       const { data: directReviews, error: directError } = await supabase
         .from('reviews')
         .select(`
@@ -31,7 +31,7 @@ export const useProfileReviewsFetching = () => {
           content, 
           created_at,
           business_id,
-          business_profile:profiles!business_id(name, avatar)
+          business_profile:profiles!reviews_business_id_fkey(name, avatar)
         `)
         .eq('customer_id', currentUser.id);
 
@@ -54,7 +54,7 @@ export const useProfileReviewsFetching = () => {
             content, 
             created_at,
             business_id,
-            business_profile:profiles!business_id(name, avatar)
+            business_profile:profiles!reviews_business_id_fkey(name, avatar)
           `)
           .ilike('customer_name', `%${currentUser.name}%`);
 
@@ -85,7 +85,7 @@ export const useProfileReviewsFetching = () => {
           content: review.content,
           date: review.created_at,
           reviewerId: review.business_id,
-          // Use the business profile name and avatar from the join - fix the mapping here
+          // Use the business profile name and avatar from the join
           reviewerName: businessProfile?.name || "Anonymous Business",
           reviewerAvatar: businessProfile?.avatar || "",
           customerId: currentUser.id,

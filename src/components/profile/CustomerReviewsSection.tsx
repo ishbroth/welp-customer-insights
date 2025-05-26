@@ -4,6 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import StarRating from "@/components/StarRating";
+import ReviewReactions from "@/components/ReviewReactions";
+import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+import { useAuth } from "@/contexts/auth";
 
 interface CustomerReview {
   id: string;
@@ -13,6 +16,13 @@ interface CustomerReview {
   rating: number;
   content: string;
   date: string;
+  reactions?: {
+    like: string[];
+    funny: string[];
+    useful: string[];
+    ohNo: string[];
+  };
+  responses?: any[];
 }
 
 interface CustomerReviewsSectionProps {
@@ -21,16 +31,7 @@ interface CustomerReviewsSectionProps {
 }
 
 const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsSectionProps) => {
-  // Function to get the first five words for customer accounts
-  const getFirstFiveWords = (text: string): string => {
-    if (!text) return "";
-    
-    // Split the text into words and take the first 5
-    const words = text.split(/\s+/);
-    const firstFiveWords = words.slice(0, 5).join(" ");
-    
-    return `${firstFiveWords}...`;
-  };
+  const { isSubscribed, hasOneTimeAccess } = useAuth();
 
   const getBusinessInitials = (name: string) => {
     if (name) {
@@ -38,6 +39,10 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
       return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
     return "B";
+  };
+
+  const handleReactionToggle = (reviewId: string, reactionType: string) => {
+    console.log(`Reaction ${reactionType} toggled for review ${reviewId}`);
   };
 
   return (
@@ -58,35 +63,55 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
       ) : customerReviews.length > 0 ? (
         <div className="space-y-4">
           {customerReviews.slice(0, 3).map((review) => (
-            <div key={review.id} className="bg-white p-4 rounded-lg border shadow-sm">
-              <div className="flex items-start space-x-4 mb-3">
+            <div key={review.id} className="bg-white p-6 rounded-lg shadow-sm border">
+              {/* Review header with business info */}
+              <div className="flex items-start space-x-4 mb-4">
                 <Link to={`/business/${review.reviewerId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                  <Avatar className="h-10 w-10">
+                  <Avatar className="h-12 w-12">
                     <AvatarImage src={review.reviewerAvatar || ""} alt={review.reviewerName} />
                     <AvatarFallback className="bg-blue-100 text-blue-800">
                       {getBusinessInitials(review.reviewerName)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold hover:text-blue-600 transition-colors">{review.reviewerName}</h3>
+                    <h3 className="font-semibold text-lg hover:text-blue-600 transition-colors">{review.reviewerName}</h3>
                     <p className="text-sm text-gray-500">
-                      {new Date(review.date).toLocaleDateString()}
+                      Review written on {new Date(review.date).toLocaleDateString()}
                     </p>
                   </div>
                 </Link>
                 <div className="ml-auto">
-                  <StarRating rating={review.rating} size="sm" />
+                  <StarRating rating={review.rating} />
                 </div>
               </div>
-              
-              <div className="mb-3">
-                <p className="text-gray-700 text-sm">
-                  {getFirstFiveWords(review.content)}
-                  <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
-                    Show more
-                  </Link>
-                </p>
+
+              {/* Review content */}
+              <div className="mb-4">
+                <p className="text-gray-700 whitespace-pre-line">{review.content}</p>
               </div>
+
+              {/* Reactions section */}
+              <div className="border-t pt-4 mb-4">
+                <div className="text-sm text-gray-500 mb-2">React to this review:</div>
+                <ReviewReactions 
+                  reviewId={review.id}
+                  customerId={review.reviewerId}
+                  businessId={review.reviewerId}
+                  businessName={review.reviewerName}
+                  businessAvatar={review.reviewerAvatar}
+                  reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
+                  onReactionToggle={handleReactionToggle}
+                />
+              </div>
+
+              {/* Customer review responses component */}
+              <CustomerReviewResponse 
+                reviewId={review.id}
+                responses={review.responses || []}
+                hasSubscription={isSubscribed}
+                isOneTimeUnlocked={hasOneTimeAccess(review.id)}
+                hideReplyOption={!isSubscribed}
+              />
             </div>
           ))}
         </div>
