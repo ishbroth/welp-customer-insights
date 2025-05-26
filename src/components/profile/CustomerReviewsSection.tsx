@@ -2,13 +2,14 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import StarRating from "@/components/StarRating";
 
 interface CustomerReview {
   id: string;
   reviewerName: string;
   reviewerId: string;
+  reviewerAvatar?: string;
   rating: number;
   content: string;
   date: string;
@@ -31,6 +32,14 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
     return `${firstFiveWords}...`;
   };
 
+  const getBusinessInitials = (name: string) => {
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "B";
+  };
+
   return (
     <Card className="p-6">
       <div className="flex justify-between items-center mb-4">
@@ -47,42 +56,40 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
           <p className="text-gray-500">Loading your reviews...</p>
         </div>
       ) : customerReviews.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Business</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead>Feedback</TableHead>
-              <TableHead>Date</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {customerReviews.slice(0, 3).map((review) => (
-              <TableRow key={review.id}>
-                <TableCell className="font-medium">
-                  <Link 
-                    to={`/business/${review.reviewerId}`}
-                    className="hover:text-welp-primary hover:underline"
-                  >
-                    {review.reviewerName}
-                  </Link>
-                </TableCell>
-                <TableCell><StarRating rating={review.rating} /></TableCell>
-                <TableCell>
+        <div className="space-y-4">
+          {customerReviews.slice(0, 3).map((review) => (
+            <div key={review.id} className="bg-white p-4 rounded-lg border shadow-sm">
+              <div className="flex items-start space-x-4 mb-3">
+                <Link to={`/business/${review.reviewerId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={review.reviewerAvatar || ""} alt={review.reviewerName} />
+                    <AvatarFallback className="bg-blue-100 text-blue-800">
+                      {getBusinessInitials(review.reviewerName)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
-                    <p className="text-sm text-gray-600">
-                      {getFirstFiveWords(review.content)}
-                      <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
-                        Show more
-                      </Link>
+                    <h3 className="font-semibold hover:text-blue-600 transition-colors">{review.reviewerName}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(review.date).toLocaleDateString()}
                     </p>
                   </div>
-                </TableCell>
-                <TableCell>{new Date(review.date).toLocaleDateString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </Link>
+                <div className="ml-auto">
+                  <StarRating rating={review.rating} size="sm" />
+                </div>
+              </div>
+              
+              <div className="mb-3">
+                <p className="text-gray-700 text-sm">
+                  {getFirstFiveWords(review.content)}
+                  <Link to="/profile/reviews" className="text-welp-primary ml-1 hover:underline">
+                    Show more
+                  </Link>
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="text-center p-4">
           <p className="text-gray-500">
