@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+import { useAuth } from "@/contexts/auth";
 
 interface CustomerReviewCardProps {
   review: Review;
@@ -31,6 +32,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   onReactionToggle,
 }) => {
   const [localReview, setLocalReview] = useState(review);
+  const { currentUser } = useAuth();
 
   const handlePurchaseClick = () => {
     onPurchase(review.id);
@@ -47,7 +49,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
     // Update local state to reflect the reaction change
     setLocalReview(prev => {
-      const userId = "current-user-id"; // This should come from auth context
+      const userId = currentUser?.id || '';
       const currentReactions = prev.reactions || { like: [], funny: [], useful: [], ohNo: [] };
       const hasReacted = currentReactions[reactionType]?.includes(userId);
       

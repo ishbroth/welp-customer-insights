@@ -20,13 +20,19 @@ const ProfileReviewsContent = ({
   hasSubscription 
 }: ProfileReviewsContentProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [localReviews, setLocalReviews] = useState(customerReviews);
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Update local reviews when customerReviews prop changes
+  useState(() => {
+    setLocalReviews(customerReviews);
+  }, [customerReviews]);
+
   // Pagination settings
   const reviewsPerPage = 5;
-  const totalPages = Math.ceil(customerReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil(localReviews.length / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
 
@@ -46,8 +52,29 @@ const ProfileReviewsContent = ({
     return hasOneTimeAccess(reviewId) || hasSubscription;
   };
 
-  // Handle toggling reactions - with content moderation for comments if added in the future
+  // Handle toggling reactions - with proper state management
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
+    const userId = currentUser?.id || '';
+    
+    setLocalReviews(prevReviews => 
+      prevReviews.map(review => {
+        if (review.id === reviewId) {
+          const currentReactions = review.reactions || { like: [], funny: [], useful: [], ohNo: [] };
+          const hasReacted = currentReactions[reactionType]?.includes(userId);
+          
+          const updatedReactions = {
+            ...currentReactions,
+            [reactionType]: hasReacted
+              ? currentReactions[reactionType].filter(id => id !== userId)
+              : [...(currentReactions[reactionType] || []), userId]
+          };
+          
+          return { ...review, reactions: updatedReactions };
+        }
+        return review;
+      })
+    );
+
     // Show notification toast for the customer
     toast({
       title: `You reacted with "${reactionType}"`,
@@ -66,13 +93,13 @@ const ProfileReviewsContent = ({
     );
   }
 
-  if (customerReviews.length === 0) {
+  if (localReviews.length === 0) {
     return <EmptyReviewsMessage type="customer" />;
   }
 
   return (
     <div className="space-y-6">
-      {customerReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
+      {localReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
         <CustomerReviewCard
           key={review.id}
           review={review}
