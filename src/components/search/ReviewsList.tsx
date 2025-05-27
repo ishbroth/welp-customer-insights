@@ -18,9 +18,10 @@ interface ReviewsListProps {
   reviews: Review[];
   hasFullAccess: (customerId: string) => boolean;
   isReviewCustomer: boolean;
+  customerProfile?: any;
 }
 
-const ReviewsList = ({ customerId, reviews, hasFullAccess, isReviewCustomer }: ReviewsListProps) => {
+const ReviewsList = ({ customerId, reviews, hasFullAccess, isReviewCustomer, customerProfile }: ReviewsListProps) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
@@ -43,7 +44,7 @@ const ReviewsList = ({ customerId, reviews, hasFullAccess, isReviewCustomer }: R
   };
 
   if (reviews.length === 0) {
-    return <NoReviews isReviewCustomer={isReviewCustomer} />;
+    return <NoReviews customerProfile={customerProfile} />;
   }
 
   return (

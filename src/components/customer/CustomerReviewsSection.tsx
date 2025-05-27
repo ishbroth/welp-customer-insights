@@ -24,6 +24,7 @@ const CustomerReviewsSection: React.FC<CustomerReviewsSectionProps> = ({
         customerId={customerId || ''}
         reviews={customerReviews}
         hasFullAccess={hasFullAccess}
+        isReviewCustomer={false}
         customerProfile={customerProfile}
       />
     </div>
