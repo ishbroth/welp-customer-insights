@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
+import { FirstNameInput } from "@/components/ui/first-name-input";
 
 interface CustomerInfoFormProps {
   customerFirstName: string;
@@ -42,7 +43,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
-          <Input
+          <FirstNameInput
             id="customerFirstName"
             value={customerFirstName}
             onChange={(e) => setCustomerFirstName(e.target.value)}

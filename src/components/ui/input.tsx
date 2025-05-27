@@ -1,9 +1,19 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onChange, ...props }, ref) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value.length > 0) {
+        // Capitalize the first letter
+        e.target.value = value.charAt(0).toUpperCase() + value.slice(1);
+      }
+      onChange?.(e);
+    };
+
     return (
       <input
         type={type}
@@ -12,6 +22,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        onChange={handleChange}
         {...props}
       />
     )

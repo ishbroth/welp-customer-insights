@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ReviewTextInputProps {
   comment: string;
@@ -10,16 +11,27 @@ const ReviewTextInput: React.FC<ReviewTextInputProps> = ({
   comment,
   setComment,
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length > 0) {
+      // Capitalize the first letter
+      const capitalizedValue = value.charAt(0).toUpperCase() + value.slice(1);
+      setComment(capitalizedValue);
+    } else {
+      setComment(value);
+    }
+  };
+
   return (
     <div>
       <label htmlFor="reviewText" className="block text-sm font-medium mb-2">
         Review
       </label>
-      <textarea
+      <Textarea
         id="reviewText"
         rows={6}
         value={comment}
-        onChange={(e) => setComment(e.target.value)}
+        onChange={handleChange}
         placeholder="Describe your experience with this customer..."
         className="w-full p-3 border rounded-md focus:ring-2 focus:ring-welp-primary focus:border-transparent"
         maxLength={1500}
