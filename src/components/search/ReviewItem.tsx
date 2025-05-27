@@ -1,10 +1,19 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import StarRating from "@/components/StarRating";
 import { Badge } from "@/components/ui/badge";
+import PhotoGallery from "@/components/reviews/PhotoGallery";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ReviewPhoto {
+  id: string;
+  photo_url: string;
+  caption: string | null;
+  display_order: number;
+}
 
 interface ReviewItemProps {
   review: {
@@ -24,6 +33,26 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete }: ReviewItemProps
   const { currentUser } = useAuth();
   const isCurrentUserReview = currentUser?.id === review.reviewerId;
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+  const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
+
+  // Load photos from database
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const { data, error } = await supabase
+        .from('review_photos')
+        .select('*')
+        .eq('review_id', review.id)
+        .order('display_order');
+
+      if (error) {
+        console.error("Error fetching review photos:", error);
+      } else {
+        setPhotos(data || []);
+      }
+    };
+
+    fetchPhotos();
+  }, [review.id]);
 
   const getFirstThreeWords = (text: string): string => {
     const words = text.split(' ');
@@ -65,6 +94,12 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete }: ReviewItemProps
           </div>
         )}
       </div>
+
+      {/* Photo Gallery - only show if user has full access */}
+      <PhotoGallery 
+        photos={photos} 
+        hasAccess={hasFullAccess}
+      />
 
       {/* Edit and Delete buttons for current user's reviews */}
       {isCurrentUserReview && isBusinessUser && (
