@@ -50,7 +50,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     // Update local state to reflect the reaction change
     setLocalReview(prev => {
       const userId = currentUser?.id || '';
-      const currentReactions = prev.reactions || { like: [], funny: [], useful: [], ohNo: [] };
+      const currentReactions = prev.reactions || { like: [], funny: [], ohNo: [] };
       const hasReacted = currentReactions[reactionType]?.includes(userId);
       
       const updatedReactions = {
@@ -116,7 +116,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
               businessId={localReview.reviewerId}
               businessName={localReview.reviewerName}
               businessAvatar={localReview.reviewerAvatar}
-              reactions={localReview.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
+              reactions={localReview.reactions || { like: [], funny: [], ohNo: [] }}
               onReactionToggle={handleReactionToggle}
             />
           </div>

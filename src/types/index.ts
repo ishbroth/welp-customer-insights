@@ -32,7 +32,6 @@ export interface Review {
   reactions?: {
     like: string[];
     funny: string[];
-    useful: string[];
     ohNo: string[];
   };
   responses?: ReviewResponse[];

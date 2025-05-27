@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ThumbsUp, Laugh, Award, Frown } from "lucide-react";
+import { ThumbsUp, Laugh, Frown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import ReactionButton from "./reactions/ReactionButton";
@@ -15,7 +15,6 @@ interface ReviewReactionsProps {
   reactions: {
     like: string[];
     funny: string[];
-    useful: string[];
     ohNo: string[];
   };
   onReactionToggle: (reviewId: string, reactionType: string) => void;
@@ -40,7 +39,6 @@ const ReviewReactions = ({
   // Check if user has already reacted with each reaction type
   const hasLiked = reactions.like.includes(userId);
   const hasFunny = reactions.funny.includes(userId);
-  const hasUseful = reactions.useful.includes(userId);
   const hasOhNo = reactions.ohNo.includes(userId);
 
   const checkPermissions = () => {
@@ -128,16 +126,6 @@ const ReviewReactions = ({
           activeBg="bg-yellow-50"
           activeBorder="border-yellow-200"
           onClick={() => handleReaction("funny")}
-        />
-
-        <ReactionButton
-          active={hasUseful}
-          count={reactions.useful.length}
-          icon={Award}
-          activeColor="text-green-500"
-          activeBg="bg-green-50"
-          activeBorder="border-green-200"
-          onClick={() => handleReaction("useful")}
         />
 
         <ReactionButton

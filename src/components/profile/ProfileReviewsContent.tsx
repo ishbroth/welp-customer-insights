@@ -59,7 +59,7 @@ const ProfileReviewsContent = ({
     setLocalReviews(prevReviews => 
       prevReviews.map(review => {
         if (review.id === reviewId) {
-          const currentReactions = review.reactions || { like: [], funny: [], useful: [], ohNo: [] };
+          const currentReactions = review.reactions || { like: [], funny: [], ohNo: [] };
           const hasReacted = currentReactions[reactionType]?.includes(userId);
           
           const updatedReactions = {

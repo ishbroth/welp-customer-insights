@@ -110,7 +110,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           businessId={review.reviewerId}
           businessName={review.reviewerName}
           businessAvatar={review.reviewerAvatar}
-          reactions={review.reactions || { like: [], funny: [], useful: [], ohNo: [] }}
+          reactions={review.reactions || { like: [], funny: [], ohNo: [] }}
           onReactionToggle={onReactionToggle}
         />
       </div>
