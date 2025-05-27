@@ -1,13 +1,11 @@
 
 import { Shield } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "@/data/mockUsers";
+import { useAuth } from "@/contexts/auth";
 
-interface WelcomeSectionProps {
-  currentUser: User | null;
-}
+const WelcomeSection = () => {
+  const { currentUser } = useAuth();
 
-const WelcomeSection = ({ currentUser }: WelcomeSectionProps) => {
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
       <div className="flex items-center gap-4">

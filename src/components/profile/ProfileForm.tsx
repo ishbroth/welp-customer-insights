@@ -11,16 +11,12 @@ import PersonalInfoForm from "./PersonalInfoForm";
 import ContactInfoForm from "./ContactInfoForm";
 import BusinessInfoForm from "./BusinessInfoForm";
 
-interface ProfileFormProps {
-  currentUser: any;
-  updateProfile: (data: any) => void;
-  isBusinessAccount: boolean;
-}
-
-const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileFormProps) => {
+const ProfileForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setCurrentUser } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
+  
+  const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -62,15 +58,6 @@ const ProfileForm = ({ currentUser, updateProfile, isBusinessAccount }: ProfileF
       console.log("Processed update data:", updateData);
       
       await updateProfile(updateData);
-      
-      // Update the current user in the auth context
-      const updatedUser = {
-        ...currentUser,
-        ...updateData
-      };
-      
-      console.log("Updating auth context with:", updatedUser);
-      setCurrentUser(updatedUser);
       
       toast({
         title: "Profile updated successfully",
