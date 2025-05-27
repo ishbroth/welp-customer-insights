@@ -54,27 +54,6 @@ const ProfileReviewsContent = ({
 
   // Handle toggling reactions - with proper state management
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    const userId = currentUser?.id || '';
-    
-    setLocalReviews(prevReviews => 
-      prevReviews.map(review => {
-        if (review.id === reviewId) {
-          const currentReactions = review.reactions || { like: [], funny: [], ohNo: [] };
-          const hasReacted = currentReactions[reactionType]?.includes(userId);
-          
-          const updatedReactions = {
-            ...currentReactions,
-            [reactionType]: hasReacted
-              ? currentReactions[reactionType].filter(id => id !== userId)
-              : [...(currentReactions[reactionType] || []), userId]
-          };
-          
-          return { ...review, reactions: updatedReactions };
-        }
-        return review;
-      })
-    );
-
     // Show notification toast for the customer
     toast({
       title: `You reacted with "${reactionType}"`,
