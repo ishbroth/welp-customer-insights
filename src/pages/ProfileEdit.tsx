@@ -96,11 +96,7 @@ const ProfileEdit = () => {
                     <TabsTrigger value="account">Account Settings</TabsTrigger>
                   </TabsList>
                   <TabsContent value="general" className="mt-6">
-                    <ProfileForm 
-                      currentUser={currentUser}
-                      updateProfile={updateProfile}
-                      isBusinessAccount={isBusinessAccount}
-                    />
+                    <ProfileForm />
                   </TabsContent>
                   
                   <TabsContent value="account" className="mt-6">
