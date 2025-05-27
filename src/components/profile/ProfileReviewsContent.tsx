@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,7 @@ const ProfileReviewsContent = ({
   const navigate = useNavigate();
 
   // Update local reviews when customerReviews prop changes
-  useState(() => {
+  useEffect(() => {
     setLocalReviews(customerReviews);
   }, [customerReviews]);
 
