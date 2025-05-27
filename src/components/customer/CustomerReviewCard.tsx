@@ -49,6 +49,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
+    console.log('Handling reaction toggle:', reactionType, 'for review:', reviewId);
     toggleReaction(reactionType as keyof typeof reactions);
     onReactionToggle(reviewId, reactionType);
   };

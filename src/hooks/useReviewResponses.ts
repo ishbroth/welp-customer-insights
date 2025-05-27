@@ -17,12 +17,17 @@ export const useReviewResponses = (reviewId: string) => {
   useEffect(() => {
     const fetchResponses = async () => {
       try {
-        // Fetch responses with author information from profiles
+        console.log('Fetching responses for review:', reviewId);
+        
+        // Fetch responses with author information from profiles using the proper foreign key
         const { data: responseData, error } = await supabase
           .from('responses')
           .select(`
-            *,
-            profiles!author_id (
+            id,
+            author_id,
+            content,
+            created_at,
+            profiles!responses_author_id_fkey (
               name,
               first_name,
               last_name
@@ -35,6 +40,8 @@ export const useReviewResponses = (reviewId: string) => {
           console.error('Error fetching responses:', error);
           return;
         }
+
+        console.log('Raw response data:', responseData);
 
         const formattedResponses = responseData?.map((resp: any) => {
           const profile = resp.profiles;
@@ -53,13 +60,16 @@ export const useReviewResponses = (reviewId: string) => {
           };
         }) || [];
 
+        console.log('Formatted responses:', formattedResponses);
         setResponses(formattedResponses);
       } catch (error) {
         console.error('Error fetching responses:', error);
       }
     };
 
-    fetchResponses();
+    if (reviewId) {
+      fetchResponses();
+    }
   }, [reviewId]);
 
   return { responses, setResponses };
