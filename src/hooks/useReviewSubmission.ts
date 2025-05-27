@@ -14,6 +14,37 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
 
+  const uploadPhotos = async (photos: Array<{ file: File; caption: string; preview: string }>, reviewId: string) => {
+    const uploadedPhotos = [];
+    
+    for (let i = 0; i < photos.length; i++) {
+      const photo = photos[i];
+      const fileExt = photo.file.name.split('.').pop();
+      const fileName = `${currentUser?.id}/${reviewId}/${Date.now()}-${i}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('review-photos')
+        .upload(fileName, photo.file);
+
+      if (uploadError) {
+        console.error("Error uploading photo:", uploadError);
+        throw new Error(`Failed to upload photo: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('review-photos')
+        .getPublicUrl(fileName);
+
+      uploadedPhotos.push({
+        photo_url: publicUrl,
+        caption: photo.caption || null,
+        display_order: i
+      });
+    }
+
+    return uploadedPhotos;
+  };
+
   const submitReview = async (reviewData: {
     rating: number;
     comment: string;
@@ -23,6 +54,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     customerAddress: string;
     customerCity: string;
     customerZipCode: string;
+    photos?: Array<{ file: File; caption: string; preview: string }>;
   }) => {
     const { 
       rating, 
@@ -32,7 +64,8 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
       customerPhone, 
       customerAddress, 
       customerCity, 
-      customerZipCode 
+      customerZipCode,
+      photos = []
     } = reviewData;
     
     if (rating === 0) {
@@ -82,6 +115,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
       console.log("Submitting review with data:", supabaseReviewData);
       
       let result;
+      let finalReviewId = reviewId;
       
       if (isEditing && reviewId) {
         // Update existing review
@@ -93,12 +127,53 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
         // Insert new review
         result = await supabase
           .from('reviews')
-          .insert([supabaseReviewData]);
+          .insert([supabaseReviewData])
+          .select()
+          .single();
+        
+        if (result.data) {
+          finalReviewId = result.data.id;
+        }
       }
       
       if (result.error) {
         console.error("Database error:", result.error);
         throw new Error(result.error.message);
+      }
+
+      // Upload photos if any
+      if (photos.length > 0 && finalReviewId) {
+        try {
+          const uploadedPhotos = await uploadPhotos(photos, finalReviewId);
+          
+          // Save photo records to database
+          const { error: photoError } = await supabase
+            .from('review_photos')
+            .insert(
+              uploadedPhotos.map(photo => ({
+                review_id: finalReviewId,
+                ...photo
+              }))
+            );
+
+          if (photoError) {
+            console.error("Error saving photo records:", photoError);
+            // Don't fail the entire submission for photo errors
+            toast({
+              title: "Photo Upload Warning",
+              description: "Review submitted but some photos may not have been saved.",
+              variant: "default",
+            });
+          }
+        } catch (photoError) {
+          console.error("Error uploading photos:", photoError);
+          // Don't fail the entire submission for photo errors
+          toast({
+            title: "Photo Upload Warning",
+            description: "Review submitted but photos could not be uploaded.",
+            variant: "default",
+          });
+        }
       }
       
       toast({

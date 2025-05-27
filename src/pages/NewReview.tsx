@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/auth";
 import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
 import RatingInput from "@/components/reviews/RatingInput";
 import ReviewTextInput from "@/components/reviews/ReviewTextInput";
+import PhotoUpload from "@/components/reviews/PhotoUpload";
 import { useReviewSubmission } from "@/hooks/useReviewSubmission";
 import { useDuplicateReviewCheck } from "@/hooks/useDuplicateReviewCheck";
 
@@ -45,6 +46,7 @@ const NewReview = () => {
   const [customerCity, setCustomerCity] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [photos, setPhotos] = useState<Array<{ file: File; caption: string; preview: string }>>([]);
   
   // Duplicate review check states
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -154,7 +156,8 @@ const NewReview = () => {
       customerPhone,
       customerAddress,
       customerCity,
-      customerZipCode
+      customerZipCode,
+      photos // Add photos to the submission
     });
   };
 
@@ -232,6 +235,12 @@ const NewReview = () => {
                   <ReviewTextInput 
                     comment={comment}
                     setComment={setComment}
+                  />
+                  
+                  {/* Photo Upload */}
+                  <PhotoUpload 
+                    photos={photos}
+                    setPhotos={setPhotos}
                   />
                   
                   <div className="pt-4">

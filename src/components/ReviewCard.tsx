@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
@@ -8,8 +8,10 @@ import ReviewContent from "./review/ReviewContent";
 import ReviewResponseForm from "./review/ReviewResponseForm";
 import ReviewResponses from "./review/ReviewResponses";
 import ReviewDeleteDialog from "./review/ReviewDeleteDialog";
+import PhotoGallery from "./reviews/PhotoGallery";
 import { useReviewResponses } from "@/hooks/useReviewResponses";
 import { useReviewResponseActions } from "@/hooks/useReviewResponseActions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReviewResponse {
   id: string;
@@ -18,6 +20,13 @@ interface ReviewResponse {
   content: string;
   createdAt: string;
   replies?: ReviewResponse[];
+}
+
+interface ReviewPhoto {
+  id: string;
+  photo_url: string;
+  caption: string | null;
+  display_order: number;
 }
 
 interface ReviewCardProps {
@@ -43,11 +52,31 @@ interface ReviewCardProps {
 const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: ReviewCardProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [response, setResponse] = useState("");
+  const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
   
   const { currentUser } = useAuth();
   
   // Load responses from database
   const { responses, setResponses } = useReviewResponses(review.id);
+  
+  // Load photos from database
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const { data, error } = await supabase
+        .from('review_photos')
+        .select('*')
+        .eq('review_id', review.id)
+        .order('display_order');
+
+      if (error) {
+        console.error("Error fetching review photos:", error);
+      } else {
+        setPhotos(data || []);
+      }
+    };
+
+    fetchPhotos();
+  }, [review.id]);
   
   // Handle all response actions
   const {
@@ -133,6 +162,12 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         <ReviewContent 
           comment={review.comment}
           createdAt={review.createdAt}
+        />
+        
+        {/* Photo Gallery */}
+        <PhotoGallery 
+          photos={photos} 
+          hasAccess={hasSubscription} 
         />
         
         {/* Review Responses Section */}

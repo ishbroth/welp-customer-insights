@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
 import ReviewReactions from "@/components/ReviewReactions";
+import PhotoGallery from "@/components/reviews/PhotoGallery";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -14,6 +16,13 @@ interface BusinessReviewCardProps {
   onEdit: (review: Review) => void;
   onDelete: (reviewId: string) => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
+}
+
+interface ReviewPhoto {
+  id: string;
+  photo_url: string;
+  caption: string | null;
+  display_order: number;
 }
 
 const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
@@ -24,6 +33,26 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   onReactionToggle,
 }) => {
   const navigate = useNavigate();
+  const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
+
+  // Load photos from database
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const { data, error } = await supabase
+        .from('review_photos')
+        .select('*')
+        .eq('review_id', review.id)
+        .order('display_order');
+
+      if (error) {
+        console.error("Error fetching review photos:", error);
+      } else {
+        setPhotos(data || []);
+      }
+    };
+
+    fetchPhotos();
+  }, [review.id]);
 
   const handleCustomerClick = () => {
     if (review.customerId) {
@@ -100,6 +129,12 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       <div className="mb-4">
         <p className="text-gray-700 whitespace-pre-line">{review.content}</p>
       </div>
+
+      {/* Photo Gallery */}
+      <PhotoGallery 
+        photos={photos} 
+        hasAccess={true} // Business owners always have access to their own review photos
+      />
 
       {/* Reactions section */}
       <div className="border-t pt-4 mb-4">
