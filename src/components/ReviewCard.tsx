@@ -1,26 +1,15 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
-import { useToast } from "@/hooks/use-toast";
-import { formatDistance } from "date-fns";
-import { moderateContent } from "@/utils/contentModeration";
-import { supabase } from "@/integrations/supabase/client";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-// Import our new components
 import ReviewHeader from "./review/ReviewHeader";
+import ReviewContent from "./review/ReviewContent";
 import ReviewResponseForm from "./review/ReviewResponseForm";
 import ReviewResponses from "./review/ReviewResponses";
+import ReviewDeleteDialog from "./review/ReviewDeleteDialog";
+import { useReviewResponses } from "@/hooks/useReviewResponses";
+import { useReviewResponseActions } from "@/hooks/useReviewResponseActions";
 
 interface ReviewResponse {
   id: string;
@@ -54,53 +43,35 @@ interface ReviewCardProps {
 const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: ReviewCardProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [response, setResponse] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responses, setResponses] = useState<ReviewResponse[]>([]);
-  const [replyToResponseId, setReplyToResponseId] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState("");
-  const [editResponseId, setEditResponseId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [responseToDeleteId, setResponseToDeleteId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
-  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   
   const { currentUser } = useAuth();
-  const { toast } = useToast();
   
-  // Load responses from database on component mount
-  useEffect(() => {
-    const fetchResponses = async () => {
-      try {
-        // Use direct query since RPC functions don't exist yet
-        const { data: responseData, error } = await supabase
-          .from('review_responses')
-          .select('*')
-          .eq('review_id', review.id)
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching responses:', error);
-          return;
-        }
-
-        const formattedResponses = responseData?.map((resp: any) => ({
-          id: resp.id,
-          authorId: resp.author_id,
-          authorName: resp.author_name || 'User',
-          content: resp.content,
-          createdAt: resp.created_at,
-          replies: []
-        })) || [];
-
-        setResponses(formattedResponses);
-      } catch (error) {
-        console.error('Error fetching responses:', error);
-      }
-    };
-
-    fetchResponses();
-  }, [review.id]);
+  // Load responses from database
+  const { responses, setResponses } = useReviewResponses(review.id);
+  
+  // Handle all response actions
+  const {
+    isSubmitting,
+    editResponseId,
+    editContent,
+    setEditContent,
+    replyToResponseId,
+    setReplyToResponseId,
+    replyContent,
+    setReplyContent,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    responseToDeleteId,
+    rejectionReason,
+    showRejectionDialog,
+    setShowRejectionDialog,
+    handleSubmitResponse: originalHandleSubmitResponse,
+    handleEditResponse,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleDeleteResponse,
+    handleSubmitReply
+  } = useReviewResponseActions(review.id, responses, setResponses, hasSubscription);
   
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
@@ -122,235 +93,12 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     return lastResponse.authorId !== currentUser.id;
   };
 
-  // Find business owner responses in the review
-  const businessResponses = responses.filter(resp => 
-    resp.authorId === currentUser?.id
-  );
-
   const handleSubmitResponse = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!canRespond) {
-      toast({
-        title: "Subscription required",
-        description: "You need an active subscription to respond to reviews.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Add content moderation check
-    const moderationResult = moderateContent(response);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Insert response directly into the table
-      const { data, error } = await supabase
-        .from('review_responses')
-        .insert({
-          review_id: review.id,
-          author_id: currentUser?.id,
-          author_type: currentUser?.type || 'business',
-          content: response
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Create new response
-      const newResponse = {
-        id: data?.id || `temp-${Date.now()}`,
-        authorId: currentUser?.id || "",
-        authorName: currentUser?.name || "Business Owner",
-        content: response,
-        createdAt: new Date().toISOString(),
-        replies: []
-      };
-      
-      // Add response to the list
-      setResponses(prev => [...prev, newResponse]);
-      
-      setIsResponseVisible(false);
-      setResponse("");
-      
-      // Show success toast
-      toast({
-        title: "Response submitted",
-        description: "Your response has been added successfully!"
-      });
-    } catch (error) {
-      console.error('Error submitting response:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit response. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Function to handle editing a response
-  const handleEditResponse = (responseId: string) => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need an active subscription to edit responses.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const responseToEdit = responses.find(resp => resp.id === responseId);
-    if (responseToEdit) {
-      setEditResponseId(responseId);
-      setEditContent(responseToEdit.content);
-    }
-  };
-
-  // Function to save an edited response
-  const handleSaveEdit = () => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need an active subscription to edit responses.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!editResponseId || !editContent.trim()) {
-      toast({
-        title: "Empty response",
-        description: "Please write something before saving.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Add content moderation check
-    const moderationResult = moderateContent(editContent);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-
-    setResponses(prev => prev.map(resp => {
-      if (resp.id === editResponseId) {
-        return {
-          ...resp,
-          content: editContent,
-          createdAt: new Date().toISOString() // Update the timestamp
-        };
-      }
-      return resp;
-    }));
-
-    // Reset state
-    setEditResponseId(null);
-    setEditContent("");
-
-    // Show success toast
-    toast({
-      title: "Response updated",
-      description: "Your response has been updated successfully!"
-    });
-  };
-
-  // Function to cancel editing
-  const handleCancelEdit = () => {
-    setEditResponseId(null);
-    setEditContent("");
-  };
-
-  // Function to confirm delete
-  const handleDeleteResponse = () => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need an active subscription to delete responses.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!responseToDeleteId) return;
-
-    setResponses(prev => prev.filter(resp => resp.id !== responseToDeleteId));
-    setDeleteDialogOpen(false);
-    setResponseToDeleteId(null);
-
-    toast({
-      title: "Response deleted",
-      description: "Your response has been deleted successfully!"
-    });
-  };
-
-  // Function to handle replying to a customer response
-  const handleSubmitReply = (responseId: string) => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need a premium subscription to reply to customers.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!replyContent.trim()) {
-      toast({
-        title: "Empty reply",
-        description: "Please write something before submitting.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Add content moderation check
-    const moderationResult = moderateContent(replyContent);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-
-    // Create new reply
-    const newReply = {
-      id: `reply-${Date.now()}`,
-      authorId: currentUser?.id || "",
-      authorName: currentUser?.name || "Business Owner",
-      content: replyContent,
-      createdAt: new Date().toISOString()
-    };
-
-    // Add reply to the appropriate response
-    setResponses(prev => prev.map(resp => {
-      if (resp.id === responseId) {
-        return {
-          ...resp,
-          replies: [...(resp.replies || []), newReply]
-        };
-      }
-      return resp;
-    }));
-
-    // Reset state
-    setReplyToResponseId(null);
-    setReplyContent("");
-
-    // Show success toast
-    toast({
-      title: "Reply submitted",
-      description: "Your reply has been added successfully!"
-    });
+    await originalHandleSubmitResponse(response);
+    setIsResponseVisible(false);
+    setResponse("");
   };
 
   // Format the location info including business address when available
@@ -382,17 +130,10 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         />
         
         {/* Review Content */}
-        <div className="mb-4">
-          <p className="text-gray-700 whitespace-pre-line">{review.comment}</p>
-        </div>
-        
-        <div className="text-sm text-gray-500">
-          <span>
-            {formatDistance(new Date(review.createdAt), new Date(), {
-              addSuffix: true,
-            })}
-          </span>
-        </div>
+        <ReviewContent 
+          comment={review.comment}
+          createdAt={review.createdAt}
+        />
         
         {/* Review Responses Section */}
         <ReviewResponses
@@ -414,7 +155,12 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
           handleSubmitReply={handleSubmitReply}
           canBusinessRespond={canBusinessRespond}
           handleEditResponse={handleEditResponse}
-          setResponseToDeleteId={setResponseToDeleteId}
+          setResponseToDeleteId={(id) => {
+            // Handle delete button click properly
+            if (hasSubscription) {
+              setDeleteDialogOpen(true);
+            }
+          }}
           setDeleteDialogOpen={setDeleteDialogOpen}
         />
         
@@ -437,26 +183,12 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         onClose={() => setShowRejectionDialog(false)}
       />
       
-      {/* Keep existing delete confirmation dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Response</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this response? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteResponse}
-              className="bg-red-500 text-white hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete confirmation dialog */}
+      <ReviewDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteResponse}
+      />
     </Card>
   );
 };
