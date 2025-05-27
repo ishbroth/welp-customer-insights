@@ -44,26 +44,19 @@ const CustomerReviewResponse = ({
   useEffect(() => {
     const fetchResponses = async () => {
       try {
+        // Use a raw query to avoid TypeScript issues with the new table
         const { data: responseData, error } = await supabase
-          .from('review_responses')
-          .select(`
-            id,
-            author_id,
-            content,
-            created_at,
-            profiles!author_id(name, first_name, last_name)
-          `)
-          .eq('review_id', reviewId)
-          .order('created_at', { ascending: true });
+          .rpc('get_review_responses', { review_id_param: reviewId });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching responses:', error);
+          return;
+        }
 
-        const formattedResponses = responseData?.map(resp => ({
+        const formattedResponses = responseData?.map((resp: any) => ({
           id: resp.id,
           authorId: resp.author_id,
-          authorName: resp.profiles?.name || 
-                     `${resp.profiles?.first_name || ''} ${resp.profiles?.last_name || ''}`.trim() || 
-                     'User',
+          authorName: resp.author_name || 'User',
           content: resp.content,
           createdAt: resp.created_at
         })) || [];
@@ -132,27 +125,24 @@ const CustomerReviewResponse = ({
     setIsSubmitting(true);
     
     try {
-      // Insert response into database
+      // Use RPC function to insert response
       const { data, error } = await supabase
-        .from('review_responses')
-        .insert({
-          review_id: reviewId,
-          author_id: currentUser.id,
-          author_type: currentUser.type || 'customer',
-          content: responseText
-        })
-        .select()
-        .single();
+        .rpc('insert_review_response', {
+          review_id_param: reviewId,
+          author_id_param: currentUser.id,
+          author_type_param: currentUser.type || 'customer',
+          content_param: responseText
+        });
 
       if (error) throw error;
 
       // Create new response object
       const newResponse: Response = {
-        id: data.id,
+        id: data.id || `temp-${Date.now()}`,
         authorId: currentUser.id,
         authorName: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Customer',
         content: responseText,
-        createdAt: data.created_at
+        createdAt: new Date().toISOString()
       };
       
       // Update local state
@@ -196,12 +186,10 @@ const CustomerReviewResponse = ({
     
     try {
       const { error } = await supabase
-        .from('review_responses')
-        .update({ 
-          content: editContent,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', editingResponseId);
+        .rpc('update_review_response', {
+          response_id_param: editingResponseId,
+          content_param: editContent
+        });
 
       if (error) throw error;
 
@@ -241,9 +229,9 @@ const CustomerReviewResponse = ({
 
     try {
       const { error } = await supabase
-        .from('review_responses')
-        .delete()
-        .eq('id', userResponseId);
+        .rpc('delete_review_response', {
+          response_id_param: userResponseId
+        });
 
       if (error) throw error;
 

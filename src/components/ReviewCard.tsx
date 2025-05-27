@@ -72,26 +72,19 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   useEffect(() => {
     const fetchResponses = async () => {
       try {
+        // Use RPC function to get responses
         const { data: responseData, error } = await supabase
-          .from('review_responses')
-          .select(`
-            id,
-            author_id,
-            content,
-            created_at,
-            profiles!author_id(name, first_name, last_name, type)
-          `)
-          .eq('review_id', review.id)
-          .order('created_at', { ascending: true });
+          .rpc('get_review_responses', { review_id_param: review.id });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching responses:', error);
+          return;
+        }
 
-        const formattedResponses = responseData?.map(resp => ({
+        const formattedResponses = responseData?.map((resp: any) => ({
           id: resp.id,
           authorId: resp.author_id,
-          authorName: resp.profiles?.name || 
-                     `${resp.profiles?.first_name || ''} ${resp.profiles?.last_name || ''}`.trim() || 
-                     'User',
+          authorName: resp.author_name || 'User',
           content: resp.content,
           createdAt: resp.created_at,
           replies: []
@@ -154,27 +147,24 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     setIsSubmitting(true);
     
     try {
-      // Insert response into database
+      // Use RPC function to insert response
       const { data, error } = await supabase
-        .from('review_responses')
-        .insert({
-          review_id: review.id,
-          author_id: currentUser?.id,
-          author_type: currentUser?.type || 'business',
-          content: response
-        })
-        .select()
-        .single();
+        .rpc('insert_review_response', {
+          review_id_param: review.id,
+          author_id_param: currentUser?.id,
+          author_type_param: currentUser?.type || 'business',
+          content_param: response
+        });
 
       if (error) throw error;
 
       // Create new response
       const newResponse = {
-        id: data.id,
+        id: data.id || `temp-${Date.now()}`,
         authorId: currentUser?.id || "",
         authorName: currentUser?.name || "Business Owner",
         content: response,
-        createdAt: data.created_at,
+        createdAt: new Date().toISOString(),
         replies: []
       };
       
