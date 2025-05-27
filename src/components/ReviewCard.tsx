@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance } from "date-fns";
 import { moderateContent } from "@/utils/contentModeration";
+import { supabase } from "@/integrations/supabase/client";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import {
   AlertDialog,
@@ -54,7 +55,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   const [isResponseVisible, setIsResponseVisible] = useState(false);
   const [response, setResponse] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responses, setResponses] = useState<ReviewResponse[]>(review.responses || []);
+  const [responses, setResponses] = useState<ReviewResponse[]>([]);
   const [replyToResponseId, setReplyToResponseId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [editResponseId, setEditResponseId] = useState<string | null>(null);
@@ -66,6 +67,44 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  
+  // Load responses from database on component mount
+  useEffect(() => {
+    const fetchResponses = async () => {
+      try {
+        const { data: responseData, error } = await supabase
+          .from('review_responses')
+          .select(`
+            id,
+            author_id,
+            content,
+            created_at,
+            profiles!author_id(name, first_name, last_name, type)
+          `)
+          .eq('review_id', review.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        const formattedResponses = responseData?.map(resp => ({
+          id: resp.id,
+          authorId: resp.author_id,
+          authorName: resp.profiles?.name || 
+                     `${resp.profiles?.first_name || ''} ${resp.profiles?.last_name || ''}`.trim() || 
+                     'User',
+          content: resp.content,
+          createdAt: resp.created_at,
+          replies: []
+        })) || [];
+
+        setResponses(formattedResponses);
+      } catch (error) {
+        console.error('Error fetching responses:', error);
+      }
+    };
+
+    fetchResponses();
+  }, [review.id]);
   
   // Ensure hasSubscription is properly used throughout the component
   const canRespond = showResponse && hasSubscription;
@@ -92,7 +131,7 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     resp.authorId === currentUser?.id
   );
 
-  const handleSubmitResponse = (e: React.FormEvent) => {
+  const handleSubmitResponse = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!canRespond) {
@@ -114,22 +153,34 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Insert response into database
+      const { data, error } = await supabase
+        .from('review_responses')
+        .insert({
+          review_id: review.id,
+          author_id: currentUser?.id,
+          author_type: currentUser?.type || 'business',
+          content: response
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
       // Create new response
       const newResponse = {
-        id: `resp-${Date.now()}`,
+        id: data.id,
         authorId: currentUser?.id || "",
         authorName: currentUser?.name || "Business Owner",
         content: response,
-        createdAt: new Date().toISOString(),
+        createdAt: data.created_at,
         replies: []
       };
       
       // Add response to the list
       setResponses(prev => [...prev, newResponse]);
       
-      setIsSubmitting(false);
       setIsResponseVisible(false);
       setResponse("");
       
@@ -138,7 +189,16 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
         title: "Response submitted",
         description: "Your response has been added successfully!"
       });
-    }, 1000);
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit response. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Function to handle editing a response

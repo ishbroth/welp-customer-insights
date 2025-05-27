@@ -4,7 +4,6 @@ import { ThumbsUp, Laugh, Award, Frown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import ReactionButton from "./reactions/ReactionButton";
-import { useReactionPermissions } from "./reactions/useReactionPermissions";
 import { useAuth } from "@/contexts/auth";
 
 interface ReviewReactionsProps {
@@ -33,7 +32,6 @@ const ReviewReactions = ({
 }: ReviewReactionsProps) => {
   const { currentUser, hasOneTimeAccess, isSubscribed } = useAuth();
   const userId = currentUser?.id || "";
-  const { checkPermissions } = useReactionPermissions({ customerId });
   const isCustomerUser = currentUser?.type === "customer";
   
   // Check if user has access to see business profile details
@@ -44,6 +42,20 @@ const ReviewReactions = ({
   const hasFunny = reactions.funny.includes(userId);
   const hasUseful = reactions.useful.includes(userId);
   const hasOhNo = reactions.ohNo.includes(userId);
+
+  const checkPermissions = () => {
+    // Don't allow reactions if not logged in
+    if (!currentUser) {
+      return false;
+    }
+
+    // Check if user is allowed to react to this review
+    const isCustomerBeingReviewed = currentUser.id === customerId;
+    const isBusinessUser = currentUser.type === "business";
+    
+    // Allow if user is the customer being reviewed OR if they're a business user
+    return isCustomerBeingReviewed || isBusinessUser;
+  };
 
   const handleReaction = (reactionType: string) => {
     if (checkPermissions()) {
