@@ -44,9 +44,12 @@ const CustomerReviewResponse = ({
   useEffect(() => {
     const fetchResponses = async () => {
       try {
-        // Use a raw query to avoid TypeScript issues with the new table
+        // Use a direct query since RPC functions don't exist yet
         const { data: responseData, error } = await supabase
-          .rpc('get_review_responses', { review_id_param: reviewId });
+          .from('review_responses')
+          .select('*')
+          .eq('review_id', reviewId)
+          .order('created_at', { ascending: true });
 
         if (error) {
           console.error('Error fetching responses:', error);
@@ -125,20 +128,23 @@ const CustomerReviewResponse = ({
     setIsSubmitting(true);
     
     try {
-      // Use RPC function to insert response
+      // Insert response directly into the table
       const { data, error } = await supabase
-        .rpc('insert_review_response', {
-          review_id_param: reviewId,
-          author_id_param: currentUser.id,
-          author_type_param: currentUser.type || 'customer',
-          content_param: responseText
-        });
+        .from('review_responses')
+        .insert({
+          review_id: reviewId,
+          author_id: currentUser.id,
+          author_type: currentUser.type || 'customer',
+          content: responseText
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       // Create new response object
       const newResponse: Response = {
-        id: data.id || `temp-${Date.now()}`,
+        id: data?.id || `temp-${Date.now()}`,
         authorId: currentUser.id,
         authorName: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Customer',
         content: responseText,
@@ -186,10 +192,9 @@ const CustomerReviewResponse = ({
     
     try {
       const { error } = await supabase
-        .rpc('update_review_response', {
-          response_id_param: editingResponseId,
-          content_param: editContent
-        });
+        .from('review_responses')
+        .update({ content: editContent })
+        .eq('id', editingResponseId);
 
       if (error) throw error;
 
@@ -229,9 +234,9 @@ const CustomerReviewResponse = ({
 
     try {
       const { error } = await supabase
-        .rpc('delete_review_response', {
-          response_id_param: userResponseId
-        });
+        .from('review_responses')
+        .delete()
+        .eq('id', userResponseId);
 
       if (error) throw error;
 

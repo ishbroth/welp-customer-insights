@@ -72,9 +72,12 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
   useEffect(() => {
     const fetchResponses = async () => {
       try {
-        // Use RPC function to get responses
+        // Use direct query since RPC functions don't exist yet
         const { data: responseData, error } = await supabase
-          .rpc('get_review_responses', { review_id_param: review.id });
+          .from('review_responses')
+          .select('*')
+          .eq('review_id', review.id)
+          .order('created_at', { ascending: true });
 
         if (error) {
           console.error('Error fetching responses:', error);
@@ -147,20 +150,23 @@ const ReviewCard = ({ review, showResponse = false, hasSubscription = false }: R
     setIsSubmitting(true);
     
     try {
-      // Use RPC function to insert response
+      // Insert response directly into the table
       const { data, error } = await supabase
-        .rpc('insert_review_response', {
-          review_id_param: review.id,
-          author_id_param: currentUser?.id,
-          author_type_param: currentUser?.type || 'business',
-          content_param: response
-        });
+        .from('review_responses')
+        .insert({
+          review_id: review.id,
+          author_id: currentUser?.id,
+          author_type: currentUser?.type || 'business',
+          content: response
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       // Create new response
       const newResponse = {
-        id: data.id || `temp-${Date.now()}`,
+        id: data?.id || `temp-${Date.now()}`,
         authorId: currentUser?.id || "",
         authorName: currentUser?.name || "Business Owner",
         content: response,
