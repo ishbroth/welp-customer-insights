@@ -19,9 +19,25 @@ interface ReviewsListProps {
   hasFullAccess: (customerId: string) => boolean;
   isReviewCustomer: boolean;
   customerProfile?: any;
+  customerData?: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
 }
 
-const ReviewsList = ({ customerId, reviews, hasFullAccess, isReviewCustomer, customerProfile }: ReviewsListProps) => {
+const ReviewsList = ({ 
+  customerId, 
+  reviews, 
+  hasFullAccess, 
+  isReviewCustomer, 
+  customerProfile,
+  customerData 
+}: ReviewsListProps) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
@@ -60,6 +76,7 @@ const ReviewsList = ({ customerId, reviews, hasFullAccess, isReviewCustomer, cus
             hasFullAccess={hasFullAccess(customerId)}
             onEdit={handleEditReview}
             onDelete={handleDeleteReview}
+            customerData={customerData}
           />
         ))}
       </div>

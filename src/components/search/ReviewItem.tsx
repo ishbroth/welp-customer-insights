@@ -7,6 +7,7 @@ import StarRating from "@/components/StarRating";
 import { Badge } from "@/components/ui/badge";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface ReviewPhoto {
   id: string;
@@ -27,10 +28,21 @@ interface ReviewItemProps {
   hasFullAccess: boolean;
   onEdit?: (reviewId: string) => void;
   onDelete?: (reviewId: string) => void;
+  customerData?: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
 }
 
-const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete }: ReviewItemProps) => {
+const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: ReviewItemProps) => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isCurrentUserReview = currentUser?.id === review.reviewerId;
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
@@ -58,6 +70,20 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete }: ReviewItemProps
     const words = text.split(' ');
     const firstThree = words.slice(0, 3).join(' ');
     return `${firstThree}${words.length > 3 ? '...' : ''}`;
+  };
+
+  const handlePayToView = () => {
+    // Store the review and customer data in sessionStorage for retrieval after signup/signin
+    const reviewAccessData = {
+      reviewId: review.id,
+      customerData,
+      searchParams: Object.fromEntries(searchParams.entries())
+    };
+    
+    sessionStorage.setItem('pendingReviewAccess', JSON.stringify(reviewAccessData));
+    
+    // Navigate to signup page
+    navigate('/signup');
   };
 
   return (
@@ -88,9 +114,22 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete }: ReviewItemProps
         ) : (
           <div>
             <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
-            <Badge variant="secondary" className="mt-2 text-xs">
-              Limited access
-            </Badge>
+            {currentUser ? (
+              <Badge variant="secondary" className="mt-2 text-xs">
+                Limited access
+              </Badge>
+            ) : (
+              <div className="mt-3">
+                <Button 
+                  onClick={handlePayToView}
+                  variant="outline" 
+                  size="sm"
+                  className="text-welp-primary border-welp-primary hover:bg-welp-primary hover:text-white"
+                >
+                  Sign up to view full review
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

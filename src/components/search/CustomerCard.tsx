@@ -67,6 +67,17 @@ const CustomerCard = ({
     return customer.avatar || null;
   };
 
+  // Prepare customer data for ReviewsList
+  const customerData = {
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    phone: customer.phone || "",
+    address: customer.address || "",
+    city: customer.city || "",
+    state: customer.state || "",
+    zipCode: customer.zipCode || ""
+  };
+
   return (
     <Card 
       className={`p-4 transition-shadow hover:shadow-md ${isExpanded ? 'shadow-md' : ''}`}
@@ -157,6 +168,7 @@ const CustomerCard = ({
             reviews={reviews}
             hasFullAccess={hasFullAccess}
             isReviewCustomer={isReviewCustomer}
+            customerData={customerData}
           />
 
           {/* Write a review button - only show for business users who haven't reviewed this customer */}
