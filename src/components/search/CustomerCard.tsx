@@ -36,6 +36,13 @@ const CustomerCard = ({
   // Get the reviews for this customer
   const reviews = customerReviews[customer.id] || [];
   
+  // Check if current business user has already written a review for this customer
+  const hasCurrentUserReviewed = () => {
+    if (!currentUser || !isBusinessUser) return false;
+    
+    return reviews.some(review => review.reviewerId === currentUser.id);
+  };
+  
   const handleViewProfile = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent expanding/collapsing the card
     // Only navigate to profile if this is a regular customer (not from reviews)
@@ -152,8 +159,8 @@ const CustomerCard = ({
             isReviewCustomer={isReviewCustomer}
           />
 
-          {/* Write a review button - only show for business users */}
-          {isBusinessUser && (
+          {/* Write a review button - only show for business users who haven't reviewed this customer */}
+          {isBusinessUser && !hasCurrentUserReviewed() && (
             <div className="mt-4">
               <Link
                 to={`/review/new?firstName=${encodeURIComponent(customer.firstName)}&lastName=${encodeURIComponent(customer.lastName)}&phone=${encodeURIComponent(customer.phone || '')}&address=${encodeURIComponent(customer.address || '')}&city=${encodeURIComponent(customer.city || '')}&zipCode=${encodeURIComponent(customer.zipCode || '')}`}
