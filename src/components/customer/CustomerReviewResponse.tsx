@@ -1,11 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import CustomerResponseList from "./CustomerResponseList";
 import CustomerResponseForm from "./CustomerResponseForm";
 import CustomerResponseActions from "./CustomerResponseActions";
+import { useCustomerReviewResponses } from "@/hooks/useCustomerReviewResponses";
+import { useCustomerResponseActions } from "@/hooks/useCustomerResponseActions";
+import { useCustomerResponsePermissions } from "@/hooks/useCustomerResponsePermissions";
 
 interface Response {
   id: string;
@@ -33,81 +35,37 @@ const CustomerReviewResponse = ({
   onResponseSubmitted
 }: CustomerReviewResponseProps) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responses, setResponses] = useState<Response[]>([]);
-  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState("");
-  const { currentUser, hasOneTimeAccess } = useAuth();
+  const { currentUser } = useAuth();
   const { toast } = useToast();
   
-  // Load responses from database on component mount
-  useEffect(() => {
-    const fetchResponses = async () => {
-      try {
-        // Use a direct query since RPC functions don't exist yet
-        const { data: responseData, error } = await supabase
-          .from('review_responses')
-          .select('*')
-          .eq('review_id', reviewId)
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching responses:', error);
-          return;
-        }
-
-        const formattedResponses = responseData?.map((resp: any) => ({
-          id: resp.id,
-          authorId: resp.author_id,
-          authorName: resp.author_name || 'User',
-          content: resp.content,
-          createdAt: resp.created_at
-        })) || [];
-
-        setResponses(formattedResponses);
-      } catch (error) {
-        console.error('Error fetching responses:', error);
-      }
-    };
-
-    fetchResponses();
-  }, [reviewId]);
+  const { responses, setResponses } = useCustomerReviewResponses(reviewId);
   
-  // Use the AuthContext to check if this specific review has one-time access
-  const hasReviewAccess = hasOneTimeAccess(reviewId);
-  
-  // Check if the current user has already responded
-  const hasUserResponded = () => {
-    if (!currentUser) return false;
-    return responses.some(response => response.authorId === currentUser.id);
-  };
-  
-  // Check if the customer can respond based on who sent the last message
-  const canCustomerRespond = () => {
-    if (!currentUser || !responses.length) return true;
-    
-    // Sort responses by creation date (newest first)
-    const sortedResponses = [...responses].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    
-    // Get the most recent response
-    const lastResponse = sortedResponses[0];
-    
-    // If the last response is from the customer, they cannot respond again
-    // until the business responds
-    return lastResponse.authorId !== currentUser.id;
-  };
-  
+  const {
+    isSubmitting,
+    editingResponseId,
+    editContent,
+    setEditContent,
+    handleSubmitResponse: originalHandleSubmitResponse,
+    handleEditResponse,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleDeleteResponse
+  } = useCustomerResponseActions(reviewId, responses, setResponses);
+
+  const { canRespond, hasUserResponded } = useCustomerResponsePermissions(
+    reviewId,
+    responses,
+    hasSubscription,
+    isOneTimeUnlocked
+  );
+
   const handleSubmitResponse = async (responseText: string) => {
-    // If empty string is passed, it means cancel was clicked
     if (responseText === "") {
       setIsResponseVisible(false);
       return;
     }
-    
-    // Check subscription status
-    if (!hasSubscription && !isOneTimeUnlocked && !hasReviewAccess) {
+
+    if (!hasSubscription && !isOneTimeUnlocked) {
       toast({
         title: "Access required",
         description: "You need a subscription or one-time access to respond to reviews.",
@@ -115,152 +73,25 @@ const CustomerReviewResponse = ({
       });
       return;
     }
-    
-    if (!currentUser) {
-      toast({
-        title: "Authentication required",
-        description: "You must be logged in to respond.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Insert response directly into the table
-      const { data, error } = await supabase
-        .from('review_responses')
-        .insert({
-          review_id: reviewId,
-          author_id: currentUser.id,
-          author_type: currentUser.type || 'customer',
-          content: responseText
-        })
-        .select()
-        .single();
 
-      if (error) throw error;
-
-      // Create new response object
+    await originalHandleSubmitResponse(responseText);
+    
+    if (onResponseSubmitted) {
       const newResponse: Response = {
-        id: data?.id || `temp-${Date.now()}`,
-        authorId: currentUser.id,
-        authorName: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Customer',
+        id: `temp-${Date.now()}`,
+        authorId: currentUser?.id || "",
+        authorName: currentUser?.name || 'Customer',
         content: responseText,
         createdAt: new Date().toISOString()
       };
-      
-      // Update local state
-      setResponses(prev => [...prev, newResponse]);
-      
-      // Notify parent component if callback provided
-      if (onResponseSubmitted) {
-        onResponseSubmitted(newResponse);
-      }
-      
-      toast({
-        title: "Response submitted",
-        description: "Your response has been added successfully!"
-      });
-      
-      setIsResponseVisible(false);
-    } catch (error) {
-      console.error('Error submitting response:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit response. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+      onResponseSubmitted(newResponse);
     }
-  };
-
-  const handleEditResponse = () => {
-    if (!currentUser) return;
     
-    const userResponse = responses.find(r => r.authorId === currentUser.id);
-    if (userResponse) {
-      setEditingResponseId(userResponse.id);
-      setEditContent(userResponse.content);
-    }
+    setIsResponseVisible(false);
   };
-
-  const handleSaveEdit = async () => {
-    if (!editingResponseId || !currentUser) return;
-    
-    try {
-      const { error } = await supabase
-        .from('review_responses')
-        .update({ content: editContent })
-        .eq('id', editingResponseId);
-
-      if (error) throw error;
-
-      setResponses(prev => prev.map(response => 
-        response.id === editingResponseId 
-          ? { ...response, content: editContent }
-          : response
-      ));
-      
-      setEditingResponseId(null);
-      setEditContent("");
-      
-      toast({
-        title: "Response updated",
-        description: "Your response has been updated successfully!"
-      });
-    } catch (error) {
-      console.error('Error updating response:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update response. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingResponseId(null);
-    setEditContent("");
-  };
-
-  const handleDeleteResponse = async () => {
-    if (!currentUser) return;
-    
-    const userResponseId = responses.find(r => r.authorId === currentUser.id)?.id;
-    if (!userResponseId) return;
-
-    try {
-      const { error } = await supabase
-        .from('review_responses')
-        .delete()
-        .eq('id', userResponseId);
-
-      if (error) throw error;
-
-      setResponses(prev => prev.filter(response => response.id !== userResponseId));
-      
-      toast({
-        title: "Response deleted",
-        description: "Your response has been deleted successfully!"
-      });
-    } catch (error) {
-      console.error('Error deleting response:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete response. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const canRespond = (hasSubscription || isOneTimeUnlocked || hasReviewAccess) && canCustomerRespond() && !hasUserResponded();
   
   return (
     <div className="mt-4">
-      {/* Display existing responses */}
       <CustomerResponseList 
         responses={responses} 
         editingResponseId={editingResponseId}
@@ -270,7 +101,6 @@ const CustomerReviewResponse = ({
         onCancelEdit={handleCancelEdit}
       />
       
-      {/* Show response actions based on subscription status */}
       <CustomerResponseActions 
         canRespond={canRespond}
         isResponseVisible={isResponseVisible}
@@ -283,7 +113,6 @@ const CustomerReviewResponse = ({
         hasSubscription={hasSubscription}
       />
       
-      {/* Response form - only shown when clicked respond */}
       {isResponseVisible && (
         <CustomerResponseForm
           onSubmit={handleSubmitResponse}
