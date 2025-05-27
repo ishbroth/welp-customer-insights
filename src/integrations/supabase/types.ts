@@ -220,6 +220,7 @@ export type Database = {
       }
       responses: {
         Row: {
+          author_id: string | null
           content: string
           created_at: string
           id: string
@@ -227,6 +228,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          author_id?: string | null
           content: string
           created_at?: string
           id?: string
@@ -234,6 +236,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          author_id?: string | null
           content?: string
           created_at?: string
           id?: string

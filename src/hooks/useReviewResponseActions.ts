@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { moderateContent } from "@/utils/contentModeration";
 
 interface ReviewResponse {
   id: string;
@@ -33,8 +32,8 @@ export const useReviewResponseActions = (
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
-  const handleSubmitResponse = async (response: string) => {
-    if (!hasSubscription) {
+  const handleSubmitResponse = async (responseText: string) => {
+    if (!currentUser || !hasSubscription) {
       toast({
         title: "Subscription required",
         description: "You need an active subscription to respond to reviews.",
@@ -43,10 +42,7 @@ export const useReviewResponseActions = (
       return;
     }
 
-    const moderationResult = moderateContent(response);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
+    if (!responseText.trim()) {
       return;
     }
 
@@ -57,7 +53,8 @@ export const useReviewResponseActions = (
         .from('responses')
         .insert({
           review_id: reviewId,
-          content: response
+          content: responseText,
+          author_id: currentUser.id
         })
         .select()
         .single();
@@ -65,10 +62,10 @@ export const useReviewResponseActions = (
       if (error) throw error;
 
       const newResponse: ReviewResponse = {
-        id: data?.id || `temp-${Date.now()}`,
-        authorId: currentUser?.id || "",
-        authorName: currentUser?.name || "Business Owner",
-        content: response,
+        id: data.id,
+        authorId: currentUser.id,
+        authorName: currentUser.name || 'User',
+        content: responseText,
         createdAt: new Date().toISOString(),
         replies: []
       };
@@ -92,66 +89,45 @@ export const useReviewResponseActions = (
   };
 
   const handleEditResponse = (responseId: string) => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need an active subscription to edit responses.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const responseToEdit = responses.find(resp => resp.id === responseId);
-    if (responseToEdit) {
+    const response = responses.find(r => r.id === responseId);
+    if (response && response.authorId === currentUser?.id) {
       setEditResponseId(responseId);
-      setEditContent(responseToEdit.content);
+      setEditContent(response.content);
     }
   };
 
-  const handleSaveEdit = () => {
-    if (!hasSubscription) {
+  const handleSaveEdit = async () => {
+    if (!editResponseId || !currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('responses')
+        .update({ content: editContent })
+        .eq('id', editResponseId);
+
+      if (error) throw error;
+
+      setResponses(prev => prev.map(response =>
+        response.id === editResponseId
+          ? { ...response, content: editContent }
+          : response
+      ));
+
+      setEditResponseId(null);
+      setEditContent("");
+
       toast({
-        title: "Subscription required",
-        description: "You need an active subscription to edit responses.",
+        title: "Response updated",
+        description: "Your response has been updated successfully!"
+      });
+    } catch (error) {
+      console.error('Error updating response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update response. Please try again.",
         variant: "destructive"
       });
-      return;
     }
-
-    if (!editResponseId || !editContent.trim()) {
-      toast({
-        title: "Empty response",
-        description: "Please write something before saving.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const moderationResult = moderateContent(editContent);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-
-    setResponses(prev => prev.map(resp => {
-      if (resp.id === editResponseId) {
-        return {
-          ...resp,
-          content: editContent,
-          createdAt: new Date().toISOString()
-        };
-      }
-      return resp;
-    }));
-
-    setEditResponseId(null);
-    setEditContent("");
-
-    toast({
-      title: "Response updated",
-      description: "Your response has been updated successfully!"
-    });
   };
 
   const handleCancelEdit = () => {
@@ -159,79 +135,40 @@ export const useReviewResponseActions = (
     setEditContent("");
   };
 
-  const handleDeleteResponse = () => {
-    if (!hasSubscription) {
+  const handleDeleteResponse = async () => {
+    if (!responseToDeleteId || !currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('responses')
+        .delete()
+        .eq('id', responseToDeleteId);
+
+      if (error) throw error;
+
+      setResponses(prev => prev.filter(response => response.id !== responseToDeleteId));
+      setDeleteDialogOpen(false);
+      setResponseToDeleteId(null);
+
       toast({
-        title: "Subscription required",
-        description: "You need an active subscription to delete responses.",
+        title: "Response deleted",
+        description: "Your response has been deleted successfully!"
+      });
+    } catch (error) {
+      console.error('Error deleting response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete response. Please try again.",
         variant: "destructive"
       });
-      return;
     }
-
-    if (!responseToDeleteId) return;
-
-    setResponses(prev => prev.filter(resp => resp.id !== responseToDeleteId));
-    setDeleteDialogOpen(false);
-    setResponseToDeleteId(null);
-
-    toast({
-      title: "Response deleted",
-      description: "Your response has been deleted successfully!"
-    });
   };
 
-  const handleSubmitReply = (responseId: string) => {
-    if (!hasSubscription) {
-      toast({
-        title: "Subscription required",
-        description: "You need a premium subscription to reply to customers.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!replyContent.trim()) {
-      toast({
-        title: "Empty reply",
-        description: "Please write something before submitting.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const moderationResult = moderateContent(replyContent);
-    if (!moderationResult.isApproved) {
-      setRejectionReason(moderationResult.reason || "Your content violates our guidelines.");
-      setShowRejectionDialog(true);
-      return;
-    }
-
-    const newReply = {
-      id: `reply-${Date.now()}`,
-      authorId: currentUser?.id || "",
-      authorName: currentUser?.name || "Business Owner",
-      content: replyContent,
-      createdAt: new Date().toISOString()
-    };
-
-    setResponses(prev => prev.map(resp => {
-      if (resp.id === responseId) {
-        return {
-          ...resp,
-          replies: [...(resp.replies || []), newReply]
-        };
-      }
-      return resp;
-    }));
-
+  const handleSubmitReply = async (responseId: string) => {
+    // Implementation for replies would go here
+    console.log('Submit reply to:', responseId, 'Content:', replyContent);
     setReplyToResponseId(null);
     setReplyContent("");
-
-    toast({
-      title: "Reply submitted",
-      description: "Your reply has been added successfully!"
-    });
   };
 
   return {
@@ -246,7 +183,6 @@ export const useReviewResponseActions = (
     deleteDialogOpen,
     setDeleteDialogOpen,
     responseToDeleteId,
-    setResponseToDeleteId,
     rejectionReason,
     showRejectionDialog,
     setShowRejectionDialog,

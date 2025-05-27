@@ -17,10 +17,17 @@ export const useReviewResponses = (reviewId: string) => {
   useEffect(() => {
     const fetchResponses = async () => {
       try {
-        // Use the existing responses table
+        // Fetch responses with author information from profiles
         const { data: responseData, error } = await supabase
           .from('responses')
-          .select('*')
+          .select(`
+            *,
+            profiles!author_id (
+              name,
+              first_name,
+              last_name
+            )
+          `)
           .eq('review_id', reviewId)
           .order('created_at', { ascending: true });
 
@@ -29,14 +36,22 @@ export const useReviewResponses = (reviewId: string) => {
           return;
         }
 
-        const formattedResponses = responseData?.map((resp: any) => ({
-          id: resp.id,
-          authorId: resp.author_id || '',
-          authorName: resp.author_name || 'User',
-          content: resp.content,
-          createdAt: resp.created_at,
-          replies: []
-        })) || [];
+        const formattedResponses = responseData?.map((resp: any) => {
+          const profile = resp.profiles;
+          const authorName = profile?.name || 
+                           (profile?.first_name && profile?.last_name 
+                             ? `${profile.first_name} ${profile.last_name}` 
+                             : 'User');
+
+          return {
+            id: resp.id,
+            authorId: resp.author_id || '',
+            authorName,
+            content: resp.content,
+            createdAt: resp.created_at,
+            replies: []
+          };
+        }) || [];
 
         setResponses(formattedResponses);
       } catch (error) {

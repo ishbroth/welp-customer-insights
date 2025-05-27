@@ -40,12 +40,13 @@ export const useCustomerResponseActions = (
     setIsSubmitting(true);
 
     try {
-      // Use the existing responses table
+      // Use the existing responses table with author_id
       const { data, error } = await supabase
         .from('responses')
         .insert({
           review_id: reviewId,
-          content: responseText
+          content: responseText,
+          author_id: currentUser.id
         })
         .select()
         .single();
@@ -53,7 +54,7 @@ export const useCustomerResponseActions = (
       if (error) throw error;
 
       const newResponse: Response = {
-        id: data?.id || `temp-${Date.now()}`,
+        id: data.id,
         authorId: currentUser.id,
         authorName: currentUser.name || 'Customer',
         content: responseText,
