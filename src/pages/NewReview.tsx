@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import DuplicateReviewHandler from "@/components/reviews/DuplicateReviewHandler";
 import ReviewForm from "@/components/reviews/ReviewForm";
+import UploadProgressDialog from "@/components/reviews/UploadProgressDialog";
 import { useReviewFormState } from "@/hooks/useReviewFormState";
 import { useReviewSubmission } from "@/hooks/useReviewSubmission";
 import { useDuplicateReviewCheck } from "@/hooks/useDuplicateReviewCheck";
@@ -17,7 +18,8 @@ const NewReview = () => {
     rejectionReason, 
     showRejectionDialog, 
     setShowRejectionDialog, 
-    submitReview 
+    submitReview,
+    uploadProgress
   } = useReviewSubmission(formState.isEditing, formState.reviewId);
   const { checkForDuplicateReview, isChecking } = useDuplicateReviewCheck();
   
@@ -118,6 +120,15 @@ const NewReview = () => {
         existingReview={formState.existingReview}
         customerFirstName={formState.customerFirstName}
         customerLastName={formState.customerLastName}
+      />
+
+      {/* Upload Progress Dialog */}
+      <UploadProgressDialog
+        open={uploadProgress.isUploading}
+        progress={uploadProgress.uploadProgress}
+        isComplete={uploadProgress.isUploadComplete}
+        totalPhotos={formState.photos.length}
+        currentPhoto={uploadProgress.currentPhotoIndex}
       />
     </div>
   );

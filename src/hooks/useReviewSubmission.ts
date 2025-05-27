@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useContentValidation } from "@/hooks/useContentValidation";
+import { useUploadProgress } from "@/hooks/useUploadProgress";
 import { submitReviewToDatabase, type ReviewSubmissionData } from "@/services/reviewSubmissionService";
 import { uploadReviewPhotos, savePhotoRecords, type PhotoUpload } from "@/services/photoUploadService";
 
@@ -23,6 +24,8 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     setShowRejectionDialog,
     validateContent
   } = useContentValidation();
+
+  const uploadProgress = useUploadProgress();
 
   const submitReview = async (reviewData: SubmitReviewParams): Promise<boolean> => {
     const { photos = [], ...submitData } = reviewData;
@@ -52,6 +55,11 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     
     setIsSubmitting(true);
     
+    // Start upload progress if there are photos
+    if (photos.length > 0) {
+      uploadProgress.startUpload(photos.length);
+    }
+    
     try {
       // Submit review to database
       const finalReviewId = await submitReviewToDatabase(
@@ -64,10 +72,17 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
       // Handle photo uploads if any
       if (photos.length > 0) {
         try {
-          const uploadedPhotos = await uploadReviewPhotos(photos, finalReviewId, currentUser.id);
+          const uploadedPhotos = await uploadReviewPhotos(
+            photos, 
+            finalReviewId, 
+            currentUser.id,
+            uploadProgress.updateProgress
+          );
           await savePhotoRecords(uploadedPhotos, finalReviewId);
+          uploadProgress.completeUpload();
         } catch (photoError) {
           console.error("Error uploading photos:", photoError);
+          uploadProgress.resetUpload();
           // Don't fail the entire submission for photo errors
           toast({
             title: "Photo Upload Warning",
@@ -89,6 +104,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
       return true;
     } catch (error: any) {
       console.error("Error submitting review:", error);
+      uploadProgress.resetUpload();
       toast({
         title: "Error",
         description: `Failed to submit review: ${error.message}`,
@@ -105,6 +121,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
     rejectionReason,
     showRejectionDialog,
     setShowRejectionDialog,
-    submitReview
+    submitReview,
+    uploadProgress
   };
 };

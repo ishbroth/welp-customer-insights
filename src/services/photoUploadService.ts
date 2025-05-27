@@ -16,7 +16,8 @@ export interface UploadedPhoto {
 export const uploadReviewPhotos = async (
   photos: PhotoUpload[],
   reviewId: string,
-  userId: string
+  userId: string,
+  onProgress?: (photoIndex: number, totalPhotos: number) => void
 ): Promise<UploadedPhoto[]> => {
   const uploadedPhotos: UploadedPhoto[] = [];
   
@@ -43,6 +44,11 @@ export const uploadReviewPhotos = async (
       caption: photo.caption || null,
       display_order: i
     });
+
+    // Call progress callback if provided
+    if (onProgress) {
+      onProgress(i, photos.length);
+    }
   }
 
   return uploadedPhotos;
