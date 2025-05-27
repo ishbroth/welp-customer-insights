@@ -72,7 +72,7 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
     return `${firstThree}${words.length > 3 ? '...' : ''}`;
   };
 
-  const handlePayToView = () => {
+  const handleUnlockReview = () => {
     // Store the review and customer data in sessionStorage for retrieval after signup/signin
     const reviewAccessData = {
       reviewId: review.id,
@@ -82,8 +82,8 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
     
     sessionStorage.setItem('pendingReviewAccess', JSON.stringify(reviewAccessData));
     
-    // Navigate to signup page
-    navigate('/signup');
+    // Navigate to signup page with unlock indicator
+    navigate('/signup?unlock=review');
   };
 
   return (
@@ -121,12 +121,12 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             ) : (
               <div className="mt-3">
                 <Button 
-                  onClick={handlePayToView}
+                  onClick={handleUnlockReview}
                   variant="outline" 
                   size="sm"
                   className="text-welp-primary border-welp-primary hover:bg-welp-primary hover:text-white"
                 >
-                  Sign up to view full review
+                  Unlock Review
                 </Button>
               </div>
             )}

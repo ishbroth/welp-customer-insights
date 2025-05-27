@@ -8,10 +8,12 @@ import Footer from "@/components/Footer";
 import { UserRound, Building2 } from "lucide-react";
 import BusinessSignupForm from "@/components/signup/BusinessSignupForm";
 import CustomerSignupForm from "@/components/signup/CustomerSignupForm";
+import UnlockExplanationBanner from "@/components/signup/UnlockExplanationBanner";
 
 const Signup = () => {
   const [searchParams] = useSearchParams();
   const initialAccountType = searchParams.get("type") === "customer" ? "customer" : "business";
+  const isUnlockFlow = searchParams.get("unlock") === "review";
   const [accountType, setAccountType] = useState<"business" | "customer">(initialAccountType);
   const [step, setStep] = useState(1);
   
@@ -27,6 +29,9 @@ const Signup = () => {
         <div className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-6">Create Your Welp. Account</h1>
+            
+            {/* Show unlock explanation banner if coming from review unlock */}
+            {isUnlockFlow && <UnlockExplanationBanner />}
             
             <Tabs 
               defaultValue={initialAccountType} 
