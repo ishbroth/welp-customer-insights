@@ -1,98 +1,92 @@
 
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StarRating from "@/components/StarRating";
-import { Lock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
+import StarRating from "@/components/StarRating";
+import { Badge } from "@/components/ui/badge";
 
 interface ReviewItemProps {
-  review: any;
-  customerId: string;
-  hasFullAccess: (customerId: string) => boolean;
-  shouldShowLimitedReview: boolean;
+  review: {
+    id: string;
+    reviewerId: string;
+    reviewerName: string;
+    rating: number;
+    content: string;
+    date: string;
+  };
+  hasFullAccess: boolean;
+  onEdit?: (reviewId: string) => void;
+  onDelete?: (reviewId: string) => void;
 }
 
-const ReviewItem = ({ 
-  review, 
-  customerId, 
-  hasFullAccess,
-  shouldShowLimitedReview 
-}: ReviewItemProps) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { currentUser, isSubscribed } = useAuth();
-  
-  // Check if user is admin account with permanent subscription
-  const isAdminAccount = currentUser?.id === "10000000-0000-0000-0000-000000000001" || 
-                        currentUser?.id === "10000000-0000-0000-0000-000000000002";
-  
-  // Function to get just the first 3 words of a review
-  const getFirstThreeWords = (text: string) => {
-    if (!text) return "";
-    
-    // Split the text into words and take the first 3
-    const words = text.split(/\s+/);
-    const firstThreeWords = words.slice(0, 3).join(" ");
-    
-    return `${firstThreeWords}...`;
-  };
-  
-  const handleBuyFullReview = (customerId: string) => {
-    toast({
-      title: "Redirecting to payment",
-      description: "You'll be redirected to the payment page to access all reviews for this customer.",
-    });
-    
-    // Redirect to one-time payment page with customerId
-    navigate(`/one-time-review?customerId=${customerId}`);
-  };
+const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete }: ReviewItemProps) => {
+  const { currentUser } = useAuth();
+  const isCurrentUserReview = currentUser?.id === review.reviewerId;
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
 
-  // Format the review date
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch (e) {
-      return "Unknown date";
-    }
+  const getFirstThreeWords = (text: string): string => {
+    const words = text.split(' ');
+    const firstThree = words.slice(0, 3).join(' ');
+    return `${firstThree}${words.length > 3 ? '...' : ''}`;
   };
-
-  // Admin accounts and subscribed users should see full reviews without purchase prompts
-  const shouldShowPurchasePrompt = shouldShowLimitedReview && !hasFullAccess(customerId) && !isAdminAccount && !isSubscribed;
 
   return (
-    <div className="border-t pt-3">
-      <div className="flex justify-between">
-        <div className="flex items-center">
-          <StarRating rating={review.rating} size="sm" />
-          <span className="text-xs text-gray-500 ml-2">
-            {formatDate(review.date)}
-          </span>
+    <div className="border-b border-gray-100 pb-4 last:border-b-0">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <h4 className="font-medium">{review.reviewerName}</h4>
+          <div className="flex items-center mt-1">
+            <StarRating rating={review.rating} />
+            <span className="ml-2 text-sm text-gray-500">
+              {review.rating}.0
+            </span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500">
-          by {review.reviewerName || "Anonymous"}
-        </div>
+        <span className="text-sm text-gray-500">
+          {new Date(review.date).toLocaleDateString()}
+        </span>
       </div>
+      
       <div className="mt-2">
-        {shouldShowPurchasePrompt ? (
+        {hasFullAccess ? (
           <div>
-            <p className="text-sm line-clamp-1">
-              {getFirstThreeWords(review.content)}
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-2"
-              onClick={() => handleBuyFullReview(customerId)}
-            >
-              <Lock className="h-3 w-3 mr-1" />
-              Buy Full Review ($3.00)
-            </Button>
+            <p className="text-gray-700">{review.content}</p>
+            <Badge variant="outline" className="mt-2 text-xs">
+              Full access
+            </Badge>
           </div>
         ) : (
-          <p className="text-sm whitespace-pre-line">{review.content}</p>
+          <div>
+            <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
+            <Badge variant="secondary" className="mt-2 text-xs">
+              Limited access
+            </Badge>
+          </div>
         )}
       </div>
+
+      {/* Edit and Delete buttons for current user's reviews */}
+      {isCurrentUserReview && isBusinessUser && (
+        <div className="flex justify-end gap-2 mt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit?.(review.id)}
+            className="text-gray-600 hover:text-gray-800"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete?.(review.id)}
+            className="text-red-600 hover:text-red-800"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

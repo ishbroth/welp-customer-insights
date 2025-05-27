@@ -1,53 +1,67 @@
 
 import { useAuth } from "@/contexts/auth";
+import { useToast } from "@/hooks/use-toast";
 import ReviewItem from "./ReviewItem";
-import { useReviewsFetching } from "@/hooks/useReviewsFetching";
 import NoReviews from "./NoReviews";
+
+interface Review {
+  id: string;
+  reviewerId: string;
+  reviewerName: string;
+  rating: number;
+  content: string;
+  date: string;
+}
 
 interface ReviewsListProps {
   customerId: string;
-  reviews: any[];
+  reviews: Review[];
   hasFullAccess: (customerId: string) => boolean;
-  isReviewCustomer?: boolean;
-  customerProfile?: any;
+  isReviewCustomer: boolean;
 }
 
-const ReviewsList = ({ 
-  customerId, 
-  reviews, 
-  hasFullAccess, 
-  isReviewCustomer = false,
-  customerProfile
-}: ReviewsListProps) => {
-  const { currentUser, isSubscribed } = useAuth();
-  const { processedReviews } = useReviewsFetching(customerId, reviews, isReviewCustomer);
-  
-  // Check if user is admin account with permanent subscription
-  const isAdminAccount = currentUser?.id === "10000000-0000-0000-0000-000000000001" || 
-                        currentUser?.id === "10000000-0000-0000-0000-000000000002";
-  
-  // Admin accounts and subscribed users should see full reviews
-  const shouldShowLimitedReview = !currentUser || 
-    (currentUser?.type === "customer" && !isSubscribed && !isAdminAccount && !hasFullAccess(customerId)) ||
-    (currentUser?.type === "business" && !isSubscribed && !isAdminAccount);
+const ReviewsList = ({ customerId, reviews, hasFullAccess, isReviewCustomer }: ReviewsListProps) => {
+  const { currentUser } = useAuth();
+  const { toast } = useToast();
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
 
-  if (processedReviews?.length === 0) {
-    return customerProfile ? <NoReviews customerProfile={customerProfile} /> : (
-      <div className="text-center py-4 text-gray-500">No reviews available</div>
-    );
+  const handleEditReview = (reviewId: string) => {
+    // Navigate to edit review page
+    toast({
+      title: "Edit Review",
+      description: "Edit functionality will be implemented soon.",
+    });
+  };
+
+  const handleDeleteReview = (reviewId: string) => {
+    // Show delete confirmation
+    toast({
+      title: "Delete Review",
+      description: "Delete functionality will be implemented soon.",
+      variant: "destructive",
+    });
+  };
+
+  if (reviews.length === 0) {
+    return <NoReviews isReviewCustomer={isReviewCustomer} />;
   }
 
   return (
-    <div className="mt-4 space-y-4">
-      {processedReviews.map((review: any) => (
-        <ReviewItem 
-          key={review.id}
-          review={review}
-          customerId={customerId}
-          hasFullAccess={hasFullAccess}
-          shouldShowLimitedReview={shouldShowLimitedReview}
-        />
-      ))}
+    <div className="space-y-4">
+      <h4 className="font-medium text-gray-900">
+        Reviews ({reviews.length})
+      </h4>
+      <div className="space-y-4">
+        {reviews.map((review) => (
+          <ReviewItem
+            key={review.id}
+            review={review}
+            hasFullAccess={hasFullAccess(customerId)}
+            onEdit={handleEditReview}
+            onDelete={handleDeleteReview}
+          />
+        ))}
+      </div>
     </div>
   );
 };
