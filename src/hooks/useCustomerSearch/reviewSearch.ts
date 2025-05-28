@@ -8,10 +8,20 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log("Searching reviews table with flexible matching...");
   
-  // Get a broader set of reviews to work with
+  // Get a broader set of reviews to work with, including business profile data
   let reviewQuery = supabase
     .from('reviews')
-    .select('id, customer_name, customer_address, customer_city, customer_zipcode, customer_phone, rating')
+    .select(`
+      id, 
+      customer_name, 
+      customer_address, 
+      customer_city, 
+      customer_zipcode, 
+      customer_phone, 
+      rating,
+      business_id,
+      profiles!business_id(name, avatar)
+    `)
     .limit(200); // Increased limit for broader search
 
   const { data: allReviews, error } = await reviewQuery;
@@ -124,7 +134,13 @@ export const searchReviews = async (searchParams: SearchParams) => {
       }
     }
 
-    return { ...review, searchScore: score, matchCount: matches };
+    return { 
+      ...review, 
+      searchScore: score, 
+      matchCount: matches,
+      // Include business profile data in the returned object
+      business_profile: review.profiles
+    };
   });
 
   // Filter and sort by relevance

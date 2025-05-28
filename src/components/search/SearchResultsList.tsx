@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -58,7 +59,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
             business_id,
             customer_name,
             customer_phone,
-            profiles!business_id(name)
+            profiles!business_id(name, avatar)
           `)
           .eq('id', actualReviewId);
           
@@ -78,7 +79,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
               content, 
               created_at,
               business_id,
-              profiles!business_id(name)
+              profiles!business_id(name, avatar)
             `)
             .ilike('customer_name', `%${review.customer_name}%`)
             .order('created_at', { ascending: false });
@@ -99,7 +100,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
             content, 
             created_at,
             business_id,
-            profiles!business_id(name)
+            profiles!business_id(name, avatar)
           `)
           .eq('customer_id', customerId)
           .order('created_at', { ascending: false });
@@ -111,14 +112,15 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
         reviewsData = data || [];
       }
       
-      // Format reviews data
+      // Format reviews data - properly use business profile information
       const formattedReviews = reviewsData ? reviewsData.map(review => ({
         id: review.id,
         rating: review.rating,
         content: review.content,
         date: review.created_at,
         reviewerId: review.business_id,
-        reviewerName: review.profiles?.name || "Anonymous"
+        // Use the business profile name from the joined data
+        reviewerName: review.profiles?.name || "Anonymous Business"
       })) : [];
       
       // Update state with fetched reviews
