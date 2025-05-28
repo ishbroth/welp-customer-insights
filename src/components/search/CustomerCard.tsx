@@ -1,8 +1,7 @@
 
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Customer } from "@/types/search";
-import { ChevronDown, ChevronUp, UserCircle } from "lucide-react";
+import { UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import StarRating from "@/components/StarRating";
@@ -51,6 +50,11 @@ const CustomerCard = ({
     }
   };
 
+  const handleUnlockReviews = () => {
+    // Navigate to signup page with unlock indicator
+    navigate('/signup?unlock=review');
+  };
+
   const getInitials = () => {
     const firstInitial = customer.firstName ? customer.firstName[0] : "";
     const lastInitial = customer.lastName ? customer.lastName[0] : "";
@@ -78,6 +82,74 @@ const CustomerCard = ({
     zipCode: customer.zipCode || ""
   };
 
+  // If user is not signed in, show simplified view
+  if (!currentUser) {
+    return (
+      <Card className="p-4 transition-shadow hover:shadow-md">
+        <div className="flex items-center space-x-3 mb-4">
+          <Avatar className="h-10 w-10 border border-gray-200">
+            {getCustomerAvatar() ? (
+              <AvatarImage src={getCustomerAvatar()!} alt={`${customer.firstName} ${customer.lastName}`} />
+            ) : (
+              <AvatarFallback className="bg-gray-200 text-gray-800">
+                {getInitials()}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div className="flex-1">
+            <div className="flex items-center">
+              <h3 className="font-medium text-lg">
+                {customer.firstName} {customer.lastName}
+              </h3>
+              
+              {customer.totalReviews > 0 && (
+                <Badge variant="outline" className="ml-2">
+                  {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center mt-1">
+              {customer.averageRating > 0 && (
+                <div className="flex items-center">
+                  <StarRating rating={customer.averageRating} />
+                  <span className="ml-2 text-sm text-gray-500">
+                    {customer.averageRating.toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Address info and other details */}
+            <div className="mt-2 text-sm text-gray-600">
+              {customer.address && (
+                <p>{customer.address}</p>
+              )}
+              {(customer.city || customer.state || customer.zipCode) && (
+                <p>
+                  {customer.city}{customer.city && customer.state ? ', ' : ''}{customer.state} {customer.zipCode}
+                </p>
+              )}
+              {customer.phone && (
+                <p className="mt-1">Phone: {customer.phone}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Unlock Reviews button for non-signed-in users */}
+        <Button 
+          onClick={handleUnlockReviews}
+          className="w-full"
+          variant="default"
+        >
+          Unlock Reviews
+        </Button>
+      </Card>
+    );
+  }
+
+  // Original expanded view for signed-in users
   return (
     <Card 
       className={`p-4 transition-shadow hover:shadow-md ${isExpanded ? 'shadow-md' : ''}`}
@@ -150,7 +222,7 @@ const CustomerCard = ({
           </div>
         </div>
 
-        {/* Expand/collapse button */}
+        {/* Expand/collapse button - only for signed-in users */}
         <Button variant="ghost" size="sm" className="rounded-full p-1">
           {isExpanded ? (
             <ChevronUp className="h-5 w-5" />
@@ -160,7 +232,7 @@ const CustomerCard = ({
         </Button>
       </div>
 
-      {/* Expanded section with reviews */}
+      {/* Expanded section with reviews - only for signed-in users */}
       {isExpanded && (
         <div className="mt-4 border-t pt-3">
           <ReviewsList 

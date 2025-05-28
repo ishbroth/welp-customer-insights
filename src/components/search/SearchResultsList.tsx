@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -27,6 +26,11 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   );
 
   const handleSelectCustomer = async (customerId: string) => {
+    // Only allow expansion for signed-in users
+    if (!currentUser) {
+      return;
+    }
+
     // If this customer is already expanded, collapse it
     if (expandedCustomerId === customerId) {
       setExpandedCustomerId(null);
