@@ -11,8 +11,8 @@ interface CustomerInfoProps {
     city?: string;
     state?: string;
     zipCode?: string;
-    totalReviews: number;
-    averageRating: number;
+    totalReviews?: number;
+    averageRating?: number;
     id: string;
   };
   isBusinessUser: boolean;
@@ -42,7 +42,7 @@ const CustomerInfo = ({
           </h3>
         )}
         
-        {customer.totalReviews > 0 && (
+        {customer.totalReviews && customer.totalReviews > 0 && (
           <Badge variant="outline" className="ml-2">
             {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
           </Badge>
@@ -50,7 +50,7 @@ const CustomerInfo = ({
       </div>
       
       <div className="flex items-center mt-1">
-        {customer.averageRating > 0 && (
+        {customer.averageRating && customer.averageRating > 0 && (
           <div className="flex items-center">
             <StarRating rating={customer.averageRating} />
             <span className="ml-2 text-sm text-gray-500">
