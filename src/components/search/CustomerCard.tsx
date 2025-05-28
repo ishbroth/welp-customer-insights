@@ -1,7 +1,7 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { Customer } from "@/types/search";
-import { UserCircle } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import StarRating from "@/components/StarRating";
@@ -25,7 +25,7 @@ const CustomerCard = ({
   handleSelectCustomer,
   hasFullAccess
 }: CustomerCardProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const navigate = useNavigate();
   const isExpanded = expandedCustomerId === customer.id;
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
@@ -82,12 +82,24 @@ const CustomerCard = ({
     zipCode: customer.zipCode || ""
   };
 
+  // Check if user has access (subscription or one-time access)
+  const hasAccess = currentUser && (isSubscribed || hasOneTimeAccess(customer.id));
+
   // If user is not signed in, show simplified view
   if (!currentUser) {
     return (
       <Card className="p-4 transition-shadow hover:shadow-md">
-        <div className="flex items-center space-x-3 mb-4">
-          <Avatar className="h-10 w-10 border border-gray-200">
+        <div className="flex items-start space-x-3">
+          <Button 
+            onClick={handleUnlockReviews}
+            size="sm"
+            variant="default"
+            className="flex-shrink-0"
+          >
+            Unlock Reviews
+          </Button>
+          
+          <Avatar className="h-10 w-10 border border-gray-200 flex-shrink-0">
             {getCustomerAvatar() ? (
               <AvatarImage src={getCustomerAvatar()!} alt={`${customer.firstName} ${customer.lastName}`} />
             ) : (
@@ -96,7 +108,8 @@ const CustomerCard = ({
               </AvatarFallback>
             )}
           </Avatar>
-          <div className="flex-1">
+          
+          <div className="flex-1 min-w-0">
             <div className="flex items-center">
               <h3 className="font-medium text-lg">
                 {customer.firstName} {customer.lastName}
@@ -136,20 +149,11 @@ const CustomerCard = ({
             </div>
           </div>
         </div>
-
-        {/* Unlock Reviews button for non-signed-in users */}
-        <Button 
-          onClick={handleUnlockReviews}
-          className="w-full"
-          variant="default"
-        >
-          Unlock Reviews
-        </Button>
       </Card>
     );
   }
 
-  // Original expanded view for signed-in users
+  // For signed-in users, show the button with appropriate text and functionality
   return (
     <Card 
       className={`p-4 transition-shadow hover:shadow-md ${isExpanded ? 'shadow-md' : ''}`}
@@ -157,10 +161,27 @@ const CustomerCard = ({
     >
       {/* Customer basic info */}
       <div className="flex justify-between items-start">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-start space-x-3">
+          {/* Action button on the left */}
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              if (hasAccess) {
+                handleSelectCustomer(customer.id);
+              } else {
+                handleUnlockReviews();
+              }
+            }}
+            size="sm"
+            variant={hasAccess ? "secondary" : "default"}
+            className="flex-shrink-0"
+          >
+            {hasAccess ? "View Review" : "Unlock Reviews"}
+          </Button>
+
           {/* Add avatar for customer */}
           {isBusinessUser && (
-            <div onClick={handleViewProfile} className="cursor-pointer">
+            <div onClick={handleViewProfile} className="cursor-pointer flex-shrink-0">
               <Avatar className="h-10 w-10 border border-gray-200">
                 {getCustomerAvatar() ? (
                   <AvatarImage src={getCustomerAvatar()!} alt={`${customer.firstName} ${customer.lastName}`} />
@@ -172,7 +193,7 @@ const CustomerCard = ({
               </Avatar>
             </div>
           )}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center">
               {isBusinessUser && !isReviewCustomer ? (
                 <h3 
@@ -223,7 +244,7 @@ const CustomerCard = ({
         </div>
 
         {/* Expand/collapse button - only for signed-in users */}
-        <Button variant="ghost" size="sm" className="rounded-full p-1">
+        <Button variant="ghost" size="sm" className="rounded-full p-1 flex-shrink-0">
           {isExpanded ? (
             <ChevronUp className="h-5 w-5" />
           ) : (
