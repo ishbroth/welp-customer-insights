@@ -1,4 +1,5 @@
 
+
 import { Link, useNavigate } from "react-router-dom";
 import { Customer } from "@/types/search";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -89,65 +90,67 @@ const CustomerCard = ({
   if (!currentUser) {
     return (
       <Card className="p-4 transition-shadow hover:shadow-md">
-        <div className="flex items-start space-x-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-3 flex-1">
+            <Avatar className="h-10 w-10 border border-gray-200 flex-shrink-0">
+              {getCustomerAvatar() ? (
+                <AvatarImage src={getCustomerAvatar()!} alt={`${customer.firstName} ${customer.lastName}`} />
+              ) : (
+                <AvatarFallback className="bg-gray-200 text-gray-800">
+                  {getInitials()}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center">
+                <h3 className="font-medium text-lg">
+                  {customer.firstName} {customer.lastName}
+                </h3>
+                
+                {customer.totalReviews > 0 && (
+                  <Badge variant="outline" className="ml-2">
+                    {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="flex items-center mt-1">
+                {customer.averageRating > 0 && (
+                  <div className="flex items-center">
+                    <StarRating rating={customer.averageRating} />
+                    <span className="ml-2 text-sm text-gray-500">
+                      {customer.averageRating.toFixed(1)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Address info and other details */}
+              <div className="mt-2 text-sm text-gray-600">
+                {customer.address && (
+                  <p>{customer.address}</p>
+                )}
+                {(customer.city || customer.state || customer.zipCode) && (
+                  <p>
+                    {customer.city}{customer.city && customer.state ? ', ' : ''}{customer.state} {customer.zipCode}
+                  </p>
+                )}
+                {customer.phone && (
+                  <p className="mt-1">Phone: {customer.phone}</p>
+                )}
+              </div>
+            </div>
+          </div>
+          
           <Button 
             onClick={handleUnlockReviews}
             size="sm"
             variant="default"
-            className="flex-shrink-0"
+            className="flex-shrink-0 ml-4"
           >
             Unlock Reviews
           </Button>
-          
-          <Avatar className="h-10 w-10 border border-gray-200 flex-shrink-0">
-            {getCustomerAvatar() ? (
-              <AvatarImage src={getCustomerAvatar()!} alt={`${customer.firstName} ${customer.lastName}`} />
-            ) : (
-              <AvatarFallback className="bg-gray-200 text-gray-800">
-                {getInitials()}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center">
-              <h3 className="font-medium text-lg">
-                {customer.firstName} {customer.lastName}
-              </h3>
-              
-              {customer.totalReviews > 0 && (
-                <Badge variant="outline" className="ml-2">
-                  {customer.totalReviews} {customer.totalReviews === 1 ? 'review' : 'reviews'}
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex items-center mt-1">
-              {customer.averageRating > 0 && (
-                <div className="flex items-center">
-                  <StarRating rating={customer.averageRating} />
-                  <span className="ml-2 text-sm text-gray-500">
-                    {customer.averageRating.toFixed(1)}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            {/* Address info and other details */}
-            <div className="mt-2 text-sm text-gray-600">
-              {customer.address && (
-                <p>{customer.address}</p>
-              )}
-              {(customer.city || customer.state || customer.zipCode) && (
-                <p>
-                  {customer.city}{customer.city && customer.state ? ', ' : ''}{customer.state} {customer.zipCode}
-                </p>
-              )}
-              {customer.phone && (
-                <p className="mt-1">Phone: {customer.phone}</p>
-              )}
-            </div>
-          </div>
         </div>
       </Card>
     );
@@ -161,24 +164,7 @@ const CustomerCard = ({
     >
       {/* Customer basic info */}
       <div className="flex justify-between items-start">
-        <div className="flex items-start space-x-3">
-          {/* Action button on the left */}
-          <Button 
-            onClick={(e) => {
-              e.stopPropagation();
-              if (hasAccess) {
-                handleSelectCustomer(customer.id);
-              } else {
-                handleUnlockReviews();
-              }
-            }}
-            size="sm"
-            variant={hasAccess ? "secondary" : "default"}
-            className="flex-shrink-0"
-          >
-            {hasAccess ? "View Review" : "Unlock Reviews"}
-          </Button>
-
+        <div className="flex items-start space-x-3 flex-1">
           {/* Add avatar for customer */}
           {isBusinessUser && (
             <div onClick={handleViewProfile} className="cursor-pointer flex-shrink-0">
@@ -243,14 +229,32 @@ const CustomerCard = ({
           </div>
         </div>
 
-        {/* Expand/collapse button - only for signed-in users */}
-        <Button variant="ghost" size="sm" className="rounded-full p-1 flex-shrink-0">
-          {isExpanded ? (
-            <ChevronUp className="h-5 w-5" />
-          ) : (
-            <ChevronDown className="h-5 w-5" />
-          )}
-        </Button>
+        <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
+          {/* Action button on the right */}
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              if (hasAccess) {
+                handleSelectCustomer(customer.id);
+              } else {
+                handleUnlockReviews();
+              }
+            }}
+            size="sm"
+            variant={hasAccess ? "secondary" : "default"}
+          >
+            {hasAccess ? "View Review" : "Unlock Reviews"}
+          </Button>
+
+          {/* Expand/collapse button - only for signed-in users */}
+          <Button variant="ghost" size="sm" className="rounded-full p-1">
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5" />
+            ) : (
+              <ChevronDown className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Expanded section with reviews - only for signed-in users */}
@@ -284,3 +288,4 @@ const CustomerCard = ({
 };
 
 export default CustomerCard;
+
