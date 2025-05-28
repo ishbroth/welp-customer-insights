@@ -134,12 +134,18 @@ export const searchReviews = async (searchParams: SearchParams) => {
       }
     }
 
+    // Properly format the business profile data
+    const businessProfile = review.profiles ? {
+      name: review.profiles.name || 'Unknown Business',
+      avatar: review.profiles.avatar || undefined
+    } : null;
+
     return { 
       ...review, 
       searchScore: score, 
       matchCount: matches,
-      // Include business profile data in the returned object
-      business_profile: review.profiles
+      // Include properly formatted business profile data
+      business_profile: businessProfile
     };
   });
 
@@ -156,5 +162,6 @@ export const searchReviews = async (searchParams: SearchParams) => {
     .slice(0, 50); // Limit final results
 
   console.log("Flexible review search results:", filteredReviews.length);
+  console.log("Sample review with business profile:", filteredReviews[0]?.business_profile);
   return filteredReviews as ReviewData[];
 };

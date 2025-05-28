@@ -59,8 +59,8 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
         averageRating: review.rating,
         totalReviews: 1,
         isSubscriptionNeeded: true,
-        // Include the business profile data for proper display
-        businessProfile: review.business_profile || null
+        // Use the properly formatted business profile data
+        businessProfile: review.business_profile
       };
       
       customerMap.set(customerKey, customer);
@@ -69,6 +69,7 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
 
   const customers = Array.from(customerMap.values());
   console.log("Review customers processed, total new customers:", customers.length);
+  console.log("Sample customer with business profile:", customers[0]?.businessProfile);
   
   return customers;
 };
