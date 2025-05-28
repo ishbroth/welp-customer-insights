@@ -22,6 +22,11 @@ const Signup = () => {
     setStep(1);
   }, [accountType]);
 
+  useEffect(() => {
+    // Scroll to top when page loads, especially important for unlock flow
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
