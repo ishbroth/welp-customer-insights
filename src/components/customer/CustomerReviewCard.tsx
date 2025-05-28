@@ -3,11 +3,12 @@ import React from "react";
 import { Eye, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 import { useReactionPersistence } from "@/hooks/useReactionPersistence";
+import { useAuth } from "@/contexts/auth";
 
 interface CustomerReviewCardProps {
   review: Review;
@@ -31,6 +32,8 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   onPurchase,
   onReactionToggle,
 }) => {
+  const { isSubscribed } = useAuth();
+  const navigate = useNavigate();
   const { reactions, toggleReaction } = useReactionPersistence(
     review.id, 
     review.reactions || { like: [], funny: [], ohNo: [] }
@@ -59,11 +62,18 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     console.log('Response submitted:', newResponse);
   };
 
+  const handleBusinessNameClick = () => {
+    // Only allow navigation if user is subscribed or has unlocked this review
+    if (isSubscribed || isUnlocked) {
+      navigate(`/business/${review.reviewerId}`);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4">
       <div className="flex justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <Link to={`/business/${review.reviewerId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+          <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               {review.reviewerAvatar ? (
                 <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
@@ -74,12 +84,21 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
               )}
             </Avatar>
             <div>
-              <h3 className="font-semibold hover:text-blue-600 transition-colors">{review.reviewerName}</h3>
+              {(isSubscribed || isUnlocked) ? (
+                <h3 
+                  className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  onClick={handleBusinessNameClick}
+                >
+                  {review.reviewerName}
+                </h3>
+              ) : (
+                <h3 className="font-semibold">{review.reviewerName}</h3>
+              )}
               <p className="text-sm text-gray-500">
                 {new Date(review.date).toLocaleDateString()}
               </p>
             </div>
-          </Link>
+          </div>
         </div>
       </div>
 

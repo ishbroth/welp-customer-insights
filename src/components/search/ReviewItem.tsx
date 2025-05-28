@@ -40,7 +40,7 @@ interface ReviewItemProps {
 }
 
 const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: ReviewItemProps) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isCurrentUserReview = currentUser?.id === review.reviewerId;
@@ -86,11 +86,27 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
     navigate('/signup?unlock=review');
   };
 
+  const handleBusinessNameClick = () => {
+    // Only allow navigation if user is subscribed or has access
+    if (isSubscribed || hasFullAccess) {
+      navigate(`/business/${review.reviewerId}`);
+    }
+  };
+
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0">
       <div className="flex justify-between items-start mb-2">
         <div>
-          <h4 className="font-medium">{review.reviewerName}</h4>
+          {(isSubscribed || hasFullAccess) ? (
+            <h4 
+              className="font-medium cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
+              onClick={handleBusinessNameClick}
+            >
+              {review.reviewerName}
+            </h4>
+          ) : (
+            <h4 className="font-medium">{review.reviewerName}</h4>
+          )}
           <div className="flex items-center mt-1">
             <StarRating rating={review.rating} />
             <span className="ml-2 text-sm text-gray-500">
