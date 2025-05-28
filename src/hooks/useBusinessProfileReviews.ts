@@ -35,6 +35,7 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         reviewerId: review.business_id || '',
         reviewerName: review.customer_name || 'Anonymous',
         customerId: review.customer_id || '',
+        customerName: review.customer_name || 'Anonymous',
         rating: review.rating,
         content: review.content,
         date: review.created_at,
