@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,20 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
 import { UserRound, Building2 } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [accountType, setAccountType] = useState<"customer" | "business">("business");
+  const { currentUser } = useAuth();
+
+  const handleLoggedInClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Already logged in",
+      description: "You are already signed in to your account.",
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -21,11 +33,21 @@ const Index = () => {
               <h1 className="text-4xl md:text-6xl font-bold mb-4">Welp.</h1>
               <p className="text-xl md:text-2xl mb-8">Review your customers. Because businesses are people too.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link to="/signup">
-                  <Button className="bg-white text-[#ea384c] hover:bg-gray-100 font-bold py-3 px-6 rounded-full">
+                {currentUser ? (
+                  <Button 
+                    className="bg-gray-400 text-gray-600 cursor-not-allowed font-bold py-3 px-6 rounded-full"
+                    onClick={handleLoggedInClick}
+                    disabled
+                  >
                     Get Started
                   </Button>
-                </Link>
+                ) : (
+                  <Link to="/signup">
+                    <Button className="bg-white text-[#ea384c] hover:bg-gray-100 font-bold py-3 px-6 rounded-full">
+                      Get Started
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/about">
                   <Button variant="outline" className="border-white text-[#ea384c] hover:bg-white/10 hover:text-white font-bold py-3 px-6 rounded-full">
                     Learn More
@@ -64,14 +86,36 @@ const Index = () => {
                       Help build a supportive community of business owners by highlighting standout customers. Rate your customers 1 to 5 stars and detail your interaction with them. Search for customers before you do business with them and gain valuable insights from other businesses' experiences.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Link to="/login" className="flex-1">
-                        <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
-                          Login
-                        </Button>
-                      </Link>
-                      <Link to="/signup?type=business" className="flex-1">
-                        <Button className="welp-button w-full">Sign Up as Business</Button>
-                      </Link>
+                      {currentUser ? (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
+                            onClick={handleLoggedInClick}
+                            disabled
+                          >
+                            Login
+                          </Button>
+                          <Button 
+                            className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
+                            onClick={handleLoggedInClick}
+                            disabled
+                          >
+                            Sign Up as Business
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Link to="/login" className="flex-1">
+                            <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
+                              Login
+                            </Button>
+                          </Link>
+                          <Link to="/signup?type=business" className="flex-1">
+                            <Button className="welp-button w-full">Sign Up as Business</Button>
+                          </Link>
+                        </>
+                      )}
                     </div>
                     
                     <div className="mt-8 border-t pt-6">
@@ -90,14 +134,36 @@ const Index = () => {
                       Keep on top of your reputation, and stand out as a preferred customer. Sign up or login to view reviews about you and respond to business owners.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Link to="/login" className="flex-1">
-                        <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
-                          Login
-                        </Button>
-                      </Link>
-                      <Link to="/signup?type=customer" className="flex-1">
-                        <Button className="welp-button w-full">Sign Up as Customer</Button>
-                      </Link>
+                      {currentUser ? (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
+                            onClick={handleLoggedInClick}
+                            disabled
+                          >
+                            Login
+                          </Button>
+                          <Button 
+                            className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
+                            onClick={handleLoggedInClick}
+                            disabled
+                          >
+                            Sign Up as Customer
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Link to="/login" className="flex-1">
+                            <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
+                              Login
+                            </Button>
+                          </Link>
+                          <Link to="/signup?type=customer" className="flex-1">
+                            <Button className="welp-button w-full">Sign Up as Customer</Button>
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 </TabsContent>
@@ -145,7 +211,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Testimonials Section */}
         <section className="py-16 bg-welp-bg-light">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">What Business Owners Say</h2>
@@ -189,18 +254,27 @@ const Index = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="py-16 welp-gradient text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-6">Ready to take control?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Join thousands of business owners who use Welp. to make informed decisions about their customers.
             </p>
-            <Link to="/signup">
-              <Button className="bg-white text-welp-primary hover:bg-gray-100 font-bold py-3 px-8 rounded-full text-lg">
+            {currentUser ? (
+              <Button 
+                className="bg-gray-400 text-gray-600 cursor-not-allowed font-bold py-3 px-8 rounded-full text-lg"
+                onClick={handleLoggedInClick}
+                disabled
+              >
                 Get Started Today
               </Button>
-            </Link>
+            ) : (
+              <Link to="/signup">
+                <Button className="bg-white text-welp-primary hover:bg-gray-100 font-bold py-3 px-8 rounded-full text-lg">
+                  Get Started Today
+                </Button>
+              </Link>
+            )}
           </div>
         </section>
       </main>
