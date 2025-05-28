@@ -8,6 +8,7 @@ import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
 import ReviewReactions from "@/components/ReviewReactions";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
+import CustomerReactions from "./CustomerReactions";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BusinessReviewCardProps {
@@ -76,6 +77,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     return "?";
   };
 
+  console.log(`BusinessReviewCard rendering review ${review.id} with reactions:`, review.reactions);
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border relative">
       {/* Review header */}
@@ -95,12 +98,15 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div>
-              <h3 
-                className="font-semibold text-lg cursor-pointer hover:text-blue-600"
-                onClick={handleCustomerClick}
-              >
-                {review.customerName}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 
+                  className="font-semibold text-lg cursor-pointer hover:text-blue-600"
+                  onClick={handleCustomerClick}
+                >
+                  {review.customerName}
+                </h3>
+                <CustomerReactions reactions={review.reactions || { like: [], funny: [], ohNo: [] }} />
+              </div>
               <p className="text-sm text-gray-500">
                 Review written on {formatDate(review.date)}
               </p>
