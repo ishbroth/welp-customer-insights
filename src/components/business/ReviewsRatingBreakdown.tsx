@@ -63,7 +63,7 @@ const ReviewsRatingBreakdown = ({ reviews }: ReviewsRatingBreakdownProps) => {
         <div className="space-y-3">
           {reviews.slice(0, 5).map((review) => (
             <div key={review.id} className="flex items-center justify-between text-sm">
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <span className="font-medium">{review.customerName}</span>
                 <CustomerReactions reactions={review.reactions || { like: [], funny: [], ohNo: [] }} />
               </div>
