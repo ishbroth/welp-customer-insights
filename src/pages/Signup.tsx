@@ -43,7 +43,7 @@ const Signup = () => {
               onValueChange={(value) => setAccountType(value as "business" | "customer")}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="business" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white">
                   <Building2 className="mr-2 h-4 w-4" /> Business Owner
                 </TabsTrigger>
@@ -51,6 +51,12 @@ const Signup = () => {
                   <UserRound className="mr-2 h-4 w-4" /> Customer
                 </TabsTrigger>
               </TabsList>
+              
+              <div className="text-center mb-6">
+                <p className="text-sm text-gray-600">
+                  Already have an account? <Link to="/login" className="text-welp-primary hover:underline">Log In</Link>
+                </p>
+              </div>
               
               <TabsContent value="business">
                 <BusinessSignupForm step={step} setStep={setStep} />
