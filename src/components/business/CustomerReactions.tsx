@@ -10,9 +10,14 @@ interface CustomerReactionsProps {
 }
 
 const CustomerReactions = ({ reactions }: CustomerReactionsProps) => {
+  console.log("CustomerReactions component received reactions:", reactions);
+  
   const totalReactions = reactions.like.length + reactions.funny.length + reactions.ohNo.length;
   
+  console.log("Total reactions count:", totalReactions);
+  
   if (totalReactions === 0) {
+    console.log("No reactions to display");
     return null;
   }
 

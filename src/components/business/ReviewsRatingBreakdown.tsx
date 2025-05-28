@@ -10,6 +10,8 @@ interface ReviewsRatingBreakdownProps {
 }
 
 const ReviewsRatingBreakdown = ({ reviews }: ReviewsRatingBreakdownProps) => {
+  console.log("ReviewsRatingBreakdown received reviews:", reviews);
+  
   // Calculate the breakdown of reviews by star rating
   const ratingBreakdown = [5, 4, 3, 2, 1].map(rating => {
     const count = reviews.filter(review => review.rating === rating).length;
@@ -61,20 +63,23 @@ const ReviewsRatingBreakdown = ({ reviews }: ReviewsRatingBreakdownProps) => {
       <div className="border-t pt-4">
         <h4 className="text-md font-medium mb-3">Recent Reviews</h4>
         <div className="space-y-3">
-          {reviews.slice(0, 5).map((review) => (
-            <div key={review.id} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{review.customerName}</span>
-                <CustomerReactions reactions={review.reactions || { like: [], funny: [], ohNo: [] }} />
+          {reviews.slice(0, 5).map((review) => {
+            console.log(`Rendering review ${review.id} with reactions:`, review.reactions);
+            return (
+              <div key={review.id} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{review.customerName}</span>
+                  <CustomerReactions reactions={review.reactions || { like: [], funny: [], ohNo: [] }} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <StarRating rating={review.rating} size="sm" />
+                  <span className="text-gray-500">
+                    {new Date(review.date).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <StarRating rating={review.rating} size="sm" />
-                <span className="text-gray-500">
-                  {new Date(review.date).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

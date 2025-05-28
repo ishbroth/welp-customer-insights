@@ -39,12 +39,15 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         if (storedReactions) {
           try {
             reactions = JSON.parse(storedReactions);
+            console.log(`Loaded reactions for review ${review.id}:`, reactions);
           } catch (error) {
             console.error('Error parsing stored reactions:', error);
           }
+        } else {
+          console.log(`No stored reactions found for review ${review.id}`);
         }
 
-        return {
+        const transformedReview = {
           id: review.id,
           reviewerId: review.business_id || '',
           reviewerName: review.customer_name || 'Anonymous',
@@ -57,9 +60,12 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
           reactions: reactions,
           responses: []
         };
+        
+        console.log(`Transformed review ${review.id}:`, transformedReview);
+        return transformedReview;
       });
       
-      console.log("Transformed business reviews:", transformedReviews);
+      console.log("All transformed business reviews:", transformedReviews);
       return transformedReviews;
     },
     enabled: !!businessId && hasAccess,
