@@ -29,20 +29,35 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         throw error;
       }
       
-      // Transform the data to match the Review type
-      const transformedReviews: Review[] = (data || []).map(review => ({
-        id: review.id,
-        reviewerId: review.business_id || '',
-        reviewerName: review.customer_name || 'Anonymous',
-        customerId: review.customer_id || '',
-        customerName: review.customer_name || 'Anonymous',
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at,
-        location: `${review.customer_city || ''}, ${review.customer_zipcode || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || 'Unknown',
-        reactions: { like: [], funny: [], ohNo: [] },
-        responses: []
-      }));
+      // Transform the data to match the Review type and load reactions from localStorage
+      const transformedReviews: Review[] = (data || []).map(review => {
+        // Load reactions from localStorage for this review
+        const storageKey = `reactions_${review.id}`;
+        const storedReactions = localStorage.getItem(storageKey);
+        let reactions = { like: [], funny: [], ohNo: [] };
+        
+        if (storedReactions) {
+          try {
+            reactions = JSON.parse(storedReactions);
+          } catch (error) {
+            console.error('Error parsing stored reactions:', error);
+          }
+        }
+
+        return {
+          id: review.id,
+          reviewerId: review.business_id || '',
+          reviewerName: review.customer_name || 'Anonymous',
+          customerId: review.customer_id || '',
+          customerName: review.customer_name || 'Anonymous',
+          rating: review.rating,
+          content: review.content,
+          date: review.created_at,
+          location: `${review.customer_city || ''}, ${review.customer_zipcode || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || 'Unknown',
+          reactions: reactions,
+          responses: []
+        };
+      });
       
       console.log("Transformed business reviews:", transformedReviews);
       return transformedReviews;
