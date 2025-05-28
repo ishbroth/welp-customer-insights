@@ -8,6 +8,7 @@ import ContentRejectionDialog from "@/components/moderation/ContentRejectionDial
 import BusinessReviewsSubscriptionBanner from "@/components/business/BusinessReviewsSubscriptionBanner";
 import BusinessReviewsHeader from "@/components/business/BusinessReviewsHeader";
 import BusinessReviewsList from "@/components/business/BusinessReviewsList";
+import ReviewsRatingBreakdown from "@/components/business/ReviewsRatingBreakdown";
 import { useBusinessReviews } from "@/hooks/useBusinessReviews";
 
 const BusinessReviews = () => {
@@ -47,6 +48,8 @@ const BusinessReviews = () => {
             />
             
             <BusinessReviewsSubscriptionBanner hasSubscription={hasSubscription} />
+            
+            <ReviewsRatingBreakdown reviews={workingReviews} />
             
             <BusinessReviewsList 
               reviews={workingReviews}
