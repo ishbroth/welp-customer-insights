@@ -12,7 +12,9 @@ import ProfileErrorState from "@/components/business/ProfileErrorState";
 import BusinessBasicInfo from "@/components/business/BusinessBasicInfo";
 import BusinessContactInfo from "@/components/business/BusinessContactInfo";
 import BusinessDetailsInfo from "@/components/business/BusinessDetailsInfo";
+import ReviewsRatingBreakdown from "@/components/business/ReviewsRatingBreakdown";
 import { useBusinessProfile } from "@/hooks/useBusinessProfile";
+import { useBusinessProfileReviews } from "@/hooks/useBusinessProfileReviews";
 
 const BusinessProfile = () => {
   const { businessId } = useParams<{ businessId: string }>();
@@ -24,6 +26,9 @@ const BusinessProfile = () => {
   
   // Fetch business profile data using the custom hook
   const { businessProfile, isLoading, error, refetch } = useBusinessProfile(businessId, hasAccess);
+  
+  // Fetch business reviews for the rating breakdown
+  const { reviews: businessReviews, isLoading: reviewsLoading } = useBusinessProfileReviews(businessId, hasAccess);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -72,6 +77,13 @@ const BusinessProfile = () => {
                   />
                   
                   <BusinessDetailsInfo businessInfo={businessProfile.business_info} />
+                  
+                  {/* Reviews Rating Breakdown */}
+                  {!reviewsLoading && businessReviews && businessReviews.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <ReviewsRatingBreakdown reviews={businessReviews} />
+                    </div>
+                  )}
                   
                   {/* Read-only banner */}
                   <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
