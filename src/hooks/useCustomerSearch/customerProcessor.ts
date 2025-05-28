@@ -1,6 +1,32 @@
 
-import { ReviewData } from "./types";
+import { ReviewData, ProfileCustomer } from "./types";
 import { Customer } from "@/types/search";
+
+export const processProfileCustomers = async (profiles: ProfileCustomer[]): Promise<Customer[]> => {
+  console.log("Processing profile customers...");
+  
+  const customers = profiles.map(profile => {
+    const customer: Customer = {
+      id: profile.id,
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      phone: profile.phone || '',
+      address: profile.address || '',
+      city: profile.city || '',
+      state: profile.state || '',
+      zipCode: profile.zipcode || '',
+      averageRating: 0,
+      totalReviews: 0,
+      isSubscriptionNeeded: false,
+      businessProfile: null
+    };
+    
+    return customer;
+  });
+
+  console.log("Profile customers processed, total customers:", customers.length);
+  return customers;
+};
 
 export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
   console.log("Processing review customers...");

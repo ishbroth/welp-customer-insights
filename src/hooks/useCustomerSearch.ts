@@ -58,8 +58,8 @@ export const useCustomerSearch = () => {
         // Process customers from profiles
         const profileCustomers = await processProfileCustomers(profilesData);
         
-        // Process customers from reviews (excluding duplicates)
-        const reviewCustomers = processReviewCustomers(reviewsData, profileCustomers);
+        // Process customers from reviews
+        const reviewCustomers = processReviewCustomers(reviewsData);
         
         // Combine results
         const combinedCustomers = [...profileCustomers, ...reviewCustomers];

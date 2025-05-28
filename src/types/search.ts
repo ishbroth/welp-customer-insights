@@ -8,6 +8,7 @@ export interface Customer {
   city: string;
   state: string;
   zipCode: string;
+  avatar?: string;
   averageRating?: number;
   totalReviews?: number;
   isSubscriptionNeeded?: boolean;
