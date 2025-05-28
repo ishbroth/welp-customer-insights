@@ -30,7 +30,8 @@ export interface ReviewData {
   customer_zipcode: string;
   customer_phone: string;
   rating: number;
-  business_profile?: {
+  business_id: string;
+  business_profile: {
     name: string;
     avatar?: string;
   } | null;

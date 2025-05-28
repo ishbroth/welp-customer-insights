@@ -140,12 +140,25 @@ export const searchReviews = async (searchParams: SearchParams) => {
       avatar: review.profiles.avatar || undefined
     } : null;
 
-    return { 
-      ...review, 
-      searchScore: score, 
-      matchCount: matches,
-      // Include properly formatted business profile data
+    console.log("Business profile for review:", review.id, businessProfile);
+
+    // Return the properly formatted review data
+    const formattedReview: ReviewData = {
+      id: review.id,
+      customer_name: review.customer_name || '',
+      customer_address: review.customer_address || '',
+      customer_city: review.customer_city || '',
+      customer_zipcode: review.customer_zipcode || '',
+      customer_phone: review.customer_phone || '',
+      rating: review.rating,
+      business_id: review.business_id,
       business_profile: businessProfile
+    };
+
+    return { 
+      ...formattedReview, 
+      searchScore: score, 
+      matchCount: matches
     };
   });
 
@@ -163,5 +176,5 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log("Flexible review search results:", filteredReviews.length);
   console.log("Sample review with business profile:", filteredReviews[0]?.business_profile);
-  return filteredReviews as ReviewData[];
+  return filteredReviews;
 };

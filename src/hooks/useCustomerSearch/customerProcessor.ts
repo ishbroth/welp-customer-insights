@@ -34,6 +34,8 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
   const customerMap = new Map<string, Customer>();
 
   reviews.forEach(review => {
+    console.log("Processing review with business profile:", review.business_profile);
+    
     const customerKey = `${review.customer_name || ''}_${review.customer_phone || ''}_${review.customer_address || ''}`.toLowerCase();
     
     if (customerMap.has(customerKey)) {
@@ -59,10 +61,11 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
         averageRating: review.rating,
         totalReviews: 1,
         isSubscriptionNeeded: true,
-        // Use the properly formatted business profile data
+        // Use the business profile data directly from the review
         businessProfile: review.business_profile
       };
       
+      console.log("Created customer with business profile:", customer.businessProfile);
       customerMap.set(customerKey, customer);
     }
   });
