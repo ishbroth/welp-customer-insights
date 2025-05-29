@@ -25,6 +25,10 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
   );
 
+  const handleClearSearch = () => {
+    navigate('/search');
+  };
+
   const handleSelectCustomer = async (customerId: string) => {
     // Only allow expansion for signed-in users
     if (!currentUser) {
@@ -177,7 +181,15 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
 
   return (
     <div className="mt-6">
-      <h3 className="font-semibold mb-2">Search Results ({customers.length})</h3>
+      <div className="flex items-center gap-4 mb-2">
+        <h3 className="font-semibold">Search Results ({customers.length})</h3>
+        <button 
+          onClick={handleClearSearch}
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          clear search
+        </button>
+      </div>
       <div className="space-y-3">
         {customers.map(customer => (
           <CustomerCard
