@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { useToast } from "@/hooks/use-toast";
+
+import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import CustomerCard from "./CustomerCard";
 import EmptySearchResults from "./EmptySearchResults";
-import { supabase } from "@/integrations/supabase/client";
+import SearchResultsHeader from "./SearchResultsHeader";
+import { useAuth } from "@/contexts/auth";
+import { useCustomerReviewsData } from "@/hooks/useCustomerReviewsData";
+import { useClearSearch } from "@/hooks/useClearSearch";
 
 interface SearchResultsListProps {
   customers: Customer[];
@@ -13,179 +14,20 @@ interface SearchResultsListProps {
 }
 
 const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => {
-  const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
-  const [customerReviews, setCustomerReviews] = useState<{[key: string]: any[]}>({});
+  const { currentUser } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { clearSearch } = useClearSearch();
+  const {
+    expandedCustomerId,
+    customerReviews,
+    handleSelectCustomer,
+    hasFullAccess
+  } = useCustomerReviewsData();
 
   // Check if any search parameters are present to determine if a search has been performed
   const hasSearchParams = Array.from(searchParams.entries()).some(([key, value]) => 
     value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
   );
-
-  const handleClearSearch = () => {
-    // Clear all search parameters while staying on the same page
-    setSearchParams({});
-    
-    // Clear the form fields by dispatching events to trigger form reset
-    const formFields = ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'];
-    formFields.forEach(fieldName => {
-      const input = document.querySelector(`input[placeholder="${fieldName === 'firstName' ? 'First Name' : fieldName === 'lastName' ? 'Last Name' : fieldName === 'phone' ? 'Phone Number' : fieldName === 'address' ? 'Address' : fieldName === 'city' ? 'City' : fieldName === 'zipCode' ? 'ZIP Code' : fieldName}"]`) as HTMLInputElement;
-      if (input) {
-        input.value = '';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    });
-    
-    // Clear the state dropdown
-    const stateSelect = document.querySelector('[aria-label="State"]') as HTMLElement;
-    if (stateSelect) {
-      stateSelect.click();
-      setTimeout(() => {
-        const placeholderOption = document.querySelector('[data-value=""]');
-        if (placeholderOption) {
-          (placeholderOption as HTMLElement).click();
-        }
-      }, 100);
-    }
-  };
-
-  const handleSelectCustomer = async (customerId: string) => {
-    // Only allow expansion for signed-in users
-    if (!currentUser) {
-      return;
-    }
-
-    // If this customer is already expanded, collapse it
-    if (expandedCustomerId === customerId) {
-      setExpandedCustomerId(null);
-      return;
-    }
-
-    // Otherwise, expand this customer
-    setExpandedCustomerId(customerId);
-    
-    // Check if we already fetched reviews for this customer
-    if (customerReviews[customerId]) {
-      return;
-    }
-    
-    try {
-      let reviewsData = [];
-      
-      // If this is a review-based customer (ID starts with "review-customer-")
-      if (customerId.startsWith('review-customer-')) {
-        const actualReviewId = customerId.replace('review-customer-', '');
-        
-        // First get the specific review that this customer was found from
-        const { data: reviewData, error: reviewError } = await supabase
-          .from('reviews')
-          .select(`
-            id, 
-            rating, 
-            content, 
-            created_at,
-            business_id,
-            customer_name,
-            customer_phone,
-            profiles!business_id(name, avatar)
-          `)
-          .eq('id', actualReviewId);
-          
-        if (reviewError) {
-          throw reviewError;
-        }
-        
-        if (reviewData && reviewData.length > 0) {
-          const review = reviewData[0];
-          
-          // Find other reviews for same customer name
-          const { data: similarReviews, error: similarError } = await supabase
-            .from('reviews')
-            .select(`
-              id, 
-              rating, 
-              content, 
-              created_at,
-              business_id,
-              profiles!business_id(name, avatar)
-            `)
-            .ilike('customer_name', `%${review.customer_name}%`)
-            .order('created_at', { ascending: false });
-            
-          if (similarError) {
-            throw similarError;
-          }
-          
-          reviewsData = similarReviews || [];
-        }
-      } else {
-        // This is a regular customer from profiles, fetch their reviews
-        const { data, error } = await supabase
-          .from('reviews')
-          .select(`
-            id, 
-            rating, 
-            content, 
-            created_at,
-            business_id,
-            profiles!business_id(name, avatar)
-          `)
-          .eq('customer_id', customerId)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        reviewsData = data || [];
-      }
-      
-      // Format reviews data - properly use business profile information
-      const formattedReviews = reviewsData ? reviewsData.map(review => ({
-        id: review.id,
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at,
-        reviewerId: review.business_id,
-        // Use the business profile name from the joined data
-        reviewerName: review.profiles?.name || "Anonymous Business"
-      })) : [];
-      
-      // Update state with fetched reviews
-      setCustomerReviews(prev => ({
-        ...prev,
-        [customerId]: formattedReviews
-      }));
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch customer reviews.",
-        variant: "destructive"
-      });
-      
-      // Set empty array for this customer to prevent repeated fetch attempts
-      setCustomerReviews(prev => ({
-        ...prev,
-        [customerId]: []
-      }));
-    }
-  };
-
-  // Check if user has access to the customer's full reviews
-  const hasFullAccess = (customerId: string) => {
-    // If the user is logged in and has a subscription, they have access
-    if (currentUser && isSubscribed) return true;
-    
-    // If the user is an admin, they have access
-    if (currentUser?.type === "admin") return true;
-    
-    // Check if the user has paid for one-time access to this specific customer
-    return hasOneTimeAccess(customerId);
-  };
 
   // Only show loading if a search has been performed and is currently loading
   if (isLoading && hasSearchParams) {
@@ -204,15 +46,10 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
 
   return (
     <div className="mt-6">
-      <div className="flex items-center gap-4 mb-2">
-        <h3 className="font-semibold">Search Results ({customers.length})</h3>
-        <button 
-          onClick={handleClearSearch}
-          className="text-sm text-blue-600 hover:text-blue-800 underline"
-        >
-          clear search
-        </button>
-      </div>
+      <SearchResultsHeader 
+        resultsCount={customers.length}
+        onClearSearch={clearSearch}
+      />
       <div className="space-y-3">
         {customers.map(customer => (
           <CustomerCard
