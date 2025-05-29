@@ -25,6 +25,8 @@ interface ReviewFormProps {
   setCustomerAddress: (value: string) => void;
   customerCity: string;
   setCustomerCity: (value: string) => void;
+  customerState: string;
+  setCustomerState: (value: string) => void;
   customerZipCode: string;
   setCustomerZipCode: (value: string) => void;
   
@@ -60,6 +62,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   setCustomerAddress,
   customerCity,
   setCustomerCity,
+  customerState,
+  setCustomerState,
   customerZipCode,
   setCustomerZipCode,
   rating,
@@ -81,6 +85,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           customerPhone={customerPhone}
           customerAddress={customerAddress}
           customerCity={customerCity}
+          customerState={customerState}
           customerZipCode={customerZipCode}
           isNewCustomer={isNewCustomer}
           customer={customer}
@@ -89,6 +94,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           setCustomerPhone={setCustomerPhone}
           setCustomerAddress={setCustomerAddress}
           setCustomerCity={setCustomerCity}
+          setCustomerState={setCustomerState}
           setCustomerZipCode={setCustomerZipCode}
         />
         

@@ -2,6 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
+import StateSelect from "@/components/search/StateSelect";
 
 interface CustomerInfoFormProps {
   customerFirstName: string;
@@ -9,6 +10,7 @@ interface CustomerInfoFormProps {
   customerPhone: string;
   customerAddress: string;
   customerCity: string;
+  customerState: string;
   customerZipCode: string;
   isNewCustomer: boolean;
   customer: any;
@@ -17,6 +19,7 @@ interface CustomerInfoFormProps {
   setCustomerPhone: (value: string) => void;
   setCustomerAddress: (value: string) => void;
   setCustomerCity: (value: string) => void;
+  setCustomerState: (value: string) => void;
   setCustomerZipCode: (value: string) => void;
 }
 
@@ -26,6 +29,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customerPhone,
   customerAddress,
   customerCity,
+  customerState,
   customerZipCode,
   isNewCustomer,
   customer,
@@ -34,6 +38,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   setCustomerPhone,
   setCustomerAddress,
   setCustomerCity,
+  setCustomerState,
   setCustomerZipCode,
 }) => {
   return (
@@ -87,27 +92,35 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
         />
       </div>
       
-      <div>
-        <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
-        <Input
-          id="customerCity"
-          value={customerCity}
-          onChange={(e) => setCustomerCity(e.target.value)}
-          className="welp-input"
-          disabled={!isNewCustomer && !!customer}
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerZipCode" className="block text-sm font-medium mb-1">ZIP Code (where experience took place)</label>
-        <Input
-          id="customerZipCode"
-          value={customerZipCode}
-          onChange={(e) => setCustomerZipCode(e.target.value)}
-          className="welp-input"
-          disabled={!isNewCustomer && !!customer}
-          required
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
+          <Input
+            id="customerCity"
+            value={customerCity}
+            onChange={(e) => setCustomerCity(e.target.value)}
+            className="welp-input"
+            disabled={!isNewCustomer && !!customer}
+          />
+        </div>
+        <div>
+          <label htmlFor="customerState" className="block text-sm font-medium mb-1">State</label>
+          <StateSelect
+            value={customerState}
+            onValueChange={setCustomerState}
+          />
+        </div>
+        <div>
+          <label htmlFor="customerZipCode" className="block text-sm font-medium mb-1">ZIP Code (where experience took place)</label>
+          <Input
+            id="customerZipCode"
+            value={customerZipCode}
+            onChange={(e) => setCustomerZipCode(e.target.value)}
+            className="welp-input"
+            disabled={!isNewCustomer && !!customer}
+            required
+          />
+        </div>
       </div>
     </div>
   );

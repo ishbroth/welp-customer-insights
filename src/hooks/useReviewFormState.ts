@@ -16,6 +16,7 @@ export const useReviewFormState = () => {
   const searchParamPhone = searchParams.get("phone") || "";
   const searchParamAddress = searchParams.get("address") || "";
   const searchParamCity = searchParams.get("city") || "";
+  const searchParamState = searchParams.get("state") || "";
   const searchParamZipCode = searchParams.get("zipCode") || "";
   
   const reviewData = location.state?.reviewData;
@@ -30,6 +31,7 @@ export const useReviewFormState = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerCity, setCustomerCity] = useState("");
+  const [customerState, setCustomerState] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [photos, setPhotos] = useState<Array<{ file: File; caption: string; preview: string }>>([]);
@@ -56,6 +58,7 @@ export const useReviewFormState = () => {
       setCustomerPhone(reviewData.phone || "");
       setCustomerAddress(reviewData.address || "");
       setCustomerCity(reviewData.city || "");
+      setCustomerState(reviewData.state || "");
       setCustomerZipCode(reviewData.zipCode || "");
     } else {
       // Pre-fill form with search parameters from URL if not editing
@@ -64,6 +67,7 @@ export const useReviewFormState = () => {
       setCustomerPhone(searchParamPhone);
       setCustomerAddress(searchParamAddress);
       setCustomerCity(searchParamCity);
+      setCustomerState(searchParamState);
       setCustomerZipCode(searchParamZipCode);
     }
     
@@ -86,6 +90,7 @@ export const useReviewFormState = () => {
     searchParamPhone, 
     searchParamAddress, 
     searchParamCity, 
+    searchParamState,
     searchParamZipCode
   ]);
 
@@ -116,6 +121,8 @@ export const useReviewFormState = () => {
     setCustomerAddress,
     customerCity,
     setCustomerCity,
+    customerState,
+    setCustomerState,
     customerZipCode,
     setCustomerZipCode,
     isNewCustomer,
