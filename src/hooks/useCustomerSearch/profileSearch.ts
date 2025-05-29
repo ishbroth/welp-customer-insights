@@ -15,7 +15,11 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     .eq('type', 'customer')
     .limit(200); // Increased limit for broader search
 
-  // Get all customer profiles first, then we'll do intelligent filtering in JavaScript
+  // If only state is provided, add a direct filter for better performance
+  if (state && !firstName && !lastName && !phone && !address && !city && !zipCode) {
+    profileQuery = profileQuery.ilike('state', `%${state}%`);
+  }
+
   const { data: allProfiles, error } = await profileQuery;
   
   if (error) {
@@ -103,11 +107,16 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    // State matching
+    // State matching - more lenient for state-only searches
     if (state && profile.state) {
-      const similarity = calculateStringSimilarity(state.toLowerCase(), profile.state.toLowerCase());
-      if (similarity > 0.6) {
-        score += similarity;
+      const stateMatch = profile.state.toLowerCase().includes(state.toLowerCase()) || 
+                        state.toLowerCase().includes(profile.state.toLowerCase()) ||
+                        calculateStringSimilarity(state.toLowerCase(), profile.state.toLowerCase()) > 0.6;
+      
+      if (stateMatch) {
+        // Give higher score if this is a state-only search
+        const isStateOnlySearch = !firstName && !lastName && !phone && !address && !city && !zipCode;
+        score += isStateOnlySearch ? 3 : 1;
         matches++;
       }
     }
@@ -124,9 +133,12 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     return { ...profile, searchScore: score, matchCount: matches };
   });
   
-  // Filter and sort by relevance
+  // Filter and sort by relevance - more lenient for single field searches
+  const hasMultipleFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean).length > 1;
+  const minScore = hasMultipleFields ? 0.5 : 0.1; // Lower threshold for single field searches
+  
   const filteredProfiles = scoredProfiles
-    .filter(profile => profile.searchScore > 0.5 || profile.matchCount > 0) // Very lenient threshold
+    .filter(profile => profile.searchScore > minScore || profile.matchCount > 0)
     .sort((a, b) => {
       // Sort by match count first, then by score
       if (b.matchCount !== a.matchCount) {

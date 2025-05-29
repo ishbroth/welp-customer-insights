@@ -162,9 +162,12 @@ export const searchReviews = async (searchParams: SearchParams) => {
     };
   });
 
-  // Filter and sort by relevance
+  // Filter and sort by relevance - more lenient for single field searches
+  const hasMultipleFields = [firstName, lastName, phone, address, city, zipCode].filter(Boolean).length > 1;
+  const minScore = hasMultipleFields ? 0.5 : 0.1; // Lower threshold for single field searches
+
   const filteredReviews = scoredReviews
-    .filter(review => review.searchScore > 0.5 || review.matchCount > 0) // Very lenient threshold
+    .filter(review => review.searchScore > minScore || review.matchCount > 0)
     .sort((a, b) => {
       // Sort by match count first, then by score
       if (b.matchCount !== a.matchCount) {
