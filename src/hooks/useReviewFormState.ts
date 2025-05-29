@@ -35,7 +35,7 @@ export const useReviewFormState = () => {
   const [customerState, setCustomerState] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
-  const [photos, setPhotos] = useState<Array<{ file: File; caption: string; preview: string }>>([]);
+  const [photos, setPhotos] = useState<Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>>([]);
   
   // Duplicate review check states
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -91,7 +91,9 @@ export const useReviewFormState = () => {
                   return {
                     file,
                     caption: photo.caption || "",
-                    preview: photo.photo_url
+                    preview: photo.photo_url,
+                    isExisting: true, // Mark as existing photo
+                    existingId: photo.id
                   };
                 } catch (error) {
                   console.error("Error converting photo to file:", error);
@@ -101,7 +103,7 @@ export const useReviewFormState = () => {
 
               const convertedPhotos = await Promise.all(photoPromises);
               const validPhotos = convertedPhotos.filter(photo => photo !== null);
-              setPhotos(validPhotos as Array<{ file: File; caption: string; preview: string }>);
+              setPhotos(validPhotos as Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>);
             }
           } catch (error) {
             console.error("Error loading existing photos:", error);

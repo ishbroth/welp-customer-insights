@@ -78,7 +78,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
             currentUser.id,
             uploadProgress.updateProgress
           );
-          await savePhotoRecords(uploadedPhotos, finalReviewId);
+          await savePhotoRecords(uploadedPhotos, finalReviewId, isEditing);
           uploadProgress.completeUpload();
         } catch (photoError) {
           console.error("Error uploading photos:", photoError);

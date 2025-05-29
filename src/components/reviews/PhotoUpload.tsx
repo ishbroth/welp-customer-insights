@@ -4,11 +4,10 @@ import { Upload, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface PhotoUploadProps {
-  photos: Array<{ file: File; caption: string; preview: string }>;
-  setPhotos: React.Dispatch<React.SetStateAction<Array<{ file: File; caption: string; preview: string }>>>;
+  photos: Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>;
+  setPhotos: React.Dispatch<React.SetStateAction<Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>>>;
 }
 
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, setPhotos }) => {
@@ -47,7 +46,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, setPhotos }) => {
       }
 
       const preview = URL.createObjectURL(file);
-      setPhotos(prev => [...prev, { file, caption: "", preview }]);
+      setPhotos(prev => [...prev, { file, caption: "", preview, isExisting: false }]);
     });
 
     // Reset the input
@@ -59,7 +58,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, setPhotos }) => {
   const removePhoto = (index: number) => {
     setPhotos(prev => {
       const newPhotos = [...prev];
-      URL.revokeObjectURL(newPhotos[index].preview);
+      // Only revoke URL if it's not an existing photo (existing photos use original URLs)
+      if (!newPhotos[index].isExisting) {
+        URL.revokeObjectURL(newPhotos[index].preview);
+      }
       newPhotos.splice(index, 1);
       return newPhotos;
     });
@@ -119,11 +121,18 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ photos, setPhotos }) => {
           <h4 className="text-sm font-medium">Uploaded Photos ({photos.length}/6)</h4>
           {photos.map((photo, index) => (
             <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
-              <img 
-                src={photo.preview} 
-                alt={`Upload ${index + 1}`}
-                className="h-16 w-16 object-cover rounded"
-              />
+              <div className="relative">
+                <img 
+                  src={photo.preview} 
+                  alt={`Upload ${index + 1}`}
+                  className="h-16 w-16 object-cover rounded"
+                />
+                {photo.isExisting && (
+                  <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1 rounded-bl">
+                    Existing
+                  </div>
+                )}
+              </div>
               <div className="flex-1 space-y-2">
                 <Input
                   type="text"
