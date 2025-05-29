@@ -131,12 +131,33 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    // Zip code matching
+    // Enhanced zip code matching with proximity scoring
     if (cleanZip && profile.zipcode) {
       const profileZip = profile.zipcode.replace(/\D/g, '');
-      if (profileZip.startsWith(cleanZip) || profileZip.includes(cleanZip) || cleanZip.includes(profileZip)) {
-        score += 2;
+      
+      // Exact match gets highest priority
+      if (profileZip === cleanZip) {
+        score += 10; // Very high score for exact matches
         matches++;
+      }
+      // Check for partial matches or nearby zip codes
+      else if (profileZip.startsWith(cleanZip) || cleanZip.startsWith(profileZip)) {
+        score += 5; // High score for prefix matches
+        matches++;
+      }
+      // Check for nearby zip codes (within ~20 miles approximation)
+      else if (cleanZip.length >= 5 && profileZip.length >= 5) {
+        const searchZipNum = parseInt(cleanZip.slice(0, 5));
+        const profileZipNum = parseInt(profileZip.slice(0, 5));
+        const zipDifference = Math.abs(searchZipNum - profileZipNum);
+        
+        // Approximate 20-mile radius using zip code ranges
+        // This is a rough approximation as zip code proximity varies by region
+        if (zipDifference <= 50) { // Within ~20 miles for most areas
+          const proximityScore = Math.max(0, 2 - (zipDifference / 25)); // Closer zips get higher scores
+          score += proximityScore;
+          matches++;
+        }
       }
     }
     
@@ -162,7 +183,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
   
   console.log("Profile search results:", filteredProfiles.length);
   filteredProfiles.forEach(profile => {
-    console.log(`Profile: ${profile.first_name} ${profile.last_name}, State: ${profile.state}, Score: ${profile.searchScore}`);
+    console.log(`Profile: ${profile.first_name} ${profile.last_name}, Zip: ${profile.zipcode}, Score: ${profile.searchScore}`);
   });
   
   return filteredProfiles as ProfileCustomer[];

@@ -135,18 +135,33 @@ export const searchReviews = async (searchParams: SearchParams) => {
       console.log("State search requested but reviews table doesn't have customer state field");
     }
 
-    // Zip code matching - flexible
+    // Enhanced zip code matching with proximity scoring
     if (cleanZip && review.customer_zipcode) {
       const reviewZip = review.customer_zipcode.replace(/\D/g, '');
       
-      // Check for zip codes that start with the input, contain it, or are nearby
-      if (reviewZip.startsWith(cleanZip) || 
-          reviewZip.includes(cleanZip) ||
-          cleanZip.startsWith(reviewZip) ||
-          (cleanZip.length >= 5 && reviewZip.length >= 5 && 
-           Math.abs(parseInt(cleanZip.slice(0, 5)) - parseInt(reviewZip.slice(0, 5))) <= 10)) {
-        score += 2;
+      // Exact match gets highest priority
+      if (reviewZip === cleanZip) {
+        score += 10; // Very high score for exact matches
         matches++;
+      }
+      // Check for partial matches
+      else if (reviewZip.startsWith(cleanZip) || cleanZip.startsWith(reviewZip)) {
+        score += 5; // High score for prefix matches
+        matches++;
+      }
+      // Check for nearby zip codes (within ~20 miles approximation)
+      else if (cleanZip.length >= 5 && reviewZip.length >= 5) {
+        const searchZipNum = parseInt(cleanZip.slice(0, 5));
+        const reviewZipNum = parseInt(reviewZip.slice(0, 5));
+        const zipDifference = Math.abs(searchZipNum - reviewZipNum);
+        
+        // Approximate 20-mile radius using zip code ranges
+        // This is a rough approximation as zip code proximity varies by region
+        if (zipDifference <= 50) { // Within ~20 miles for most areas
+          const proximityScore = Math.max(0, 2 - (zipDifference / 25)); // Closer zips get higher scores
+          score += proximityScore;
+          matches++;
+        }
       }
     }
 
@@ -194,5 +209,9 @@ export const searchReviews = async (searchParams: SearchParams) => {
     .slice(0, 100); // Increased final results limit
 
   console.log("Review search results:", filteredReviews.length);
+  filteredReviews.forEach(review => {
+    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}`);
+  });
+  
   return filteredReviews;
 };
