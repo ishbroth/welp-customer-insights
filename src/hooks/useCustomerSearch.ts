@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
@@ -57,8 +58,9 @@ export const useCustomerSearch = () => {
         // Process customers from profiles
         const profileCustomers = await processProfileCustomers(profilesData);
         
-        // Process customers from reviews  
-        const reviewCustomers = processReviewCustomers(reviewsData);
+        // Process customers from reviews - strip scoring properties first
+        const cleanReviewsData = reviewsData.map(({ searchScore, matchCount, ...review }) => review);
+        const reviewCustomers = processReviewCustomers(cleanReviewsData);
         
         // Combine results
         const combinedCustomers = [...profileCustomers, ...reviewCustomers];
