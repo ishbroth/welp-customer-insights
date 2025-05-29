@@ -3,7 +3,6 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
-import CustomerReactions from "./CustomerReactions";
 
 interface ReviewsRatingBreakdownProps {
   reviews: Review[];
@@ -39,7 +38,7 @@ const ReviewsRatingBreakdown = ({ reviews }: ReviewsRatingBreakdownProps) => {
   return (
     <div className="mb-6 bg-white p-4 rounded-lg border">
       <h3 className="text-lg font-semibold mb-4">Rating Breakdown</h3>
-      <div className="space-y-2 mb-6">
+      <div className="space-y-2">
         {ratingBreakdown.map((item) => (
           <div key={item.rating} className="flex items-center gap-3">
             <div className="flex items-center w-16">
@@ -57,30 +56,6 @@ const ReviewsRatingBreakdown = ({ reviews }: ReviewsRatingBreakdownProps) => {
             </div>
           </div>
         ))}
-      </div>
-      
-      {/* Show recent reviews with reactions */}
-      <div className="border-t pt-4">
-        <h4 className="text-md font-medium mb-3">Recent Reviews</h4>
-        <div className="space-y-3">
-          {reviews.slice(0, 5).map((review) => {
-            console.log(`Rendering review ${review.id} with reactions:`, review.reactions);
-            return (
-              <div key={review.id} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{review.customerName}</span>
-                  <CustomerReactions reactions={review.reactions || { like: [], funny: [], ohNo: [] }} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <StarRating rating={review.rating} size="sm" />
-                  <span className="text-gray-500">
-                    {new Date(review.date).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
