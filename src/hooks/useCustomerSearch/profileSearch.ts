@@ -15,12 +15,12 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     .eq('type', 'customer')
     .limit(500); // Increased limit for broader search
 
-  // For state searches, be much more direct
+  // For state searches, be more flexible with case sensitivity
   if (state && state.trim() !== '') {
     console.log(`Searching for state: ${state}`);
     
-    // Use a direct state filter that matches the exact abbreviation
-    profileQuery = profileQuery.ilike('state', `%${state}%`);
+    // Use a case-insensitive search for state
+    profileQuery = profileQuery.or(`state.ilike.%${state}%,state.ilike.%${state.toLowerCase()}%,state.ilike.%${state.toUpperCase()}%`);
   }
 
   const { data: allProfiles, error } = await profileQuery;
@@ -118,16 +118,23 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    // State matching - simplified and more direct
+    // Enhanced state matching - much more flexible
     if (state && profile.state) {
-      const stateMatch = profile.state.toUpperCase().includes(state.toUpperCase()) || 
-                        state.toUpperCase().includes(profile.state.toUpperCase());
+      const searchStateUpper = state.toUpperCase().trim();
+      const profileStateUpper = profile.state.toUpperCase().trim();
+      
+      // Check for exact match, contains, or abbreviation match
+      const stateMatch = profileStateUpper === searchStateUpper || 
+                        profileStateUpper.includes(searchStateUpper) || 
+                        searchStateUpper.includes(profileStateUpper) ||
+                        (searchStateUpper.length === 2 && profileStateUpper.startsWith(searchStateUpper)) ||
+                        (profileStateUpper.length === 2 && searchStateUpper.startsWith(profileStateUpper));
       
       if (stateMatch) {
         // Give very high score for state-only searches
-        score += isStateOnlySearch ? 100 : 2;
+        score += isStateOnlySearch ? 100 : 5;
         matches++;
-        console.log(`State match found: ${profile.state} matches ${state}`);
+        console.log(`State match found: "${profile.state}" matches "${state}" for profile ${profile.first_name} ${profile.last_name}`);
       }
     }
     
@@ -164,14 +171,20 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     return { ...profile, searchScore: score, matchCount: matches };
   });
   
-  // For state-only searches, return all results with any state match
+  // For state-only searches, be very lenient with scoring
   let minScore = 0.1;
   if (isStateOnlySearch) {
     minScore = 0; // Return anything with any score at all for state-only searches
   }
   
   const filteredProfiles = scoredProfiles
-    .filter(profile => profile.searchScore > minScore || profile.matchCount > 0)
+    .filter(profile => {
+      // For state-only searches, include any profile that has a state match
+      if (isStateOnlySearch) {
+        return profile.matchCount > 0 || profile.searchScore > 0;
+      }
+      return profile.searchScore > minScore || profile.matchCount > 0;
+    })
     .sort((a, b) => {
       // Sort by match count first, then by score
       if (b.matchCount !== a.matchCount) {
@@ -183,7 +196,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
   
   console.log("Profile search results:", filteredProfiles.length);
   filteredProfiles.forEach(profile => {
-    console.log(`Profile: ${profile.first_name} ${profile.last_name}, Zip: ${profile.zipcode}, Score: ${profile.searchScore}`);
+    console.log(`Profile: ${profile.first_name} ${profile.last_name}, State: ${profile.state}, Zip: ${profile.zipcode}, Score: ${profile.searchScore}, Matches: ${profile.matchCount}`);
   });
   
   return filteredProfiles as ProfileCustomer[];
