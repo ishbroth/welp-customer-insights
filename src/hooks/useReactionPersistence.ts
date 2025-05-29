@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 
@@ -21,7 +20,16 @@ export const useReactionPersistence = (reviewId: string, initialReactions: React
       try {
         const parsed = JSON.parse(storedReactions);
         console.log('Loaded reactions from localStorage:', parsed);
-        setReactions(parsed);
+        
+        // Ensure we only keep valid reaction types and filter out any invalid ones
+        const cleanedReactions: Reactions = {
+          like: Array.isArray(parsed.like) ? parsed.like : [],
+          funny: Array.isArray(parsed.funny) ? parsed.funny : [],
+          ohNo: Array.isArray(parsed.ohNo) ? parsed.ohNo : []
+        };
+        
+        console.log('Cleaned reactions:', cleanedReactions);
+        setReactions(cleanedReactions);
       } catch (error) {
         console.error('Error parsing stored reactions:', error);
         setReactions(initialReactions);
@@ -36,7 +44,15 @@ export const useReactionPersistence = (reviewId: string, initialReactions: React
   useEffect(() => {
     const storageKey = `reactions_${reviewId}`;
     console.log('Saving reactions to localStorage:', reactions);
-    localStorage.setItem(storageKey, JSON.stringify(reactions));
+    
+    // Ensure we only save valid reaction types
+    const cleanReactions: Reactions = {
+      like: reactions.like || [],
+      funny: reactions.funny || [],
+      ohNo: reactions.ohNo || []
+    };
+    
+    localStorage.setItem(storageKey, JSON.stringify(cleanReactions));
   }, [reviewId, reactions]);
 
   const toggleReaction = (reactionType: keyof Reactions) => {

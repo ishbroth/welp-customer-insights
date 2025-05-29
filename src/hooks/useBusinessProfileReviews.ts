@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Review } from "@/types";
@@ -38,7 +37,13 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         
         if (storedReactions) {
           try {
-            reactions = JSON.parse(storedReactions);
+            const parsed = JSON.parse(storedReactions);
+            // Ensure we only keep valid reaction types
+            reactions = {
+              like: Array.isArray(parsed.like) ? parsed.like : [],
+              funny: Array.isArray(parsed.funny) ? parsed.funny : [],
+              ohNo: Array.isArray(parsed.ohNo) ? parsed.ohNo : []
+            };
             console.log(`Loaded reactions for review ${review.id}:`, reactions);
           } catch (error) {
             console.error('Error parsing stored reactions:', error);
