@@ -6,10 +6,11 @@ export interface ReviewSubmissionData {
   comment: string;
   customerFirstName: string;
   customerLastName: string;
-  customerPhone: string;
-  customerAddress: string;
-  customerCity: string;
-  customerZipCode: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  customerCity?: string;
+  customerState?: string;
+  customerZipCode?: string;
 }
 
 export const submitReviewToDatabase = async (
