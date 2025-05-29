@@ -24,7 +24,7 @@ const Index = () => {
   };
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow">
@@ -38,15 +38,17 @@ const Index = () => {
                   {currentUser ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button 
-                          className="bg-gray-400 text-gray-600 cursor-not-allowed font-bold py-3 px-6 rounded-full"
-                          onClick={handleLoggedInClick}
-                          disabled
-                        >
-                          Get Started
-                        </Button>
+                        <div>
+                          <Button 
+                            className="bg-gray-400 text-gray-600 cursor-not-allowed font-bold py-3 px-6 rounded-full"
+                            onClick={handleLoggedInClick}
+                            disabled
+                          >
+                            Get Started
+                          </Button>
+                        </div>
                       </TooltipTrigger>
-                      <TooltipContent>
+                      <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
                         <p>You are already signed in to your account</p>
                       </TooltipContent>
                     </Tooltip>
@@ -99,30 +101,34 @@ const Index = () => {
                           <>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
-                                  onClick={handleLoggedInClick}
-                                  disabled
-                                >
-                                  Login
-                                </Button>
+                                <div className="flex-1">
+                                  <Button 
+                                    variant="outline" 
+                                    className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
+                                    onClick={handleLoggedInClick}
+                                    disabled
+                                  >
+                                    Login
+                                  </Button>
+                                </div>
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
                                 <p>You are already signed in to your account</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button 
-                                  className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
-                                  onClick={handleLoggedInClick}
-                                  disabled
-                                >
-                                  Sign Up as Business
-                                </Button>
+                                <div className="flex-1">
+                                  <Button 
+                                    className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
+                                    onClick={handleLoggedInClick}
+                                    disabled
+                                  >
+                                    Sign Up as Business
+                                  </Button>
+                                </div>
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
                                 <p>You are already signed in to your account</p>
                               </TooltipContent>
                             </Tooltip>
@@ -161,30 +167,34 @@ const Index = () => {
                           <>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
-                                  onClick={handleLoggedInClick}
-                                  disabled
-                                >
-                                  Login
-                                </Button>
+                                <div className="flex-1">
+                                  <Button 
+                                    variant="outline" 
+                                    className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
+                                    onClick={handleLoggedInClick}
+                                    disabled
+                                  >
+                                    Login
+                                  </Button>
+                                </div>
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
                                 <p>You are already signed in to your account</p>
                               </TooltipContent>
                             </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button 
-                                  className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
-                                  onClick={handleLoggedInClick}
-                                  disabled
-                                >
-                                  Sign Up as Customer
-                                </Button>
+                                <div className="flex-1">
+                                  <Button 
+                                    className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
+                                    onClick={handleLoggedInClick}
+                                    disabled
+                                  >
+                                    Sign Up as Customer
+                                  </Button>
+                                </div>
                               </TooltipTrigger>
-                              <TooltipContent>
+                              <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
                                 <p>You are already signed in to your account</p>
                               </TooltipContent>
                             </Tooltip>
@@ -300,15 +310,17 @@ const Index = () => {
               {currentUser ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      className="bg-gray-400 text-gray-600 cursor-not-allowed font-bold py-3 px-8 rounded-full text-lg"
-                      onClick={handleLoggedInClick}
-                      disabled
-                    >
-                      Get Started Today
-                    </Button>
+                    <div>
+                      <Button 
+                        className="bg-gray-400 text-gray-600 cursor-not-allowed font-bold py-3 px-8 rounded-full text-lg"
+                        onClick={handleLoggedInClick}
+                        disabled
+                      >
+                        Get Started Today
+                      </Button>
+                    </div>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
                     <p>You are already signed in to your account</p>
                   </TooltipContent>
                 </Tooltip>
