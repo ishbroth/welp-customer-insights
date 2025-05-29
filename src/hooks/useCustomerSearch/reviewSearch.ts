@@ -3,63 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchParams, ReviewData } from "./types";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
 
-// State mapping for flexible state search
-const stateMap: { [key: string]: string[] } = {
-  'AL': ['AL', 'Alabama'],
-  'AK': ['AK', 'Alaska'],
-  'AZ': ['AZ', 'Arizona'],
-  'AR': ['AR', 'Arkansas'],
-  'CA': ['CA', 'California'],
-  'CO': ['CO', 'Colorado'],
-  'CT': ['CT', 'Connecticut'],
-  'DE': ['DE', 'Delaware'],
-  'FL': ['FL', 'Florida'],
-  'GA': ['GA', 'Georgia'],
-  'HI': ['HI', 'Hawaii'],
-  'ID': ['ID', 'Idaho'],
-  'IL': ['IL', 'Illinois'],
-  'IN': ['IN', 'Indiana'],
-  'IA': ['IA', 'Iowa'],
-  'KS': ['KS', 'Kansas'],
-  'KY': ['KY', 'Kentucky'],
-  'LA': ['LA', 'Louisiana'],
-  'ME': ['ME', 'Maine'],
-  'MD': ['MD', 'Maryland'],
-  'MA': ['MA', 'Massachusetts'],
-  'MI': ['MI', 'Michigan'],
-  'MN': ['MN', 'Minnesota'],
-  'MS': ['MS', 'Mississippi'],
-  'MO': ['MO', 'Missouri'],
-  'MT': ['MT', 'Montana'],
-  'NE': ['NE', 'Nebraska'],
-  'NV': ['NV', 'Nevada'],
-  'NH': ['NH', 'New Hampshire'],
-  'NJ': ['NJ', 'New Jersey'],
-  'NM': ['NM', 'New Mexico'],
-  'NY': ['NY', 'New York'],
-  'NC': ['NC', 'North Carolina'],
-  'ND': ['ND', 'North Dakota'],
-  'OH': ['OH', 'Ohio'],
-  'OK': ['OK', 'Oklahoma'],
-  'OR': ['OR', 'Oregon'],
-  'PA': ['PA', 'Pennsylvania'],
-  'RI': ['RI', 'Rhode Island'],
-  'SC': ['SC', 'South Carolina'],
-  'SD': ['SD', 'South Dakota'],
-  'TN': ['TN', 'Tennessee'],
-  'TX': ['TX', 'Texas'],
-  'UT': ['UT', 'Utah'],
-  'VT': ['VT', 'Vermont'],
-  'VA': ['VA', 'Virginia'],
-  'WA': ['WA', 'Washington'],
-  'WV': ['WV', 'West Virginia'],
-  'WI': ['WI', 'Wisconsin'],
-  'WY': ['WY', 'Wyoming'],
-  'DC': ['DC', 'District of Columbia']
-};
-
 export const searchReviews = async (searchParams: SearchParams) => {
-  const { firstName, lastName, phone, address, city, zipCode } = searchParams;
+  const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
   console.log("Searching reviews table with flexible matching...");
   
@@ -87,16 +32,20 @@ export const searchReviews = async (searchParams: SearchParams) => {
   }
 
   if (!allReviews || allReviews.length === 0) {
+    console.log("No reviews found in initial query");
     return [];
   }
+
+  console.log(`Found ${allReviews.length} reviews in initial query`);
 
   // Format phone for search by removing non-digit characters
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const cleanZip = zipCode ? zipCode.replace(/\D/g, '') : '';
 
   // Check if this is a single field search
-  const searchFields = [firstName, lastName, phone, address, city, zipCode].filter(Boolean);
+  const searchFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean);
   const isSingleFieldSearch = searchFields.length === 1;
+  const isStateOnlySearch = state && searchFields.length === 1 && searchFields[0] === state;
 
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
@@ -178,6 +127,14 @@ export const searchReviews = async (searchParams: SearchParams) => {
       }
     }
 
+    // State matching - Note: reviews don't have customer_state field, so we skip this
+    // The reviews table structure doesn't include customer state information
+    if (state) {
+      // Since reviews don't have state info, we can't match on state
+      // This is a limitation of the current database schema
+      console.log("State search requested but reviews table doesn't have customer state field");
+    }
+
     // Zip code matching - flexible
     if (cleanZip && review.customer_zipcode) {
       const reviewZip = review.customer_zipcode.replace(/\D/g, '');
@@ -198,8 +155,6 @@ export const searchReviews = async (searchParams: SearchParams) => {
       name: review.profiles.name || 'Unknown Business',
       avatar: review.profiles.avatar || undefined
     } : null;
-
-    console.log("Business profile for review:", review.id, businessProfile);
 
     // Return the properly formatted review data
     const formattedReview: ReviewData = {
@@ -238,7 +193,6 @@ export const searchReviews = async (searchParams: SearchParams) => {
     })
     .slice(0, 100); // Increased final results limit
 
-  console.log("Flexible review search results:", filteredReviews.length);
-  console.log("Sample review with business profile:", filteredReviews[0]?.business_profile);
+  console.log("Review search results:", filteredReviews.length);
   return filteredReviews;
 };
