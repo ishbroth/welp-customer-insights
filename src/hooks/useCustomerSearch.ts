@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
@@ -39,7 +38,7 @@ export const useCustomerSearch = () => {
     if (!hasSearchParams) {
       console.log("No search parameters, skipping search");
       setIsLoading(false);
-      setCustomers([]);
+      // Don't clear customers here - keep previous results visible
       return;
     }
 
@@ -58,7 +57,7 @@ export const useCustomerSearch = () => {
         // Process customers from profiles
         const profileCustomers = await processProfileCustomers(profilesData);
         
-        // Process customers from reviews
+        // Process customers from reviews  
         const reviewCustomers = processReviewCustomers(reviewsData);
         
         // Combine results

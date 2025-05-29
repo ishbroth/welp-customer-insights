@@ -34,8 +34,28 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  // Don't render anything if no search has been performed
+  // Don't render search results header or content if no search has been performed
   if (!hasSearchParams) {
+    // However, still show previous search results if customers array has data
+    if (customers.length > 0) {
+      return (
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">Previous Search Results ({customers.length})</h3>
+          <div className="space-y-3">
+            {customers.map(customer => (
+              <CustomerCard
+                key={customer.id}
+                customer={customer}
+                customerReviews={customerReviews}
+                expandedCustomerId={expandedCustomerId}
+                handleSelectCustomer={handleSelectCustomer}
+                hasFullAccess={hasFullAccess}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) => void) => {
@@ -14,6 +14,22 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
   const [city, setCity] = useState(currentSearchParams.get("city") || "");
   const [state, setState] = useState(currentSearchParams.get("state") || "");
   const [zipCode, setZipCode] = useState(currentSearchParams.get("zipCode") || "");
+  
+  // Listen for clear search events
+  useEffect(() => {
+    const handleClearSearch = () => {
+      setLastName("");
+      setFirstName("");
+      setPhone("");
+      setAddress("");
+      setCity("");
+      setState("");
+      setZipCode("");
+    };
+
+    window.addEventListener('clearSearchForm', handleClearSearch);
+    return () => window.removeEventListener('clearSearchForm', handleClearSearch);
+  }, []);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
