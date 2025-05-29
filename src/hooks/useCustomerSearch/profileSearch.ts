@@ -3,6 +3,61 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchParams, ProfileCustomer } from "./types";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
 
+// State mapping for flexible state search
+const stateMap: { [key: string]: string[] } = {
+  'AL': ['AL', 'Alabama'],
+  'AK': ['AK', 'Alaska'],
+  'AZ': ['AZ', 'Arizona'],
+  'AR': ['AR', 'Arkansas'],
+  'CA': ['CA', 'California'],
+  'CO': ['CO', 'Colorado'],
+  'CT': ['CT', 'Connecticut'],
+  'DE': ['DE', 'Delaware'],
+  'FL': ['FL', 'Florida'],
+  'GA': ['GA', 'Georgia'],
+  'HI': ['HI', 'Hawaii'],
+  'ID': ['ID', 'Idaho'],
+  'IL': ['IL', 'Illinois'],
+  'IN': ['IN', 'Indiana'],
+  'IA': ['IA', 'Iowa'],
+  'KS': ['KS', 'Kansas'],
+  'KY': ['KY', 'Kentucky'],
+  'LA': ['LA', 'Louisiana'],
+  'ME': ['ME', 'Maine'],
+  'MD': ['MD', 'Maryland'],
+  'MA': ['MA', 'Massachusetts'],
+  'MI': ['MI', 'Michigan'],
+  'MN': ['MN', 'Minnesota'],
+  'MS': ['MS', 'Mississippi'],
+  'MO': ['MO', 'Missouri'],
+  'MT': ['MT', 'Montana'],
+  'NE': ['NE', 'Nebraska'],
+  'NV': ['NV', 'Nevada'],
+  'NH': ['NH', 'New Hampshire'],
+  'NJ': ['NJ', 'New Jersey'],
+  'NM': ['NM', 'New Mexico'],
+  'NY': ['NY', 'New York'],
+  'NC': ['NC', 'North Carolina'],
+  'ND': ['ND', 'North Dakota'],
+  'OH': ['OH', 'Ohio'],
+  'OK': ['OK', 'Oklahoma'],
+  'OR': ['OR', 'Oregon'],
+  'PA': ['PA', 'Pennsylvania'],
+  'RI': ['RI', 'Rhode Island'],
+  'SC': ['SC', 'South Carolina'],
+  'SD': ['SD', 'South Dakota'],
+  'TN': ['TN', 'Tennessee'],
+  'TX': ['TX', 'Texas'],
+  'UT': ['UT', 'Utah'],
+  'VT': ['VT', 'Vermont'],
+  'VA': ['VA', 'Virginia'],
+  'WA': ['WA', 'Washington'],
+  'WV': ['WV', 'West Virginia'],
+  'WI': ['WI', 'Wisconsin'],
+  'WY': ['WY', 'Wyoming'],
+  'DC': ['DC', 'District of Columbia']
+};
+
 export const searchProfiles = async (searchParams: SearchParams) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
@@ -15,9 +70,15 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     .eq('type', 'customer')
     .limit(500); // Increased limit for broader search
 
-  // If only state is provided, add a direct filter for better performance
+  // For state-only searches, add a more targeted filter using both abbreviation and full name
   if (state && !firstName && !lastName && !phone && !address && !city && !zipCode) {
-    profileQuery = profileQuery.ilike('state', `%${state}%`);
+    const stateVariants = stateMap[state] || [state];
+    console.log(`Searching for state variants: ${stateVariants.join(', ')}`);
+    
+    // Use OR condition to search for either abbreviation or full name
+    profileQuery = profileQuery.or(
+      stateVariants.map(variant => `state.ilike.%${variant}%`).join(',')
+    );
   }
 
   const { data: allProfiles, error } = await profileQuery;
@@ -111,15 +172,23 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    // State matching - very lenient for state searches
+    // Improved state matching - check against both abbreviation and full name
     if (state && profile.state) {
-      const stateMatch = profile.state.toLowerCase().includes(state.toLowerCase()) || 
-                        state.toLowerCase().includes(profile.state.toLowerCase()) ||
-                        calculateStringSimilarity(state.toLowerCase(), profile.state.toLowerCase()) > 0.3;
+      const stateVariants = stateMap[state] || [state];
+      let stateMatch = false;
+      
+      for (const variant of stateVariants) {
+        if (profile.state.toLowerCase().includes(variant.toLowerCase()) || 
+            variant.toLowerCase().includes(profile.state.toLowerCase()) ||
+            calculateStringSimilarity(variant.toLowerCase(), profile.state.toLowerCase()) > 0.3) {
+          stateMatch = true;
+          break;
+        }
+      }
       
       if (stateMatch) {
         // Give higher score if this is a state-only search
-        score += isSingleFieldSearch ? 5 : 1;
+        score += isSingleFieldSearch ? 10 : 2;
         matches++;
       }
     }
