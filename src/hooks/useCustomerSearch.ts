@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { searchProfiles } from "./useCustomerSearch/profileSearch";
 import { searchReviews } from "./useCustomerSearch/reviewSearch";
 import { processProfileCustomers, processReviewCustomers } from "./useCustomerSearch/customerProcessor";
-import { SearchParams } from "./useCustomerSearch/types";
+import { SearchParams, ReviewData } from "./useCustomerSearch/types";
 
 export const useCustomerSearch = () => {
   const [searchParams] = useSearchParams();
@@ -58,8 +58,18 @@ export const useCustomerSearch = () => {
         // Process customers from profiles
         const profileCustomers = await processProfileCustomers(profilesData);
         
-        // Process customers from reviews - strip scoring properties first
-        const cleanReviewsData = reviewsData.map(({ searchScore, matchCount, ...review }) => review);
+        // Process customers from reviews - convert scored reviews to ReviewData
+        const cleanReviewsData: ReviewData[] = reviewsData.map(review => ({
+          id: review.id,
+          customer_name: review.customer_name,
+          customer_address: review.customer_address,
+          customer_city: review.customer_city,
+          customer_zipcode: review.customer_zipcode,
+          customer_phone: review.customer_phone,
+          rating: review.rating,
+          business_id: review.business_id,
+          business_profile: review.business_profile
+        }));
         const reviewCustomers = processReviewCustomers(cleanReviewsData);
         
         // Combine results
