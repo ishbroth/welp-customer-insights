@@ -22,7 +22,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       business_id,
       profiles!business_id(name, avatar)
     `)
-    .limit(200); // Increased limit for broader search
+    .limit(500); // Increased limit for broader search
 
   const { data: allReviews, error } = await reviewQuery;
 
@@ -39,6 +39,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const cleanZip = zipCode ? zipCode.replace(/\D/g, '') : '';
 
+  // Check if this is a single field search
+  const searchFields = [firstName, lastName, phone, address, city, zipCode].filter(Boolean);
+  const isSingleFieldSearch = searchFields.length === 1;
+
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
     let score = 0;
@@ -51,7 +55,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       
       // Direct similarity
       const similarity = calculateStringSimilarity(searchName, customerName);
-      if (similarity > 0.4) { // Lower threshold for more matches
+      if (similarity > 0.2) { // Very low threshold for more matches
         score += similarity * 3;
         matches++;
       }
@@ -89,7 +93,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
     // Address matching with fuzzy logic
     if (address && review.customer_address) {
       const similarity = calculateStringSimilarity(address.toLowerCase(), review.customer_address.toLowerCase());
-      if (similarity > 0.3) {
+      if (similarity > 0.2) { // Lower threshold
         score += similarity * 2;
         matches++;
       }
@@ -113,7 +117,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
     // City matching
     if (city && review.customer_city) {
       const similarity = calculateStringSimilarity(city.toLowerCase(), review.customer_city.toLowerCase());
-      if (similarity > 0.5) {
+      if (similarity > 0.3 || review.customer_city.toLowerCase().includes(city.toLowerCase()) || city.toLowerCase().includes(review.customer_city.toLowerCase())) {
         score += similarity * 1.5;
         matches++;
       }
@@ -162,9 +166,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
     };
   });
 
-  // Filter and sort by relevance - more lenient for single field searches
-  const hasMultipleFields = [firstName, lastName, phone, address, city, zipCode].filter(Boolean).length > 1;
-  const minScore = hasMultipleFields ? 0.5 : 0.1; // Lower threshold for single field searches
+  // For single field searches, be very lenient - return anything with any match
+  let minScore = 0.1;
+  if (isSingleFieldSearch) {
+    minScore = 0; // Return anything with any score at all for single field searches
+  }
 
   const filteredReviews = scoredReviews
     .filter(review => review.searchScore > minScore || review.matchCount > 0)
@@ -175,7 +181,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       }
       return b.searchScore - a.searchScore;
     })
-    .slice(0, 50); // Limit final results
+    .slice(0, 100); // Increased final results limit
 
   console.log("Flexible review search results:", filteredReviews.length);
   console.log("Sample review with business profile:", filteredReviews[0]?.business_profile);

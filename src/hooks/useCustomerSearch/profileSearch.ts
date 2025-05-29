@@ -13,7 +13,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     .from('profiles')
     .select('id, first_name, last_name, phone, address, city, state, zipcode')
     .eq('type', 'customer')
-    .limit(200); // Increased limit for broader search
+    .limit(500); // Increased limit for broader search
 
   // If only state is provided, add a direct filter for better performance
   if (state && !firstName && !lastName && !phone && !address && !city && !zipCode) {
@@ -35,6 +35,10 @@ export const searchProfiles = async (searchParams: SearchParams) => {
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const cleanZip = zipCode ? zipCode.replace(/\D/g, '') : '';
 
+  // Check if this is a single field search
+  const searchFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean);
+  const isSingleFieldSearch = searchFields.length === 1;
+
   // Score each profile based on how well it matches the search criteria
   const scoredProfiles = allProfiles.map(profile => {
     let score = 0;
@@ -47,8 +51,8 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       
       if (profileName) {
         const similarity = calculateStringSimilarity(searchName, profileName);
-        if (similarity > 0.4) { // Lower threshold for more matches
-          score += similarity * 3; // Weight name matches heavily
+        if (similarity > 0.2) { // Very low threshold for single field searches
+          score += similarity * 3;
           matches++;
         }
         
@@ -58,7 +62,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
         
         for (const searchWord of searchWords) {
           for (const profileWord of profileWords) {
-            if (searchWord.length >= 2 && profileWord.includes(searchWord)) {
+            if (searchWord.length >= 2 && (profileWord.includes(searchWord) || searchWord.includes(profileWord))) {
               score += 1;
               matches++;
             }
@@ -79,7 +83,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     // Address matching with fuzzy logic
     if (address && profile.address) {
       const similarity = calculateStringSimilarity(address.toLowerCase(), profile.address.toLowerCase());
-      if (similarity > 0.3) {
+      if (similarity > 0.2) { // Lower threshold
         score += similarity * 2;
         matches++;
       }
@@ -101,22 +105,21 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     // City matching
     if (city && profile.city) {
       const similarity = calculateStringSimilarity(city.toLowerCase(), profile.city.toLowerCase());
-      if (similarity > 0.5) {
+      if (similarity > 0.3 || profile.city.toLowerCase().includes(city.toLowerCase()) || city.toLowerCase().includes(profile.city.toLowerCase())) {
         score += similarity * 1.5;
         matches++;
       }
     }
     
-    // State matching - more lenient for state-only searches
+    // State matching - very lenient for state searches
     if (state && profile.state) {
       const stateMatch = profile.state.toLowerCase().includes(state.toLowerCase()) || 
                         state.toLowerCase().includes(profile.state.toLowerCase()) ||
-                        calculateStringSimilarity(state.toLowerCase(), profile.state.toLowerCase()) > 0.6;
+                        calculateStringSimilarity(state.toLowerCase(), profile.state.toLowerCase()) > 0.3;
       
       if (stateMatch) {
         // Give higher score if this is a state-only search
-        const isStateOnlySearch = !firstName && !lastName && !phone && !address && !city && !zipCode;
-        score += isStateOnlySearch ? 3 : 1;
+        score += isSingleFieldSearch ? 5 : 1;
         matches++;
       }
     }
@@ -124,7 +127,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     // Zip code matching
     if (cleanZip && profile.zipcode) {
       const profileZip = profile.zipcode.replace(/\D/g, '');
-      if (profileZip.startsWith(cleanZip) || profileZip.includes(cleanZip)) {
+      if (profileZip.startsWith(cleanZip) || profileZip.includes(cleanZip) || cleanZip.includes(profileZip)) {
         score += 2;
         matches++;
       }
@@ -133,9 +136,11 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     return { ...profile, searchScore: score, matchCount: matches };
   });
   
-  // Filter and sort by relevance - more lenient for single field searches
-  const hasMultipleFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean).length > 1;
-  const minScore = hasMultipleFields ? 0.5 : 0.1; // Lower threshold for single field searches
+  // For single field searches, be very lenient - return anything with any match
+  let minScore = 0.1;
+  if (isSingleFieldSearch) {
+    minScore = 0; // Return anything with any score at all for single field searches
+  }
   
   const filteredProfiles = scoredProfiles
     .filter(profile => profile.searchScore > minScore || profile.matchCount > 0)
@@ -146,7 +151,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
       return b.searchScore - a.searchScore;
     })
-    .slice(0, 50); // Limit final results
+    .slice(0, 100); // Increased final results limit
   
   console.log("Flexible profile search results:", filteredProfiles.length);
   return filteredProfiles as ProfileCustomer[];
