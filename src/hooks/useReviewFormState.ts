@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useReviewFormState = () => {
   const [searchParams] = useSearchParams();
@@ -40,51 +41,101 @@ export const useReviewFormState = () => {
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [existingReview, setExistingReview] = useState<any>(null);
 
+  // Function to convert URL to File object for existing photos
+  const urlToFile = async (url: string, filename: string): Promise<File> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new File([blob], filename, { type: blob.type });
+  };
+
   useEffect(() => {
-    console.log("useReviewFormState - isEditing:", isEditing, "reviewData:", reviewData);
-    
-    // Handle pre-filling data if we're editing
-    if (isEditing && reviewData) {
-      setRating(reviewData.rating);
-      setComment(reviewData.content);
+    const initializeForm = async () => {
+      console.log("useReviewFormState - isEditing:", isEditing, "reviewData:", reviewData, "reviewId:", reviewId);
       
-      const customerName = reviewData.customerName || "";
-      const nameParts = customerName.split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
+      // Handle pre-filling data if we're editing
+      if (isEditing && reviewData) {
+        setRating(reviewData.rating);
+        setComment(reviewData.content);
+        
+        const customerName = reviewData.customerName || "";
+        const nameParts = customerName.split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+        
+        setCustomerFirstName(firstName);
+        setCustomerLastName(lastName);
+        setCustomerPhone(reviewData.phone || "");
+        setCustomerAddress(reviewData.address || "");
+        setCustomerCity(reviewData.city || "");
+        setCustomerState(reviewData.state || "");
+        setCustomerZipCode(reviewData.zipCode || "");
+
+        // Load existing photos when editing
+        if (reviewId) {
+          try {
+            const { data: existingPhotos, error } = await supabase
+              .from('review_photos')
+              .select('*')
+              .eq('review_id', reviewId)
+              .order('display_order');
+
+            if (error) {
+              console.error("Error fetching existing photos:", error);
+            } else if (existingPhotos && existingPhotos.length > 0) {
+              console.log("Loading existing photos:", existingPhotos);
+              
+              // Convert existing photos to the format expected by the form
+              const photoPromises = existingPhotos.map(async (photo, index) => {
+                try {
+                  const file = await urlToFile(photo.photo_url, `photo-${index}.jpg`);
+                  return {
+                    file,
+                    caption: photo.caption || "",
+                    preview: photo.photo_url
+                  };
+                } catch (error) {
+                  console.error("Error converting photo to file:", error);
+                  return null;
+                }
+              });
+
+              const convertedPhotos = await Promise.all(photoPromises);
+              const validPhotos = convertedPhotos.filter(photo => photo !== null);
+              setPhotos(validPhotos as Array<{ file: File; caption: string; preview: string }>);
+            }
+          } catch (error) {
+            console.error("Error loading existing photos:", error);
+          }
+        }
+      } else {
+        // Pre-fill form with search parameters from URL if not editing
+        setCustomerFirstName(searchParamFirstName);
+        setCustomerLastName(searchParamLastName);
+        setCustomerPhone(searchParamPhone);
+        setCustomerAddress(searchParamAddress);
+        setCustomerCity(searchParamCity);
+        setCustomerState(searchParamState);
+        setCustomerZipCode(searchParamZipCode);
+      }
       
-      setCustomerFirstName(firstName);
-      setCustomerLastName(lastName);
-      setCustomerPhone(reviewData.phone || "");
-      setCustomerAddress(reviewData.address || "");
-      setCustomerCity(reviewData.city || "");
-      setCustomerState(reviewData.state || "");
-      setCustomerZipCode(reviewData.zipCode || "");
-    } else {
-      // Pre-fill form with search parameters from URL if not editing
-      setCustomerFirstName(searchParamFirstName);
-      setCustomerLastName(searchParamLastName);
-      setCustomerPhone(searchParamPhone);
-      setCustomerAddress(searchParamAddress);
-      setCustomerCity(searchParamCity);
-      setCustomerState(searchParamState);
-      setCustomerZipCode(searchParamZipCode);
-    }
-    
-    if (customerId) {
-      setIsLoading(true);
-      setTimeout(() => {
+      if (customerId) {
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsNewCustomer(true);
+          setIsLoading(false);
+        }, 500);
+      } else {
         setIsNewCustomer(true);
         setIsLoading(false);
-      }, 500);
-    } else {
-      setIsNewCustomer(true);
-      setIsLoading(false);
-    }
+      }
+    };
+
+    initializeForm();
   }, [
     customerId, 
     isEditing, 
     reviewData, 
+    reviewId,
     searchParamFirstName, 
     searchParamLastName, 
     searchParamPhone, 
