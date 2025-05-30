@@ -123,15 +123,16 @@ const HowItWorks = () => {
                     Getting started with Welp. is simple. Choose whether you're a business owner or customer, 
                     then fill out our quick registration form with your email and create a password.
                   </p>
-                  <ol className="list-decimal ml-5 space-y-3">
+                  <ol className="list-decimal ml-5 space-y-3 mb-4">
                     <li>Click "Sign Up" from the homepage or navigation menu</li>
                     <li>Select your account type: Business Owner or Customer</li>
-                    <li>Enter your email address and create a secure password</li>
-                    <li>Fill out your profile with relevant information</li>
-                    <li>For business accounts, we'll verify your business credentials</li>
-                    <li>Confirm your email address via our verification link</li>
-                    <li>Start using Welp. immediately</li>
+                    <li>Choose your email and password</li>
+                    <li>Fill out your profile with as much of your information as possible</li>
+                    <li>Verify your account through text, and start using Welp. immediately</li>
                   </ol>
+                  <p className="mt-4">
+                    For business accounts, please enter any license information for your business to expedite business verification.
+                  </p>
                 </div>
 
                 <div className="welp-card">
