@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -143,13 +142,13 @@ const HowItWorks = () => {
                       <p>
                         To maintain the integrity of our platform, business accounts require verification. 
                         You'll need to provide your business name, location, and contact information. 
-                        We may also request business documentation to confirm your legitimacy.
+                        Please provide any license number you may have for your business, this helps expedite the verification process.
                       </p>
                     </div>
                     <div>
                       <h4 className="font-bold mb-2">For Customers</h4>
                       <p>
-                        Customer accounts are verified through email confirmation. 
+                        Customer accounts are verified through text confirmation. 
                         We recommend adding your phone number and address to help 
                         businesses locate reviews about you when you search.
                       </p>
