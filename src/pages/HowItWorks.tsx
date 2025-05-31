@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -211,8 +212,10 @@ const HowItWorks = () => {
                 
                 <div className="welp-card">
                   <h4 className="font-bold mb-3">For Customers</h4>
-                  <p>
+                  <p className="mb-4">
                     As a customer, you can search for yourself to see what businesses are saying about you.
+                  </p>
+                  <p>
                     You'll be able to view basic information about the businesses that reviewed you, and you will be able to purchase access to individual reviews or subscribe for unlimited access to all reviews.
                   </p>
                 </div>
