@@ -90,7 +90,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                   }`}
                 >
                   <FileText className="mr-3 h-5 w-5 text-gray-500" />
-                  My Reviews
+                  My Customer Reviews
                 </Link>
               ) : (
                 <Link 
