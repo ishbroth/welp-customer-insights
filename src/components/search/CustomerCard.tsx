@@ -74,6 +74,7 @@ const CustomerCard = ({
             isBusinessUser={isBusinessUser}
             isReviewCustomer={isReviewCustomer}
             onViewProfile={handleViewProfile}
+            hasAccess={!!hasAccess}
           />
         </div>
 

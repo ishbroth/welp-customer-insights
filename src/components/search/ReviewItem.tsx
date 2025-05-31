@@ -108,8 +108,11 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             <h4 className="font-medium">{review.reviewerName}</h4>
           )}
           <div className="flex items-center mt-1">
-            <StarRating rating={review.rating} />
-            <span className="ml-2 text-sm text-gray-500">
+            <StarRating 
+              rating={review.rating} 
+              grayedOut={!hasFullAccess}
+            />
+            <span className={`ml-2 text-sm ${!hasFullAccess ? 'text-gray-400' : 'text-gray-500'}`}>
               {review.rating}.0
             </span>
           </div>

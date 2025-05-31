@@ -7,13 +7,15 @@ interface StarRatingProps {
   max?: number;
   size?: "sm" | "md" | "lg";
   className?: string;
+  grayedOut?: boolean;
 }
 
 const StarRating = ({ 
   rating, 
   max = 5, 
   size = "md", 
-  className 
+  className,
+  grayedOut = false
 }: StarRatingProps) => {
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -29,9 +31,11 @@ const StarRating = ({
           className={cn(
             sizeClasses[size],
             "transition-colors",
-            i < rating 
-              ? "text-yellow-400 fill-yellow-400" 
-              : "text-gray-300"
+            grayedOut 
+              ? "text-gray-300" 
+              : i < rating 
+                ? "text-yellow-400 fill-yellow-400" 
+                : "text-gray-300"
           )}
         />
       ))}

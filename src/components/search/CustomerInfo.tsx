@@ -18,13 +18,15 @@ interface CustomerInfoProps {
   isBusinessUser: boolean;
   isReviewCustomer: boolean;
   onViewProfile: (e: React.MouseEvent) => void;
+  hasAccess?: boolean;
 }
 
 const CustomerInfo = ({ 
   customer, 
   isBusinessUser, 
   isReviewCustomer, 
-  onViewProfile 
+  onViewProfile,
+  hasAccess = false
 }: CustomerInfoProps) => {
   return (
     <div className="flex-1 min-w-0">
@@ -52,8 +54,11 @@ const CustomerInfo = ({
       <div className="flex items-center mt-1">
         {customer.averageRating && customer.averageRating > 0 && (
           <div className="flex items-center">
-            <StarRating rating={customer.averageRating} />
-            <span className="ml-2 text-sm text-gray-500">
+            <StarRating 
+              rating={customer.averageRating} 
+              grayedOut={!hasAccess}
+            />
+            <span className={`ml-2 text-sm ${!hasAccess ? 'text-gray-400' : 'text-gray-500'}`}>
               {customer.averageRating.toFixed(1)}
             </span>
           </div>
