@@ -198,7 +198,7 @@ const HowItWorks = () => {
                   <h4 className="font-bold mb-3">For Business Owners</h4>
                   <p className="mb-3">
                     When searching as a business owner, you'll see basic information about customers 
-                    including their name and overall rating. For full review content, you can either:
+                    that match your search criteria. For full review content, you can either:
                   </p>
                   <ul className="list-disc ml-5 space-y-2 mb-4">
                     <li>Pay per review to access specific reviews</li>
@@ -211,17 +211,9 @@ const HowItWorks = () => {
                 
                 <div className="welp-card">
                   <h4 className="font-bold mb-3">For Customers</h4>
-                  <p className="mb-3">
-                    As a customer, you can search for yourself to see what businesses are saying about you.
-                    You'll be able to view:
-                  </p>
-                  <ul className="list-disc ml-5 space-y-2 mb-4">
-                    <li>Which businesses have reviewed you</li>
-                    <li>Your overall star rating</li>
-                    <li>The first sentence of each review</li>
-                  </ul>
                   <p>
-                    To read the full review content and post a response, you can purchase access to each review.
+                    As a customer, you can search for yourself to see what businesses are saying about you.
+                    You'll be able to view basic information about the businesses that reviewed you, and you will be able to purchase access to individual reviews or subscribe for unlimited access to all reviews.
                   </p>
                 </div>
               </div>
