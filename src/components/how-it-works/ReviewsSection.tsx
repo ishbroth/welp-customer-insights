@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Star, MessageSquare } from "lucide-react";
@@ -20,16 +19,14 @@ const ReviewsSection = () => {
               <h4 className="font-bold text-lg mb-2">Writing Reviews</h4>
               <ol className="list-decimal ml-5 space-y-3 mb-6">
                 <li>Log in to your business account</li>
-                <li>Click "Write a Review" from your dashboard</li>
+                <li>Post review from your dashboard</li>
                 <li>Enter customer information (name, contact details)</li>
                 <li>Select a star rating (1-5 stars)</li>
                 <li>Write a detailed review of your experience</li>
                 <li>Submit your review</li>
               </ol>
               <p className="mb-4">
-                Your review will be published and available in the customer database.
-                Other business owners can see the first sentence for free, with full access
-                available through our payment options.
+                Other business owners can now find your customer review by searching for their name, address, phone number, or any other piece of information you know about them.
               </p>
               <Link to="/login">
                 <Button className="welp-button">
@@ -45,7 +42,7 @@ const ReviewsSection = () => {
               <ol className="list-decimal ml-5 space-y-3 mb-6">
                 <li>Log in to your customer account</li>
                 <li>Navigate to "My Reviews" in your profile</li>
-                <li>Purchase access to the full review for $3</li>
+                <li>Purchase access or subscribe to see the full review</li>
                 <li>Read the complete review content</li>
                 <li>Click "Respond" to share your perspective</li>
                 <li>Write your response to the business owner</li>
