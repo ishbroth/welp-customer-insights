@@ -21,6 +21,7 @@ import ProfileReviews from "@/pages/ProfileReviews";
 import BusinessReviews from "@/pages/BusinessReviews";
 import NotificationsPage from "@/pages/NotificationsPage";
 import BillingPage from "@/pages/BillingPage";
+import BuyCredits from "@/pages/BuyCredits";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
 import SuccessStories from "@/pages/SuccessStories";
 import Verification from "@/pages/Verification";
@@ -115,6 +116,11 @@ const AppRoutes = () => {
       <Route path="/profile/billing" element={
         <ProtectedRoute>
           <BillingPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/buy-credits" element={
+        <ProtectedRoute>
+          <BuyCredits />
         </ProtectedRoute>
       } />
       

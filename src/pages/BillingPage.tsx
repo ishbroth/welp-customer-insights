@@ -7,15 +7,21 @@ import ProfileSidebar from "@/components/ProfileSidebar";
 import { toast } from "@/components/ui/sonner";
 import { openCustomerPortal } from "@/services/subscriptionService";
 import { useBillingData } from "@/hooks/useBillingData";
+import { useCredits } from "@/hooks/useCredits";
 import BillingPageHeader from "@/components/billing/BillingPageHeader";
 import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
 import PaymentMethodsCard from "@/components/billing/PaymentMethodsCard";
 import TransactionHistoryCard from "@/components/billing/TransactionHistoryCard";
+import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 const BillingPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useAuth();
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [searchParams] = useSearchParams();
+  const { processSuccessfulPurchase } = useCredits();
   
   const {
     isLoadingData,
@@ -26,6 +32,25 @@ const BillingPage = () => {
     setHasStripeCustomer,
     loadBillingData
   } = useBillingData(currentUser);
+
+  // Handle successful credit purchase
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const credits = searchParams.get('credits');
+    
+    if (success === 'true' && credits) {
+      const creditAmount = parseInt(credits);
+      if (!isNaN(creditAmount)) {
+        processSuccessfulPurchase(creditAmount);
+        
+        // Clean up URL parameters
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('success');
+        newUrl.searchParams.delete('credits');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+  }, [searchParams, processSuccessfulPurchase]);
 
   // Handle opening Stripe customer portal
   const handleManageSubscription = async () => {
@@ -70,6 +95,8 @@ const BillingPage = () => {
             />
 
             <div className="space-y-6">
+              <CreditsBalanceCard />
+
               <CurrentSubscriptionCard
                 isLoadingData={isLoadingData}
                 subscriptionData={subscriptionData}
