@@ -114,7 +114,7 @@ const HowItWorks = () => {
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold mb-12 text-center">How to Sign Up & Log In</h2>
+              <h2 className="text-3xl font-bold mb-12 text-center">How to Sign Up</h2>
               
               <div className="space-y-12">
                 <div className="welp-card">
@@ -155,20 +155,6 @@ const HowItWorks = () => {
                       </p>
                     </div>
                   </div>
-                </div>
-
-                <div className="welp-card">
-                  <h3 className="text-xl font-bold mb-4">Logging In</h3>
-                  <p className="mb-4">
-                    Once your account is created, you can log in anytime using your email and password.
-                    We offer secure authentication options including:
-                  </p>
-                  <ul className="list-disc ml-5 space-y-2">
-                    <li>Standard email and password login</li>
-                    <li>Google account integration</li>
-                    <li>Apple ID login</li>
-                    <li>Remember me option for trusted devices</li>
-                  </ul>
                 </div>
               </div>
             </div>
@@ -242,7 +228,7 @@ const HowItWorks = () => {
             </div>
           </div>
         </section>
-
+        
         {/* Reviews Section */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">

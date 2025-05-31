@@ -11,7 +11,7 @@ export const useAuthLogin = () => {
     'isaac.wiley99@gmail.com'
   ];
 
-  // Login function using Supabase
+  // Login function using Supabase (email/password only)
   const login = async (email: string, password: string) => {
     try {
       // First attempt a regular login

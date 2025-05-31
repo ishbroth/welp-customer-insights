@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
@@ -14,6 +15,7 @@ import { CheckCircle } from "lucide-react";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
@@ -24,6 +26,15 @@ const Login = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(
     location.state?.message || null
   );
+
+  // Load remembered credentials on component mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("welp_remembered_email");
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Clear the success message after 10 seconds
   useEffect(() => {
@@ -53,6 +64,13 @@ const Login = () => {
       const { success, error } = await login(email, password);
       
       if (success) {
+        // Handle remember me functionality
+        if (rememberMe) {
+          localStorage.setItem("welp_remembered_email", email);
+        } else {
+          localStorage.removeItem("welp_remembered_email");
+        }
+        
         toast({
           title: "Logged In",
           description: "Welcome back to Welp.",
@@ -121,6 +139,17 @@ const Login = () => {
                     className="welp-input"
                     required
                   />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  />
+                  <label htmlFor="remember-me" className="text-sm text-gray-600">
+                    Remember me on this device
+                  </label>
                 </div>
                 
                 <Button
