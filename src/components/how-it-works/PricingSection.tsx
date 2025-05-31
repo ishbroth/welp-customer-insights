@@ -46,10 +46,12 @@ const PricingSection = () => {
                 </div>
               </div>
               
-              <Button className="welp-button w-full flex items-center justify-center">
-                <CreditCard className="mr-2 h-4 w-4" />
-                Buy Credits
-              </Button>
+              <Link to="/buy-credits">
+                <Button className="welp-button w-full flex items-center justify-center">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Buy Credits
+                </Button>
+              </Link>
             </div>
             
             {/* Subscription Option - Combined for both types of users */}
