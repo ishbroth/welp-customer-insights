@@ -1,6 +1,4 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Star, MessageSquare } from "lucide-react";
 
 const ReviewsSection = () => {
@@ -29,11 +27,6 @@ const ReviewsSection = () => {
               <p className="mb-4">
                 Other business owners can now find your customer review by searching for their name, address, phone number, or any other piece of information you know about them.
               </p>
-              <Link to="/login">
-                <Button className="welp-button">
-                  Write a Review
-                </Button>
-              </Link>
             </div>
             
             {/* For Customers */}
@@ -53,11 +46,6 @@ const ReviewsSection = () => {
                 Your response will be attached to the original review, providing context
                 and your side of the story to other businesses who view your customer profile.
               </p>
-              <Link to="/profile/reviews">
-                <Button className="welp-button">
-                  View My Reviews
-                </Button>
-              </Link>
             </div>
           </div>
           
