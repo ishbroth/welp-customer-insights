@@ -32,6 +32,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import AdminLogin from "@/pages/AdminLogin";
 import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
+import VerifyLicense from "@/pages/VerifyLicense";
 import ProtectedRoute from "./ProtectedRoute";
 import BusinessOwnerRoute from "./BusinessOwnerRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";

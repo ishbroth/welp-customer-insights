@@ -1,18 +1,17 @@
-
 export interface User {
   id: string;
   name: string;
   email: string;
-  type: "business" | "customer" | "admin";
-  avatar?: string;
-  businessId?: string;
-  bio?: string;
+  type: "customer" | "business" | "admin";
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   zipCode?: string;
-  reviews?: Review[];
+  businessId?: string;
+  avatar?: string;
+  bio?: string;
+  verified?: boolean;
 }
 
 export interface ReviewResponse {

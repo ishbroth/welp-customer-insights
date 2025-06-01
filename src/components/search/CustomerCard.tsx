@@ -120,9 +120,11 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
           
           <div className="flex items-center space-x-2">
             <CustomerActions 
-              customer={customer}
-              hasFullAccess={hasFullAccess}
-              isBusinessUser={isBusinessUser}
+              currentUser={currentUser}
+              hasAccess={hasFullAccess}
+              isExpanded={isExpanded}
+              onActionClick={(e) => e.stopPropagation()}
+              onExpandClick={handleCardClick}
             />
             <Button variant="ghost" size="sm">
               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -136,10 +138,33 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
               isExpanded ? (
                 <ExpandedCustomerView customer={customer} hasFullAccess={hasFullAccess} />
               ) : (
-                <ReviewsList customer={customer} hasFullAccess={hasFullAccess} />
+                <ReviewsList 
+                  customerId={customer.id}
+                  reviews={customer.reviews}
+                  hasFullAccess={() => hasFullAccess}
+                  isReviewCustomer={isReviewCustomer}
+                  customerData={{
+                    firstName: customer.firstName,
+                    lastName: customer.lastName,
+                    phone: customer.phone,
+                    address: customer.address,
+                    city: customer.city,
+                    state: customer.state,
+                    zipCode: customer.zipCode
+                  }}
+                />
               )
             ) : (
-              <NoReviews />
+              <NoReviews 
+                customerProfile={{
+                  first_name: customer.firstName,
+                  last_name: customer.lastName,
+                  phone: customer.phone,
+                  address: customer.address,
+                  city: customer.city,
+                  zipcode: customer.zipCode
+                }}
+              />
             )}
           </div>
         )}

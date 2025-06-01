@@ -5,7 +5,6 @@ import CustomerCard from "./CustomerCard";
 import EmptySearchResults from "./EmptySearchResults";
 import SearchResultsHeader from "./SearchResultsHeader";
 import { useAuth } from "@/contexts/auth";
-import { useCustomerReviewsData } from "@/hooks/useCustomerReviewsData";
 import { useClearSearch } from "@/hooks/useClearSearch";
 
 interface SearchResultsListProps {
@@ -17,12 +16,6 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
   const { currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const { clearSearch } = useClearSearch();
-  const {
-    expandedCustomerId,
-    customerReviews,
-    handleSelectCustomer,
-    hasFullAccess
-  } = useCustomerReviewsData();
 
   // Check if any search parameters are present to determine if a search has been performed
   const hasSearchParams = Array.from(searchParams.entries()).some(([key, value]) => 
@@ -46,10 +39,6 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
               <CustomerCard
                 key={customer.id}
                 customer={customer}
-                customerReviews={customerReviews}
-                expandedCustomerId={expandedCustomerId}
-                handleSelectCustomer={handleSelectCustomer}
-                hasFullAccess={hasFullAccess}
               />
             ))}
           </div>
@@ -75,10 +64,6 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
           <CustomerCard
             key={customer.id}
             customer={customer}
-            customerReviews={customerReviews}
-            expandedCustomerId={expandedCustomerId}
-            handleSelectCustomer={handleSelectCustomer}
-            hasFullAccess={hasFullAccess}
           />
         ))}
       </div>
