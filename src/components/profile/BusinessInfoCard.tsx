@@ -4,19 +4,19 @@ import { MapPin, Phone, Shield, User as UserIcon, ExternalLink, Building, Globe 
 import { User } from "@/data/mockUsers";
 import { Link } from "react-router-dom";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface BusinessInfoCardProps {
   currentUser: User | null;
 }
 
 const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
+  const { isVerified } = useVerifiedStatus(currentUser?.id);
+  
   // Extract license information from user data
   const licenseNumber = currentUser?.businessId;
   const licenseState = currentUser?.state;
-  const licenseType = currentUser?.type; // This would need to be stored separately in a real implementation
-  
-  // Check if business is verified
-  const isVerified = currentUser?.verified || false;
+  const licenseType = currentUser?.type;
 
   return (
     <Card className="p-6">

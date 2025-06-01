@@ -11,31 +11,49 @@ export type Database = {
     Tables: {
       business_info: {
         Row: {
+          additional_info: string | null
+          additional_licenses: string | null
+          business_category: string | null
           business_name: string
+          business_subcategory: string | null
           id: string
           license_expiration: string | null
           license_number: string | null
+          license_state: string | null
           license_status: string | null
           license_type: string | null
           verified: boolean
+          website: string | null
         }
         Insert: {
+          additional_info?: string | null
+          additional_licenses?: string | null
+          business_category?: string | null
           business_name: string
+          business_subcategory?: string | null
           id: string
           license_expiration?: string | null
           license_number?: string | null
+          license_state?: string | null
           license_status?: string | null
           license_type?: string | null
           verified?: boolean
+          website?: string | null
         }
         Update: {
+          additional_info?: string | null
+          additional_licenses?: string | null
+          business_category?: string | null
           business_name?: string
+          business_subcategory?: string | null
           id?: string
           license_expiration?: string | null
           license_number?: string | null
+          license_state?: string | null
           license_status?: string | null
           license_type?: string | null
           verified?: boolean
+          website?: string | null
         }
         Relationships: [
           {

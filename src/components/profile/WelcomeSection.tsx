@@ -1,41 +1,37 @@
 
-import { Shield } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 const WelcomeSection = () => {
   const { currentUser } = useAuth();
+  const { isVerified } = useVerifiedStatus(currentUser?.id);
+
+  if (!currentUser) return null;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16 border-2 border-white shadow-md">
-          {currentUser?.avatar ? (
-            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-          ) : (
-            <AvatarFallback className="text-xl bg-welp-primary text-white">
-              {currentUser?.name?.[0] || "U"}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div>
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome, {currentUser?.name}
-            {currentUser?.type === "admin" && (
-              <span className="inline-flex items-center ml-2 text-lg bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md">
-                <Shield className="h-4 w-4 mr-1" /> Administrator
-              </span>
-            )}
-          </h1>
-          <p className="text-gray-600">
-            {currentUser?.type === "admin" 
-              ? "Administrator access - You can manage all aspects of the application"
-              : currentUser?.type === "customer"
-              ? "View what businesses are saying about you"
-              : "Manage your profile and customer reviews"}
-          </p>
-        </div>
+    <div className="mb-8">
+      <div className="flex items-center gap-3 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900">
+          {getGreeting()}, {currentUser.name || "User"}!
+        </h1>
+        {currentUser.type === 'business' && isVerified && (
+          <VerifiedBadge size="lg" />
+        )}
       </div>
+      <p className="text-gray-600">
+        {currentUser.type === 'business' 
+          ? `Welcome to your business dashboard${isVerified ? ' - Your business is verified!' : ''}.`
+          : "Welcome to your customer dashboard."
+        }
+      </p>
     </div>
   );
 };

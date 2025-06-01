@@ -1,48 +1,48 @@
 
-import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Shield } from "lucide-react";
-import { CardTitle } from "@/components/ui/card";
-import { BusinessProfile } from "@/types/business";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface BusinessBasicInfoProps {
-  profile: BusinessProfile;
+  profile: {
+    id: string;
+    name?: string;
+    avatar?: string;
+    bio?: string;
+  };
 }
 
-const BusinessBasicInfo: React.FC<BusinessBasicInfoProps> = ({ profile }) => {
-  // Get initials from name for avatar fallback
-  const getInitials = (name?: string) => {
-    if (!name) return "B";
-    return name.split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+const BusinessBasicInfo = ({ profile }: BusinessBasicInfoProps) => {
+  const { isVerified } = useVerifiedStatus(profile.id);
+
+  const getBusinessInitials = (name: string | undefined) => {
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "B";
   };
-  
+
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
-      <Avatar className="h-24 w-24 border-2 border-white shadow-lg">
-        {profile.avatar ? (
-          <AvatarImage src={profile.avatar} alt={profile.name} />
-        ) : (
-          <AvatarFallback className="text-xl bg-primary/10 text-primary">
-            {getInitials(profile.name)}
-          </AvatarFallback>
-        )}
+    <div className="flex items-start space-x-4">
+      <Avatar className="h-20 w-20">
+        <AvatarImage src={profile.avatar || ""} alt={profile.name} />
+        <AvatarFallback className="bg-blue-100 text-blue-800 text-lg">
+          {getBusinessInitials(profile.name)}
+        </AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-2xl font-bold text-center md:text-left">
-            {profile.name || "Business"}
-          </CardTitle>
-          <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs flex items-center">
-            <Shield className="h-3 w-3 mr-1" />
-            Business
-          </div>
+        <div className="flex items-center gap-2 mb-2">
+          <h1 className="text-2xl font-bold">{profile.name || "Business Profile"}</h1>
+          {isVerified && <VerifiedBadge size="lg" />}
         </div>
         {profile.bio && (
-          <p className="mt-2 text-gray-600">{profile.bio}</p>
+          <p className="text-gray-600 leading-relaxed">{profile.bio}</p>
+        )}
+        {isVerified && (
+          <div className="mt-2 text-sm text-green-600 font-medium">
+            ✓ Verified Business
+          </div>
         )}
       </div>
     </div>
