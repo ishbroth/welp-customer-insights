@@ -1,6 +1,6 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./types";
 import StateSelect from "@/components/search/StateSelect";
@@ -19,7 +19,7 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
           <FormItem>
             <FormLabel>Phone</FormLabel>
             <FormControl>
-              <Input placeholder="Your phone number" {...field} />
+              <PhoneInput placeholder="Your phone number" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
