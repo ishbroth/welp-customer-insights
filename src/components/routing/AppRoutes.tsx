@@ -118,11 +118,9 @@ const AppRoutes = () => {
           <BillingPage />
         </ProtectedRoute>
       } />
-      <Route path="/buy-credits" element={
-        <ProtectedRoute>
-          <BuyCredits />
-        </ProtectedRoute>
-      } />
+      
+      {/* Buy credits page - accessible to all, handles auth redirect internally */}
+      <Route path="/buy-credits" element={<BuyCredits />} />
       
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />

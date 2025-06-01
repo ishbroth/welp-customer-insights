@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -16,16 +16,35 @@ import { useCredits } from "@/hooks/useCredits";
 const BuyCredits = () => {
   const [creditAmount, setCreditAmount] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { balance } = useCredits();
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
 
+  // Check if user is authenticated, if not redirect to login
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      // Store the current path so we can redirect back after login
+      navigate("/login", { 
+        state: { 
+          returnTo: "/buy-credits",
+          message: "Please log in to purchase credits"
+        }
+      });
+    }
+  }, [currentUser, loading, navigate]);
+
   const handlePurchase = async () => {
     if (!currentUser) {
       toast.error("Please log in to purchase credits");
-      navigate("/login");
+      navigate("/login", { 
+        state: { 
+          returnTo: "/buy-credits",
+          message: "Please log in to purchase credits"
+        }
+      });
       return;
     }
 
@@ -63,32 +82,25 @@ const BuyCredits = () => {
     }
   };
 
-  if (!currentUser) {
+  // Show loading while auth is being determined
+  if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <Lock className="h-12 w-12 mx-auto mb-4 text-[#ea384c]" />
-              <CardTitle>Login Required</CardTitle>
-              <CardDescription>
-                You must be logged in to purchase credits.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={() => navigate("/login")} 
-                className="w-full"
-              >
-                Go to Login
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ea384c] mx-auto mb-4"></div>
+            <p>Loading...</p>
+          </div>
         </main>
         <Footer />
       </div>
     );
+  }
+
+  // If not authenticated, component will redirect via useEffect
+  if (!currentUser) {
+    return null;
   }
 
   return (

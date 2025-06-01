@@ -22,10 +22,11 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get success message if passed from another page
+  // Get success message and return URL if passed from another page
   const [successMessage, setSuccessMessage] = useState<string | null>(
     location.state?.message || null
   );
+  const returnTo = location.state?.returnTo || "/profile";
 
   // Load remembered credentials on component mount
   useEffect(() => {
@@ -75,7 +76,8 @@ const Login = () => {
           title: "Logged In",
           description: "Welcome back to Welp.",
         });
-        navigate("/profile");
+        // Redirect to the returnTo URL or default to profile
+        navigate(returnTo);
       } else {
         toast({
           title: "Login Failed",
