@@ -118,7 +118,7 @@ const ProfilePage = () => {
                                 className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
                               >
                                 <ExternalLink className="h-3 w-3" />
-                                Verify License
+                                Update License Information
                               </Link>
                             )}
                           </div>
