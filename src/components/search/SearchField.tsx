@@ -2,6 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface SearchFieldProps {
   type?: string;
@@ -23,10 +24,25 @@ const SearchField = ({
   // Use FirstNameInput for first name fields
   const isFirstNameField = placeholder.toLowerCase().includes("first name");
   
+  // Use PhoneInput for phone fields
+  const isPhoneField = placeholder.toLowerCase().includes("phone") || type === "tel";
+  
   if (isFirstNameField) {
     return (
       <FirstNameInput
         type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className={`welp-input ${className || ""}`}
+        required={required}
+      />
+    );
+  }
+
+  if (isPhoneField) {
+    return (
+      <PhoneInput
         placeholder={placeholder}
         value={value}
         onChange={onChange}

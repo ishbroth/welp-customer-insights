@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRound } from "lucide-react";
 import { 
@@ -230,7 +231,7 @@ const CustomerSignupForm = () => {
       
       <div>
         <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">Phone Number</label>
-        <Input
+        <PhoneInput
           id="customerPhone"
           placeholder="(555) 123-4567"
           value={customerPhone}

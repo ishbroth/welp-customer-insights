@@ -2,6 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import StateSelect from "@/components/search/StateSelect";
 
 interface CustomerInfoFormProps {
@@ -72,7 +73,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       
       <div>
         <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">Phone Number (if known)</label>
-        <Input
+        <PhoneInput
           id="customerPhone"
           value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}

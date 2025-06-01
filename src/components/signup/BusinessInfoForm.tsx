@@ -1,5 +1,5 @@
 
-import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { 
   Select, 
   SelectContent, 
@@ -201,7 +201,7 @@ export const BusinessInfoForm = ({
       
       <div>
         <label htmlFor="businessPhone" className="block text-sm font-medium mb-1">Business Phone</label>
-        <Input
+        <PhoneInput
           id="businessPhone"
           placeholder="(555) 123-4567"
           value={businessPhone}
