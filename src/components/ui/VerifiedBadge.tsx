@@ -1,5 +1,5 @@
 
-import { Check, Ribbon } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface VerifiedBadgeProps {
   size?: "sm" | "md" | "lg";
@@ -20,12 +20,12 @@ const VerifiedBadge = ({ size = "md", className = "" }: VerifiedBadgeProps) => {
   };
 
   return (
-    <div className={`relative inline-flex ${className}`} aria-label="Verified business">
-      <Ribbon 
-        className={`text-blue-600 fill-blue-600 ${sizeClasses[size]}`}
-      />
+    <div 
+      className={`relative inline-flex items-center justify-center bg-blue-600 rounded-full ${sizeClasses[size]} ${className}`} 
+      aria-label="Verified business"
+    >
       <Check 
-        className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white ${checkSizeClasses[size]}`}
+        className={`text-white ${checkSizeClasses[size]}`}
       />
     </div>
   );
