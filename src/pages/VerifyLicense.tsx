@@ -13,59 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Shield, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-
-const BUSINESS_TYPES = [
-  { category: "Construction & Contractors", types: [
-    "General Contractor", "Electrician", "Plumber", "HVAC Contractor", 
-    "Roofing Contractor", "Flooring Contractor", "Painting Contractor",
-    "Landscaping Contractor", "Pool Contractor", "Concrete Contractor",
-    "Drywall Contractor", "Kitchen & Bath Remodeling", "Windows & Doors"
-  ]},
-  { category: "Professional Services", types: [
-    "Accountant/CPA", "Attorney/Lawyer", "Real Estate Agent", "Insurance Agent",
-    "Financial Advisor", "Consultant", "Marketing Agency", "IT Services",
-    "Web Design/Development", "Graphic Designer", "Photographer", "Event Planner"
-  ]},
-  { category: "Healthcare & Wellness", types: [
-    "Dentist", "Physician", "Veterinarian", "Chiropractor", "Physical Therapist",
-    "Massage Therapist", "Mental Health Counselor", "Optometrist", "Pharmacist"
-  ]},
-  { category: "Home Services", types: [
-    "House Cleaning", "Lawn Care", "Pest Control", "Security Systems",
-    "Appliance Repair", "Computer Repair", "Auto Repair", "Moving Services",
-    "Handyman Services", "Interior Design"
-  ]},
-  { category: "Food & Hospitality", types: [
-    "Restaurant", "Catering", "Food Truck", "Hotel/Motel", "Event Venue",
-    "Wedding Venue", "Bar/Nightclub", "Coffee Shop", "Bakery"
-  ]},
-  { category: "Retail & Commerce", types: [
-    "Retail Store", "Auto Dealership", "Jewelry Store", "Clothing Store",
-    "Electronics Store", "Furniture Store", "Hardware Store", "Pharmacy"
-  ]},
-  { category: "Transportation", types: [
-    "Taxi Service", "Rideshare Driver", "Trucking Company", "Moving Company",
-    "Auto Repair Shop", "Towing Service", "Delivery Service"
-  ]},
-  { category: "Education & Training", types: [
-    "Private School", "Tutoring Service", "Driving School", "Fitness Trainer",
-    "Music Instructor", "Dance Studio", "Art Studio", "Language School"
-  ]},
-  { category: "Beauty & Personal Care", types: [
-    "Hair Salon", "Barber Shop", "Nail Salon", "Spa", "Tattoo Parlor",
-    "Massage Therapy", "Esthetician", "Personal Trainer"
-  ]},
-  { category: "Other", types: [
-    "Other Professional Service", "Other Retail Business", "Other Service Business"
-  ]}
-];
+import { BUSINESS_TYPE_OPTIONS } from "@/components/signup/businessFormData";
 
 const LICENSE_TYPES = [
   "Business License", "Contractor License", "Professional License", 
   "Trade License", "Occupational License", "Federal License",
   "State Professional License", "City/County Business License",
   "Industry-Specific License", "Certification", "Other"
-];
+].sort();
 
 const VerifyLicense = () => {
   const { currentUser, loading } = useAuth();
@@ -246,7 +201,7 @@ const VerifyLicense = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select license type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {LICENSE_TYPES.map((type) => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
@@ -270,10 +225,10 @@ const VerifyLicense = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select business category" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {BUSINESS_TYPES.map((category) => (
-                          <SelectItem key={category.category} value={category.category}>
-                            {category.category}
+                      <SelectContent className="bg-white">
+                        {BUSINESS_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -282,20 +237,12 @@ const VerifyLicense = () => {
 
                   <div>
                     <Label htmlFor="businessSubcategory">Business Subcategory</Label>
-                    <Select 
-                      value={formData.businessSubcategory} 
-                      onValueChange={(value) => handleInputChange("businessSubcategory", value)}
-                      disabled={!formData.businessType}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select subcategory" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {BUSINESS_TYPES.find(cat => cat.category === formData.businessType)?.types.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      id="businessSubcategory"
+                      value={formData.businessSubcategory}
+                      onChange={(e) => handleInputChange("businessSubcategory", e.target.value)}
+                      placeholder="e.g. Plumbing, General Practice, etc."
+                    />
                   </div>
 
                   <div>
