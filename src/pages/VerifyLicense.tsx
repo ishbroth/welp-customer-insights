@@ -32,6 +32,8 @@ const BUSINESS_CATEGORIES = [
 const BUSINESS_SUBCATEGORIES = [
   "Auto Repair", "Car Dealership", "Hair Salon", "Spa", "Fitness Center", 
   "General Contractor", "Electrician", "Plumber", "HVAC", "Roofing", 
+  "Painter", "Landscaping", "Flooring", "Carpentry", "Masonry", "Concrete",
+  "Drywall", "Insulation", "Windows & Doors", "Kitchen & Bath Remodeling",
   "School", "Tutoring", "Restaurant", "Bar", "Catering", "Doctor", 
   "Dentist", "Veterinarian", "Law Firm", "Accounting", "Consulting", 
   "Real Estate Agent", "Property Management", "Retail Store", "E-commerce", 
