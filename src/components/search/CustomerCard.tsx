@@ -141,7 +141,7 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
                 <ReviewsList 
                   customerId={customer.id}
                   reviews={customer.reviews}
-                  hasFullAccess={() => hasFullAccess}
+                  hasFullAccess={(customerId: string) => hasFullAccess}
                   isReviewCustomer={isReviewCustomer}
                   customerData={{
                     firstName: customer.firstName,
