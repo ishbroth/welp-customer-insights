@@ -1,13 +1,22 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Shield, User as UserIcon } from "lucide-react";
+import { MapPin, Phone, Shield, User as UserIcon, CheckCircle, ExternalLink } from "lucide-react";
 import { User } from "@/data/mockUsers";
+import { Link } from "react-router-dom";
 
 interface BusinessInfoCardProps {
   currentUser: User | null;
 }
 
 const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
+  // Extract license information from user data
+  const licenseNumber = currentUser?.businessId;
+  const licenseState = currentUser?.state;
+  const licenseType = currentUser?.type; // This would need to be stored separately in a real implementation
+  
+  // Check if business is verified (this would come from the database in a real implementation)
+  const isVerified = false; // Placeholder - would check verification status from database
+
   return (
     <Card className="p-6">
       <CardHeader className="pb-2">
@@ -23,15 +32,40 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
                 <p className="font-medium">{currentUser?.name}</p>
               </div>
             </div>
-            {currentUser?.businessId && (
-              <div className="flex items-center gap-3 mb-4">
-                <Shield className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Business ID</p>
-                  <p className="font-medium">{currentUser?.businessId}</p>
+            
+            {licenseNumber && (
+              <div className="flex items-start gap-3 mb-4">
+                <Shield className="h-5 w-5 text-gray-500 mt-1" />
+                <div className="flex-grow">
+                  <p className="text-sm text-gray-500">License Number</p>
+                  <p className="font-medium">{licenseNumber}</p>
+                  
+                  {licenseState && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {licenseType && licenseType !== 'business' ? `${licenseType.charAt(0).toUpperCase() + licenseType.slice(1)} License` : 'Business License'} • {licenseState}
+                    </p>
+                  )}
+                  
+                  <div className="mt-2">
+                    {isVerified ? (
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="text-sm font-medium">Verified</span>
+                      </div>
+                    ) : (
+                      <Link 
+                        to="/verify-license" 
+                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Verify License
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
+            
             {currentUser?.phone && (
               <div className="flex items-center gap-3 mb-4">
                 <Phone className="h-5 w-5 text-gray-500" />

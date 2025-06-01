@@ -8,7 +8,7 @@ import ProfileSidebar from "@/components/ProfileSidebar";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Edit, CheckCircle, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ProfilePage = () => {
@@ -25,6 +25,14 @@ const ProfilePage = () => {
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
+
+  // Extract license information
+  const licenseNumber = currentUser.businessId;
+  const licenseState = currentUser.state;
+  const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
+  
+  // Check if business is verified (placeholder - would come from database)
+  const isVerified = false;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -92,13 +100,40 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {(currentUser.type === "business" || currentUser.type === "admin") && currentUser.businessId && (
+                {isBusinessAccount && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Business ID</label>
-                      <p className="text-gray-900">{currentUser.businessId}</p>
-                    </div>
+                    {licenseNumber ? (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">License Number</label>
+                          <p className="text-gray-900">{licenseNumber}</p>
+                          {licenseState && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Business License • {licenseState}
+                            </p>
+                          )}
+                          <div className="mt-2">
+                            {isVerified ? (
+                              <div className="flex items-center gap-2 text-green-600">
+                                <CheckCircle className="h-4 w-4" />
+                                <span className="text-sm font-medium">Verified License</span>
+                              </div>
+                            ) : (
+                              <Link 
+                                to="/verify-license" 
+                                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Verify License
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No license information provided</p>
+                    )}
                   </div>
                 )}
               </div>

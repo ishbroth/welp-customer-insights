@@ -23,7 +23,7 @@ const BusinessInfoForm = ({ form }: BusinessInfoFormProps) => {
     if (!businessId) {
       toast({
         title: "Verification Error",
-        description: "Please enter a license number or EIN first",
+        description: "Please enter a license number first",
         variant: "destructive",
       });
       return;
@@ -41,13 +41,13 @@ const BusinessInfoForm = ({ form }: BusinessInfoFormProps) => {
         setVerificationStatus('verified');
         toast({
           title: "Verification Successful",
-          description: "Your business ID has been verified successfully",
+          description: "Your license has been verified successfully",
         });
       } else {
         setVerificationStatus('failed');
         toast({
           title: "Verification Failed",
-          description: result.message || "Could not verify the business ID",
+          description: result.message || "Could not verify the license",
           variant: "destructive",
         });
       }
@@ -69,11 +69,11 @@ const BusinessInfoForm = ({ form }: BusinessInfoFormProps) => {
       name="businessId"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>License Number / EIN</FormLabel>
+          <FormLabel>License Number</FormLabel>
           <div className="flex gap-2">
             <FormControl>
               <Input 
-                placeholder="Enter your business license or EIN" 
+                placeholder="Enter your license number or EIN" 
                 {...field} 
                 className="flex-grow"
               />
@@ -89,10 +89,10 @@ const BusinessInfoForm = ({ form }: BusinessInfoFormProps) => {
             </Button>
           </div>
           {verificationStatus === 'verified' && (
-            <p className="text-sm text-green-600 mt-1">Business ID verified successfully</p>
+            <p className="text-sm text-green-600 mt-1">License verified successfully</p>
           )}
           {verificationStatus === 'failed' && (
-            <p className="text-sm text-red-600 mt-1">Business ID verification failed</p>
+            <p className="text-sm text-red-600 mt-1">License verification failed</p>
           )}
           <FormMessage />
         </FormItem>

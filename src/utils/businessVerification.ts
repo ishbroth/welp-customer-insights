@@ -1,6 +1,7 @@
-
 // Mock business verification utility
 // In a real application, this would connect to actual verification services
+
+import { verifyLicenseWithStateDatabase } from './realLicenseVerification';
 
 type VerificationResult = {
   verified: boolean;
@@ -9,11 +10,14 @@ type VerificationResult = {
     type?: string;
     status?: string;
     expirationDate?: string;
+    businessName?: string;
+    issuingAuthority?: string;
   };
+  isRealVerification?: boolean;
 };
 
 /**
- * Verify a business ID (license number or EIN)
+ * Verify a business ID (license number or EIN) with enhanced real verification
  */
 export const verifyBusinessId = async (
   businessId: string, 
@@ -34,7 +38,23 @@ export const verifyBusinessId = async (
     };
   }
 
-  // Route verification to the appropriate function based on business type
+  // First try real verification for supported states and license types
+  if (state && businessType !== 'ein') {
+    try {
+      console.log(`Attempting real verification for ${businessType} in ${state}`);
+      const realResult = await verifyLicenseWithStateDatabase(cleanId, businessType, state);
+      
+      // If real verification succeeded or failed definitively, return that result
+      if (realResult.isRealVerification) {
+        return realResult;
+      }
+    } catch (error) {
+      console.log('Real verification failed, falling back to mock verification:', error);
+      // Continue to mock verification if real verification fails
+    }
+  }
+
+  // Fall back to mock verification for EINs and unsupported states
   switch(businessType) {
     case 'ein':
       return verifyEIN(cleanId);
