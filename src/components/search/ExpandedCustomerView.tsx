@@ -15,7 +15,15 @@ interface ExpandedCustomerViewProps {
     state?: string;
     zipCode?: string;
   };
-  reviews: any[];
+  reviews: Array<{
+    id: string;
+    reviewerId: string;
+    reviewerName: string;
+    rating: number;
+    content: string;
+    date: string;
+    reviewerVerified?: boolean;
+  }>;
   hasFullAccess: (customerId: string) => boolean;
   isReviewCustomer: boolean;
 }

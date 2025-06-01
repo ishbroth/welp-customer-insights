@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { MapPin, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,7 +44,11 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
   const [isExpanded, setIsExpanded] = useState(false);
   
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-  const hasFullAccess = isSubscribed || hasOneTimeAccess(customer.id);
+  
+  // Create a function that checks full access for a given customer ID
+  const hasFullAccessFunction = (customerId: string): boolean => {
+    return isSubscribed || hasOneTimeAccess(customerId);
+  };
   
   // Check if customer has verified reviews
   const hasVerifiedReviews = customer.reviews?.some(review => review.reviewerVerified) || false;
@@ -60,7 +65,7 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
 
   const handleViewProfile = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isBusinessUser && hasFullAccess) {
+    if (isBusinessUser && hasFullAccessFunction(customer.id)) {
       navigate(`/customer/${customer.id}`);
     }
   };
@@ -120,7 +125,7 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
           <div className="flex items-center space-x-2">
             <CustomerActions 
               currentUser={currentUser}
-              hasAccess={hasFullAccess}
+              hasAccess={hasFullAccessFunction(customer.id)}
               isExpanded={isExpanded}
               onActionClick={(e) => e.stopPropagation()}
               onExpandClick={handleCardClick}
@@ -134,25 +139,12 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
         {isExpanded && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             {customer.reviews && customer.reviews.length > 0 ? (
-              isExpanded ? (
-                <ExpandedCustomerView customer={customer} hasFullAccess={hasFullAccess} />
-              ) : (
-                <ReviewsList 
-                  customerId={customer.id}
-                  reviews={customer.reviews}
-                  hasFullAccess={() => hasFullAccess}
-                  isReviewCustomer={isReviewCustomer}
-                  customerData={{
-                    firstName: customer.firstName,
-                    lastName: customer.lastName,
-                    phone: customer.phone,
-                    address: customer.address,
-                    city: customer.city,
-                    state: customer.state,
-                    zipCode: customer.zipCode
-                  }}
-                />
-              )
+              <ExpandedCustomerView 
+                customer={customer}
+                reviews={customer.reviews}
+                hasFullAccess={hasFullAccessFunction}
+                isReviewCustomer={isReviewCustomer}
+              />
             ) : (
               <NoReviews 
                 customerProfile={{
