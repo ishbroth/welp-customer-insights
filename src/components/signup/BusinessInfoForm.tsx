@@ -19,6 +19,18 @@ const US_STATES = [
   "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
 ];
 
+// Business type options - alphabetized
+const BUSINESS_TYPE_OPTIONS = [
+  { value: "attorney", label: "Attorney/Legal Services" },
+  { value: "bar", label: "Bar/Liquor Store" },
+  { value: "contractor", label: "Contractor" },
+  { value: "ein", label: "EIN (Employer Identification Number)" },
+  { value: "medical", label: "Medical Professional" },
+  { value: "other", label: "Other Licensed Business" },
+  { value: "realtor", label: "Real Estate Agent" },
+  { value: "restaurant", label: "Restaurant" }
+].sort((a, b) => a.label.localeCompare(b.label));
+
 interface BusinessInfoFormProps {
   businessName: string;
   setBusinessName: (value: string) => void;
@@ -218,14 +230,11 @@ export const BusinessInfoForm = ({
             <SelectValue placeholder="Select Business Type" />
           </SelectTrigger>
           <SelectContent className="bg-white">
-            <SelectItem value="ein">EIN (Employer Identification Number)</SelectItem>
-            <SelectItem value="contractor">Contractor</SelectItem>
-            <SelectItem value="restaurant">Restaurant</SelectItem>
-            <SelectItem value="bar">Bar/Liquor Store</SelectItem>
-            <SelectItem value="attorney">Attorney/Legal Services</SelectItem>
-            <SelectItem value="realtor">Real Estate Agent</SelectItem>
-            <SelectItem value="medical">Medical Professional</SelectItem>
-            <SelectItem value="other">Other Licensed Business</SelectItem>
+            {BUSINESS_TYPE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
