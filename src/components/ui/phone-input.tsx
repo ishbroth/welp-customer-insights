@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const PhoneInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, onChange, ...props }, ref) => {
+  ({ className, onChange, value, ...props }, ref) => {
     const formatPhoneNumber = (value: string) => {
       // Remove all non-digits
       const phoneNumber = value.replace(/\D/g, '');
@@ -20,14 +20,24 @@ const PhoneInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"inpu
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const formatted = formatPhoneNumber(e.target.value);
+      const inputValue = e.target.value;
+      const formatted = formatPhoneNumber(inputValue);
       
-      // Update the input value
-      e.target.value = formatted;
+      // Create a new event with the formatted value
+      const syntheticEvent = {
+        ...e,
+        target: {
+          ...e.target,
+          value: formatted
+        }
+      };
       
       // Call the original onChange if provided
-      onChange?.(e);
+      onChange?.(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
     };
+
+    // Format the initial value if provided
+    const formattedValue = value ? formatPhoneNumber(value.toString()) : value;
 
     return (
       <input
@@ -37,6 +47,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"inpu
           className
         )}
         ref={ref}
+        value={formattedValue}
         onChange={handleChange}
         maxLength={14} // (123) 456-7890 = 14 characters
         {...props}
