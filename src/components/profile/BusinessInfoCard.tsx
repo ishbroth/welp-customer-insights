@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Shield, User as UserIcon, CheckCircle, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Shield, User as UserIcon, ExternalLink } from "lucide-react";
 import { User } from "@/data/mockUsers";
 import { Link } from "react-router-dom";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface BusinessInfoCardProps {
   currentUser: User | null;
@@ -14,13 +15,16 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
   const licenseState = currentUser?.state;
   const licenseType = currentUser?.type; // This would need to be stored separately in a real implementation
   
-  // Check if business is verified (this would come from the database in a real implementation)
-  const isVerified = false; // Placeholder - would check verification status from database
+  // Check if business is verified
+  const isVerified = currentUser?.verified || false;
 
   return (
     <Card className="p-6">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-semibold">Business Information</CardTitle>
+        <CardTitle className="text-xl font-semibold flex items-center gap-2">
+          Business Information
+          {isVerified && <VerifiedBadge size="md" />}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -29,7 +33,10 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
               <UserIcon className="h-5 w-5 text-gray-500" />
               <div>
                 <p className="text-sm text-gray-500">Business Name</p>
-                <p className="font-medium">{currentUser?.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{currentUser?.name}</p>
+                  {isVerified && <VerifiedBadge size="sm" />}
+                </div>
               </div>
             </div>
             
@@ -49,7 +56,7 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
                   <div className="mt-2">
                     {isVerified ? (
                       <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle className="h-4 w-4" />
+                        <VerifiedBadge size="sm" />
                         <span className="text-sm font-medium">Verified</span>
                       </div>
                     ) : (

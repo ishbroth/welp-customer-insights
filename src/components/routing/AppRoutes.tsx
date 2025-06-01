@@ -45,6 +45,11 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/verification" element={<Verification />} />
+      <Route path="/verify-license" element={
+        <ProtectedRoute>
+          <VerifyLicense />
+        </ProtectedRoute>
+      } />
       <Route path="/review/success" element={<ReviewSuccess />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/one-time-review" element={<OneTimeReviewAccess />} />

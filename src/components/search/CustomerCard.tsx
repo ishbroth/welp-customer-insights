@@ -1,100 +1,149 @@
 
-import { useNavigate } from "react-router-dom";
-import { Customer } from "@/types/search";
-import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { MapPin, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
 import CustomerAvatar from "./CustomerAvatar";
-import CustomerInfo from "./CustomerInfo";
+import ReviewsList from "./ReviewsList";
 import CustomerActions from "./CustomerActions";
 import ExpandedCustomerView from "./ExpandedCustomerView";
+import NoReviews from "./NoReviews";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface CustomerCardProps {
-  customer: Customer;
-  customerReviews: {[key: string]: any[]};
-  expandedCustomerId: string | null;
-  handleSelectCustomer: (customerId: string) => void;
-  hasFullAccess: (customerId: string) => boolean;
+  customer: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    avatar?: string;
+    reviews?: Array<{
+      id: string;
+      reviewerId: string;
+      reviewerName: string;
+      rating: number;
+      content: string;
+      date: string;
+      reviewerVerified?: boolean;
+    }>;
+  };
+  searchCriteria?: string;
+  isReviewCustomer?: boolean;
 }
 
-const CustomerCard = ({
-  customer,
-  customerReviews,
-  expandedCustomerId,
-  handleSelectCustomer,
-  hasFullAccess
-}: CustomerCardProps) => {
+const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: CustomerCardProps) => {
   const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const navigate = useNavigate();
-  const isExpanded = expandedCustomerId === customer.id;
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-  const isReviewCustomer = customer.id.startsWith('review-customer-');
-  const reviews = customerReviews[customer.id] || [];
-  const hasAccess = currentUser && (isSubscribed || hasOneTimeAccess(customer.id));
+  const hasFullAccess = isSubscribed || hasOneTimeAccess(customer.id);
+  
+  // Check if customer has verified reviews
+  const hasVerifiedReviews = customer.reviews?.some(review => review.reviewerVerified) || false;
+
+  const getLocationDisplay = () => {
+    if (customer.city && customer.state) {
+      return `${customer.city}, ${customer.state}`;
+    }
+    if (customer.zipCode) {
+      return customer.zipCode;
+    }
+    return null;
+  };
 
   const handleViewProfile = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isReviewCustomer) {
+    if (isBusinessUser && hasFullAccess) {
       navigate(`/customer/${customer.id}`);
     }
   };
 
-  const handleUnlockReviews = () => {
-    navigate('/signup?unlock=review');
+  const handleCardClick = () => {
+    setIsExpanded(!isExpanded);
   };
 
-  const handleActionClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (hasAccess) {
-      handleSelectCustomer(customer.id);
-    } else {
-      handleUnlockReviews();
-    }
-  };
-
-  const handleExpandClick = () => {
-    handleSelectCustomer(customer.id);
-  };
+  const location = getLocationDisplay();
 
   return (
-    <Card 
-      className={`p-4 transition-shadow hover:shadow-md ${isExpanded ? 'shadow-md' : ''}`}
-      onClick={currentUser ? () => handleSelectCustomer(customer.id) : undefined}
-    >
-      <div className="flex justify-between items-start">
-        <div className="flex items-start space-x-3 flex-1">
-          <CustomerAvatar
-            customer={customer}
-            isReviewCustomer={isReviewCustomer}
-            isBusinessUser={isBusinessUser}
-            onViewProfile={handleViewProfile}
-          />
+    <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between cursor-pointer" onClick={handleCardClick}>
+          <div className="flex items-start space-x-3 flex-grow">
+            <CustomerAvatar 
+              customer={customer}
+              isReviewCustomer={isReviewCustomer}
+              isBusinessUser={isBusinessUser}
+              onViewProfile={handleViewProfile}
+            />
+            
+            <div className="flex-grow min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-lg">
+                  {customer.firstName} {customer.lastName}
+                </h3>
+                {hasVerifiedReviews && <VerifiedBadge size="sm" />}
+              </div>
+              
+              {location && (
+                <div className="flex items-center text-gray-600 text-sm mb-2">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {location}
+                </div>
+              )}
+              
+              {customer.reviews && customer.reviews.length > 0 ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {customer.reviews.length} review{customer.reviews.length !== 1 ? 's' : ''}
+                  </Badge>
+                  {hasVerifiedReviews && (
+                    <Badge variant="outline" className="text-xs border-blue-200 text-blue-700">
+                      Verified reviews
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <Badge variant="outline" className="text-xs text-gray-500">
+                  No reviews
+                </Badge>
+              )}
+            </div>
+          </div>
           
-          <CustomerInfo
-            customer={customer}
-            isBusinessUser={isBusinessUser}
-            isReviewCustomer={isReviewCustomer}
-            onViewProfile={handleViewProfile}
-            hasAccess={!!hasAccess}
-          />
+          <div className="flex items-center space-x-2">
+            <CustomerActions 
+              customer={customer}
+              hasFullAccess={hasFullAccess}
+              isBusinessUser={isBusinessUser}
+            />
+            <Button variant="ghost" size="sm">
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
-
-        <CustomerActions
-          currentUser={currentUser}
-          hasAccess={hasAccess}
-          isExpanded={isExpanded}
-          onActionClick={handleActionClick}
-          onExpandClick={handleExpandClick}
-        />
-      </div>
-
-      {isExpanded && currentUser && (
-        <ExpandedCustomerView
-          customer={customer}
-          reviews={reviews}
-          hasFullAccess={hasFullAccess}
-          isReviewCustomer={isReviewCustomer}
-        />
-      )}
+        
+        {isExpanded && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            {customer.reviews && customer.reviews.length > 0 ? (
+              isExpanded ? (
+                <ExpandedCustomerView customer={customer} hasFullAccess={hasFullAccess} />
+              ) : (
+                <ReviewsList customer={customer} hasFullAccess={hasFullAccess} />
+              )
+            ) : (
+              <NoReviews />
+            )}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };

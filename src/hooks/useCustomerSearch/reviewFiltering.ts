@@ -4,6 +4,7 @@ import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 interface ScoredReview {
   searchScore: number;
   matchCount: number;
+  reviewerVerified?: boolean;
   [key: string]: any;
 }
 
@@ -20,7 +21,12 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => review.searchScore > minScore || review.matchCount > 0)
     .sort((a, b) => {
-      // Sort by match count first, then by score
+      // First, prioritize verified reviewers if they match search criteria
+      if (a.reviewerVerified !== b.reviewerVerified) {
+        return b.reviewerVerified ? 1 : -1;
+      }
+      
+      // Then sort by match count first, then by score
       if (b.matchCount !== a.matchCount) {
         return b.matchCount - a.matchCount;
       }
@@ -34,6 +40,6 @@ export const filterAndSortReviews = (
 export const logSearchResults = (reviews: ScoredReview[]): void => {
   console.log("Review search results:", reviews.length);
   reviews.forEach(review => {
-    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}`);
+    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}, Verified: ${review.reviewerVerified || false}`);
   });
 };

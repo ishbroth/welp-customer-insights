@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth";
 import StarRating from "@/components/StarRating";
 import { Badge } from "@/components/ui/badge";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -24,6 +25,7 @@ interface ReviewItemProps {
     rating: number;
     content: string;
     date: string;
+    reviewerVerified?: boolean;
   };
   hasFullAccess: boolean;
   onEdit?: (reviewId: string) => void;
@@ -97,16 +99,19 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
     <div className="border-b border-gray-100 pb-4 last:border-b-0">
       <div className="flex justify-between items-start mb-2">
         <div>
-          {(isSubscribed || hasFullAccess) ? (
-            <h4 
-              className="font-medium cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
-              onClick={handleBusinessNameClick}
-            >
-              {review.reviewerName}
-            </h4>
-          ) : (
-            <h4 className="font-medium">{review.reviewerName}</h4>
-          )}
+          <div className="flex items-center gap-2">
+            {(isSubscribed || hasFullAccess) ? (
+              <h4 
+                className="font-medium cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
+                onClick={handleBusinessNameClick}
+              >
+                {review.reviewerName}
+              </h4>
+            ) : (
+              <h4 className="font-medium">{review.reviewerName}</h4>
+            )}
+            {review.reviewerVerified && <VerifiedBadge size="sm" />}
+          </div>
           <div className="flex items-center mt-1">
             <StarRating 
               rating={review.rating} 
