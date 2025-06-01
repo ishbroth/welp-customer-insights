@@ -7,8 +7,7 @@ import WelcomeSection from "@/components/profile/WelcomeSection";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Edit, CheckCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ProfilePage = () => {
@@ -42,14 +41,8 @@ const ProfilePage = () => {
         
         <main className="flex-1 p-6">
           <div className="container mx-auto max-w-4xl">
-            <div className="flex justify-between items-start mb-8">
+            <div className="mb-8">
               <WelcomeSection />
-              <Link to="/profile/edit">
-                <Button className="flex items-center gap-2">
-                  <Edit className="h-4 w-4" />
-                  Edit Profile
-                </Button>
-              </Link>
             </div>
             
             {/* Profile Information Display */}
