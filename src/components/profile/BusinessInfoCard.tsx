@@ -73,38 +73,6 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
               </div>
             )}
 
-            {/* Business Category Information */}
-            {currentUser?.businessCategory && (
-              <div className="flex items-start gap-3 mb-4">
-                <Building className="h-5 w-5 text-gray-500 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Business Category</p>
-                  <p className="font-medium">{currentUser.businessCategory}</p>
-                  {currentUser.businessSubcategory && (
-                    <p className="text-sm text-gray-600 mt-1">{currentUser.businessSubcategory}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Website */}
-            {currentUser?.website && (
-              <div className="flex items-center gap-3 mb-4">
-                <Globe className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-500">Website</p>
-                  <a 
-                    href={currentUser.website} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {currentUser.website}
-                  </a>
-                </div>
-              </div>
-            )}
-            
             {currentUser?.phone && (
               <div className="flex items-center gap-3 mb-4">
                 <Phone className="h-5 w-5 text-gray-500" />
@@ -132,27 +100,27 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
                 </div>
               </div>
             )}
-            
-            {/* Additional Licenses */}
-            {currentUser?.additionalLicenses && (
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Additional Licenses</p>
-                <p className="text-sm">{currentUser.additionalLicenses}</p>
-              </div>
-            )}
-
-            {/* Additional Info */}
-            {currentUser?.additionalInfo && (
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Additional Information</p>
-                <p className="text-sm">{currentUser.additionalInfo}</p>
-              </div>
-            )}
 
             {currentUser?.bio && (
               <div className="mt-4">
                 <p className="text-sm text-gray-500 mb-1">About Business</p>
                 <p>{currentUser.bio}</p>
+              </div>
+            )}
+
+            {!isVerified && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Complete Business Verification</h4>
+                <p className="text-sm text-blue-700 mb-3">
+                  Verify your business to display additional information including business category, website, and certifications.
+                </p>
+                <Link 
+                  to="/verify-license" 
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Start Verification Process
+                </Link>
               </div>
             )}
           </div>

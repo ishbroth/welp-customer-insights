@@ -133,7 +133,15 @@ const VerifyLicense = () => {
     try {
       console.log("Submitting verification request...");
       
-      const { error } = await supabase.functions.invoke('send-verification-request', {
+      // Get the session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("You must be logged in to submit verification");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('send-verification-request', {
         body: {
           userInfo: {
             id: currentUser.id,
@@ -141,15 +149,19 @@ const VerifyLicense = () => {
             name: currentUser.name
           },
           formData
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
       if (error) {
         console.error("Error sending verification request:", error);
-        toast.error("Failed to submit verification request. Please try again.");
+        toast.error(`Failed to submit verification request: ${error.message}`);
         return;
       }
 
+      console.log("Verification request response:", data);
       toast.success("Verification request submitted successfully! You will be notified once reviewed.");
       navigate("/profile");
       
