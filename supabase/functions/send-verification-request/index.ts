@@ -1,8 +1,9 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = new Resend(Deno.env.get("Resend Key") || Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,14 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // Check if Resend API key is available
+    const resendApiKey = Deno.env.get("Resend Key") || Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      logStep("ERROR: RESEND_API_KEY not found in environment variables");
+      throw new Error("RESEND_API_KEY not configured. Please add your Resend API key to the edge function secrets.");
+    }
+    logStep("Resend API key found");
 
     // Authenticate user
     const authHeader = req.headers.get("Authorization");
