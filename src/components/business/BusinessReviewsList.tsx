@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Star, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface BusinessReviewsListProps {
   reviews: Review[];
@@ -111,8 +109,6 @@ interface BusinessReviewCardProps {
 }
 
 const BusinessReviewCard = ({ review, onDeleteReview }: BusinessReviewCardProps) => {
-  const { isVerified } = useVerifiedStatus(review.reviewerId);
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -153,8 +149,8 @@ const BusinessReviewCard = ({ review, onDeleteReview }: BusinessReviewCardProps)
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
+                {/* No verified badge next to customer names */}
                 <h3 className="font-semibold">{review.customerName}</h3>
-                {isVerified && <VerifiedBadge size="sm" />}
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex">{renderStars(review.rating)}</div>

@@ -4,8 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface ReviewCardProps {
   review: Review;
@@ -14,8 +12,6 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ review, onReactionToggle, showCustomerInfo = true }: ReviewCardProps) => {
-  const { isVerified } = useVerifiedStatus(review.reviewerId);
-
   const getInitials = (name: string) => {
     if (name) {
       const names = name.split(' ');
@@ -47,7 +43,7 @@ const ReviewCard = ({ review, onReactionToggle, showCustomerInfo = true }: Revie
   return (
     <Card className="w-full">
       <CardContent className="p-6">
-        {/* Reviewer Info */}
+        {/* Reviewer Info - No verified badge here since this shows customer info */}
         <div className="flex items-start space-x-4 mb-4">
           <Avatar className="h-12 w-12">
             <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
@@ -58,7 +54,6 @@ const ReviewCard = ({ review, onReactionToggle, showCustomerInfo = true }: Revie
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-lg">{review.reviewerName}</h3>
-              {isVerified && <VerifiedBadge size="sm" />}
             </div>
             <div className="flex items-center gap-2 mb-2">
               <div className="flex">{renderStars(review.rating)}</div>

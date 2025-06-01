@@ -96,8 +96,16 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
   };
 
   return (
-    <div className="border-b border-gray-100 pb-4 last:border-b-0">
-      <div className="flex justify-between items-start mb-2">
+    <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
+      {/* Verified badge in upper right corner for search results */}
+      {review.reviewerVerified && (
+        <div className="absolute top-0 right-0 flex items-center gap-2">
+          <span className="text-xs text-gray-500">verified business review</span>
+          <VerifiedBadge size="sm" />
+        </div>
+      )}
+      
+      <div className="flex justify-between items-start mb-2 pr-24">
         <div>
           <div className="flex items-center gap-2">
             {(isSubscribed || hasFullAccess) ? (
@@ -110,7 +118,6 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             ) : (
               <h4 className="font-medium">{review.reviewerName}</h4>
             )}
-            {review.reviewerVerified && <VerifiedBadge size="sm" />}
           </div>
           <div className="flex items-center mt-1">
             <StarRating 
