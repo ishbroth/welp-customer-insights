@@ -19,16 +19,14 @@ const US_STATES = [
   "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
 ];
 
-// Business type options - alphabetized
+// Business type options - alphabetized and concise
 const BUSINESS_TYPE_OPTIONS = [
-  { value: "attorney", label: "Attorney/Legal Services" },
-  { value: "bar", label: "Bar/Liquor Store" },
-  { value: "contractor", label: "Contractor" },
-  { value: "ein", label: "EIN (Employer Identification Number)" },
-  { value: "medical", label: "Medical Professional" },
-  { value: "other", label: "Other Licensed Business" },
-  { value: "realtor", label: "Real Estate Agent" },
-  { value: "restaurant", label: "Restaurant" }
+  { value: "contractor", label: "Contractors" },
+  { value: "attorney", label: "Law/Legal" },
+  { value: "bar", label: "Liquor Licenses" },
+  { value: "medical", label: "Medical/Dental" },
+  { value: "realtor", label: "Real Estate" },
+  { value: "other", label: "Vendors/Sellers" }
 ].sort((a, b) => a.label.localeCompare(b.label));
 
 interface BusinessInfoFormProps {
