@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -13,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Shield, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { BUSINESS_TYPE_OPTIONS } from "@/components/signup/businessFormData";
 
 const LICENSE_TYPES = [
   "Contractors",
@@ -22,6 +20,22 @@ const LICENSE_TYPES = [
   "Medical/Dental",
   "Real Estate",
   "Vendors/Sellers"
+].sort();
+
+const BUSINESS_CATEGORIES = [
+  "Automotive", "Beauty & Wellness", "Construction & Contractors", "Education", 
+  "Entertainment", "Finance & Insurance", "Food & Beverage", "Healthcare", 
+  "Home & Garden", "Legal Services", "Manufacturing", "Professional Services", 
+  "Real Estate", "Retail", "Technology", "Transportation", "Other"
+].sort();
+
+const BUSINESS_SUBCATEGORIES = [
+  "Auto Repair", "Car Dealership", "Hair Salon", "Spa", "Fitness Center", 
+  "General Contractor", "Electrician", "Plumber", "HVAC", "Roofing", 
+  "School", "Tutoring", "Restaurant", "Bar", "Catering", "Doctor", 
+  "Dentist", "Veterinarian", "Law Firm", "Accounting", "Consulting", 
+  "Real Estate Agent", "Property Management", "Retail Store", "E-commerce", 
+  "Software Development", "IT Services", "Other"
 ].sort();
 
 const VerifyLicense = () => {
@@ -228,9 +242,9 @@ const VerifyLicense = () => {
                         <SelectValue placeholder="Select business category" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        {BUSINESS_TYPE_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                        {BUSINESS_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -239,12 +253,18 @@ const VerifyLicense = () => {
 
                   <div>
                     <Label htmlFor="businessSubcategory">Business Subcategory</Label>
-                    <Input
-                      id="businessSubcategory"
-                      value={formData.businessSubcategory}
-                      onChange={(e) => handleInputChange("businessSubcategory", e.target.value)}
-                      placeholder="e.g. Plumbing, General Practice, etc."
-                    />
+                    <Select value={formData.businessSubcategory} onValueChange={(value) => handleInputChange("businessSubcategory", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select business subcategory" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        {BUSINESS_SUBCATEGORIES.map((subcategory) => (
+                          <SelectItem key={subcategory} value={subcategory}>
+                            {subcategory}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
