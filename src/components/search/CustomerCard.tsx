@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MapPin, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -141,7 +140,7 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
                 <ReviewsList 
                   customerId={customer.id}
                   reviews={customer.reviews}
-                  hasFullAccess={(customerId: string) => hasFullAccess}
+                  hasFullAccess={() => hasFullAccess}
                   isReviewCustomer={isReviewCustomer}
                   customerData={{
                     firstName: customer.firstName,
