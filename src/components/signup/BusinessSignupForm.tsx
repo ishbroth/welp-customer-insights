@@ -9,6 +9,8 @@ import { BusinessInfoForm } from "./BusinessInfoForm";
 import { BusinessVerificationDisplay } from "./BusinessVerificationDisplay";
 import { PhoneVerificationFlow } from "./PhoneVerificationFlow";
 import { PasswordSetupStep } from "./PasswordSetupStep";
+import VerificationSuccessPopup from "./VerificationSuccessPopup";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BusinessSignupFormProps {
   step: number;
@@ -39,6 +41,8 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
   const [verificationError, setVerificationError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTextVerification, setShowTextVerification] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [realVerificationDetails, setRealVerificationDetails] = useState<any>(null);
   
   // Business verification handlers
   const handleBusinessVerification = async (e: React.FormEvent) => {
@@ -57,8 +61,38 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       // Use the business verification utility with state-specific verification
       const result = await verifyBusinessId(licenseNumber, businessType, businessState);
       
-      if (result.verified) {
-        // Store business data for later use in verification success page
+      if (result.verified && result.isRealVerification) {
+        // Real verification successful - proceed with immediate verification
+        console.log('Real verification successful:', result);
+        
+        setRealVerificationDetails({
+          businessName,
+          verificationDetails: result.details || {
+            type: "Business License",
+            status: "Active"
+          }
+        });
+        
+        // Store business data for account creation
+        const businessData = {
+          name: businessName,
+          email: businessEmail,
+          phone: businessPhone,
+          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+          licenseNumber: licenseNumber,
+          businessType: businessType,
+          state: businessState,
+          city: businessCity,
+          verificationMethod: "real_license",
+          isFullyVerified: true,
+          realVerificationResult: result
+        };
+        
+        sessionStorage.setItem("businessVerificationData", JSON.stringify(businessData));
+        setStep(2); // Go to password setup
+        
+      } else if (result.verified && !result.isRealVerification) {
+        // Mock verification - use existing flow
         const businessData = {
           name: businessName,
           email: businessEmail,
@@ -69,10 +103,9 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
           state: businessState,
           city: businessCity,
           verificationMethod: "license",
-          isFullyVerified: true
+          isFullyVerified: false
         };
         
-        // Store the verification data in session storage
         sessionStorage.setItem("businessVerificationData", JSON.stringify(businessData));
         
         setVerificationData({
@@ -120,7 +153,6 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       const verificationDataStr = sessionStorage.getItem("businessVerificationData");
       const verificationInfo = verificationDataStr ? JSON.parse(verificationDataStr) : null;
       
-      // Create a business name by joining the business name and type
       const fullBusinessName = `${businessName} (${businessType})`;
       
       const { success, error } = await signup({
@@ -136,15 +168,46 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       });
       
       if (success) {
-        toast({
-          title: "Account Created",
-          description: verificationInfo?.isFullyVerified 
-            ? "Your business account has been fully verified and created successfully!" 
-            : "Your business account has been created with limited access. Complete verification for full access.",
-        });
-        
-        // Redirect to business verification success page
-        navigate("/business-verification-success");
+        // If this was real verification, update the business_info table immediately
+        if (verificationInfo?.verificationMethod === "real_license") {
+          try {
+            // Wait a moment for the profile to be created
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { error: updateError } = await supabase
+                .from('business_info')
+                .upsert({
+                  id: user.id,
+                  business_name: businessName,
+                  license_number: licenseNumber,
+                  license_type: businessType,
+                  license_state: businessState,
+                  verified: true,
+                  license_status: verificationInfo.realVerificationResult?.details?.status || "Active",
+                  additional_info: `Real-time verified: ${verificationInfo.realVerificationResult?.details?.issuingAuthority || 'State Database'}`
+                });
+                
+              if (updateError) {
+                console.error("Error updating business info:", updateError);
+              } else {
+                console.log("Business info updated with verification status");
+              }
+            }
+          } catch (updateError) {
+            console.error("Error in post-signup verification update:", updateError);
+          }
+          
+          // Show success popup for real verification
+          setShowSuccessPopup(true);
+        } else {
+          toast({
+            title: "Account Created",
+            description: "Your business account has been created with limited access. Complete verification for full access.",
+          });
+          navigate("/business-verification-success");
+        }
       } else {
         toast({
           title: "Signup Failed",
@@ -256,6 +319,14 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
           setBusinessConfirmPassword={setBusinessConfirmPassword}
           isSubmitting={isSubmitting}
           onCreateAccount={handleCreateBusinessAccount}
+        />
+      )}
+      
+      {showSuccessPopup && realVerificationDetails && (
+        <VerificationSuccessPopup
+          isOpen={showSuccessPopup}
+          businessName={realVerificationDetails.businessName}
+          verificationDetails={realVerificationDetails.verificationDetails}
         />
       )}
     </>
