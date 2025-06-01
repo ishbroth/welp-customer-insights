@@ -82,11 +82,10 @@ serve(async (req) => {
 
     logStep("Verification request updated to approved");
 
-    // Update the user's profile with verified status and business information
+    // Update the user's profile with business information (removed verified column reference)
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({ 
-        verified: true,
         name: verificationRequest.business_name,
         business_id: verificationRequest.primary_license,
         phone: verificationRequest.phone || null,
@@ -102,7 +101,7 @@ serve(async (req) => {
       throw new Error("Failed to update user profile");
     }
 
-    logStep("User profile updated with verified status");
+    logStep("User profile updated successfully");
 
     // Update business_info table with comprehensive verification data
     const { error: updateBusinessError } = await supabaseClient
