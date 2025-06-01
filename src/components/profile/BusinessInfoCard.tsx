@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Shield, User as UserIcon, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Shield, User as UserIcon, ExternalLink, Building, Globe } from "lucide-react";
 import { User } from "@/data/mockUsers";
 import { Link } from "react-router-dom";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
@@ -72,6 +72,38 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
                 </div>
               </div>
             )}
+
+            {/* Business Category Information */}
+            {currentUser?.businessCategory && (
+              <div className="flex items-start gap-3 mb-4">
+                <Building className="h-5 w-5 text-gray-500 mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Business Category</p>
+                  <p className="font-medium">{currentUser.businessCategory}</p>
+                  {currentUser.businessSubcategory && (
+                    <p className="text-sm text-gray-600 mt-1">{currentUser.businessSubcategory}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Website */}
+            {currentUser?.website && (
+              <div className="flex items-center gap-3 mb-4">
+                <Globe className="h-5 w-5 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Website</p>
+                  <a 
+                    href={currentUser.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {currentUser.website}
+                  </a>
+                </div>
+              </div>
+            )}
             
             {currentUser?.phone && (
               <div className="flex items-center gap-3 mb-4">
@@ -100,6 +132,23 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
                 </div>
               </div>
             )}
+            
+            {/* Additional Licenses */}
+            {currentUser?.additionalLicenses && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 mb-1">Additional Licenses</p>
+                <p className="text-sm">{currentUser.additionalLicenses}</p>
+              </div>
+            )}
+
+            {/* Additional Info */}
+            {currentUser?.additionalInfo && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 mb-1">Additional Information</p>
+                <p className="text-sm">{currentUser.additionalInfo}</p>
+              </div>
+            )}
+
             {currentUser?.bio && (
               <div className="mt-4">
                 <p className="text-sm text-gray-500 mb-1">About Business</p>

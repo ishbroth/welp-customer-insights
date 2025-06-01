@@ -52,17 +52,26 @@ serve(async (req) => {
       throw new Error("Failed to update verification request");
     }
 
-    // Update the user's profile to mark as verified
+    // Update the user's profile with all the verification data
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
-      .update({ verified: true })
+      .update({ 
+        verified: true,
+        name: verificationRequest.business_name,
+        business_id: verificationRequest.primary_license,
+        phone: verificationRequest.phone || null,
+        address: verificationRequest.address || null,
+        city: verificationRequest.city || null,
+        state: verificationRequest.state || null,
+        zipcode: verificationRequest.zipcode || null
+      })
       .eq('id', verificationRequest.user_id);
 
     if (updateProfileError) {
       throw new Error("Failed to update user profile");
     }
 
-    // Update business_info table if it exists
+    // Update business_info table with comprehensive verification data
     const { error: updateBusinessError } = await supabaseClient
       .from('business_info')
       .upsert({
@@ -71,7 +80,13 @@ serve(async (req) => {
         license_number: verificationRequest.primary_license,
         license_type: verificationRequest.license_type,
         license_status: 'verified',
-        verified: true
+        verified: true,
+        business_category: verificationRequest.business_type,
+        business_subcategory: verificationRequest.business_subcategory,
+        license_state: verificationRequest.license_state,
+        website: verificationRequest.website,
+        additional_licenses: verificationRequest.additional_licenses,
+        additional_info: verificationRequest.additional_info
       });
 
     if (updateBusinessError) {
@@ -112,6 +127,13 @@ serve(async (req) => {
               font-size: 18px;
               margin: 20px 0;
             }
+            .details {
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 5px;
+              margin: 20px 0;
+              text-align: left;
+            }
           </style>
         </head>
         <body>
@@ -119,8 +141,14 @@ serve(async (req) => {
             <div class="success-icon">✓</div>
             <h1>Business Verified Successfully!</h1>
             <div class="business-name">${verificationRequest.business_name}</div>
+            <div class="details">
+              <p><strong>License:</strong> ${verificationRequest.primary_license}</p>
+              <p><strong>Category:</strong> ${verificationRequest.business_type}</p>
+              ${verificationRequest.business_subcategory ? `<p><strong>Subcategory:</strong> ${verificationRequest.business_subcategory}</p>` : ''}
+              <p><strong>State:</strong> ${verificationRequest.license_state || 'Not specified'}</p>
+            </div>
             <p>The business has been successfully verified and will now display the verified badge on their profile and reviews.</p>
-            <p>The business owner will be notified of their verification status.</p>
+            <p>All verification details have been saved to the business profile.</p>
           </div>
         </body>
       </html>

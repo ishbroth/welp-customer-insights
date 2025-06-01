@@ -8,6 +8,11 @@ export interface BusinessInfo {
   license_type: string;
   verified: boolean;
   website?: string;
+  business_category?: string;
+  business_subcategory?: string;
+  license_state?: string;
+  additional_licenses?: string;
+  additional_info?: string;
 }
 
 export interface BusinessProfile {
@@ -20,5 +25,6 @@ export interface BusinessProfile {
   zipcode?: string;
   avatar?: string;
   bio?: string;
+  verified?: boolean;
   business_info?: BusinessInfo;
 }
