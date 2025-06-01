@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-const resend = new Resend(Deno.env.get("Resend Key") || Deno.env.get("RESEND_API_KEY"));
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +26,7 @@ serve(async (req) => {
     logStep("Function started");
 
     // Check if Resend API key is available
-    const resendApiKey = Deno.env.get("Resend Key") || Deno.env.get("RESEND_API_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       logStep("ERROR: RESEND_API_KEY not found in environment variables");
       throw new Error("RESEND_API_KEY not configured. Please add your Resend API key to the edge function secrets.");
@@ -91,9 +91,9 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://yftvcixhifvrovwhtgtj.supabase.co";
     const verificationUrl = `${origin}/admin/verify-business?token=${verificationToken}`;
 
-    // Send email to admin
+    // Send email to admin - using onboarding@resend.dev which is verified by default
     const emailResponse = await resend.emails.send({
-      from: "Welp Verification <noreply@welp.app>",
+      from: "Welp Verification <onboarding@resend.dev>",
       to: ["iw@thepaintedpainter.com"],
       subject: `Business Verification Request - ${formData.businessName}`,
       html: `
@@ -150,12 +150,15 @@ serve(async (req) => {
 
     if (emailResponse.error) {
       logStep("Error sending email", emailResponse.error);
-      throw new Error("Failed to send verification email");
+      throw new Error(`Failed to send verification email: ${emailResponse.error.message}`);
     }
 
     logStep("Verification email sent successfully", { emailId: emailResponse.data?.id });
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Verification request submitted successfully" 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
@@ -163,7 +166,10 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      success: false 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
