@@ -80,9 +80,9 @@ const ReviewCard = ({ review, onReactionToggle, showCustomerInfo = true }: Revie
             <p className="text-sm text-gray-600">
               <strong>Customer:</strong> {review.customerName}
             </p>
-            {review.location && (
+            {(review.address || review.city || review.state || review.zipCode) && (
               <p className="text-sm text-gray-600">
-                <strong>Location:</strong> {review.location}
+                <strong>Location:</strong> {[review.address, review.city, review.state, review.zipCode].filter(Boolean).join(', ')}
               </p>
             )}
           </div>
