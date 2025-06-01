@@ -16,10 +16,12 @@ import { toast } from "@/components/ui/sonner";
 import { BUSINESS_TYPE_OPTIONS } from "@/components/signup/businessFormData";
 
 const LICENSE_TYPES = [
-  "Business License", "Contractor License", "Professional License", 
-  "Trade License", "Occupational License", "Federal License",
-  "State Professional License", "City/County Business License",
-  "Industry-Specific License", "Certification", "Other"
+  "Contractors",
+  "Law/Legal", 
+  "Liquor Licenses",
+  "Medical/Dental",
+  "Real Estate",
+  "Vendors/Sellers"
 ].sort();
 
 const VerifyLicense = () => {
