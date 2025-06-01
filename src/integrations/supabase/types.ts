@@ -467,6 +467,75 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_requests: {
+        Row: {
+          additional_info: string | null
+          additional_licenses: string | null
+          address: string | null
+          business_name: string
+          business_subcategory: string | null
+          business_type: string
+          city: string | null
+          created_at: string
+          id: string
+          license_state: string | null
+          license_type: string | null
+          phone: string | null
+          primary_license: string
+          state: string | null
+          status: string
+          user_id: string
+          verification_token: string
+          verified_at: string | null
+          website: string | null
+          zipcode: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          additional_licenses?: string | null
+          address?: string | null
+          business_name: string
+          business_subcategory?: string | null
+          business_type: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          license_state?: string | null
+          license_type?: string | null
+          phone?: string | null
+          primary_license: string
+          state?: string | null
+          status?: string
+          user_id: string
+          verification_token?: string
+          verified_at?: string | null
+          website?: string | null
+          zipcode?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          additional_licenses?: string | null
+          address?: string | null
+          business_name?: string
+          business_subcategory?: string | null
+          business_type?: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          license_state?: string | null
+          license_type?: string | null
+          phone?: string | null
+          primary_license?: string
+          state?: string | null
+          status?: string
+          user_id?: string
+          verification_token?: string
+          verified_at?: string | null
+          website?: string | null
+          zipcode?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -79,8 +78,8 @@ serve(async (req) => {
 
     logStep("Verification request stored", { token: verificationToken });
 
-    // Create verification URL
-    const origin = req.headers.get("origin") || "http://localhost:5173";
+    // Create verification URL - use the function URL's origin or a default
+    const origin = req.headers.get("origin") || "https://yftvcixhifvrovwhtgtj.supabase.co";
     const verificationUrl = `${origin}/admin/verify-business?token=${verificationToken}`;
 
     // Send email to admin

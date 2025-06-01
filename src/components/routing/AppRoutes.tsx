@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import SearchResults from "@/pages/SearchResults";
@@ -36,6 +35,7 @@ import VerifyLicense from "@/pages/VerifyLicense";
 import ProtectedRoute from "./ProtectedRoute";
 import BusinessOwnerRoute from "./BusinessOwnerRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
+import AdminVerifyBusiness from "@/pages/AdminVerifyBusiness";
 
 const AppRoutes = () => {
   return (
@@ -127,6 +127,9 @@ const AppRoutes = () => {
       
       {/* Buy credits page - accessible to all, handles auth redirect internally */}
       <Route path="/buy-credits" element={<BuyCredits />} />
+      
+      {/* Admin verification route - accessible without authentication */}
+      <Route path="/admin/verify-business" element={<AdminVerifyBusiness />} />
       
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
