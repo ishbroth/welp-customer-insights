@@ -27,13 +27,31 @@ const SearchField = ({
   // Use PhoneInput for phone fields
   const isPhoneField = placeholder.toLowerCase().includes("phone") || type === "tel";
   
+  // Handle address field restrictions
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isAddressField = placeholder.toLowerCase().includes("address") || 
+                          placeholder.toLowerCase().includes("street");
+    
+    if (isAddressField) {
+      let value = e.target.value;
+      // Remove commas and stop input after first comma
+      const commaIndex = value.indexOf(',');
+      if (commaIndex !== -1) {
+        value = value.substring(0, commaIndex);
+        e.target.value = value;
+      }
+    }
+    
+    onChange(e);
+  };
+  
   if (isFirstNameField) {
     return (
       <FirstNameInput
         type={type}
         placeholder={placeholder}
         value={value}
-        onChange={onChange}
+        onChange={handleAddressChange}
         className={`welp-input ${className || ""}`}
         required={required}
       />
@@ -45,7 +63,7 @@ const SearchField = ({
       <PhoneInput
         placeholder={placeholder}
         value={value}
-        onChange={onChange}
+        onChange={handleAddressChange}
         className={`welp-input ${className || ""}`}
         required={required}
       />
@@ -57,7 +75,7 @@ const SearchField = ({
       type={type}
       placeholder={placeholder}
       value={value}
-      onChange={onChange}
+      onChange={handleAddressChange}
       className={`welp-input ${className || ""}`}
       required={required}
     />

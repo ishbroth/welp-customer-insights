@@ -4,13 +4,26 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onChange, ...props }, ref) => {
+  ({ className, type, onChange, placeholder, ...props }, ref) => {
+    const isAddressField = placeholder?.toLowerCase().includes("address") || 
+                          placeholder?.toLowerCase().includes("street");
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      if (value.length > 0) {
-        // Capitalize the first letter
+      let value = e.target.value;
+      
+      // Handle address fields specially
+      if (isAddressField) {
+        // Remove commas and stop input after first comma
+        const commaIndex = value.indexOf(',');
+        if (commaIndex !== -1) {
+          value = value.substring(0, commaIndex);
+        }
+        e.target.value = value;
+      } else if (value.length > 0) {
+        // Capitalize the first letter for non-address fields
         e.target.value = value.charAt(0).toUpperCase() + value.slice(1);
       }
+      
       onChange?.(e);
     };
 
@@ -22,6 +35,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        placeholder={placeholder}
         onChange={handleChange}
         {...props}
       />
