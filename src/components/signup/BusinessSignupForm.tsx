@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { verifyBusinessId } from "@/utils/businessVerification";
 import { useAuth } from "@/contexts/auth";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 import { BusinessInfoForm } from "./BusinessInfoForm";
 import { BusinessVerificationDisplay } from "./BusinessVerificationDisplay";
 import { PhoneVerificationFlow } from "./PhoneVerificationFlow";
@@ -18,7 +18,8 @@ interface BusinessSignupFormProps {
 const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signup } = useAuth();
+  const { signup, currentUser } = useAuth();
+  const { isVerified } = useVerifiedStatus(currentUser?.id);
   
   // Business form state
   const [businessName, setBusinessName] = useState("");
@@ -88,10 +89,10 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
         // Offer text verification as an alternative
         setVerificationData(null);
         setShowTextVerification(true);
-        setVerificationError(result.message || "We couldn't verify your business license. You can proceed with phone verification instead.");
+        setVerificationError(result.message || `We couldn't verify your business license. ${isVerified ? 'You can update your license information or' : 'You can'} proceed with phone verification instead.`);
       }
     } catch (error) {
-      setVerificationError("An error occurred during verification. Please try again.");
+      setVerificationError(`An error occurred during verification. ${isVerified ? 'You can update your license information or try again.' : 'Please try again.'}`);
       console.error("Verification error:", error);
     } finally {
       setIsVerifying(false);
@@ -216,7 +217,7 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
             className="welp-button w-full mt-6" 
             disabled={isVerifying}
           >
-            {isVerifying ? "Verifying..." : "Verify Business"}
+            {isVerifying ? "Verifying..." : (isVerified ? "Update License Information" : "Verify Business")}
           </Button>
         </form>
       )}
