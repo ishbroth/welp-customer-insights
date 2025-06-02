@@ -11,7 +11,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log("Searching reviews table with flexible matching...");
   
-  // Get a broader set of reviews to work with, including business profile data and verification status
+  // Get a broader set of reviews to work with, including business profile data
   let reviewQuery = supabase
     .from('reviews')
     .select(`
@@ -23,8 +23,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       customer_phone, 
       rating,
       business_id,
-      profiles!business_id(name, avatar),
-      business_info!business_id(verified)
+      profiles!business_id(name, avatar)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -42,6 +41,23 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log(`Found ${allReviews.length} reviews in initial query`);
 
+  // Now get business verification status for each business_id found
+  const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
+  let businessVerificationMap = new Map();
+
+  if (businessIds.length > 0) {
+    const { data: businessInfoData } = await supabase
+      .from('business_info')
+      .select('id, verified')
+      .in('id', businessIds);
+
+    if (businessInfoData) {
+      businessInfoData.forEach(info => {
+        businessVerificationMap.set(info.id, info.verified);
+      });
+    }
+  }
+
   // Check if this is a single field search
   const searchFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean);
   const isSingleFieldSearch = searchFields.length === 1;
@@ -54,6 +70,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
     const formattedReview = formatReviewData(review);
+    // Add verification status from our separate query
+    formattedReview.reviewerVerified = businessVerificationMap.get(review.business_id) || false;
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
 
