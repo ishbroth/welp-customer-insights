@@ -37,6 +37,7 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
     isVerifying,
     verificationData,
     verificationError,
+    setVerificationError,
     showTextVerification,
     realVerificationDetails,
     performBusinessVerification,

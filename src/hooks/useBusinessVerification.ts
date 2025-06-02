@@ -132,6 +132,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
     isVerifying,
     verificationData,
     verificationError,
+    setVerificationError,
     showTextVerification,
     realVerificationDetails,
     performBusinessVerification,
