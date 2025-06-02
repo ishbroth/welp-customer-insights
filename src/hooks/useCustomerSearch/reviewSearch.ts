@@ -45,18 +45,26 @@ export const searchReviews = async (searchParams: SearchParams) => {
   const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
   let businessVerificationMap = new Map();
 
+  console.log("Business IDs found in reviews:", businessIds);
+
   if (businessIds.length > 0) {
-    const { data: businessInfoData } = await supabase
+    const { data: businessInfoData, error: businessError } = await supabase
       .from('business_info')
       .select('id, verified')
       .in('id', businessIds);
 
+    console.log("Business info query result:", businessInfoData);
+    console.log("Business info query error:", businessError);
+
     if (businessInfoData) {
       businessInfoData.forEach(info => {
+        console.log(`Business ${info.id} verification status: ${info.verified}`);
         businessVerificationMap.set(info.id, info.verified);
       });
     }
   }
+
+  console.log("Final business verification map:", Object.fromEntries(businessVerificationMap));
 
   // Check if this is a single field search
   const searchFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean);
@@ -71,7 +79,9 @@ export const searchReviews = async (searchParams: SearchParams) => {
   const scoredReviews = allReviews.map(review => {
     const formattedReview = formatReviewData(review);
     // Add verification status from our separate query
-    formattedReview.reviewerVerified = businessVerificationMap.get(review.business_id) || false;
+    const verificationStatus = businessVerificationMap.get(review.business_id) || false;
+    console.log(`Setting verification status for business ${review.business_id}: ${verificationStatus}`);
+    formattedReview.reviewerVerified = verificationStatus;
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
 
