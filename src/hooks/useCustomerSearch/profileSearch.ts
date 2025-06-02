@@ -15,12 +15,12 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     .eq('type', 'customer')
     .limit(500); // Increased limit for broader search
 
-  // For state searches, be more flexible with case sensitivity
+  // For state searches, use a simpler and more reliable approach
   if (state && state.trim() !== '') {
     console.log(`Searching for state: ${state}`);
     
-    // Use a case-insensitive search for state
-    profileQuery = profileQuery.or(`state.ilike.%${state}%,state.ilike.%${state.toLowerCase()}%,state.ilike.%${state.toUpperCase()}%`);
+    // Use a simpler ilike query for state - this should be more reliable
+    profileQuery = profileQuery.ilike('state', `%${state}%`);
   }
 
   const { data: allProfiles, error } = await profileQuery;
@@ -118,7 +118,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    // Enhanced state matching - much more flexible
+    // Enhanced state matching - much more flexible and reliable
     if (state && profile.state) {
       const searchStateUpper = state.toUpperCase().trim();
       const profileStateUpper = profile.state.toUpperCase().trim();
@@ -131,7 +131,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
                         (profileStateUpper.length === 2 && searchStateUpper.startsWith(profileStateUpper));
       
       if (stateMatch) {
-        // Give very high score for state-only searches
+        // Give very high score for state-only searches, but still allow other matches
         score += isStateOnlySearch ? 100 : 5;
         matches++;
         console.log(`State match found: "${profile.state}" matches "${state}" for profile ${profile.first_name} ${profile.last_name}`);
