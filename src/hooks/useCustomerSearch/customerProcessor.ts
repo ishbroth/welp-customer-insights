@@ -43,7 +43,7 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
 
     const customer = customerMap.get(customerKey)!;
     
-    // Add review with proper verification status
+    // Add review with proper verification status - use the value from reviewData
     customer.reviews!.push({
       id: review.id,
       reviewerId: review.business_id,
@@ -51,7 +51,7 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
       rating: review.rating,
       content: '', // Content will be fetched when needed
       date: new Date().toISOString(), // Default date, should be from review data
-      reviewerVerified: Boolean(review.reviewerVerified) // Ensure boolean conversion
+      reviewerVerified: review.reviewerVerified // Use the verification status from reviewData
     });
 
     console.log(`processReviewCustomers: Added review with verification status ${review.reviewerVerified} for business ${review.business_profile?.name}`);

@@ -49,27 +49,44 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
   const isCurrentUserReview = currentUser?.id === review.reviewerId;
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
+  const [fullReviewContent, setFullReviewContent] = useState<string>("");
 
   console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
 
-  // Load photos from database
+  // Load photos and full review content from database
   useEffect(() => {
-    const fetchPhotos = async () => {
-      const { data, error } = await supabase
+    const fetchReviewData = async () => {
+      // Fetch photos
+      const { data: photoData, error: photoError } = await supabase
         .from('review_photos')
         .select('*')
         .eq('review_id', review.id)
         .order('display_order');
 
-      if (error) {
-        console.error("Error fetching review photos:", error);
+      if (photoError) {
+        console.error("Error fetching review photos:", photoError);
       } else {
-        setPhotos(data || []);
+        setPhotos(photoData || []);
+      }
+
+      // Fetch full review content if user has access
+      if (hasFullAccess) {
+        const { data: reviewData, error: reviewError } = await supabase
+          .from('reviews')
+          .select('content')
+          .eq('id', review.id)
+          .single();
+
+        if (reviewError) {
+          console.error("Error fetching review content:", reviewError);
+        } else {
+          setFullReviewContent(reviewData?.content || "");
+        }
       }
     };
 
-    fetchPhotos();
-  }, [review.id]);
+    fetchReviewData();
+  }, [review.id, hasFullAccess]);
 
   const getFirstThreeWords = (text: string): string => {
     const words = text.split(' ');
@@ -113,7 +130,7 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             ) : (
               <h4 className="font-medium">{review.reviewerName}</h4>
             )}
-            {/* Always show verified badge when reviewerVerified is true */}
+            {/* Show verified badge when reviewerVerified is true */}
             {review.reviewerVerified && (
               <VerifiedBadge size="sm" />
             )}
@@ -136,7 +153,7 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
       <div className="mt-2">
         {hasFullAccess ? (
           <div>
-            <p className="text-gray-700">{review.content}</p>
+            <p className="text-gray-700">{fullReviewContent || review.content}</p>
             <Badge variant="outline" className="mt-2 text-xs">
               Full access
             </Badge>
@@ -177,7 +194,7 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
           responses={[]}
           hasSubscription={isSubscribed}
           isOneTimeUnlocked={false}
-          hideReplyOption={!isBusinessUser || (!isCurrentUserReview && !isSubscribed)}
+          hideReplyOption={!isBusinessUser}
         />
       )}
 

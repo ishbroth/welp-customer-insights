@@ -8,7 +8,8 @@ export const formatReviewData = (review: any): ReviewData => {
     avatar: review.profiles.avatar || undefined
   } : null;
 
-  // Return the properly formatted review data with explicit verification handling
+  // Return the properly formatted review data - don't set reviewerVerified here
+  // It will be set in the reviewSearch.ts file after we get the verification data
   const formattedReview: ReviewData = {
     id: review.id,
     customer_name: review.customer_name || '',
@@ -19,11 +20,9 @@ export const formatReviewData = (review: any): ReviewData => {
     rating: review.rating,
     business_id: review.business_id,
     business_profile: businessProfile,
-    // Ensure reviewerVerified is explicitly set
-    reviewerVerified: Boolean(review.reviewerVerified)
+    // Don't set reviewerVerified here - it will be set later
+    reviewerVerified: false
   };
-
-  console.log(`formatReviewData: Setting reviewerVerified to ${formattedReview.reviewerVerified} for business ${businessProfile?.name}`);
 
   return formattedReview;
 };
