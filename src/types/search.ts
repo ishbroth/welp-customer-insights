@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   firstName: string;
@@ -16,6 +15,15 @@ export interface Customer {
     name: string;
     avatar?: string;
   } | null;
+  reviews?: Array<{
+    id: string;
+    reviewerId: string;
+    reviewerName: string;
+    rating: number;
+    content: string;
+    date: string;
+    reviewerVerified?: boolean;
+  }>;
 }
 
 export interface SearchFilters {
