@@ -1,22 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { Edit, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
-import StarRating from "@/components/StarRating";
-import { Badge } from "@/components/ui/badge";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
-
-interface ReviewPhoto {
-  id: string;
-  photo_url: string;
-  caption: string | null;
-  display_order: number;
-}
+import ReviewItemHeader from "./ReviewItemHeader";
+import ReviewItemContent from "./ReviewItemContent";
+import ReviewItemActions from "./ReviewItemActions";
+import { useReviewData } from "@/hooks/useReviewData";
 
 interface ReviewItemProps {
   review: {
@@ -44,142 +33,24 @@ interface ReviewItemProps {
 
 const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: ReviewItemProps) => {
   const { currentUser, isSubscribed } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isCurrentUserReview = currentUser?.id === review.reviewerId;
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-  const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
-  const [fullReviewContent, setFullReviewContent] = useState<string>("");
+  const { photos, fullReviewContent } = useReviewData(review.id, hasFullAccess);
 
   console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
 
-  // Load photos and full review content from database
-  useEffect(() => {
-    const fetchReviewData = async () => {
-      // Fetch photos
-      const { data: photoData, error: photoError } = await supabase
-        .from('review_photos')
-        .select('*')
-        .eq('review_id', review.id)
-        .order('display_order');
-
-      if (photoError) {
-        console.error("Error fetching review photos:", photoError);
-      } else {
-        setPhotos(photoData || []);
-      }
-
-      // Fetch full review content if user has access
-      if (hasFullAccess) {
-        const { data: reviewData, error: reviewError } = await supabase
-          .from('reviews')
-          .select('content')
-          .eq('id', review.id)
-          .single();
-
-        if (reviewError) {
-          console.error("Error fetching review content:", reviewError);
-        } else {
-          setFullReviewContent(reviewData?.content || "");
-        }
-      }
-    };
-
-    fetchReviewData();
-  }, [review.id, hasFullAccess]);
-
-  const getFirstThreeWords = (text: string): string => {
-    const words = text.split(' ');
-    const firstThree = words.slice(0, 3).join(' ');
-    return `${firstThree}${words.length > 3 ? '...' : ''}`;
-  };
-
-  const handleUnlockReview = () => {
-    // Store the review and customer data in sessionStorage for retrieval after signup/signin
-    const reviewAccessData = {
-      reviewId: review.id,
-      customerData,
-      searchParams: Object.fromEntries(searchParams.entries())
-    };
-    
-    sessionStorage.setItem('pendingReviewAccess', JSON.stringify(reviewAccessData));
-    
-    // Navigate to signup page with unlock indicator
-    navigate('/signup?unlock=review');
-  };
-
-  const handleBusinessNameClick = () => {
-    // Only allow navigation if user is subscribed or has access
-    if (isSubscribed || hasFullAccess) {
-      navigate(`/business/${review.reviewerId}`);
-    }
-  };
-
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <div className="flex items-center gap-2">
-            {(isSubscribed || hasFullAccess) ? (
-              <h4 
-                className="font-medium cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
-                onClick={handleBusinessNameClick}
-              >
-                {review.reviewerName}
-              </h4>
-            ) : (
-              <h4 className="font-medium">{review.reviewerName}</h4>
-            )}
-            {/* Show verified badge when reviewerVerified is true */}
-            {review.reviewerVerified && (
-              <VerifiedBadge size="sm" />
-            )}
-          </div>
-          <div className="flex items-center mt-1">
-            <StarRating 
-              rating={review.rating} 
-              grayedOut={!hasFullAccess}
-            />
-            <span className={`ml-2 text-sm ${!hasFullAccess ? 'text-gray-400' : 'text-gray-500'}`}>
-              {review.rating}.0
-            </span>
-          </div>
-        </div>
-        <span className="text-sm text-gray-500">
-          {new Date(review.date).toLocaleDateString()}
-        </span>
-      </div>
+      <ReviewItemHeader 
+        review={review} 
+        hasFullAccess={hasFullAccess} 
+      />
       
-      <div className="mt-2">
-        {hasFullAccess ? (
-          <div>
-            <p className="text-gray-700">{fullReviewContent || review.content}</p>
-            <Badge variant="outline" className="mt-2 text-xs">
-              Full access
-            </Badge>
-          </div>
-        ) : (
-          <div>
-            <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
-            {currentUser ? (
-              <Badge variant="secondary" className="mt-2 text-xs">
-                Limited access
-              </Badge>
-            ) : (
-              <div className="mt-3">
-                <Button 
-                  onClick={handleUnlockReview}
-                  variant="outline" 
-                  size="sm"
-                  className="text-welp-primary border-welp-primary hover:bg-welp-primary hover:text-white"
-                >
-                  Unlock Review
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <ReviewItemContent
+        review={review}
+        fullReviewContent={fullReviewContent}
+        hasFullAccess={hasFullAccess}
+        customerData={customerData}
+      />
 
       {/* Photo Gallery - only show if user has full access */}
       <PhotoGallery 
@@ -199,26 +70,11 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
       )}
 
       {/* Edit and Delete buttons for current user's reviews */}
-      {isCurrentUserReview && isBusinessUser && (
-        <div className="flex justify-end gap-2 mt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit?.(review.id)}
-            className="text-gray-600 hover:text-gray-800"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete?.(review.id)}
-            className="text-red-600 hover:text-red-800"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+      <ReviewItemActions
+        review={review}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     </div>
   );
 };
