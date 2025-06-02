@@ -8,7 +8,7 @@ export const formatReviewData = (review: any): ReviewData => {
     avatar: review.profiles.avatar || undefined
   } : null;
 
-  // Return the properly formatted review data
+  // Return the properly formatted review data with explicit verification handling
   const formattedReview: ReviewData = {
     id: review.id,
     customer_name: review.customer_name || '',
@@ -19,8 +19,11 @@ export const formatReviewData = (review: any): ReviewData => {
     rating: review.rating,
     business_id: review.business_id,
     business_profile: businessProfile,
-    reviewerVerified: review.business_info?.verified || false
+    // Ensure reviewerVerified is explicitly set
+    reviewerVerified: Boolean(review.reviewerVerified)
   };
+
+  console.log(`formatReviewData: Setting reviewerVerified to ${formattedReview.reviewerVerified} for business ${businessProfile?.name}`);
 
   return formattedReview;
 };

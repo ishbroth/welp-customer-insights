@@ -9,6 +9,7 @@ import PhotoGallery from "@/components/reviews/PhotoGallery";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 
 interface ReviewPhoto {
   id: string;
@@ -112,8 +113,8 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             ) : (
               <h4 className="font-medium">{review.reviewerName}</h4>
             )}
-            {/* Show verified badge next to business name - this is the key fix */}
-            {review.reviewerVerified && (
+            {/* Show verified badge next to business name - force display when verified */}
+            {review.reviewerVerified === true && (
               <VerifiedBadge size="sm" />
             )}
           </div>
@@ -168,6 +169,17 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
         photos={photos} 
         hasAccess={hasFullAccess}
       />
+
+      {/* Show responses if user has full access */}
+      {hasFullAccess && (
+        <CustomerReviewResponse
+          reviewId={review.id}
+          responses={[]}
+          hasSubscription={isSubscribed}
+          isOneTimeUnlocked={false}
+          hideReplyOption={!isBusinessUser || (!isCurrentUserReview && !isSubscribed)}
+        />
+      )}
 
       {/* Edit and Delete buttons for current user's reviews */}
       {isCurrentUserReview && isBusinessUser && (
