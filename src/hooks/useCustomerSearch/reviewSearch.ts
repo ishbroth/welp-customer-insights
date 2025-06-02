@@ -24,7 +24,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       rating,
       business_id,
       profiles!business_id(name, avatar),
-      business_info!inner(verified)
+      business_info!business_id(verified)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -54,8 +54,6 @@ export const searchReviews = async (searchParams: SearchParams) => {
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
     const formattedReview = formatReviewData(review);
-    // Add verification status to the review
-    formattedReview.reviewerVerified = review.business_info?.verified || false;
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
 
