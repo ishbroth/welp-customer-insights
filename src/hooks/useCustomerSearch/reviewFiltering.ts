@@ -21,7 +21,7 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => review.searchScore > minScore || review.matchCount > 0)
     .sort((a, b) => {
-      // First, prioritize verified reviewers if they match search criteria
+      // First, prioritize verified reviewers
       if (a.reviewerVerified !== b.reviewerVerified) {
         return b.reviewerVerified ? 1 : -1;
       }

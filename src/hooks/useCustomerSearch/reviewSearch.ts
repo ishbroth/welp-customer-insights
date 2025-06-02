@@ -11,7 +11,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log("Searching reviews table with flexible matching...");
   
-  // Get a broader set of reviews to work with, including business profile data
+  // Get a broader set of reviews to work with, including business profile data and verification status
   let reviewQuery = supabase
     .from('reviews')
     .select(`
@@ -23,7 +23,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
       customer_phone, 
       rating,
       business_id,
-      profiles!business_id(name, avatar)
+      profiles!business_id(name, avatar),
+      business_info!business_id(verified)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -53,6 +54,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
     const formattedReview = formatReviewData(review);
+    // Add verification status to the review
+    formattedReview.reviewerVerified = review.business_info?.verified || false;
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
 

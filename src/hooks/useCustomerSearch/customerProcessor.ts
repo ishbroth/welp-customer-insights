@@ -1,4 +1,3 @@
-
 import { ReviewData, ProfileCustomer } from "./types";
 import { Customer } from "@/types/search";
 
@@ -46,7 +45,7 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
       rating: review.rating,
       content: "", // Content will be loaded when expanded
       date: new Date().toISOString(), // We'll use current date as placeholder
-      reviewerVerified: review.business_profile ? true : false,
+      reviewerVerified: (review as any).reviewerVerified || false, // Pass through verification status
       reviewerAvatar: review.business_profile?.avatar || ""
     };
     
