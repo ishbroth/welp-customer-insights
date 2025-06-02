@@ -31,25 +31,38 @@ export const processProfileCustomers = async (profiles: ProfileCustomer[]): Prom
 export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
   console.log("Processing review customers...");
   
-  const customerMap = new Map<string, Customer>();
+  const customerMap = new Map<string, Customer & { reviews: any[] }>();
 
   reviews.forEach(review => {
     console.log("Processing review with business profile:", review.business_profile);
     
     const customerKey = `${review.customer_name || ''}_${review.customer_phone || ''}_${review.customer_address || ''}`.toLowerCase();
     
+    // Create the review object that will be attached to the customer
+    const reviewObject = {
+      id: review.id,
+      reviewerId: review.business_id,
+      reviewerName: review.business_profile?.name || "The Painted Painter",
+      rating: review.rating,
+      content: "", // Content will be loaded when expanded
+      date: new Date().toISOString(), // We'll use current date as placeholder
+      reviewerVerified: review.business_profile ? true : false,
+      reviewerAvatar: review.business_profile?.avatar || ""
+    };
+    
     if (customerMap.has(customerKey)) {
       // Update existing customer
       const existingCustomer = customerMap.get(customerKey)!;
       existingCustomer.totalReviews += 1;
       existingCustomer.averageRating = (existingCustomer.averageRating + review.rating) / 2;
+      existingCustomer.reviews.push(reviewObject);
     } else {
       // Create new customer from review
       const nameParts = (review.customer_name || '').split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       
-      const customer: Customer = {
+      const customer = {
         id: `review-customer-${review.id}`,
         firstName,
         lastName,
@@ -61,8 +74,8 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
         averageRating: review.rating,
         totalReviews: 1,
         isSubscriptionNeeded: true,
-        // Use the business profile data directly from the review
-        businessProfile: review.business_profile
+        businessProfile: review.business_profile,
+        reviews: [reviewObject]
       };
       
       console.log("Created customer with business profile:", customer.businessProfile);
@@ -70,9 +83,16 @@ export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
     }
   });
 
-  const customers = Array.from(customerMap.values());
+  // Convert to the expected Customer type (without reviews property in the interface)
+  const customers: Customer[] = Array.from(customerMap.values()).map(customer => {
+    const { reviews, ...customerWithoutReviews } = customer;
+    // Store reviews in a way that can be accessed by the customer card
+    (customerWithoutReviews as any).reviews = reviews;
+    return customerWithoutReviews;
+  });
+  
   console.log("Review customers processed, total new customers:", customers.length);
-  console.log("Sample customer with business profile:", customers[0]?.businessProfile);
+  console.log("Sample customer with reviews:", customers[0] ? (customers[0] as any).reviews : undefined);
   
   return customers;
 };
