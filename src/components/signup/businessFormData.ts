@@ -10,12 +10,21 @@ export const US_STATES = [
   "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
 ];
 
-// Business type options - alphabetized and concise
+// Business type options - with EIN/Other at top, others alphabetized
 export const BUSINESS_TYPE_OPTIONS = [
-  { value: "contractor", label: "Contractors" },
-  { value: "attorney", label: "Law/Legal" },
-  { value: "bar", label: "Liquor Licenses" },
-  { value: "medical", label: "Medical/Dental" },
-  { value: "realtor", label: "Real Estate" },
-  { value: "other", label: "Vendors/Sellers" }
-].sort((a, b) => a.label.localeCompare(b.label));
+  { value: "ein", label: "EIN/Other" },
+  ...[ 
+    { value: "auto", label: "Auto/Mechanic" },
+    { value: "contractor", label: "Contractors" },
+    { value: "energy", label: "Energy" },
+    { value: "insurance", label: "Insurance" },
+    { value: "attorney", label: "Law/Legal" },
+    { value: "bar", label: "Liquor Licenses" },
+    { value: "medical", label: "Medical/Dental" },
+    { value: "realtor", label: "Real Estate" },
+    { value: "rentals", label: "Rentals/Equipment" },
+    { value: "restaurant", label: "Restaurant/Service" },
+    { value: "retail", label: "Retail" },
+    { value: "other", label: "Vendors/Sellers" }
+  ].sort((a, b) => a.label.localeCompare(b.label))
+];

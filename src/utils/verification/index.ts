@@ -62,6 +62,13 @@ export const verifyBusinessId = async (
       return verifyMedicalLicense(cleanId, state);
     case 'restaurant':
       return verifyRestaurantLicense(cleanId, state);
+    case 'auto':
+    case 'insurance':
+    case 'energy':
+    case 'rentals':
+    case 'retail':
+    case 'other':
+      return verifyGeneralLicense(cleanId, state);
     default:
       return verifyGeneralLicense(cleanId, state);
   }

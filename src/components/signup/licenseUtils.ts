@@ -16,6 +16,16 @@ export const getLicenseLabel = (businessType: string): string => {
       return "Real Estate License Number";
     case "medical":
       return "Medical License Number";
+    case "auto":
+      return "Auto Repair License Number";
+    case "insurance":
+      return "Insurance License Number";
+    case "energy":
+      return "Energy License Number";
+    case "rentals":
+      return "Equipment Rental License";
+    case "retail":
+      return "Retail License Number";
     default:
       return "License Number / EIN";
   }
@@ -52,6 +62,16 @@ export const getGuidanceMessage = (businessState: string, businessType: string):
     case "realtor":
       if (businessState === "Florida") {
         return "Florida real estate licenses typically start with BK or SL followed by 7 digits";
+      }
+      break;
+    case "auto":
+      if (businessState === "California") {
+        return "California auto repair licenses typically have 6-8 digits";
+      }
+      break;
+    case "restaurant":
+      if (businessState === "California") {
+        return "California food service licenses typically have 6-8 digits";
       }
       break;
   }
