@@ -11,6 +11,7 @@ interface Review {
   rating: number;
   content: string;
   date: string;
+  reviewerVerified?: boolean;
 }
 
 interface ReviewsListProps {
@@ -62,6 +63,11 @@ const ReviewsList = ({
   if (reviews.length === 0) {
     return <NoReviews customerProfile={customerProfile} />;
   }
+
+  console.log("ReviewsList: Reviews with verification status:", reviews.map(r => ({
+    name: r.reviewerName,
+    verified: r.reviewerVerified
+  })));
 
   return (
     <div className="space-y-4">

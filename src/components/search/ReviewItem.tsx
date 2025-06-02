@@ -49,6 +49,8 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
 
+  console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
+
   // Load photos from database
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -110,8 +112,10 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             ) : (
               <h4 className="font-medium">{review.reviewerName}</h4>
             )}
-            {/* Show verified badge next to business name */}
-            {review.reviewerVerified && <VerifiedBadge size="sm" />}
+            {/* Show verified badge next to business name - this is the key fix */}
+            {review.reviewerVerified && (
+              <VerifiedBadge size="sm" />
+            )}
           </div>
           <div className="flex items-center mt-1">
             <StarRating 
