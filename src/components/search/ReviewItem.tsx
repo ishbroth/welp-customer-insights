@@ -113,8 +113,8 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
             ) : (
               <h4 className="font-medium">{review.reviewerName}</h4>
             )}
-            {/* Show verified badge next to business name - force display when verified */}
-            {review.reviewerVerified === true && (
+            {/* Always show verified badge when reviewerVerified is true */}
+            {review.reviewerVerified && (
               <VerifiedBadge size="sm" />
             )}
           </div>

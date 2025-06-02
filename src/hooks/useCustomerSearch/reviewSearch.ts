@@ -59,7 +59,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
     if (businessInfoData) {
       businessInfoData.forEach(info => {
         console.log(`Business ${info.id} verification status: ${info.verified}`);
-        businessVerificationMap.set(info.id, info.verified);
+        businessVerificationMap.set(info.id, Boolean(info.verified));
       });
     }
   }
@@ -78,10 +78,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
     const formattedReview = formatReviewData(review);
-    // Add verification status from our separate query
-    const verificationStatus = businessVerificationMap.get(review.business_id) || false;
-    console.log(`Setting verification status for business ${review.business_id}: ${verificationStatus}`);
-    formattedReview.reviewerVerified = verificationStatus;
+    // Add verification status from our separate query - ensure it's properly set
+    const verificationStatus = businessVerificationMap.get(review.business_id);
+    console.log(`Setting verification status for business ${review.business_id} (${review.profiles?.name}): ${verificationStatus}`);
+    formattedReview.reviewerVerified = Boolean(verificationStatus);
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
 
