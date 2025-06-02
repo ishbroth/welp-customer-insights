@@ -6,6 +6,7 @@ import ReviewItemHeader from "./ReviewItemHeader";
 import ReviewItemContent from "./ReviewItemContent";
 import ReviewItemActions from "./ReviewItemActions";
 import { useReviewData } from "@/hooks/useReviewData";
+import { useCustomerReviewResponses } from "@/hooks/useCustomerReviewResponses";
 
 interface ReviewItemProps {
   review: {
@@ -35,8 +36,10 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
   const { currentUser, isSubscribed } = useAuth();
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
   const { photos, fullReviewContent } = useReviewData(review.id, hasFullAccess);
+  const { responses } = useCustomerReviewResponses(review.id);
 
   console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
+  console.log(`ReviewItem: Found ${responses.length} responses for review ${review.id}`);
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
@@ -62,7 +65,7 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
       {hasFullAccess && (
         <CustomerReviewResponse
           reviewId={review.id}
-          responses={[]}
+          responses={responses}
           hasSubscription={isSubscribed}
           isOneTimeUnlocked={false}
           hideReplyOption={!isBusinessUser}

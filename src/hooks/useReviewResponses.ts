@@ -19,32 +19,46 @@ export const useReviewResponses = (reviewId: string) => {
       try {
         console.log('Fetching responses for review:', reviewId);
         
-        // Fetch responses with author information from profiles using the proper foreign key
-        const { data: responseData, error } = await supabase
+        // First get the responses
+        const { data: responseData, error: responseError } = await supabase
           .from('responses')
-          .select(`
-            id,
-            author_id,
-            content,
-            created_at,
-            profiles!responses_author_id_fkey (
-              name,
-              first_name,
-              last_name
-            )
-          `)
+          .select('id, author_id, content, created_at')
           .eq('review_id', reviewId)
           .order('created_at', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching responses:', error);
+        if (responseError) {
+          console.error('Error fetching responses:', responseError);
           return;
         }
 
         console.log('Raw response data:', responseData);
 
-        const formattedResponses = responseData?.map((resp: any) => {
-          const profile = resp.profiles;
+        if (!responseData || responseData.length === 0) {
+          setResponses([]);
+          return;
+        }
+
+        // Get author information for each response
+        const authorIds = responseData.map(r => r.author_id).filter(Boolean);
+        
+        if (authorIds.length === 0) {
+          setResponses([]);
+          return;
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, name, first_name, last_name')
+          .in('id', authorIds);
+
+        if (profileError) {
+          console.error('Error fetching profiles:', profileError);
+          return;
+        }
+
+        // Combine response data with profile data
+        const formattedResponses = responseData.map((resp: any) => {
+          const profile = profileData?.find(p => p.id === resp.author_id);
           const authorName = profile?.name || 
                            (profile?.first_name && profile?.last_name 
                              ? `${profile.first_name} ${profile.last_name}` 
@@ -58,7 +72,7 @@ export const useReviewResponses = (reviewId: string) => {
             createdAt: resp.created_at,
             replies: []
           };
-        }) || [];
+        });
 
         console.log('Formatted responses:', formattedResponses);
         setResponses(formattedResponses);
