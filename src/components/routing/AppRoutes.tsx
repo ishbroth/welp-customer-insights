@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import SearchResults from "@/pages/SearchResults";
@@ -24,6 +25,7 @@ import BuyCredits from "@/pages/BuyCredits";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
 import SuccessStories from "@/pages/SuccessStories";
 import Verification from "@/pages/Verification";
+import VerificationResources from "@/pages/VerificationResources";
 import CustomerVerification from "@/pages/CustomerVerification";
 import CustomerBenefits from "@/pages/CustomerBenefits";
 import CustomerStories from "@/pages/CustomerStories";
@@ -46,6 +48,7 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/verification" element={<Verification />} />
+      <Route path="/verification-resources" element={<VerificationResources />} />
       <Route path="/verify-license" element={
         <ProtectedRoute>
           <VerifyLicense />

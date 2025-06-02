@@ -89,6 +89,15 @@ const Verification = () => {
               </ol>
             </div>
             
+            <div className="text-center mb-6">
+              <a 
+                href="/verification-resources" 
+                className="text-welp-primary hover:underline text-sm font-medium"
+              >
+                List of verification resources
+              </a>
+            </div>
+            
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
               <h3 className="text-lg font-semibold mb-3 flex items-center">
                 <AlertCircle className="h-5 w-5 text-amber-600 mr-2" />
