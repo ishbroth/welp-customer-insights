@@ -35,4 +35,5 @@ export interface ReviewData {
     name: string;
     avatar?: string;
   } | null;
+  reviewerVerified?: boolean;
 }

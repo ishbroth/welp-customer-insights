@@ -18,7 +18,8 @@ export const formatReviewData = (review: any): ReviewData => {
     customer_phone: review.customer_phone || '',
     rating: review.rating,
     business_id: review.business_id,
-    business_profile: businessProfile
+    business_profile: businessProfile,
+    reviewerVerified: review.business_info?.verified || false
   };
 
   return formattedReview;

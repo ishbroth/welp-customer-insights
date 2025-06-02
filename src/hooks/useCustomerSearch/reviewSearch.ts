@@ -24,7 +24,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       rating,
       business_id,
       profiles!business_id(name, avatar),
-      business_info!business_id(verified)
+      business_info!inner(verified)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
