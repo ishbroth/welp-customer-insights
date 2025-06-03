@@ -1,32 +1,12 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
-import { useToast } from "@/hooks/use-toast";
-import { UserRound } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
 
-// Array of US states for the dropdown
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
-  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", 
-  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
-  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", 
-  "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", 
-  "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-];
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomerPersonalInfoSection } from "./CustomerPersonalInfoSection";
+import { CustomerAddressSection } from "./CustomerAddressSection";
+import { CustomerPasswordSection } from "./CustomerPasswordSection";
 
 const CustomerSignupForm = () => {
   const navigate = useNavigate();
@@ -46,38 +26,6 @@ const CustomerSignupForm = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingEmailError, setExistingEmailError] = useState(false);
-
-  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
-    if (!place.address_components) return;
-
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
-
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
-      }
-    });
-
-    // Update form fields
-    if (city) setCustomerCity(city);
-    if (state) setCustomerState(state);
-    if (zipCode) setCustomerZipCode(zipCode);
-  };
   
   // Email validation to check if it's already registered
   const checkEmailExists = async (email: string) => {
@@ -195,159 +143,47 @@ const CustomerSignupForm = () => {
       await checkEmailExists(customerEmail);
     }
   };
+
+  const handleEmailChange = (value: string) => {
+    setCustomerEmail(value);
+    if (existingEmailError) setExistingEmailError(false);
+  };
   
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold mb-4">Create Customer Account</h2>
       
-      <div>
-        <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
-        <Input
-          id="customerFirstName"
-          placeholder="John"
-          value={customerFirstName}
-          onChange={(e) => setCustomerFirstName(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
+      <CustomerPersonalInfoSection
+        firstName={customerFirstName}
+        setFirstName={setCustomerFirstName}
+        lastName={customerLastName}
+        setLastName={setCustomerLastName}
+        email={customerEmail}
+        setEmail={setCustomerEmail}
+        phone={customerPhone}
+        setPhone={setCustomerPhone}
+        existingEmailError={existingEmailError}
+        onEmailBlur={handleEmailBlur}
+        onEmailChange={handleEmailChange}
+      />
       
-      <div>
-        <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
-        <Input
-          id="customerLastName"
-          placeholder="Smith"
-          value={customerLastName}
-          onChange={(e) => setCustomerLastName(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
+      <CustomerAddressSection
+        street={customerStreet}
+        setStreet={setCustomerStreet}
+        city={customerCity}
+        setCity={setCustomerCity}
+        state={customerState}
+        setState={setCustomerState}
+        zipCode={customerZipCode}
+        setZipCode={setCustomerZipCode}
+      />
       
-      {/* Email field with validation for existing emails */}
-      <div>
-        <label htmlFor="customerEmail" className="block text-sm font-medium mb-1">Email Address</label>
-        <Input
-          id="customerEmail"
-          type="email"
-          placeholder="customer@example.com"
-          value={customerEmail}
-          onChange={(e) => {
-            setCustomerEmail(e.target.value);
-            if (existingEmailError) setExistingEmailError(false);
-          }}
-          onBlur={handleEmailBlur}
-          className={`welp-input ${existingEmailError ? 'border-red-500' : ''}`}
-          required
-        />
-        <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
-        
-        {existingEmailError && (
-          <Alert className="mt-2 bg-amber-50 border-amber-200">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-2">
-              <span>This email is already registered.</span>
-              <div>
-                <Link to="/login" className="text-welp-primary hover:underline font-medium">
-                  Sign in instead
-                </Link>
-                {" or "}
-                <Link to="/forgot-password" className="text-welp-primary hover:underline font-medium">
-                  Reset password
-                </Link>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
-      
-      <div>
-        <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">Phone Number</label>
-        <PhoneInput
-          id="customerPhone"
-          placeholder="(555) 123-4567"
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          className="welp-input"
-          required
-        />
-        <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
-      </div>
-      
-      {/* Address fields */}
-      <div>
-        <label htmlFor="customerStreet" className="block text-sm font-medium mb-1">Street Address</label>
-        <AddressAutocomplete
-          id="customerStreet"
-          placeholder="Start typing your address..."
-          value={customerStreet}
-          onChange={(e) => setCustomerStreet(e.target.value)}
-          onAddressChange={setCustomerStreet}
-          onPlaceSelect={handleAddressSelect}
-          className="welp-input"
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
-        <Input
-          id="customerCity"
-          placeholder="New York"
-          value={customerCity}
-          onChange={(e) => setCustomerCity(e.target.value)}
-          className="welp-input"
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerState" className="block text-sm font-medium mb-1">State</label>
-        <Select value={customerState} onValueChange={setCustomerState}>
-          <SelectTrigger className="welp-input">
-            <SelectValue placeholder="Select State" />
-          </SelectTrigger>
-          <SelectContent className="bg-white max-h-60">
-            {US_STATES.map((state) => (
-              <SelectItem key={state} value={state}>{state}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div>
-        <label htmlFor="customerZipCode" className="block text-sm font-medium mb-1">ZIP Code</label>
-        <Input
-          id="customerZipCode"
-          placeholder="12345"
-          value={customerZipCode}
-          onChange={(e) => setCustomerZipCode(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerPassword" className="block text-sm font-medium mb-1">Password</label>
-        <Input
-          id="customerPassword"
-          type="password"
-          value={customerPassword}
-          onChange={(e) => setCustomerPassword(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerConfirmPassword" className="block text-sm font-medium mb-1">Confirm Password</label>
-        <Input
-          id="customerConfirmPassword"
-          type="password"
-          value={customerConfirmPassword}
-          onChange={(e) => setCustomerConfirmPassword(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
+      <CustomerPasswordSection
+        password={customerPassword}
+        setPassword={setCustomerPassword}
+        confirmPassword={customerConfirmPassword}
+        setConfirmPassword={setCustomerConfirmPassword}
+      />
       
       <div className="pt-4">
         <Button
@@ -366,10 +202,6 @@ const CustomerSignupForm = () => {
         >
           {isSubmitting ? "Sending Verification..." : "Continue to Verification"}
         </Button>
-        
-        {customerPassword !== customerConfirmPassword && customerConfirmPassword && (
-          <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
-        )}
       </div>
     </div>
   );
