@@ -56,18 +56,6 @@ export const useProfileReviewsFetching = () => {
           );
         }
         
-        // 3. Search by profile information
-        if (currentUser.first_name && currentUser.last_name) {
-          const fullName = `${currentUser.first_name} ${currentUser.last_name}`;
-          searchPromises.push(
-            supabase
-              .from('reviews')
-              .select('*')
-              .ilike('customer_name', `%${fullName}%`)
-              .order('created_at', { ascending: false })
-          );
-        }
-        
         // Execute all searches
         const searchResults = await Promise.allSettled(searchPromises);
         const allReviews = [];
