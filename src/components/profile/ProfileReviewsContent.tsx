@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Review } from "@/types";
 import CustomerReviewCard from "@/components/customer/CustomerReviewCard";
+import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 
@@ -66,6 +67,17 @@ const ProfileReviewsContent = ({
     });
   };
 
+  // Handle edit review for business users
+  const handleEditReview = (review: Review) => {
+    navigate(`/edit-review/${review.id}`);
+  };
+
+  // Handle delete review for business users
+  const handleDeleteReview = (reviewId: string) => {
+    // Implementation would go here
+    console.log('Delete review:', reviewId);
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-10">
@@ -85,17 +97,30 @@ const ProfileReviewsContent = ({
     return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
 
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+
   return (
     <div className="space-y-6">
       {localReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
-        <CustomerReviewCard
-          key={review.id}
-          review={review}
-          isUnlocked={isReviewUnlocked(review.id)}
-          onPurchase={handlePurchaseReview}
-          onReactionToggle={handleReactionToggle}
-          hasSubscription={hasSubscription}
-        />
+        isBusinessUser ? (
+          <BusinessReviewCard
+            key={review.id}
+            review={review}
+            hasSubscription={hasSubscription}
+            onEdit={handleEditReview}
+            onDelete={handleDeleteReview}
+            onReactionToggle={handleReactionToggle}
+          />
+        ) : (
+          <CustomerReviewCard
+            key={review.id}
+            review={review}
+            isUnlocked={isReviewUnlocked(review.id)}
+            onPurchase={handlePurchaseReview}
+            onReactionToggle={handleReactionToggle}
+            hasSubscription={hasSubscription}
+          />
+        )
       ))}
       
       {totalPages > 1 && (

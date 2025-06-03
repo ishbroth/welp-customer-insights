@@ -9,7 +9,9 @@ import StarRating from "@/components/StarRating";
 import ReviewReactions from "@/components/ReviewReactions";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
 import CustomerReactions from "./CustomerReactions";
+import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -34,6 +36,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   onReactionToggle,
 }) => {
   const navigate = useNavigate();
+  const { isSubscribed } = useAuth();
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
 
   // Load photos from database
@@ -78,6 +81,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   console.log(`BusinessReviewCard rendering review ${review.id} with reactions:`, review.reactions);
+  console.log(`BusinessReviewCard rendering review ${review.id} with responses:`, review.responses);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border relative">
@@ -156,6 +160,32 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         />
       </div>
 
+      {/* Customer responses section */}
+      {review.responses && review.responses.length > 0 && (
+        <div className="border-t pt-4 mb-4">
+          <CustomerReviewResponse 
+            reviewId={review.id}
+            responses={review.responses}
+            hasSubscription={hasSubscription}
+            isOneTimeUnlocked={false}
+            hideReplyOption={false} // Allow business to respond
+          />
+        </div>
+      )}
+
+      {/* Show respond option if no responses yet but user is subscribed */}
+      {(!review.responses || review.responses.length === 0) && hasSubscription && (
+        <div className="border-t pt-4 mb-4">
+          <CustomerReviewResponse 
+            reviewId={review.id}
+            responses={[]}
+            hasSubscription={hasSubscription}
+            isOneTimeUnlocked={false}
+            hideReplyOption={false}
+          />
+        </div>
+      )}
+
       {/* Action buttons moved to bottom */}
       <div className="flex justify-end space-x-2 pt-2 border-t">
         <Button 
@@ -175,8 +205,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-
-      {/* Responses section would go here if implemented */}
     </div>
   );
 };

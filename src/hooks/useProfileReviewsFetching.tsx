@@ -81,35 +81,76 @@ export const useProfileReviewsFetching = () => {
         uniqueReviews = await fetchCustomerReviewsFromDB(currentUser);
       }
 
-      // Now fetch business profiles for each review
-      const reviewsWithProfiles = await Promise.all(
+      // Now fetch business profiles and responses for each review
+      const reviewsWithProfilesAndResponses = await Promise.all(
         uniqueReviews.map(async (review) => {
+          let businessProfile = null;
+          let responses = [];
+
+          // Fetch business profile if business_id exists
           if (review.business_id) {
             try {
-              const businessProfile = await fetchBusinessProfile(review.business_id);
-              return {
-                ...review,
-                business_profile: businessProfile
-              };
+              businessProfile = await fetchBusinessProfile(review.business_id);
             } catch (error) {
               console.error(`Error fetching business profile for ${review.business_id}:`, error);
-              return {
-                ...review,
-                business_profile: null
-              };
             }
           }
+
+          // Fetch responses for this review
+          try {
+            const { data: responseData, error: responseError } = await supabase
+              .from('responses')
+              .select('id, author_id, content, created_at')
+              .eq('review_id', review.id)
+              .order('created_at', { ascending: true });
+
+            if (!responseError && responseData && responseData.length > 0) {
+              console.log(`Found ${responseData.length} responses for review ${review.id}`);
+              
+              // Get author information for each response
+              const authorIds = responseData.map(r => r.author_id).filter(Boolean);
+              
+              if (authorIds.length > 0) {
+                const { data: profileData, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('id, name, first_name, last_name')
+                  .in('id', authorIds);
+
+                if (!profileError && profileData) {
+                  responses = responseData.map((resp: any) => {
+                    const profile = profileData.find(p => p.id === resp.author_id);
+                    const authorName = profile?.name || 
+                                     (profile?.first_name && profile?.last_name 
+                                       ? `${profile.first_name} ${profile.last_name}` 
+                                       : 'User');
+
+                    return {
+                      id: resp.id,
+                      authorId: resp.author_id || '',
+                      authorName,
+                      content: resp.content,
+                      createdAt: resp.created_at
+                    };
+                  });
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching responses for review ${review.id}:`, error);
+          }
+
           return {
             ...review,
-            business_profile: null
+            business_profile: businessProfile,
+            responses: responses
           };
         })
       );
 
-      console.log("Reviews with business profile data:", reviewsWithProfiles);
+      console.log("Reviews with business profile and response data:", reviewsWithProfilesAndResponses);
 
       // Format the reviews data
-      const formattedReviews = reviewsWithProfiles.map(review => 
+      const formattedReviews = reviewsWithProfilesAndResponses.map(review => 
         formatReview(review, currentUser)
       );
 
@@ -122,6 +163,13 @@ export const useProfileReviewsFetching = () => {
         console.log("1. No businesses have reviewed this customer yet");
         console.log("2. Reviews exist but customer_id/name matching failed");
         console.log("3. Reviews are in the database but not properly linked");
+      } else {
+        // Log which reviews have responses
+        formattedReviews.forEach(review => {
+          if (review.responses && review.responses.length > 0) {
+            console.log(`Review ${review.id} has ${review.responses.length} responses from customers`);
+          }
+        });
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
