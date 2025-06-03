@@ -1,39 +1,30 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
+import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
-import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
+import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import ProfileReviewsHeader from "@/components/profile/ProfileReviewsHeader";
 import ProfileReviewsSubscriptionStatus from "@/components/profile/ProfileReviewsSubscriptionStatus";
-import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
 
 const ProfileReviews = () => {
+  const { currentUser, loading, isSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
-  
-  // Set local subscription status based on auth context
-  const [hasSubscription, setHasSubscription] = useState(isSubscribed);
-  
-  // Use the custom hook for review fetching
-  const { customerReviews, isLoading, fetchCustomerReviews } = useProfileReviewsFetching();
+  const { customerReviews, isLoading } = useProfileReviewsFetching();
 
-  useEffect(() => {
-    // Update local subscription status when the auth context changes
-    setHasSubscription(isSubscribed);
-    
-    // Check URL params for legacy support
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("subscribed") === "true") {
-      setHasSubscription(true);
-    }
-  }, [currentUser, isSubscribed]);
-  
-  // Add new state for content moderation
-  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
-  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
+  const isCustomerAccount = currentUser.type === "customer";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -42,30 +33,27 @@ const ProfileReviews = () => {
         <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
         
         <main className="flex-1 p-6">
-          <div className="container mx-auto">
+          <div className="container mx-auto max-w-4xl">
             <ProfileReviewsHeader 
-              onRefresh={fetchCustomerReviews}
-              isLoading={isLoading}
+              title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
+              description={
+                isCustomerAccount 
+                  ? "Reviews that businesses have written about you"
+                  : "Reviews you've written about your customers"
+              }
             />
             
-            <ProfileReviewsSubscriptionStatus hasSubscription={hasSubscription} />
+            <ProfileReviewsSubscriptionStatus />
             
             <ProfileReviewsContent 
               customerReviews={customerReviews}
               isLoading={isLoading}
-              hasSubscription={hasSubscription}
+              hasSubscription={isSubscribed}
             />
           </div>
         </main>
       </div>
       <Footer />
-      
-      {showRejectionDialog && rejectionReason && (
-        <ContentRejectionDialog
-          reason={rejectionReason}
-          onClose={() => setShowRejectionDialog(false)}
-        />
-      )}
     </div>
   );
 };

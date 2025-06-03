@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { fetchCustomerReviewsFromDB } from "@/services/reviewsService";
 import { fetchBusinessProfile } from "@/services/businessProfileService";
 import { formatReview } from "@/utils/reviewFormatter";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
@@ -21,8 +22,27 @@ export const useProfileReviewsFetching = () => {
     setIsLoading(true);
     
     try {
-      // Fetch reviews from database
-      const uniqueReviews = await fetchCustomerReviewsFromDB(currentUser);
+      let uniqueReviews;
+      
+      // If user is a customer, fetch reviews written about them
+      if (currentUser.type === "customer") {
+        // Find reviews where customer_id matches the current user's ID
+        const { data: reviewsData, error } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('customer_id', currentUser.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching customer reviews:', error);
+          throw error;
+        }
+
+        uniqueReviews = reviewsData || [];
+      } else {
+        // For business users, use the existing logic
+        uniqueReviews = await fetchCustomerReviewsFromDB(currentUser);
+      }
 
       // Now fetch business profiles for each review
       const reviewsWithProfiles = await Promise.all(

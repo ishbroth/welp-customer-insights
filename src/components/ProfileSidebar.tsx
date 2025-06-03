@@ -22,6 +22,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   const location = useLocation();
   
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
+  const isCustomerAccount = currentUser?.type === "customer";
   
   return (
     <>
@@ -79,7 +80,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 Edit Profile
               </Link>
               
-              {/* Only show reviews link for business users - they see reviews they've written about customers */}
+              {/* Show reviews link for both business and customer users */}
               {isBusinessAccount && (
                 <Link 
                   to="/profile/business-reviews" 
@@ -91,6 +92,21 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 >
                   <FileText className="mr-3 h-5 w-5 text-gray-500" />
                   My Customer Reviews
+                </Link>
+              )}
+              
+              {/* Customer reviews link - shows reviews written about the customer */}
+              {isCustomerAccount && (
+                <Link 
+                  to="/profile/reviews" 
+                  className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
+                    location.pathname === "/profile/reviews" 
+                    ? "bg-gray-100 text-primary" 
+                    : "text-gray-700"
+                  }`}
+                >
+                  <FileText className="mr-3 h-5 w-5 text-gray-500" />
+                  My Reviews
                 </Link>
               )}
               
