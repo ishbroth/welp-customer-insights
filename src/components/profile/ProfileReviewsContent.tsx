@@ -28,7 +28,12 @@ const ProfileReviewsContent = ({
   // Update local reviews when customerReviews prop changes
   useEffect(() => {
     setLocalReviews(customerReviews);
-  }, [customerReviews]);
+    console.log("ProfileReviewsContent: Reviews updated", {
+      count: customerReviews.length,
+      userType: currentUser?.type,
+      userId: currentUser?.id
+    });
+  }, [customerReviews, currentUser]);
 
   // Pagination settings
   const reviewsPerPage = 5;
@@ -64,16 +69,20 @@ const ProfileReviewsContent = ({
   if (isLoading) {
     return (
       <div className="text-center py-10">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ea384c] mx-auto mb-4"></div>
         <p className="text-gray-500 mb-2">Loading your reviews...</p>
         <p className="text-sm text-gray-400">
-          We're checking for reviews that match your profile information.
+          {currentUser?.type === "customer" 
+            ? "Searching for reviews written about you by businesses..."
+            : "We're checking for reviews that match your profile information."
+          }
         </p>
       </div>
     );
   }
 
   if (localReviews.length === 0) {
-    return <EmptyReviewsMessage type="customer" />;
+    return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
 
   return (
