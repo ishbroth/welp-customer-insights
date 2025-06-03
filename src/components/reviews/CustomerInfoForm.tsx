@@ -3,6 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 
 interface CustomerInfoFormProps {
@@ -42,6 +43,38 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   setCustomerState,
   setCustomerZipCode,
 }) => {
+  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+    if (!place.address_components) return;
+
+    // Extract address components
+    let streetNumber = '';
+    let route = '';
+    let city = '';
+    let state = '';
+    let zipCode = '';
+
+    place.address_components.forEach((component) => {
+      const types = component.types;
+      
+      if (types.includes('street_number')) {
+        streetNumber = component.long_name;
+      } else if (types.includes('route')) {
+        route = component.long_name;
+      } else if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = component.short_name;
+      } else if (types.includes('postal_code')) {
+        zipCode = component.long_name;
+      }
+    });
+
+    // Update form fields
+    if (city) setCustomerCity(city);
+    if (state) setCustomerState(state);
+    if (zipCode) setCustomerZipCode(zipCode);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Customer Information</h2>
@@ -84,10 +117,12 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       
       <div>
         <label htmlFor="customerAddress" className="block text-sm font-medium mb-1">Address (if service was performed here)</label>
-        <Input
+        <AddressAutocomplete
           id="customerAddress"
           value={customerAddress}
           onChange={(e) => setCustomerAddress(e.target.value)}
+          onAddressChange={setCustomerAddress}
+          onPlaceSelect={handleAddressSelect}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}
         />
