@@ -13,7 +13,7 @@ import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
 const ProfileReviews = () => {
   const { currentUser, loading, isSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { customerReviews, isLoading } = useProfileReviewsFetching();
+  const { customerReviews, isLoading, fetchCustomerReviews } = useProfileReviewsFetching();
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -41,9 +41,11 @@ const ProfileReviews = () => {
                   ? "Reviews that businesses have written about you"
                   : "Reviews you've written about your customers"
               }
+              onRefresh={fetchCustomerReviews}
+              isLoading={isLoading}
             />
             
-            <ProfileReviewsSubscriptionStatus />
+            <ProfileReviewsSubscriptionStatus hasSubscription={isSubscribed} />
             
             <ProfileReviewsContent 
               customerReviews={customerReviews}

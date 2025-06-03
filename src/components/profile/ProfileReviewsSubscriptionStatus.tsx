@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 interface ProfileReviewsSubscriptionStatusProps {
-  hasSubscription: boolean;
+  hasSubscription?: boolean;
 }
 
-const ProfileReviewsSubscriptionStatus = ({ hasSubscription }: ProfileReviewsSubscriptionStatusProps) => {
+const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileReviewsSubscriptionStatusProps) => {
   const navigate = useNavigate();
 
   if (hasSubscription) {
