@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { UserRound } from "lucide-react";
 import { 
@@ -46,6 +46,38 @@ const CustomerSignupForm = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingEmailError, setExistingEmailError] = useState(false);
+
+  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+    if (!place.address_components) return;
+
+    // Extract address components
+    let streetNumber = '';
+    let route = '';
+    let city = '';
+    let state = '';
+    let zipCode = '';
+
+    place.address_components.forEach((component) => {
+      const types = component.types;
+      
+      if (types.includes('street_number')) {
+        streetNumber = component.long_name;
+      } else if (types.includes('route')) {
+        route = component.long_name;
+      } else if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = component.short_name;
+      } else if (types.includes('postal_code')) {
+        zipCode = component.long_name;
+      }
+    });
+
+    // Update form fields
+    if (city) setCustomerCity(city);
+    if (state) setCustomerState(state);
+    if (zipCode) setCustomerZipCode(zipCode);
+  };
   
   // Email validation to check if it's already registered
   const checkEmailExists = async (email: string) => {
@@ -245,11 +277,13 @@ const CustomerSignupForm = () => {
       {/* Address fields */}
       <div>
         <label htmlFor="customerStreet" className="block text-sm font-medium mb-1">Street Address</label>
-        <Input
+        <AddressAutocomplete
           id="customerStreet"
-          placeholder="123 Main St"
+          placeholder="Start typing your address..."
           value={customerStreet}
           onChange={(e) => setCustomerStreet(e.target.value)}
+          onAddressChange={setCustomerStreet}
+          onPlaceSelect={handleAddressSelect}
           className="welp-input"
         />
       </div>

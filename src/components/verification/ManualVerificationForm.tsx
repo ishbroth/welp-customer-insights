@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { Send } from "lucide-react";
 import { BUSINESS_TYPE_OPTIONS, US_STATES } from "@/components/signup/businessFormData";
 
@@ -64,6 +65,38 @@ const ManualVerificationForm = ({
   onSubmit, 
   isSubmitting 
 }: ManualVerificationFormProps) => {
+  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+    if (!place.address_components) return;
+
+    // Extract address components
+    let streetNumber = '';
+    let route = '';
+    let city = '';
+    let state = '';
+    let zipCode = '';
+
+    place.address_components.forEach((component) => {
+      const types = component.types;
+      
+      if (types.includes('street_number')) {
+        streetNumber = component.long_name;
+      } else if (types.includes('route')) {
+        route = component.long_name;
+      } else if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = component.short_name;
+      } else if (types.includes('postal_code')) {
+        zipCode = component.long_name;
+      }
+    });
+
+    // Update form fields
+    if (city) onInputChange("city", city);
+    if (state) onInputChange("state", state);
+    if (zipCode) onInputChange("zipCode", zipCode);
+  };
+
   return (
     <>
       <div>
@@ -114,10 +147,12 @@ const ManualVerificationForm = ({
 
       <div>
         <Label htmlFor="address">Business Address</Label>
-        <Input
+        <AddressAutocomplete
           id="address"
           value={formData.address}
           onChange={(e) => onInputChange("address", e.target.value)}
+          onAddressChange={(address) => onInputChange("address", address)}
+          onPlaceSelect={handleAddressSelect}
         />
       </div>
 

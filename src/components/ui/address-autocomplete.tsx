@@ -8,6 +8,12 @@ interface AddressAutocompleteProps extends React.ComponentProps<"input"> {
   onAddressChange?: (address: string) => void;
 }
 
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
 const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(
   ({ className, onPlaceSelect, onAddressChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +58,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
 
       try {
         // Initialize autocomplete
-        autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
           componentRestrictions: { country: 'us' }, // Restrict to US addresses
           fields: ['formatted_address', 'address_components', 'geometry']
@@ -80,7 +86,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
 
       return () => {
         if (autocompleteRef.current) {
-          google.maps.event.clearInstanceListeners(autocompleteRef.current);
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         }
       };
     }, [isLoaded, onPlaceSelect, onAddressChange]);
