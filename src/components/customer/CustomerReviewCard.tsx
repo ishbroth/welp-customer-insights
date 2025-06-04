@@ -33,7 +33,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   onPurchase,
   onReactionToggle,
 }) => {
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, currentUser } = useAuth();
   const navigate = useNavigate();
   const { reactions, toggleReaction } = useReactionPersistence(
     review.id, 
@@ -70,8 +70,21 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     }
   };
 
+  // Check if current user is the business who wrote this review
+  const isReviewAuthor = currentUser?.id === review.reviewerId;
+
   // Use the reviewerVerified property directly from the review
   const isVerified = review.reviewerVerified || false;
+
+  console.log('CustomerReviewCard: Review verification status:', {
+    reviewId: review.id,
+    reviewerName: review.reviewerName,
+    reviewerVerified: review.reviewerVerified,
+    isVerified: isVerified,
+    currentUserId: currentUser?.id,
+    reviewerId: review.reviewerId,
+    isReviewAuthor: isReviewAuthor
+  });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4">
@@ -99,7 +112,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
                 ) : (
                   <h3 className="font-semibold">{review.reviewerName}</h3>
                 )}
-                {/* Show verified badge next to business name when customers see it */}
+                {/* Show verified badge next to business name */}
                 {isVerified && <VerifiedBadge size="sm" />}
               </div>
               <p className="text-sm text-gray-500">
@@ -118,27 +131,29 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             Full review unlocked
           </div>
           
-          {/* Reactions for unlocked reviews */}
-          <div className="mt-4 border-t pt-3">
-            <div className="text-sm text-gray-500 mb-1">React to this review:</div>
-            <ReviewReactions 
-              reviewId={review.id}
-              customerId={review.customerId}
-              businessId={review.reviewerId}
-              businessName={review.reviewerName}
-              businessAvatar={review.reviewerAvatar}
-              reactions={reactions}
-              onReactionToggle={handleReactionToggle}
-            />
-          </div>
+          {/* Reactions for unlocked reviews - only show if user is not the review author */}
+          {!isReviewAuthor && (
+            <div className="mt-4 border-t pt-3">
+              <div className="text-sm text-gray-500 mb-1">React to this review:</div>
+              <ReviewReactions 
+                reviewId={review.id}
+                customerId={review.customerId}
+                businessId={review.reviewerId}
+                businessName={review.reviewerName}
+                businessAvatar={review.reviewerAvatar}
+                reactions={reactions}
+                onReactionToggle={handleReactionToggle}
+              />
+            </div>
+          )}
           
-          {/* Customer review responses component */}
+          {/* Customer review responses component - hide reply option if user is the review author */}
           <CustomerReviewResponse 
             reviewId={review.id}
             responses={review.responses || []}
             hasSubscription={hasSubscription}
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
-            hideReplyOption={!hasSubscription && !isUnlocked}
+            hideReplyOption={isReviewAuthor}
             onResponseSubmitted={handleResponseSubmitted}
           />
         </div>
