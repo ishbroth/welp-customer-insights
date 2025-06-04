@@ -45,9 +45,11 @@ export const useCustomerReviewResponses = (reviewId: string) => {
           return;
         }
 
+        console.log('Author IDs to fetch:', authorIds);
+
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, name, first_name, last_name')
+          .select('id, name, first_name, last_name, type')
           .in('id', authorIds);
 
         if (profileError) {
@@ -55,13 +57,34 @@ export const useCustomerReviewResponses = (reviewId: string) => {
           return;
         }
 
+        console.log('Profile data found:', profileData);
+
         // Combine response data with profile data
         const formattedResponses = responseData.map((resp: any) => {
           const profile = profileData?.find(p => p.id === resp.author_id);
-          const authorName = profile?.name || 
-                           (profile?.first_name && profile?.last_name 
-                             ? `${profile.first_name} ${profile.last_name}` 
-                             : 'User');
+          
+          let authorName = 'User'; // Default fallback
+          
+          if (profile) {
+            // First try to use the 'name' field
+            if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+            }
+            // If no name, try to construct from first_name and last_name
+            else if (profile.first_name || profile.last_name) {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              authorName = `${firstName} ${lastName}`.trim();
+            }
+            // If still no name, use account type
+            else if (profile.type) {
+              authorName = profile.type === 'business' ? 'Business' : 'Customer';
+            }
+            
+            console.log(`Response author mapping: ${resp.author_id} -> ${authorName} (profile name: ${profile.name}, first: ${profile.first_name}, last: ${profile.last_name}, type: ${profile.type})`);
+          } else {
+            console.log(`No profile found for author ${resp.author_id}`);
+          }
 
           return {
             id: resp.id,
@@ -72,7 +95,7 @@ export const useCustomerReviewResponses = (reviewId: string) => {
           };
         });
 
-        console.log('Formatted responses:', formattedResponses);
+        console.log('Formatted responses with proper author names:', formattedResponses);
         setResponses(formattedResponses);
       } catch (error) {
         console.error('Error fetching responses:', error);
