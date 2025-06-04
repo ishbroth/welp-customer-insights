@@ -11,7 +11,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log("Searching reviews table with corrected join syntax...");
   
-  // Use correct Supabase join syntax with exclamation mark and foreign key field
+  // First, let's get reviews without the join to see what business_ids we have
   let reviewQuery = supabase
     .from('reviews')
     .select(`
@@ -24,8 +24,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       rating,
       content,
       created_at,
-      business_id,
-      profiles!business_id(name, avatar, type)
+      business_id
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -41,16 +40,35 @@ export const searchReviews = async (searchParams: SearchParams) => {
     return [];
   }
 
-  console.log(`Found ${allReviews.length} reviews with proper joins`);
-  console.log("Sample review data with corrected join:", allReviews[0]);
+  console.log(`Found ${allReviews.length} reviews`);
+  console.log("Business IDs in reviews:", allReviews.map(r => r.business_id));
 
-  // Get business verification statuses for all businesses in the results
+  // Now get all the business profiles separately
   const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
-  console.log("Business IDs to check verification for:", businessIds);
+  console.log("Unique business IDs to fetch:", businessIds);
   
+  let businessProfilesMap = new Map();
   let businessVerificationMap = new Map();
   
   if (businessIds.length > 0) {
+    // Fetch business profiles
+    const { data: businessProfiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, name, avatar, type')
+      .in('id', businessIds)
+      .eq('type', 'business');
+
+    if (profileError) {
+      console.error("Error fetching business profiles:", profileError);
+    } else {
+      console.log("Business profiles found:", businessProfiles);
+      businessProfiles?.forEach(profile => {
+        businessProfilesMap.set(profile.id, profile);
+        console.log(`Profile mapping: ${profile.id} -> ${profile.name}`);
+      });
+    }
+
+    // Fetch business verification statuses
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
       .select('id, verified')
@@ -67,6 +85,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
     }
   }
 
+  console.log("Final business profiles map:", Object.fromEntries(businessProfilesMap));
   console.log("Final business verification map:", Object.fromEntries(businessVerificationMap));
 
   // Check if this is a single field search
@@ -80,7 +99,15 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
-    const formattedReview = formatReviewData(review);
+    // Add the business profile data to the review
+    const businessProfile = businessProfilesMap.get(review.business_id);
+    const reviewWithProfile = {
+      ...review,
+      profiles: businessProfile || null
+    };
+    
+    const formattedReview = formatReviewData(reviewWithProfile);
+    
     // Add verification status from our business_info query
     const verificationStatus = businessVerificationMap.get(review.business_id) || false;
     console.log(`Setting verification status for business ${review.business_id} (${formattedReview.reviewerName}): ${verificationStatus}`);
