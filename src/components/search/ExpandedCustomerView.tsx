@@ -1,6 +1,8 @@
 
 import ReviewsList from "./ReviewsList";
 import CustomerInfo from "./CustomerInfo";
+import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
 
 interface ExpandedCustomerViewProps {
   customer: {
@@ -43,11 +45,26 @@ const ExpandedCustomerView = ({
   isReviewCustomer,
   onReviewUpdate 
 }: ExpandedCustomerViewProps) => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+  
+  const handleViewProfile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isBusinessUser && hasFullAccess(customer.id)) {
+      navigate(`/customer/${customer.id}`);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <CustomerInfo 
         customer={customer}
+        isBusinessUser={isBusinessUser}
         isReviewCustomer={isReviewCustomer}
+        onViewProfile={handleViewProfile}
+        hasAccess={hasFullAccess(customer.id)}
       />
       
       <ReviewsList 
