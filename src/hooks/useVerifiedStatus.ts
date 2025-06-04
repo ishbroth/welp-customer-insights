@@ -8,6 +8,8 @@ export const useVerifiedStatus = (userId: string | undefined) => {
     queryFn: async () => {
       if (!userId) return false;
       
+      console.log(`useVerifiedStatus: Checking verification for user ID: ${userId}`);
+      
       const { data, error } = await supabase
         .from('business_info')
         .select('verified')
@@ -19,6 +21,7 @@ export const useVerifiedStatus = (userId: string | undefined) => {
         return false;
       }
       
+      console.log(`useVerifiedStatus: User ${userId} verification status: ${data?.verified}`);
       return data?.verified || false;
     },
     enabled: !!userId,

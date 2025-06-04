@@ -66,7 +66,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       });
     }
 
-    // Fetch business verification statuses
+    // Fetch business verification statuses - THIS IS THE KEY PART
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
       .select('id, verified')
@@ -77,8 +77,9 @@ export const searchReviews = async (searchParams: SearchParams) => {
     } else {
       console.log("Business verification data found:", businessInfos?.length || 0);
       businessInfos?.forEach(business => {
-        businessVerificationMap.set(business.id, Boolean(business.verified));
-        console.log(`Business ${business.id} verification status: ${business.verified}`);
+        const isVerified = Boolean(business.verified);
+        businessVerificationMap.set(business.id, isVerified);
+        console.log(`Business verification mapping: ${business.id} -> verified: ${isVerified}`);
       });
     }
   }
@@ -101,9 +102,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
     
     const formattedReview = formatReviewData(reviewWithProfile);
     
-    // Add verification status
+    // Add verification status - ENSURE THIS IS PROPERLY SET
     const verificationStatus = businessVerificationMap.get(review.business_id) || false;
     formattedReview.reviewerVerified = verificationStatus;
+    
+    console.log(`Review verification check: Business ID ${review.business_id}, Verification Status: ${verificationStatus}, Business Name: ${formattedReview.reviewerName}`);
     
     const scoredReview = scoreReview(formattedReview, { firstName, lastName, phone, address, city, state, zipCode });
     

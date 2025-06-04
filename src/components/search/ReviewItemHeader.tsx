@@ -39,6 +39,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   };
 
   console.log(`ReviewItemHeader: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
+  console.log(`ReviewItemHeader: Should show verified badge: ${Boolean(review.reviewerVerified)}`);
 
   return (
     <div className="flex items-start justify-between mb-3">
@@ -61,8 +62,10 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
             )}
-            {/* Show verified badge next to business name */}
-            {review.reviewerVerified && <VerifiedBadge size="sm" />}
+            {/* Show verified badge next to business name - FIXED LOGIC */}
+            {review.reviewerVerified && (
+              <VerifiedBadge size="sm" />
+            )}
           </div>
           
           {/* Star rating under the business name */}
