@@ -11,6 +11,19 @@ export interface SearchParams {
   similarityThreshold?: number;
 }
 
+export interface ProfileCustomer {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  searchScore: number;
+  matchCount: number;
+}
+
 export interface ReviewData {
   id: string;
   customer_name: string | null;

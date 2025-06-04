@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
@@ -67,6 +66,8 @@ export const useCustomerSearch = () => {
           customer_zipcode: review.customer_zipcode,
           customer_phone: review.customer_phone,
           rating: review.rating,
+          content: review.content,
+          created_at: review.created_at,
           business_id: review.business_id,
           business_profile: review.business_profile
         }));
