@@ -55,12 +55,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
   let customerProfilesMap = new Map();
   
   if (businessIds.length > 0) {
-    // Fetch business profiles with state information
+    // Fetch business profiles - remove the type filter to get all profiles
     const { data: businessProfiles, error: profileError } = await supabase
       .from('profiles')
       .select('id, name, avatar, type, state')
-      .in('id', businessIds)
-      .eq('type', 'business');
+      .in('id', businessIds);
 
     if (profileError) {
       console.error("Error fetching business profiles:", profileError);
@@ -68,14 +67,14 @@ export const searchReviews = async (searchParams: SearchParams) => {
       console.log("Business profiles found:", businessProfiles?.length || 0);
       businessProfiles?.forEach(profile => {
         businessProfilesMap.set(profile.id, profile);
-        console.log(`Profile mapping: ${profile.id} -> ${profile.name} (State: ${profile.state})`);
+        console.log(`Profile mapping: ${profile.id} -> ${profile.name} (State: ${profile.state}, Type: ${profile.type})`);
       });
     }
 
     // Fetch business verification statuses
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
-      .select('id, verified')
+      .select('id, verified, business_name')
       .in('id', businessIds);
 
     if (businessError) {
@@ -87,6 +86,17 @@ export const searchReviews = async (searchParams: SearchParams) => {
         const isVerified = Boolean(business.verified);
         businessVerificationMap.set(business.id, isVerified);
         console.log(`VERIFICATION MAPPING: Business ID ${business.id} -> verified: ${isVerified} (raw value: ${business.verified})`);
+        
+        // If no profile name found, use business_name from business_info
+        if (!businessProfilesMap.has(business.id)) {
+          businessProfilesMap.set(business.id, {
+            id: business.id,
+            name: business.business_name || 'Unknown Business',
+            avatar: null,
+            type: 'business',
+            state: null
+          });
+        }
       });
     }
   }
@@ -143,8 +153,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
     return scoredReview;
   });
 
-  // Filter and sort the results
-  const filteredReviews = filterAndSortReviews(scoredReviews, isSingleFieldSearch);
+  // Filter and sort the results - for single field searches, be more lenient
+  const filteredReviews = isSingleFieldSearch 
+    ? scoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
+    : filterAndSortReviews(scoredReviews, isSingleFieldSearch);
 
   // Log results for debugging
   logSearchResults(filteredReviews);
