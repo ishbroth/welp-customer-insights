@@ -3,6 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 interface SearchFieldProps {
   type?: string;
@@ -27,11 +28,12 @@ const SearchField = ({
   // Use PhoneInput for phone fields
   const isPhoneField = placeholder.toLowerCase().includes("phone") || type === "tel";
   
+  // Use AddressAutocomplete for address fields
+  const isAddressField = placeholder.toLowerCase().includes("address") || 
+                        placeholder.toLowerCase().includes("street");
+  
   // Handle address field restrictions
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isAddressField = placeholder.toLowerCase().includes("address") || 
-                          placeholder.toLowerCase().includes("street");
-    
     if (isAddressField) {
       let value = e.target.value;
       // Remove commas and stop input after first comma
@@ -43,6 +45,15 @@ const SearchField = ({
     }
     
     onChange(e);
+  };
+
+  // Handle address autocomplete change
+  const handleAddressAutocompleteChange = (address: string) => {
+    // Create a synthetic event to maintain consistency
+    const syntheticEvent = {
+      target: { value: address }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onChange(syntheticEvent);
   };
   
   if (isFirstNameField) {
@@ -64,6 +75,19 @@ const SearchField = ({
         placeholder={placeholder}
         value={value}
         onChange={handleAddressChange}
+        className={`welp-input ${className || ""}`}
+        required={required}
+      />
+    );
+  }
+
+  if (isAddressField) {
+    return (
+      <AddressAutocomplete
+        placeholder={placeholder}
+        value={value}
+        onChange={handleAddressChange}
+        onAddressChange={handleAddressAutocompleteChange}
         className={`welp-input ${className || ""}`}
         required={required}
       />
