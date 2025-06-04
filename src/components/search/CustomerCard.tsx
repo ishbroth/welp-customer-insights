@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MapPin, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,9 +35,15 @@ interface CustomerCardProps {
   };
   searchCriteria?: string;
   isReviewCustomer?: boolean;
+  onReviewUpdate?: () => void;
 }
 
-const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: CustomerCardProps) => {
+const CustomerCard = ({ 
+  customer, 
+  searchCriteria, 
+  isReviewCustomer = false, 
+  onReviewUpdate 
+}: CustomerCardProps) => {
   const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -169,6 +174,7 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
                 reviews={sortedReviews}
                 hasFullAccess={hasFullAccessFunction}
                 isReviewCustomer={isReviewCustomer}
+                onReviewUpdate={onReviewUpdate}
               />
             ) : (
               <NoReviews 

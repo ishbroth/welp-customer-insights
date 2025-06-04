@@ -1,29 +1,20 @@
 
-import { Card } from "@/components/ui/card";
-import SearchBox from "@/components/SearchBox";
-import SearchResultsList from "@/components/search/SearchResultsList";
-import { Customer } from "@/types/search";
-import { useAuth } from "@/contexts/auth";
-import { useSearchParams } from "react-router-dom";
+import SearchResultsList from "./SearchResultsList";
 
 interface SearchResultsContainerProps {
-  customers: Customer[];
+  customers: any[];
   isLoading: boolean;
+  onRefresh?: () => void;
 }
 
-const SearchResultsContainer = ({ customers, isLoading }: SearchResultsContainerProps) => {
-  const { currentUser } = useAuth();
-  const [searchParams] = useSearchParams();
-  
+const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResultsContainerProps) => {
   return (
     <div className="max-w-4xl mx-auto">
-      <Card className="p-6 mb-8">
-        <SearchBox />
-        <SearchResultsList 
-          customers={customers} 
-          isLoading={isLoading} 
-        />
-      </Card>
+      <SearchResultsList 
+        customers={customers} 
+        isLoading={isLoading}
+        onRefresh={onRefresh}
+      />
     </div>
   );
 };

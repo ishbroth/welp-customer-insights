@@ -6,10 +6,15 @@ import { useCustomerSearch } from "@/hooks/useCustomerSearch";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 
 const SearchResults = () => {
-  const { customers, isLoading } = useCustomerSearch();
+  const { customers, isLoading, refetch } = useCustomerSearch();
   
   // Handle post-auth redirections
   usePostAuthRedirect();
+
+  const handleRefresh = () => {
+    console.log('Refreshing search results...');
+    refetch();
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -19,6 +24,7 @@ const SearchResults = () => {
           <SearchResultsContainer 
             customers={customers}
             isLoading={isLoading}
+            onRefresh={handleRefresh}
           />
         </div>
       </main>

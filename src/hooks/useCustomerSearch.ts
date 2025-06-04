@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +27,7 @@ export const useCustomerSearch = () => {
     similarityThreshold: parseFloat(searchParams.get("similarityThreshold") || "0.7")
   };
 
-  useEffect(() => {
+  const fetchSearchResults = useCallback(async () => {
     // Check if we have any search parameters
     const hasSearchParams = Object.values(searchParameters)
       .slice(0, 7) // Only check the string parameters, not fuzzy/threshold
@@ -38,62 +39,56 @@ export const useCustomerSearch = () => {
     if (!hasSearchParams) {
       console.log("No search parameters, skipping search");
       setIsLoading(false);
-      // Don't clear customers here - keep previous results visible
       return;
     }
 
-    // Perform search with Supabase
-    const fetchSearchResults = async () => {
-      console.log("Starting search...");
-      setIsLoading(true);
+    console.log("Starting search...");
+    setIsLoading(true);
+    
+    try {
+      // Search both profiles and reviews
+      const [profilesData, reviewsData] = await Promise.all([
+        searchProfiles(searchParameters),
+        searchReviews(searchParameters)
+      ]);
       
-      try {
-        // Search both profiles and reviews
-        const [profilesData, reviewsData] = await Promise.all([
-          searchProfiles(searchParameters),
-          searchReviews(searchParameters)
-        ]);
-        
-        // Process customers from profiles
-        const profileCustomers = await processProfileCustomers(profilesData);
-        
-        // Process customers from reviews - convert scored reviews to ReviewData
-        const cleanReviewsData: ReviewData[] = reviewsData.map(review => ({
-          id: review.id,
-          customer_name: review.customer_name,
-          customer_address: review.customer_address,
-          customer_city: review.customer_city,
-          customer_zipcode: review.customer_zipcode,
-          customer_phone: review.customer_phone,
-          rating: review.rating,
-          content: review.content,
-          created_at: review.created_at,
-          business_id: review.business_id,
-          business_profile: review.business_profile
-        }));
-        const reviewCustomers = processReviewCustomers(cleanReviewsData);
-        
-        // Combine results
-        const combinedCustomers = [...profileCustomers, ...reviewCustomers];
-        
-        console.log("Final combined customers:", combinedCustomers);
-        setCustomers(combinedCustomers);
-        
-      } catch (error) {
-        console.error('Search error:', error);
-        toast({
-          title: "Search Error",
-          description: "An error occurred while searching the customer database.",
-          variant: "destructive"
-        });
-        setCustomers([]);
-      } finally {
-        console.log("Search completed, setting loading to false");
-        setIsLoading(false);
-      }
-    };
-
-    fetchSearchResults();
+      // Process customers from profiles
+      const profileCustomers = await processProfileCustomers(profilesData);
+      
+      // Process customers from reviews - convert scored reviews to ReviewData
+      const cleanReviewsData: ReviewData[] = reviewsData.map(review => ({
+        id: review.id,
+        customer_name: review.customer_name,
+        customer_address: review.customer_address,
+        customer_city: review.customer_city,
+        customer_zipcode: review.customer_zipcode,
+        customer_phone: review.customer_phone,
+        rating: review.rating,
+        content: review.content,
+        created_at: review.created_at,
+        business_id: review.business_id,
+        business_profile: review.business_profile
+      }));
+      const reviewCustomers = processReviewCustomers(cleanReviewsData);
+      
+      // Combine results
+      const combinedCustomers = [...profileCustomers, ...reviewCustomers];
+      
+      console.log("Final combined customers:", combinedCustomers);
+      setCustomers(combinedCustomers);
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search Error",
+        description: "An error occurred while searching the customer database.",
+        variant: "destructive"
+      });
+      setCustomers([]);
+    } finally {
+      console.log("Search completed, setting loading to false");
+      setIsLoading(false);
+    }
   }, [
     searchParameters.lastName, 
     searchParameters.firstName, 
@@ -105,5 +100,13 @@ export const useCustomerSearch = () => {
     toast
   ]);
 
-  return { customers, isLoading };
+  useEffect(() => {
+    fetchSearchResults();
+  }, [fetchSearchResults]);
+
+  return { 
+    customers, 
+    isLoading, 
+    refetch: fetchSearchResults 
+  };
 };

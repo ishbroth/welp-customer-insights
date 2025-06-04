@@ -1,12 +1,9 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/auth";
 import ReviewsList from "./ReviewsList";
+import CustomerInfo from "./CustomerInfo";
 
 interface ExpandedCustomerViewProps {
   customer: {
-    id: string;
     firstName: string;
     lastName: string;
     phone?: string;
@@ -14,6 +11,15 @@ interface ExpandedCustomerViewProps {
     city?: string;
     state?: string;
     zipCode?: string;
+    reviews?: Array<{
+      id: string;
+      reviewerId: string;
+      reviewerName: string;
+      rating: number;
+      content: string;
+      date: string;
+      reviewerVerified?: boolean;
+    }>;
   };
   reviews: Array<{
     id: string;
@@ -26,54 +32,37 @@ interface ExpandedCustomerViewProps {
   }>;
   hasFullAccess: (customerId: string) => boolean;
   isReviewCustomer: boolean;
+  onReviewUpdate?: () => void;
 }
 
 const ExpandedCustomerView = ({ 
   customer, 
   reviews, 
   hasFullAccess, 
-  isReviewCustomer 
+  isReviewCustomer,
+  onReviewUpdate 
 }: ExpandedCustomerViewProps) => {
-  const { currentUser } = useAuth();
-  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-
-  const customerData = {
-    firstName: customer.firstName,
-    lastName: customer.lastName,
-    phone: customer.phone || "",
-    address: customer.address || "",
-    city: customer.city || "",
-    state: customer.state || "",
-    zipCode: customer.zipCode || ""
-  };
-
-  const hasCurrentUserReviewed = () => {
-    if (!currentUser || !isBusinessUser) return false;
-    return reviews.some(review => review.reviewerId === currentUser.id);
-  };
-
   return (
-    <div className="mt-4 border-t pt-3">
+    <div className="space-y-4">
+      <CustomerInfo 
+        customer={customer}
+        isReviewCustomer={isReviewCustomer}
+      />
+      
       <ReviewsList 
-        customerId={customer.id} 
         reviews={reviews}
         hasFullAccess={hasFullAccess}
-        isReviewCustomer={isReviewCustomer}
-        customerData={customerData}
+        customerData={{
+          firstName: customer.firstName,
+          lastName: customer.lastName,
+          phone: customer.phone,
+          address: customer.address,
+          city: customer.city,
+          state: customer.state,
+          zipCode: customer.zipCode
+        }}
+        onReviewUpdate={onReviewUpdate}
       />
-
-      {isBusinessUser && !hasCurrentUserReviewed() && (
-        <div className="mt-4">
-          <Link
-            to={`/review/new?firstName=${encodeURIComponent(customer.firstName)}&lastName=${encodeURIComponent(customer.lastName)}&phone=${encodeURIComponent(customer.phone || '')}&address=${encodeURIComponent(customer.address || '')}&city=${encodeURIComponent(customer.city || '')}&zipCode=${encodeURIComponent(customer.zipCode || '')}`}
-            className="w-full"
-          >
-            <Button variant="secondary" className="w-full">
-              Write a Review for this Customer
-            </Button>
-          </Link>
-        </div>
-      )}
     </div>
   );
 };

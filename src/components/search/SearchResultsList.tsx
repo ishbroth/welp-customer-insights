@@ -10,9 +10,10 @@ import { useClearSearch } from "@/hooks/useClearSearch";
 interface SearchResultsListProps {
   customers: Customer[];
   isLoading: boolean;
+  onRefresh?: () => void;
 }
 
-const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => {
+const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsListProps) => {
   const { currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const { clearSearch } = useClearSearch();
@@ -39,6 +40,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
               <CustomerCard
                 key={customer.id}
                 customer={customer}
+                onReviewUpdate={onRefresh}
               />
             ))}
           </div>
@@ -64,6 +66,7 @@ const SearchResultsList = ({ customers, isLoading }: SearchResultsListProps) => 
           <CustomerCard
             key={customer.id}
             customer={customer}
+            onReviewUpdate={onRefresh}
           />
         ))}
       </div>
