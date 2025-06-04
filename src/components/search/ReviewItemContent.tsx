@@ -32,7 +32,10 @@ const ReviewItemContent = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const getFirstThreeWords = (text: string): string => {
+  const getFirstThreeWords = (text: string | undefined): string => {
+    if (!text || typeof text !== 'string') {
+      return 'No content available...';
+    }
     const words = text.split(' ');
     const firstThree = words.slice(0, 3).join(' ');
     return `${firstThree}${words.length > 3 ? '...' : ''}`;

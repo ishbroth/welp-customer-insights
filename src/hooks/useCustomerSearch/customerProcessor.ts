@@ -36,14 +36,14 @@ export const processReviewCustomers = (reviewsData: any[]): Customer[] => {
     const reviewItem = {
       id: review.id,
       reviewerId: review.business_id || review.reviewerId,
-      reviewerName: review.reviewerName,
-      rating: review.rating,
-      content: review.content,
-      date: review.date,
-      reviewerVerified: review.reviewerVerified
+      reviewerName: review.reviewerName || review.business_profile?.name || "Unknown Business",
+      rating: review.rating || 0,
+      content: review.content || "",
+      date: review.date || review.created_at || new Date().toISOString(),
+      reviewerVerified: review.reviewerVerified || false
     };
 
-    console.log(`processReviewCustomers: Added review with verification status ${review.reviewerVerified} for business ${review.reviewerName}`);
+    console.log(`processReviewCustomers: Added review with verification status ${review.reviewerVerified} for business ${reviewItem.reviewerName}`);
     
     if (customerMap.has(customerKey)) {
       // Add review to existing customer
