@@ -4,6 +4,7 @@ import CustomerInfo from "./CustomerInfo";
 
 interface ExpandedCustomerViewProps {
   customer: {
+    id: string;
     firstName: string;
     lastName: string;
     phone?: string;
@@ -53,6 +54,7 @@ const ExpandedCustomerView = ({
         reviews={reviews}
         hasFullAccess={hasFullAccess}
         customerData={{
+          id: customer.id,
           firstName: customer.firstName,
           lastName: customer.lastName,
           phone: customer.phone,

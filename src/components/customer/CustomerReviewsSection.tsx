@@ -21,11 +21,18 @@ const CustomerReviewsSection: React.FC<CustomerReviewsSectionProps> = ({
     <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
       <ReviewsList 
-        customerId={customerId || ''}
         reviews={customerReviews}
         hasFullAccess={hasFullAccess}
-        isReviewCustomer={false}
-        customerProfile={customerProfile}
+        customerData={{
+          id: customerId,
+          firstName: customerProfile?.first_name || '',
+          lastName: customerProfile?.last_name || '',
+          phone: customerProfile?.phone,
+          address: customerProfile?.address,
+          city: customerProfile?.city,
+          state: customerProfile?.state,
+          zipCode: customerProfile?.zipcode
+        }}
       />
     </div>
   );

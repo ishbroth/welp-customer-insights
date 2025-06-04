@@ -13,6 +13,7 @@ interface ReviewsListProps {
   }>;
   hasFullAccess: (customerId: string) => boolean;
   customerData?: {
+    id: string;
     firstName: string;
     lastName: string;
     phone?: string;
@@ -25,7 +26,7 @@ interface ReviewsListProps {
 }
 
 const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: ReviewsListProps) => {
-  const customerId = "default-customer-id"; // This should be the actual customer ID
+  const customerId = customerData?.id || "default-customer-id";
 
   return (
     <div className="space-y-4">
