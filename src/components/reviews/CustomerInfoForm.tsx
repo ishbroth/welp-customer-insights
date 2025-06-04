@@ -69,7 +69,11 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       }
     });
 
-    // Update form fields
+    // Update form fields with full street address (street number + route)
+    const fullStreetAddress = `${streetNumber} ${route}`.trim();
+    if (fullStreetAddress) setCustomerAddress(fullStreetAddress);
+    
+    // Update other form fields
     if (city) setCustomerCity(city);
     if (state) setCustomerState(state);
     if (zipCode) setCustomerZipCode(zipCode);
@@ -125,6 +129,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
           onPlaceSelect={handleAddressSelect}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}
+          placeholder="Start typing address..."
         />
       </div>
       
