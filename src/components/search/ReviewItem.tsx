@@ -42,6 +42,11 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
   const isReviewAuthor = currentUser?.id === review.reviewerId;
 
   console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
+  console.log(`ReviewItem: Review data passed to header:`, {
+    reviewerName: review.reviewerName,
+    reviewerId: review.reviewerId,
+    reviewerVerified: review.reviewerVerified
+  });
   console.log(`ReviewItem: Found ${responses.length} responses for review ${review.id}`);
   console.log(`ReviewItem: Current user ${currentUser?.id} is review author: ${isReviewAuthor}`);
 

@@ -76,10 +76,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
       console.error("Error fetching business verification status:", businessError);
     } else {
       console.log("Business verification data found:", businessInfos?.length || 0);
+      console.log("Raw verification data:", businessInfos);
       businessInfos?.forEach(business => {
         const isVerified = Boolean(business.verified);
         businessVerificationMap.set(business.id, isVerified);
-        console.log(`Business verification mapping: ${business.id} -> verified: ${isVerified}`);
+        console.log(`VERIFICATION MAPPING: Business ID ${business.id} -> verified: ${isVerified} (raw value: ${business.verified})`);
       });
     }
   }
@@ -106,7 +107,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
     const verificationStatus = businessVerificationMap.get(review.business_id) || false;
     formattedReview.reviewerVerified = verificationStatus;
     
-    console.log(`Review verification check: Business ID ${review.business_id}, Verification Status: ${verificationStatus}, Business Name: ${formattedReview.reviewerName}`);
+    console.log(`FINAL VERIFICATION CHECK: Business ID ${review.business_id}, Verification Status: ${verificationStatus}, Business Name: ${formattedReview.reviewerName}, Raw Map Value: ${businessVerificationMap.get(review.business_id)}`);
     
     const scoredReview = scoreReview(formattedReview, { firstName, lastName, phone, address, city, state, zipCode });
     

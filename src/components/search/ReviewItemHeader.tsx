@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface ReviewItemHeaderProps {
@@ -24,6 +26,29 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   const { isSubscribed } = useAuth();
   const navigate = useNavigate();
 
+  // Fetch business profile to get avatar
+  const { data: businessProfile } = useQuery({
+    queryKey: ['businessProfile', review.reviewerId],
+    queryFn: async () => {
+      console.log(`Fetching business profile for ID: ${review.reviewerId}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, avatar')
+        .eq('id', review.reviewerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching business profile:", error);
+        return null;
+      }
+
+      console.log(`Business profile found:`, data);
+      return data;
+    },
+    enabled: !!review.reviewerId
+  });
+
   const handleBusinessClick = () => {
     if (isSubscribed || hasFullAccess) {
       navigate(`/business/${review.reviewerId}`);
@@ -40,12 +65,16 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
 
   console.log(`ReviewItemHeader: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
   console.log(`ReviewItemHeader: Should show verified badge: ${Boolean(review.reviewerVerified)}`);
+  console.log(`ReviewItemHeader: Business profile avatar:`, businessProfile?.avatar);
 
   return (
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center space-x-3">
         <Avatar className="h-10 w-10">
-          <AvatarImage src="" alt={review.reviewerName} />
+          <AvatarImage 
+            src={businessProfile?.avatar || ""} 
+            alt={review.reviewerName} 
+          />
           <AvatarFallback className="bg-blue-100 text-blue-800">
             {getBusinessInitials()}
           </AvatarFallback>
@@ -62,8 +91,8 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
             )}
-            {/* Show verified badge next to business name - FIXED LOGIC */}
-            {review.reviewerVerified && (
+            {/* Show verified badge next to business name - DEBUG VERSION */}
+            {review.reviewerVerified === true && (
               <VerifiedBadge size="sm" />
             )}
           </div>
