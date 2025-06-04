@@ -8,6 +8,9 @@ export const formatReviewData = (review: any) => {
   const firstName = customerParts[0] || "";
   const lastName = customerParts.slice(1).join(' ') || "";
 
+  console.log(`formatReviewData: Business ID ${review.business_id}, profiles data:`, review.profiles);
+  console.log(`formatReviewData: Using business name: ${businessName}`);
+
   return {
     id: review.id,
     customer_name: review.customer_name || "",

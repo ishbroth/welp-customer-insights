@@ -25,7 +25,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       content,
       created_at,
       business_id,
-      profiles!business_id(name, avatar)
+      profiles:business_id(name, avatar)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -42,9 +42,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
   }
 
   console.log(`Found ${allReviews.length} reviews in initial query`);
+  console.log("Sample review data:", allReviews[0]);
 
   // Get business verification statuses for all businesses in the results
   const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
+  console.log("Business IDs to check verification for:", businessIds);
   
   let businessVerificationMap = new Map();
   
@@ -57,6 +59,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
     if (businessError) {
       console.error("Error fetching business verification status:", businessError);
     } else {
+      console.log("Business info query result:", businessInfos);
       businessInfos?.forEach(business => {
         businessVerificationMap.set(business.id, Boolean(business.verified));
         console.log(`Business ${business.id} verification status: ${business.verified}`);
@@ -80,13 +83,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
     const formattedReview = formatReviewData(review);
     // Add verification status from our business_info query
     const verificationStatus = businessVerificationMap.get(review.business_id) || false;
-    console.log(`Setting verification status for business ${review.business_id} (${review.profiles?.name}): ${verificationStatus}`);
+    console.log(`Setting verification status for business ${review.business_id} (${formattedReview.reviewerName}): ${verificationStatus}`);
     formattedReview.reviewerVerified = verificationStatus;
-    
-    // Ensure business name is properly set from profiles
-    if (review.profiles?.name) {
-      formattedReview.reviewerName = review.profiles.name;
-    }
     
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
