@@ -1,39 +1,35 @@
 
 export interface SearchParams {
-  lastName: string;
-  firstName: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  fuzzyMatch: boolean;
-  similarityThreshold: number;
-}
-
-export interface ProfileCustomer {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipcode: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  fuzzyMatch?: boolean;
+  similarityThreshold?: number;
 }
 
 export interface ReviewData {
   id: string;
-  customer_name: string;
-  customer_address: string;
-  customer_city: string;
-  customer_zipcode: string;
-  customer_phone: string;
+  customer_name: string | null;
+  customer_address: string | null;
+  customer_city: string | null;
+  customer_zipcode: string | null;
+  customer_phone: string | null;
   rating: number;
-  business_id: string;
-  business_profile: {
+  content: string;
+  created_at: string;
+  business_id: string | null;
+  reviewerName?: string;
+  reviewerAvatar?: string;
+  reviewerVerified?: boolean;
+  business_profile?: {
+    id: string;
     name: string;
     avatar?: string;
+    state?: string;
+    [key: string]: any;
   } | null;
-  reviewerVerified?: boolean;
 }

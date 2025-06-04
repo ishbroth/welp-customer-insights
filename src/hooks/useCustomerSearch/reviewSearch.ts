@@ -49,10 +49,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
   let businessVerificationMap = new Map();
   
   if (businessIds.length > 0) {
-    // Fetch business profiles
+    // Fetch business profiles with state information
     const { data: businessProfiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, avatar, type')
+      .select('id, name, avatar, type, state')
       .in('id', businessIds)
       .eq('type', 'business');
 
@@ -62,7 +62,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       console.log("Business profiles found:", businessProfiles?.length || 0);
       businessProfiles?.forEach(profile => {
         businessProfilesMap.set(profile.id, profile);
-        console.log(`Profile mapping: ${profile.id} -> ${profile.name}`);
+        console.log(`Profile mapping: ${profile.id} -> ${profile.name} (State: ${profile.state})`);
       });
     }
 
@@ -105,9 +105,9 @@ export const searchReviews = async (searchParams: SearchParams) => {
     const verificationStatus = businessVerificationMap.get(review.business_id) || false;
     formattedReview.reviewerVerified = verificationStatus;
     
-    const scoredReview = scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
+    const scoredReview = scoreReview(formattedReview, { firstName, lastName, phone, address, city, state, zipCode });
     
-    console.log(`Review ${review.id}: Customer "${review.customer_name}", Score: ${scoredReview.searchScore}, Matches: ${scoredReview.matchCount}, Business: ${formattedReview.reviewerName}, Verified: ${verificationStatus}`);
+    console.log(`Review ${review.id}: Customer "${review.customer_name}", Score: ${scoredReview.searchScore}, Matches: ${scoredReview.matchCount}, Business: ${formattedReview.reviewerName}, Verified: ${verificationStatus}, Business State: ${businessProfile?.state}`);
     
     return scoredReview;
   });
