@@ -12,6 +12,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
   console.log("Searching reviews table with flexible matching...");
   
   // Get a broader set of reviews to work with, including business profile data
+  // Using the correct Supabase join syntax with ! to indicate foreign key relationship
   let reviewQuery = supabase
     .from('reviews')
     .select(`
@@ -25,7 +26,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       content,
       created_at,
       business_id,
-      profiles:business_id(name, avatar)
+      profiles!business_id(name, avatar)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -42,7 +43,12 @@ export const searchReviews = async (searchParams: SearchParams) => {
   }
 
   console.log(`Found ${allReviews.length} reviews in initial query`);
-  console.log("Sample review data:", allReviews[0]);
+  console.log("Sample review data with profiles join:", allReviews[0]);
+  console.log("All reviews data structure:", allReviews.map(r => ({ 
+    id: r.id, 
+    business_id: r.business_id, 
+    profiles: r.profiles 
+  })));
 
   // Get business verification statuses for all businesses in the results
   const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];

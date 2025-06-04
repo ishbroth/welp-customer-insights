@@ -50,8 +50,17 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
     return isSubscribed || hasOneTimeAccess(customerId);
   };
   
-  // Check if customer has verified reviews
-  const hasVerifiedReviews = customer.reviews?.some(review => review.reviewerVerified) || false;
+  // Check if customer has verified reviews and log the review data
+  const hasVerifiedReviews = customer.reviews?.some(review => {
+    console.log(`CustomerCard: Review ${review.id} from ${review.reviewerName} - verified: ${review.reviewerVerified}`);
+    return review.reviewerVerified;
+  }) || false;
+
+  console.log(`CustomerCard: Customer ${customer.firstName} ${customer.lastName} has verified reviews: ${hasVerifiedReviews}`);
+  console.log(`CustomerCard: All reviews:`, customer.reviews?.map(r => ({ 
+    reviewerName: r.reviewerName, 
+    verified: r.reviewerVerified 
+  })));
 
   const getLocationDisplay = () => {
     if (customer.city && customer.state) {
@@ -93,7 +102,12 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
                 <h3 className="font-semibold text-lg">
                   {customer.firstName} {customer.lastName}
                 </h3>
-                {hasVerifiedReviews && <VerifiedBadge size="sm" />}
+                {hasVerifiedReviews && (
+                  <div>
+                    <VerifiedBadge size="sm" />
+                    <span className="sr-only">Has verified reviews</span>
+                  </div>
+                )}
               </div>
               
               {location && (
