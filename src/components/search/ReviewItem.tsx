@@ -38,8 +38,12 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
   const { photos, fullReviewContent } = useReviewData(review.id, hasFullAccess);
   const { responses } = useCustomerReviewResponses(review.id);
 
+  // Check if current user is the business who wrote this review
+  const isReviewAuthor = currentUser?.id === review.reviewerId;
+
   console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
   console.log(`ReviewItem: Found ${responses.length} responses for review ${review.id}`);
+  console.log(`ReviewItem: Current user ${currentUser?.id} is review author: ${isReviewAuthor}`);
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
@@ -68,7 +72,7 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
           responses={responses}
           hasSubscription={isSubscribed}
           isOneTimeUnlocked={false}
-          hideReplyOption={!isBusinessUser}
+          hideReplyOption={isReviewAuthor}
         />
       )}
 
