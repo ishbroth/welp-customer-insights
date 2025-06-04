@@ -4,16 +4,25 @@ export const formatReviewData = (review: any) => {
   let businessName = "Unknown Business";
   let businessAvatar = "";
   
-  // Check if profiles data was successfully joined
-  if (review.profiles) {
-    console.log(`formatReviewData: Profiles join successful for business ${review.business_id}:`, review.profiles);
-    businessName = review.profiles.name || "Unknown Business";
-    businessAvatar = review.profiles.avatar || "";
+  // Check multiple possible locations for business profile data
+  let businessProfile = null;
+  
+  if (review.business_profile) {
+    businessProfile = review.business_profile;
+    console.log(`formatReviewData: Found business_profile for business ${review.business_id}:`, businessProfile);
+  } else if (review.profiles) {
+    businessProfile = review.profiles;
+    console.log(`formatReviewData: Found profiles data for business ${review.business_id}:`, businessProfile);
+  }
+  
+  if (businessProfile) {
+    businessName = businessProfile.name || "Unknown Business";
+    businessAvatar = businessProfile.avatar || "";
+    console.log(`formatReviewData: Successfully extracted business name: ${businessName}`);
   } else {
-    console.log(`formatReviewData: No profiles data found for business ${review.business_id}. This could indicate:
-    1. The business_id doesn't exist in the profiles table
-    2. The join syntax is incorrect
-    3. The business profile was deleted`);
+    console.log(`formatReviewData: No business profile data found for business ${review.business_id}`);
+    console.log(`formatReviewData: Review object keys:`, Object.keys(review));
+    console.log(`formatReviewData: Full review object:`, review);
   }
   
   // Parse customer name
