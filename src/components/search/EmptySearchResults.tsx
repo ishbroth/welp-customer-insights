@@ -31,7 +31,7 @@ const EmptySearchResults = ({ isBusinessUser }: EmptySearchResultsProps) => {
   
   return (
     <div className="text-center py-8">
-      <p className="text-gray-500 mb-4">No reviews for this customer yet. Write one!</p>
+      <p className="text-gray-500 mb-4">No reviews found. Write one!</p>
       {isBusinessUser && (
         <div className="flex justify-center">
           <Link to={newReviewLink}>
