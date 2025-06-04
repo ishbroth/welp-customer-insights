@@ -1,26 +1,18 @@
 
 export const formatReviewData = (review: any) => {
-  // Handle joined profiles data more robustly
+  // Handle the corrected profiles join data structure
   let businessName = "Unknown Business";
   let businessAvatar = "";
   
-  // Check multiple possible locations for business profile data
-  let businessProfile = null;
-  
-  if (review.business_profile) {
-    businessProfile = review.business_profile;
-    console.log(`formatReviewData: Found business_profile for business ${review.business_id}:`, businessProfile);
-  } else if (review.profiles) {
-    businessProfile = review.profiles;
-    console.log(`formatReviewData: Found profiles data for business ${review.business_id}:`, businessProfile);
-  }
+  // With the corrected join syntax, profile data should be at review.profiles
+  const businessProfile = review.profiles;
   
   if (businessProfile) {
     businessName = businessProfile.name || "Unknown Business";
     businessAvatar = businessProfile.avatar || "";
-    console.log(`formatReviewData: Successfully extracted business name: ${businessName}`);
+    console.log(`formatReviewData: Successfully extracted business name from profiles join: ${businessName}`);
   } else {
-    console.log(`formatReviewData: No business profile data found for business ${review.business_id}`);
+    console.log(`formatReviewData: No profiles data found for business ${review.business_id}`);
     console.log(`formatReviewData: Review object keys:`, Object.keys(review));
     console.log(`formatReviewData: Full review object:`, review);
   }
@@ -43,7 +35,7 @@ export const formatReviewData = (review: any) => {
     content: review.content || "",
     date: review.created_at || new Date().toISOString(),
     business_id: review.business_id,
-    // Use the business profile data from the join
+    // Use the business profile data from the corrected join
     business_profile: {
       name: businessName,
       avatar: businessAvatar
