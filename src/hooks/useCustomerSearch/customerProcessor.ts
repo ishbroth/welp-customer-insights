@@ -1,61 +1,67 @@
 
 import { Customer } from "@/types/search";
-import { ProfileCustomer, ReviewData } from "./types";
 
-export const processProfileCustomers = async (profilesData: ProfileCustomer[]): Promise<Customer[]> => {
+export const processProfileCustomers = async (profilesData: any[]): Promise<Customer[]> => {
+  console.log("processProfileCustomers: Processing", profilesData.length, "profiles");
+  
   return profilesData.map(profile => ({
     id: profile.id,
-    firstName: profile.first_name || '',
-    lastName: profile.last_name || '',
-    phone: profile.phone || '',
-    address: profile.address || '',
-    city: profile.city || '',
-    state: profile.state || '',
-    zipCode: profile.zipcode || '',
-    reviews: []
+    firstName: profile.first_name || "",
+    lastName: profile.last_name || "",
+    phone: profile.phone || "",
+    address: profile.address || "",
+    city: profile.city || "",
+    state: profile.state || "",
+    zipCode: profile.zipcode || "",
+    avatar: profile.avatar || "",
+    reviews: [] // Reviews will be populated separately if needed
   }));
 };
 
-export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] => {
+export const processReviewCustomers = (reviewsData: any[]): Customer[] => {
+  console.log("processReviewCustomers: Processing", reviewsData.length, "reviews");
+  
+  // Group reviews by customer identifier (name + phone or address)
   const customerMap = new Map<string, Customer>();
-
+  
   reviewsData.forEach(review => {
-    const customerKey = `${review.customer_name}-${review.customer_phone || review.customer_address}`;
+    // Create a unique identifier for the customer
+    const customerKey = `${review.firstName.toLowerCase()}_${review.lastName.toLowerCase()}_${review.customer_phone || review.customer_address || ''}`;
     
-    if (!customerMap.has(customerKey)) {
-      // Parse customer name
-      const nameParts = review.customer_name.split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-
-      customerMap.set(customerKey, {
-        id: `review-customer-${review.id}`,
-        firstName,
-        lastName,
-        phone: review.customer_phone || '',
-        address: review.customer_address || '',
-        city: review.customer_city || '',
-        state: '', // Reviews don't have customer state
-        zipCode: review.customer_zipcode || '',
-        reviews: []
-      });
-    }
-
-    const customer = customerMap.get(customerKey)!;
-    
-    // Add review with proper verification status - use the value from reviewData
-    customer.reviews!.push({
+    const reviewItem = {
       id: review.id,
-      reviewerId: review.business_id,
-      reviewerName: review.business_profile?.name || 'Unknown Business',
+      reviewerId: review.business_id || review.reviewerId,
+      reviewerName: review.reviewerName,
       rating: review.rating,
-      content: '', // Content will be fetched when needed
-      date: new Date().toISOString(), // Default date, should be from review data
-      reviewerVerified: review.reviewerVerified // Use the verification status from reviewData
-    });
+      content: review.content,
+      date: review.date,
+      reviewerVerified: review.reviewerVerified
+    };
 
-    console.log(`processReviewCustomers: Added review with verification status ${review.reviewerVerified} for business ${review.business_profile?.name}`);
+    console.log(`processReviewCustomers: Added review with verification status ${review.reviewerVerified} for business ${review.reviewerName}`);
+    
+    if (customerMap.has(customerKey)) {
+      // Add review to existing customer
+      const existingCustomer = customerMap.get(customerKey)!;
+      existingCustomer.reviews = existingCustomer.reviews || [];
+      existingCustomer.reviews.push(reviewItem);
+    } else {
+      // Create new customer
+      const customer: Customer = {
+        id: `review-customer-${review.id}`,
+        firstName: review.firstName,
+        lastName: review.lastName,
+        phone: review.customer_phone || "",
+        address: review.customer_address || "",
+        city: review.customer_city || "",
+        state: "", // Reviews don't have customer state
+        zipCode: review.customer_zipcode || "",
+        reviews: [reviewItem]
+      };
+      
+      customerMap.set(customerKey, customer);
+    }
   });
-
+  
   return Array.from(customerMap.values());
 };

@@ -11,7 +11,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log("Searching reviews table with flexible matching...");
   
-  // Get a broader set of reviews to work with, including business profile data
+  // Get a broader set of reviews to work with, including business profile data and verification status
   let reviewQuery = supabase
     .from('reviews')
     .select(`
@@ -22,8 +22,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
       customer_zipcode, 
       customer_phone, 
       rating,
+      content,
+      created_at,
       business_id,
-      profiles!business_id(name, avatar)
+      profiles!business_id(name, avatar),
+      business_info!business_id(verified)
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -41,28 +44,16 @@ export const searchReviews = async (searchParams: SearchParams) => {
 
   console.log(`Found ${allReviews.length} reviews in initial query`);
 
-  // Now get business verification status for each business_id found
-  const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
-  let businessVerificationMap = new Map();
-
-  console.log("Business IDs found in reviews:", businessIds);
-
-  if (businessIds.length > 0) {
-    const { data: businessInfoData, error: businessError } = await supabase
-      .from('business_info')
-      .select('id, verified')
-      .in('id', businessIds);
-
-    console.log("Business info query result:", businessInfoData);
-    console.log("Business info query error:", businessError);
-
-    if (businessInfoData) {
-      businessInfoData.forEach(info => {
-        console.log(`Business ${info.id} verification status: ${info.verified}`);
-        businessVerificationMap.set(info.id, Boolean(info.verified));
-      });
+  // Process the business verification status from the joined data
+  const businessVerificationMap = new Map();
+  
+  allReviews.forEach(review => {
+    if (review.business_id && review.business_info) {
+      const verificationStatus = Boolean(review.business_info.verified);
+      businessVerificationMap.set(review.business_id, verificationStatus);
+      console.log(`Business ${review.business_id} (${review.profiles?.name || 'Unknown'}) verification status: ${verificationStatus}`);
     }
-  }
+  });
 
   console.log("Final business verification map:", Object.fromEntries(businessVerificationMap));
 
@@ -78,10 +69,16 @@ export const searchReviews = async (searchParams: SearchParams) => {
   // Score each review based on how well it matches the search criteria
   const scoredReviews = allReviews.map(review => {
     const formattedReview = formatReviewData(review);
-    // Add verification status from our separate query - ensure it's properly set
+    // Add verification status from our joined data
     const verificationStatus = businessVerificationMap.get(review.business_id);
     console.log(`Setting verification status for business ${review.business_id} (${review.profiles?.name}): ${verificationStatus}`);
     formattedReview.reviewerVerified = Boolean(verificationStatus);
+    
+    // Ensure business name is properly set from profiles
+    if (review.profiles?.name) {
+      formattedReview.reviewerName = review.profiles.name;
+    }
+    
     return scoreReview(formattedReview, { firstName, lastName, phone, address, city, zipCode });
   });
 
