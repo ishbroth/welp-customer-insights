@@ -18,7 +18,8 @@ export const scoreReview = (
     city?: string;
     state?: string;
     zipCode?: string;
-  }
+  },
+  businessState?: string | null
 ): ScoredReview => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
   let score = 0;
@@ -105,20 +106,21 @@ export const scoreReview = (
     }
   }
 
-  // State matching - NEW: Check if state is provided and match against business profile
-  if (state && review.business_profile?.state) {
+  // State matching - Use the business state parameter directly
+  if (state && businessState) {
     const searchState = state.toLowerCase().trim();
-    const businessState = review.business_profile.state.toLowerCase().trim();
+    const reviewBusinessState = businessState.toLowerCase().trim();
     
     console.log('State matching:', {
       searchState,
-      businessState,
-      matches: searchState === businessState
+      reviewBusinessState,
+      matches: searchState === reviewBusinessState
     });
     
-    if (searchState === businessState) {
+    if (searchState === reviewBusinessState) {
       score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH; // Use a high score for state match
       matches++;
+      console.log(`State match found! Adding ${REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH} points`);
     }
   }
 
@@ -154,6 +156,7 @@ export const scoreReview = (
     reviewId: review.id,
     customerName: review.customer_name,
     searchParams,
+    businessState,
     finalScore: score,
     finalMatches: matches
   });

@@ -146,7 +146,16 @@ export const searchReviews = async (searchParams: SearchParams) => {
     
     console.log(`FINAL VERIFICATION CHECK: Business ID ${review.business_id}, Verification Status: ${verificationStatus}, Business Name: ${formattedReview.reviewerName}, Raw Map Value: ${businessVerificationMap.get(review.business_id)}`);
     
-    const scoredReview = scoreReview(formattedReview, { firstName, lastName, phone, address, city, state, zipCode });
+    // Pass the business profile state directly to scoring for state matching
+    const scoredReview = scoreReview(formattedReview, { 
+      firstName, 
+      lastName, 
+      phone, 
+      address, 
+      city, 
+      state, 
+      zipCode 
+    }, businessProfile?.state || null);
     
     console.log(`Review ${review.id}: Customer "${review.customer_name}", Score: ${scoredReview.searchScore}, Matches: ${scoredReview.matchCount}, Business: ${formattedReview.reviewerName}, Verified: ${verificationStatus}, Business State: ${businessProfile?.state}`);
     
