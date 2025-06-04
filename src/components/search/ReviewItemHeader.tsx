@@ -50,7 +50,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
           </AvatarFallback>
         </Avatar>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
             {(isSubscribed || hasFullAccess) ? (
               <h4 
                 className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
@@ -61,26 +61,29 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
             )}
-            {/* Show verified badge if business is verified */}
+            {/* Show verified badge next to business name */}
             {review.reviewerVerified && <VerifiedBadge size="sm" />}
           </div>
+          
+          {/* Star rating under the business name */}
+          <div className="flex items-center space-x-1 mb-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-4 w-4 ${
+                  i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                }`}
+              />
+            ))}
+            <Badge variant="secondary" className="ml-2">
+              {review.rating}/5
+            </Badge>
+          </div>
+          
           <p className="text-sm text-gray-500">
             {new Date(review.date).toLocaleDateString()}
           </p>
         </div>
-      </div>
-      <div className="flex items-center space-x-1">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`h-4 w-4 ${
-              i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-            }`}
-          />
-        ))}
-        <Badge variant="secondary" className="ml-2">
-          {review.rating}/5
-        </Badge>
       </div>
     </div>
   );
