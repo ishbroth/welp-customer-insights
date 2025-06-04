@@ -72,10 +72,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
       });
     }
 
-    // Fetch business verification statuses AND business info (including state if not in profiles)
+    // Fetch business verification statuses only (state column doesn't exist in business_info)
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
-      .select('id, verified, business_name, state, city')
+      .select('id, verified, business_name')
       .in('id', businessIds);
 
     if (businessError) {
@@ -95,17 +95,9 @@ export const searchReviews = async (searchParams: SearchParams) => {
             name: business.business_name || 'Unknown Business',
             avatar: null,
             type: 'business',
-            state: business.state || null
+            state: null // State info must come from profiles table
           });
-          console.log(`Created profile from business_info: ${business.id} -> ${business.business_name} (State: ${business.state})`);
-        } else {
-          // If profile exists but no state, use business_info state
-          const existingProfile = businessProfilesMap.get(business.id);
-          if (!existingProfile.state && business.state) {
-            existingProfile.state = business.state;
-            businessProfilesMap.set(business.id, existingProfile);
-            console.log(`Updated profile state from business_info: ${business.id} -> State: ${business.state}`);
-          }
+          console.log(`Created profile from business_info: ${business.id} -> ${business.business_name}`);
         }
       });
     }
