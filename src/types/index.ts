@@ -19,6 +19,7 @@ export interface Review {
   reviewerId: string;
   reviewerName: string;
   reviewerAvatar?: string;
+  reviewerVerified?: boolean;
   customerId: string;
   customerName: string;
   customerAvatar?: string;
