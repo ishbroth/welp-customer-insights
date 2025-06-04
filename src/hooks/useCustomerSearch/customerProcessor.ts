@@ -25,8 +25,13 @@ export const processReviewCustomers = (reviewsData: any[]): Customer[] => {
   const customerMap = new Map<string, Customer>();
   
   reviewsData.forEach(review => {
+    // Parse customer name from customer_name field
+    const customerParts = (review.customer_name || "").split(' ');
+    const firstName = customerParts[0] || "";
+    const lastName = customerParts.slice(1).join(' ') || "";
+    
     // Create a unique identifier for the customer
-    const customerKey = `${review.firstName.toLowerCase()}_${review.lastName.toLowerCase()}_${review.customer_phone || review.customer_address || ''}`;
+    const customerKey = `${firstName.toLowerCase()}_${lastName.toLowerCase()}_${review.customer_phone || review.customer_address || ''}`;
     
     const reviewItem = {
       id: review.id,
@@ -49,8 +54,8 @@ export const processReviewCustomers = (reviewsData: any[]): Customer[] => {
       // Create new customer
       const customer: Customer = {
         id: `review-customer-${review.id}`,
-        firstName: review.firstName,
-        lastName: review.lastName,
+        firstName: firstName,
+        lastName: lastName,
         phone: review.customer_phone || "",
         address: review.customer_address || "",
         city: review.customer_city || "",
