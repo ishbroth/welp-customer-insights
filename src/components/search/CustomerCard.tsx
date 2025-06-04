@@ -56,6 +56,17 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
     return review.reviewerVerified;
   }) || false;
 
+  // Sort reviews to put verified businesses first, then by date
+  const sortedReviews = customer.reviews ? [...customer.reviews].sort((a, b) => {
+    // First, prioritize verified reviewers
+    if (a.reviewerVerified !== b.reviewerVerified) {
+      return b.reviewerVerified ? 1 : -1;
+    }
+    
+    // Then sort by date (newest first)
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  }) : [];
+
   console.log(`CustomerCard: Customer ${customer.firstName} ${customer.lastName} has verified reviews: ${hasVerifiedReviews}`);
   console.log(`CustomerCard: All reviews:`, customer.reviews?.map(r => ({ 
     reviewerName: r.reviewerName, 
@@ -152,10 +163,10 @@ const CustomerCard = ({ customer, searchCriteria, isReviewCustomer = false }: Cu
         
         {isExpanded && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            {customer.reviews && customer.reviews.length > 0 ? (
+            {sortedReviews && sortedReviews.length > 0 ? (
               <ExpandedCustomerView 
                 customer={customer}
-                reviews={customer.reviews}
+                reviews={sortedReviews}
                 hasFullAccess={hasFullAccessFunction}
                 isReviewCustomer={isReviewCustomer}
               />

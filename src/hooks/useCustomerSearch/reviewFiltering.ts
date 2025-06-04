@@ -5,6 +5,7 @@ interface ScoredReview {
   searchScore: number;
   matchCount: number;
   reviewerVerified?: boolean;
+  created_at?: string;
   [key: string]: any;
 }
 
@@ -30,7 +31,18 @@ export const filterAndSortReviews = (
       if (b.matchCount !== a.matchCount) {
         return b.matchCount - a.matchCount;
       }
-      return b.searchScore - a.searchScore;
+      
+      // If match counts are equal, sort by score
+      if (b.searchScore !== a.searchScore) {
+        return b.searchScore - a.searchScore;
+      }
+      
+      // Finally, sort by date (newest first) for reviews with same score and match count
+      if (a.created_at && b.created_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      
+      return 0;
     })
     .slice(0, REVIEW_SEARCH_CONFIG.FINAL_RESULTS_LIMIT);
 
@@ -40,6 +52,6 @@ export const filterAndSortReviews = (
 export const logSearchResults = (reviews: ScoredReview[]): void => {
   console.log("Review search results:", reviews.length);
   reviews.forEach(review => {
-    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}, Verified: ${review.reviewerVerified || false}`);
+    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}, Verified: ${review.reviewerVerified || false}, Date: ${review.created_at}`);
   });
 };
