@@ -41,6 +41,10 @@ export const formatReviewData = (review: any) => {
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
     customerId: review.customer_id,
-    business_profile: review.profiles || review.business_profile || null
+    business_profile: review.profiles || review.business_profile || null,
+    // Add missing properties for TypeScript compatibility
+    created_at: review.created_at,
+    business_id: review.business_id,
+    reviewerVerified: false // This will be set later in the search process
   };
 };
