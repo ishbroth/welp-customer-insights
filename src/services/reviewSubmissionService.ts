@@ -19,11 +19,70 @@ export const submitReviewToDatabase = async (
   isEditing: boolean,
   reviewId?: string | null
 ): Promise<string> => {
+  // Create or find customer profile
+  let customerId = null;
+  const fullName = `${reviewData.customerFirstName} ${reviewData.customerLastName}`.trim();
+  
+  if (reviewData.customerPhone) {
+    const cleanPhone = reviewData.customerPhone.replace(/\D/g, '');
+    
+    // Check if customer profile exists by phone
+    const { data: existingCustomer } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone', cleanPhone)
+      .eq('type', 'customer')
+      .maybeSingle();
+    
+    if (existingCustomer) {
+      customerId = existingCustomer.id;
+      console.log("Found existing customer by phone:", customerId);
+      
+      // Update existing customer profile with latest info
+      await supabase
+        .from('profiles')
+        .update({
+          name: fullName,
+          first_name: reviewData.customerFirstName,
+          last_name: reviewData.customerLastName,
+          address: reviewData.customerAddress,
+          city: reviewData.customerCity,
+          state: reviewData.customerState,
+          zipcode: reviewData.customerZipCode,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', customerId);
+    } else if (fullName && fullName.length > 1) {
+      // Create new customer profile
+      const newCustomerId = crypto.randomUUID();
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: newCustomerId,
+          name: fullName,
+          first_name: reviewData.customerFirstName,
+          last_name: reviewData.customerLastName,
+          phone: cleanPhone,
+          address: reviewData.customerAddress,
+          city: reviewData.customerCity,
+          state: reviewData.customerState,
+          zipcode: reviewData.customerZipCode,
+          type: 'customer'
+        });
+      
+      if (!profileError) {
+        customerId = newCustomerId;
+        console.log("Created new customer profile:", customerId);
+      }
+    }
+  }
+
   const supabaseReviewData = {
     business_id: businessId,
+    customer_id: customerId,
     rating: reviewData.rating,
     content: reviewData.comment,
-    customer_name: `${reviewData.customerFirstName} ${reviewData.customerLastName}`.trim(),
+    customer_name: fullName,
     customer_address: reviewData.customerAddress,
     customer_city: reviewData.customerCity,
     customer_zipcode: reviewData.customerZipCode,
@@ -63,5 +122,6 @@ export const submitReviewToDatabase = async (
     throw new Error("Failed to get review ID");
   }
 
+  console.log("Review submitted successfully with ID:", finalReviewId);
   return finalReviewId;
 };

@@ -10,7 +10,6 @@ import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse
 import { useReactionPersistence } from "@/hooks/useReactionPersistence";
 import { useAuth } from "@/contexts/auth";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface CustomerReviewCardProps {
   review: Review;
@@ -36,7 +35,6 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
 }) => {
   const { isSubscribed } = useAuth();
   const navigate = useNavigate();
-  const { isVerified } = useVerifiedStatus(review.reviewerId);
   const { reactions, toggleReaction } = useReactionPersistence(
     review.id, 
     review.reactions || { like: [], funny: [], ohNo: [] }
@@ -71,6 +69,9 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
       navigate(`/business/${review.reviewerId}`);
     }
   };
+
+  // Use the reviewerVerified property directly from the review
+  const isVerified = review.reviewerVerified || false;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4">
