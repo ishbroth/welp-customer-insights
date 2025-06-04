@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface ReviewItemHeaderProps {
   review: {
@@ -64,7 +63,6 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   };
 
   console.log(`ReviewItemHeader: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
-  console.log(`ReviewItemHeader: Should show verified badge: ${Boolean(review.reviewerVerified)}`);
   console.log(`ReviewItemHeader: Business profile avatar:`, businessProfile?.avatar);
 
   return (
@@ -90,10 +88,6 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
               </h4>
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
-            )}
-            {/* Show verified badge next to business name - DEBUG VERSION */}
-            {review.reviewerVerified === true && (
-              <VerifiedBadge size="sm" />
             )}
           </div>
           

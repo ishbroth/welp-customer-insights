@@ -7,6 +7,7 @@ import ReviewItemContent from "./ReviewItemContent";
 import ReviewItemActions from "./ReviewItemActions";
 import { useReviewData } from "@/hooks/useReviewData";
 import { useCustomerReviewResponses } from "@/hooks/useCustomerReviewResponses";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface ReviewItemProps {
   review: {
@@ -52,10 +53,21 @@ const ReviewItem = ({ review, hasFullAccess, onEdit, onDelete, customerData }: R
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
-      <ReviewItemHeader 
-        review={review} 
-        hasFullAccess={hasFullAccess} 
-      />
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <ReviewItemHeader 
+            review={review} 
+            hasFullAccess={hasFullAccess} 
+          />
+        </div>
+        
+        {/* Verified badge on the far right */}
+        {review.reviewerVerified && (
+          <div className="ml-4 flex-shrink-0">
+            <VerifiedBadge size="md" />
+          </div>
+        )}
+      </div>
       
       <ReviewItemContent
         review={review}

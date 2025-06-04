@@ -25,7 +25,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
       rating,
       content,
       created_at,
-      business_id
+      business_id,
+      customer_id
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -45,8 +46,13 @@ export const searchReviews = async (searchParams: SearchParams) => {
   const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
   console.log("Fetching business data for IDs:", businessIds);
   
+  // Get customer profiles for avatar display
+  const customerIds = [...new Set(allReviews.map(review => review.customer_id).filter(Boolean))];
+  console.log("Fetching customer data for IDs:", customerIds);
+  
   let businessProfilesMap = new Map();
   let businessVerificationMap = new Map();
+  let customerProfilesMap = new Map();
   
   if (businessIds.length > 0) {
     // Fetch business profiles with state information
@@ -66,7 +72,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       });
     }
 
-    // Fetch business verification statuses - THIS IS THE KEY PART
+    // Fetch business verification statuses
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
       .select('id, verified')
@@ -85,6 +91,24 @@ export const searchReviews = async (searchParams: SearchParams) => {
     }
   }
 
+  // Fetch customer profiles for avatars
+  if (customerIds.length > 0) {
+    const { data: customerProfiles, error: customerError } = await supabase
+      .from('profiles')
+      .select('id, avatar, first_name, last_name')
+      .in('id', customerIds);
+
+    if (customerError) {
+      console.error("Error fetching customer profiles:", customerError);
+    } else {
+      console.log("Customer profiles found:", customerProfiles?.length || 0);
+      customerProfiles?.forEach(profile => {
+        customerProfilesMap.set(profile.id, profile);
+        console.log(`Customer profile mapping: ${profile.id} -> ${profile.first_name} ${profile.last_name}`);
+      });
+    }
+  }
+
   // Check if this is a single field search
   const searchFields = [firstName, lastName, phone, address, city, state, zipCode].filter(Boolean);
   const isSingleFieldSearch = searchFields.length === 1;
@@ -96,9 +120,12 @@ export const searchReviews = async (searchParams: SearchParams) => {
   const scoredReviews = allReviews.map(review => {
     // Add the business profile data to the review
     const businessProfile = businessProfilesMap.get(review.business_id);
+    const customerProfile = customerProfilesMap.get(review.customer_id);
+    
     const reviewWithProfile = {
       ...review,
-      profiles: businessProfile || null
+      profiles: businessProfile || null,
+      customer_profile: customerProfile || null
     };
     
     const formattedReview = formatReviewData(reviewWithProfile);

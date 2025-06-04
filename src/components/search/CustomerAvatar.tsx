@@ -8,7 +8,7 @@ interface CustomerAvatarProps {
     firstName: string;
     lastName: string;
     avatar?: string;
-    id: string;
+    id?: string;
   };
   isReviewCustomer: boolean;
   isBusinessUser: boolean;
@@ -22,10 +22,12 @@ const CustomerAvatar = ({
   onViewProfile 
 }: CustomerAvatarProps) => {
 
-  // Fetch customer profile to get avatar if not already provided
+  // Fetch customer profile to get avatar if not already provided and we have an ID
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', customer.id],
     queryFn: async () => {
+      if (!customer.id) return null;
+      
       console.log(`Fetching customer profile for ID: ${customer.id}`);
       
       const { data, error } = await supabase
@@ -42,7 +44,7 @@ const CustomerAvatar = ({
       console.log(`Customer profile found:`, data);
       return data;
     },
-    enabled: !!customer.id && !customer.avatar // Only fetch if we don't already have avatar
+    enabled: !!customer.id && !customer.avatar // Only fetch if we have an ID and don't already have avatar
   });
 
   const getInitials = () => {
@@ -52,9 +54,6 @@ const CustomerAvatar = ({
   };
 
   const getCustomerAvatar = () => {
-    if (isReviewCustomer) {
-      return null; // Don't show avatar for review customers
-    }
     // Use avatar from props first, then from fetched profile
     return customer.avatar || customerProfile?.avatar || null;
   };
