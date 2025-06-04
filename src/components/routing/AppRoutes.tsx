@@ -95,6 +95,13 @@ const AppRoutes = () => {
         </BusinessOwnerRoute>
       } />
       
+      {/* Redirect the old incorrect route to the correct one */}
+      <Route path="/new-review" element={
+        <BusinessOwnerRoute>
+          <NewReview />
+        </BusinessOwnerRoute>
+      } />
+      
       <Route path="/profile/business-reviews" element={
         <BusinessOwnerRoute>
           <BusinessReviews />
