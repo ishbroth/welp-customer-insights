@@ -55,7 +55,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
   let customerProfilesMap = new Map();
   
   if (businessIds.length > 0) {
-    // Fetch business profiles - remove the type filter to get all profiles
+    // Fetch business profiles - remove any filters to get all profiles
     const { data: businessProfiles, error: profileError } = await supabase
       .from('profiles')
       .select('id, name, avatar, type, state')
@@ -65,37 +65,47 @@ export const searchReviews = async (searchParams: SearchParams) => {
       console.error("Error fetching business profiles:", profileError);
     } else {
       console.log("Business profiles found:", businessProfiles?.length || 0);
+      console.log("Raw business profiles data:", businessProfiles);
       businessProfiles?.forEach(profile => {
         businessProfilesMap.set(profile.id, profile);
         console.log(`Profile mapping: ${profile.id} -> ${profile.name} (State: ${profile.state}, Type: ${profile.type})`);
       });
     }
 
-    // Fetch business verification statuses
+    // Fetch business verification statuses AND business info (including state if not in profiles)
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
-      .select('id, verified, business_name')
+      .select('id, verified, business_name, state, city')
       .in('id', businessIds);
 
     if (businessError) {
       console.error("Error fetching business verification status:", businessError);
     } else {
       console.log("Business verification data found:", businessInfos?.length || 0);
-      console.log("Raw verification data:", businessInfos);
+      console.log("Raw business info data:", businessInfos);
       businessInfos?.forEach(business => {
         const isVerified = Boolean(business.verified);
         businessVerificationMap.set(business.id, isVerified);
         console.log(`VERIFICATION MAPPING: Business ID ${business.id} -> verified: ${isVerified} (raw value: ${business.verified})`);
         
-        // If no profile name found, use business_name from business_info
+        // If no profile found, create one from business_info
         if (!businessProfilesMap.has(business.id)) {
           businessProfilesMap.set(business.id, {
             id: business.id,
             name: business.business_name || 'Unknown Business',
             avatar: null,
             type: 'business',
-            state: null
+            state: business.state || null
           });
+          console.log(`Created profile from business_info: ${business.id} -> ${business.business_name} (State: ${business.state})`);
+        } else {
+          // If profile exists but no state, use business_info state
+          const existingProfile = businessProfilesMap.get(business.id);
+          if (!existingProfile.state && business.state) {
+            existingProfile.state = business.state;
+            businessProfilesMap.set(business.id, existingProfile);
+            console.log(`Updated profile state from business_info: ${business.id} -> State: ${business.state}`);
+          }
         }
       });
     }
@@ -131,6 +141,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
     // Add the business profile data to the review
     const businessProfile = businessProfilesMap.get(review.business_id);
     const customerProfile = customerProfilesMap.get(review.customer_id);
+    
+    console.log(`Processing review ${review.id} - Business ID: ${review.business_id}, Business Profile State: ${businessProfile?.state}`);
     
     const reviewWithProfile = {
       ...review,
