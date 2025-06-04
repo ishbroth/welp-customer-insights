@@ -51,7 +51,8 @@ export const searchReviews = async (searchParams: SearchParams) => {
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
-  const { data: allReviews, error } = await reviewQuery;
+  const { data: initialReviews, error } = await reviewQuery;
+  let allReviews = initialReviews;
 
   if (error) {
     console.error("Review search error:", error);
