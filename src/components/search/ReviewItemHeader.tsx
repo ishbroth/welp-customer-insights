@@ -28,8 +28,10 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   // Debug logging
   console.log(`ReviewItemHeader DEBUG - Review ID: ${review.id}`);
   console.log(`ReviewItemHeader DEBUG - Rating: ${review.rating}`);
+  console.log(`ReviewItemHeader DEBUG - Rating type: ${typeof review.rating}`);
   console.log(`ReviewItemHeader DEBUG - Verified: ${review.reviewerVerified}`);
   console.log(`ReviewItemHeader DEBUG - Business Name: ${review.reviewerName}`);
+  console.log(`ReviewItemHeader DEBUG - Full review object:`, review);
 
   // Fetch business profile to get avatar
   const { data: businessProfile } = useQuery({
@@ -68,6 +70,10 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
     return "B";
   };
 
+  // Ensure rating is a valid number
+  const validRating = Number(review.rating) || 0;
+  console.log(`ReviewItemHeader DEBUG - Valid rating: ${validRating}`);
+
   return (
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center space-x-3">
@@ -97,17 +103,21 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
           {/* Star rating directly under the business name */}
           <div className="flex items-center space-x-2 mb-2">
             <div className="flex items-center space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                  }`}
-                />
-              ))}
+              {[...Array(5)].map((_, i) => {
+                const isStarFilled = i < validRating;
+                console.log(`Star ${i + 1}: ${isStarFilled ? 'filled' : 'empty'}`);
+                return (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      isStarFilled ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                    }`}
+                  />
+                );
+              })}
             </div>
             <Badge variant="secondary" className="text-xs">
-              {review.rating}/5
+              {validRating}/5
             </Badge>
           </div>
           
