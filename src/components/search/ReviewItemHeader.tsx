@@ -2,11 +2,11 @@
 import { Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface ReviewItemHeaderProps {
   review: {
@@ -89,6 +89,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
             )}
+            {review.reviewerVerified && <VerifiedBadge size="sm" />}
           </div>
           
           {/* Star rating under the business name */}
