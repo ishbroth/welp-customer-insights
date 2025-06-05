@@ -37,23 +37,28 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
     // Extract first word of address for search
     const firstWordOfAddress = address.trim().split(/\s+/)[0];
     
-    // Prepare search parameters
+    // Prepare search parameters - ensure all values are strings
     const searchParams = {
-      lastName,
-      firstName,
-      phone,
-      address: firstWordOfAddress,
-      city,
-      state,
-      zipCode,
+      lastName: lastName || "",
+      firstName: firstName || "",
+      phone: phone || "",
+      address: firstWordOfAddress || "",
+      city: city || "",
+      state: state || "",
+      zipCode: zipCode || "",
     };
+    
+    console.log("Search initiated with params:", searchParams);
     
     if (onSearch) {
       // Use the custom search handler if provided
       onSearch(searchParams);
     } else {
       // Default behavior - navigate to search results page with parameters
-      navigate(`/search?lastName=${encodeURIComponent(lastName)}&firstName=${encodeURIComponent(firstName)}&phone=${encodeURIComponent(phone)}&address=${encodeURIComponent(firstWordOfAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&zipCode=${encodeURIComponent(zipCode)}`);
+      // Always navigate to /search to ensure consistent behavior
+      const searchUrl = `/search?lastName=${encodeURIComponent(searchParams.lastName)}&firstName=${encodeURIComponent(searchParams.firstName)}&phone=${encodeURIComponent(searchParams.phone)}&address=${encodeURIComponent(searchParams.address)}&city=${encodeURIComponent(searchParams.city)}&state=${encodeURIComponent(searchParams.state)}&zipCode=${encodeURIComponent(searchParams.zipCode)}`;
+      console.log("Navigating to:", searchUrl);
+      navigate(searchUrl);
     }
   };
 

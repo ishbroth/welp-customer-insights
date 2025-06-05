@@ -19,6 +19,10 @@ const SearchResults = () => {
     value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
   );
 
+  console.log("SearchResults - Current search params:", Object.fromEntries(searchParams.entries()));
+  console.log("SearchResults - Has search params:", hasSearchParams);
+  console.log("SearchResults - Customers found:", customers.length);
+
   const handleRefresh = () => {
     console.log('Refreshing search results...');
     refetch();
