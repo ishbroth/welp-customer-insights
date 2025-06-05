@@ -29,7 +29,7 @@ const SearchBox = ({
           </h2>
         )}
         
-        <p className="text-center text-sm text-gray-600 mb-3">
+        <p className="text-center text-lg font-semibold text-gray-700 mb-4">
           Search for Customer Reviews with any piece information.
         </p>
         

@@ -99,7 +99,7 @@ const TabsSection = () => {
                   )}
                 </div>
                 
-                <div className="mt-8 border-t pt-6">
+                <div className="mt-12 border-t pt-8">
                   <SearchBox simplified className="max-w-md mx-auto" />
                 </div>
               </div>
