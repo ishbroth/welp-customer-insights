@@ -102,12 +102,9 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
               ) : (
                 <h4 className="font-semibold">{review.reviewerName}</h4>
               )}
-              {review.reviewerVerified && (
-                <VerifiedBadge size="sm" />
-              )}
             </div>
             
-            {/* Star rating */}
+            {/* Star rating with verified badge */}
             <div className="flex items-center space-x-2 mb-2">
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (
@@ -122,6 +119,9 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
               <Badge variant="secondary" className="text-xs">
                 {validRating}/5
               </Badge>
+              {review.reviewerVerified && (
+                <VerifiedBadge size="sm" />
+              )}
             </div>
             
             <p className="text-sm text-gray-500">
