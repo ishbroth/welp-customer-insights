@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/auth";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
@@ -8,7 +9,6 @@ import ClaimReviewButton from "./ClaimReviewButton";
 import { useReviewData } from "@/hooks/useReviewData";
 import { useCustomerReviewResponses } from "@/hooks/useCustomerReviewResponses";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -57,6 +57,12 @@ const ReviewItem = ({
   const { photos, fullReviewContent } = useReviewData(review.id, hasFullAccess);
   const { responses } = useCustomerReviewResponses(review.id);
 
+  // Debug logging for review data
+  console.log(`ReviewItem DEBUG - Review ID: ${review.id}`);
+  console.log(`ReviewItem DEBUG - Rating: ${review.rating}`);
+  console.log(`ReviewItem DEBUG - Verified: ${review.reviewerVerified}`);
+  console.log(`ReviewItem DEBUG - Full review object:`, review);
+
   // Fetch current user's profile for matching
   const { data: userProfile } = useQuery({
     queryKey: ['userProfile', currentUser?.id],
@@ -86,16 +92,6 @@ const ReviewItem = ({
   const isClaimableReview = isCustomerUser && 
     !review.customerId && 
     doesReviewMatchUser(review, currentUser, userProfile);
-
-  console.log(`ReviewItem: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
-  console.log(`ReviewItem: Review data passed to header:`, {
-    reviewerName: review.reviewerName,
-    reviewerId: review.reviewerId,
-    reviewerVerified: review.reviewerVerified
-  });
-  console.log(`ReviewItem: Found ${responses.length} responses for review ${review.id}`);
-  console.log(`ReviewItem: Current user ${currentUser?.id} is review author: ${isReviewAuthor}`);
-  console.log(`ReviewItem: Review is claimable: ${isClaimableReview}`);
 
   const handleReviewClaimed = () => {
     console.log('Review claimed, triggering update');

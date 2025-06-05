@@ -25,6 +25,12 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   const { isSubscribed } = useAuth();
   const navigate = useNavigate();
 
+  // Debug logging
+  console.log(`ReviewItemHeader DEBUG - Review ID: ${review.id}`);
+  console.log(`ReviewItemHeader DEBUG - Rating: ${review.rating}`);
+  console.log(`ReviewItemHeader DEBUG - Verified: ${review.reviewerVerified}`);
+  console.log(`ReviewItemHeader DEBUG - Business Name: ${review.reviewerName}`);
+
   // Fetch business profile to get avatar
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
@@ -62,9 +68,6 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
     return "B";
   };
 
-  console.log(`ReviewItemHeader: Business ${review.reviewerName} verification status: ${review.reviewerVerified}`);
-  console.log(`ReviewItemHeader: Business profile avatar:`, businessProfile?.avatar);
-
   return (
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center space-x-3">
@@ -89,7 +92,10 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
             )}
-            {review.reviewerVerified && <VerifiedBadge size="sm" />}
+            {/* Verified badge next to business name */}
+            {review.reviewerVerified && (
+              <VerifiedBadge size="sm" />
+            )}
           </div>
           
           {/* Star rating under the business name */}
