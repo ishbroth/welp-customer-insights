@@ -1,13 +1,15 @@
 
 import { useAuth } from "@/contexts/auth";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 interface ReviewItemContentProps {
   review: {
     id: string;
     content: string;
+    customer_name?: string;
+    customer_phone?: string;
+    customer_address?: string;
+    customer_city?: string;
+    customer_zipcode?: string;
   };
   fullReviewContent: string;
   hasFullAccess: boolean;
@@ -25,64 +27,70 @@ interface ReviewItemContentProps {
 const ReviewItemContent = ({ 
   review, 
   fullReviewContent, 
-  hasFullAccess, 
+  hasFullAccess,
   customerData 
 }: ReviewItemContentProps) => {
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  const getFirstThreeWords = (text: string | undefined): string => {
-    if (!text || typeof text !== 'string') {
-      return 'No content available...';
-    }
-    const words = text.split(' ');
-    const firstThree = words.slice(0, 3).join(' ');
-    return `${firstThree}${words.length > 3 ? '...' : ''}`;
-  };
-
-  const handleUnlockReview = () => {
-    // Store the review and customer data in sessionStorage for retrieval after signup/signin
-    const reviewAccessData = {
-      reviewId: review.id,
-      customerData,
-      searchParams: Object.fromEntries(searchParams.entries())
-    };
-    
-    sessionStorage.setItem('pendingReviewAccess', JSON.stringify(reviewAccessData));
-    
-    // Navigate to signup page with unlock indicator
-    navigate('/signup?unlock=review');
-  };
+  const { isSubscribed } = useAuth();
 
   return (
-    <div className="mt-2">
-      {hasFullAccess ? (
-        <div>
-          <p className="text-gray-700">{fullReviewContent || review.content}</p>
-          <Badge variant="outline" className="mt-2 text-xs">
-            Full access
-          </Badge>
-        </div>
-      ) : (
-        <div>
-          <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
-          {currentUser ? (
-            <Badge variant="secondary" className="mt-2 text-xs">
-              Limited access
-            </Badge>
-          ) : (
-            <div className="mt-3">
-              <Button 
-                onClick={handleUnlockReview}
-                variant="outline" 
-                size="sm"
-                className="text-welp-primary border-welp-primary hover:bg-welp-primary hover:text-white"
-              >
-                Unlock Review
-              </Button>
-            </div>
-          )}
+    <div className="mb-4">
+      {/* Review Content */}
+      <div className="mb-3">
+        <p className="text-gray-700 leading-relaxed">
+          {hasFullAccess ? fullReviewContent : review.content}
+        </p>
+      </div>
+
+      {/* Customer Information - Only show if user has full access */}
+      {hasFullAccess && (customerData || review.customer_name) && (
+        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+            {customerData ? (
+              <>
+                <div>
+                  <span className="font-medium">Name:</span> {customerData.firstName} {customerData.lastName}
+                </div>
+                {customerData.phone && (
+                  <div>
+                    <span className="font-medium">Phone:</span> {customerData.phone}
+                  </div>
+                )}
+                {customerData.address && (
+                  <div>
+                    <span className="font-medium">Address:</span> {customerData.address}
+                  </div>
+                )}
+                {customerData.city && customerData.state && (
+                  <div>
+                    <span className="font-medium">Location:</span> {customerData.city}, {customerData.state} {customerData.zipCode}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {review.customer_name && (
+                  <div>
+                    <span className="font-medium">Name:</span> {review.customer_name}
+                  </div>
+                )}
+                {review.customer_phone && (
+                  <div>
+                    <span className="font-medium">Phone:</span> {review.customer_phone}
+                  </div>
+                )}
+                {review.customer_address && (
+                  <div>
+                    <span className="font-medium">Address:</span> {review.customer_address}
+                  </div>
+                )}
+                {(review.customer_city || review.customer_zipcode) && (
+                  <div>
+                    <span className="font-medium">Location:</span> {review.customer_city} {review.customer_zipcode}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
