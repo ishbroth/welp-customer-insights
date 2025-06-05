@@ -10,9 +10,13 @@ import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse
 import { useReactionPersistence } from "@/hooks/useReactionPersistence";
 import { useAuth } from "@/contexts/auth";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerReviewCardProps {
-  review: Review;
+  review: Review & {
+    customerAvatar?: string;
+  };
   isUnlocked: boolean;
   hasSubscription: boolean;
   onPurchase: (reviewId: string) => void;
@@ -40,6 +44,54 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
+  // Fetch business profile for avatar if not already provided
+  const { data: businessProfile } = useQuery({
+    queryKey: ['businessProfile', review.reviewerId],
+    queryFn: async () => {
+      console.log(`CustomerReviewCard: Fetching business profile for ID: ${review.reviewerId}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, name')
+        .eq('id', review.reviewerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("CustomerReviewCard: Error fetching business profile:", error);
+        return null;
+      }
+
+      console.log(`CustomerReviewCard: Business profile found:`, data);
+      return data;
+    },
+    enabled: !!review.reviewerId && !review.reviewerAvatar
+  });
+
+  // Fetch customer profile for avatar if we have a customer ID but no avatar
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerProfile', review.customerId],
+    queryFn: async () => {
+      if (!review.customerId) return null;
+      
+      console.log(`CustomerReviewCard: Fetching customer profile for ID: ${review.customerId}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name')
+        .eq('id', review.customerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("CustomerReviewCard: Error fetching customer profile:", error);
+        return null;
+      }
+
+      console.log(`CustomerReviewCard: Customer profile found:`, data);
+      return data;
+    },
+    enabled: !!review.customerId && !review.customerAvatar
+  });
+
   const handlePurchaseClick = () => {
     onPurchase(review.id);
   };
@@ -50,6 +102,14 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
       return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
     }
     return "B";
+  };
+
+  const getCustomerInitials = () => {
+    if (review.customerName) {
+      const names = review.customerName.split(' ');
+      return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "C";
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
@@ -76,24 +136,27 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   // Use the reviewerVerified property directly from the review
   const isVerified = review.reviewerVerified || false;
 
-  console.log('CustomerReviewCard: Review verification status:', {
+  // Get the final avatar URLs
+  const finalBusinessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
+  const finalCustomerAvatar = review.customerAvatar || customerProfile?.avatar || '';
+
+  console.log('CustomerReviewCard: Avatar info:', {
     reviewId: review.id,
+    businessAvatar: finalBusinessAvatar,
+    customerAvatar: finalCustomerAvatar,
     reviewerName: review.reviewerName,
-    reviewerVerified: review.reviewerVerified,
-    isVerified: isVerified,
-    currentUserId: currentUser?.id,
-    reviewerId: review.reviewerId,
-    isReviewAuthor: isReviewAuthor
+    customerName: review.customerName
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4">
       <div className="flex justify-between mb-4">
         <div className="flex items-center space-x-3">
+          {/* Business Avatar */}
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
-              {review.reviewerAvatar ? (
-                <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+              {finalBusinessAvatar ? (
+                <AvatarImage src={finalBusinessAvatar} alt={review.reviewerName} />
               ) : (
                 <AvatarFallback className="bg-blue-100 text-blue-800">
                   {getBusinessInitials()}
@@ -121,6 +184,23 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Customer Avatar - show on the right */}
+        {review.customerName && (
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">About:</span>
+            <Avatar className="h-8 w-8">
+              {finalCustomerAvatar ? (
+                <AvatarImage src={finalCustomerAvatar} alt={review.customerName} />
+              ) : (
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                  {getCustomerInitials()}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <span className="text-sm font-medium text-gray-700">{review.customerName}</span>
+          </div>
+        )}
       </div>
 
       {isUnlocked ? (
@@ -140,7 +220,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
                 customerId={review.customerId}
                 businessId={review.reviewerId}
                 businessName={review.reviewerName}
-                businessAvatar={review.reviewerAvatar}
+                businessAvatar={finalBusinessAvatar}
                 reactions={reactions}
                 onReactionToggle={handleReactionToggle}
               />

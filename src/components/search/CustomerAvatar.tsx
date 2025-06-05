@@ -28,20 +28,20 @@ const CustomerAvatar = ({
     queryFn: async () => {
       if (!customer.id) return null;
       
-      console.log(`Fetching customer profile for ID: ${customer.id}`);
+      console.log(`CustomerAvatar: Fetching profile for ID: ${customer.id}`);
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar')
+        .select('id, avatar, first_name, last_name')
         .eq('id', customer.id)
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching customer profile:", error);
+        console.error("CustomerAvatar: Error fetching profile:", error);
         return null;
       }
 
-      console.log(`Customer profile found:`, data);
+      console.log(`CustomerAvatar: Profile found:`, data);
       return data;
     },
     enabled: !!customer.id && !customer.avatar // Only fetch if we have an ID and don't already have avatar
@@ -55,11 +55,12 @@ const CustomerAvatar = ({
 
   const getCustomerAvatar = () => {
     // Use avatar from props first, then from fetched profile
-    return customer.avatar || customerProfile?.avatar || null;
+    const avatarUrl = customer.avatar || customerProfile?.avatar || null;
+    console.log(`CustomerAvatar: Final avatar URL for ${customer.firstName} ${customer.lastName}:`, avatarUrl);
+    return avatarUrl;
   };
 
   const avatarSrc = getCustomerAvatar();
-  console.log(`CustomerAvatar: Customer ${customer.firstName} ${customer.lastName} avatar:`, avatarSrc);
 
   if (!isBusinessUser) {
     return (
