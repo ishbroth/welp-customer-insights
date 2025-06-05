@@ -1,7 +1,6 @@
 
 import { Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -77,10 +76,50 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0">
-      {/* Header with business info and rating */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex justify-between items-start">
+        {/* Left side: Rating, Business name, Date */}
+        <div className="flex flex-col space-y-2">
+          {/* Star rating */}
+          <div className="flex items-center space-x-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-5 w-5 ${
+                  i < validRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Business name */}
+          <div>
+            {(isSubscribed || hasFullAccess) ? (
+              <h4 
+                className="font-semibold text-base cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                onClick={handleBusinessClick}
+              >
+                {review.reviewerName}
+              </h4>
+            ) : (
+              <h4 className="font-semibold text-base">{review.reviewerName}</h4>
+            )}
+          </div>
+          
+          {/* Date */}
+          <p className="text-sm text-gray-500">
+            {new Date(review.date).toLocaleDateString()}
+          </p>
+        </div>
+
+        {/* Right side: Verified badge and Avatar */}
         <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10">
+          {/* Verified badge */}
+          {review.reviewerVerified && (
+            <VerifiedBadge size="md" />
+          )}
+          
+          {/* Business avatar */}
+          <Avatar className="h-12 w-12">
             <AvatarImage 
               src={businessProfile?.avatar || ""} 
               alt={review.reviewerName} 
@@ -89,50 +128,11 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
               {getBusinessInitials()}
             </AvatarFallback>
           </Avatar>
-          
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              {(isSubscribed || hasFullAccess) ? (
-                <h4 
-                  className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  onClick={handleBusinessClick}
-                >
-                  {review.reviewerName}
-                </h4>
-              ) : (
-                <h4 className="font-semibold">{review.reviewerName}</h4>
-              )}
-            </div>
-            
-            {/* Star rating with verified badge */}
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < validRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                {validRating}/5
-              </Badge>
-              {review.reviewerVerified && (
-                <VerifiedBadge size="sm" />
-              )}
-            </div>
-            
-            <p className="text-sm text-gray-500">
-              {new Date(review.date).toLocaleDateString()}
-            </p>
-          </div>
         </div>
       </div>
 
       {/* Review content */}
-      <div className="mb-4">
+      <div className="mt-4">
         <p className="text-gray-700 leading-relaxed">
           {review.content}
         </p>

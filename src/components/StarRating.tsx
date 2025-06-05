@@ -25,20 +25,39 @@ const StarRating = ({
 
   return (
     <div className={cn("flex", className)}>
-      {[...Array(max)].map((_, i) => (
-        <Star
-          key={i}
-          className={cn(
-            sizeClasses[size],
-            "transition-colors",
-            grayedOut 
-              ? "text-gray-300" 
-              : i < rating 
-                ? "text-yellow-400 fill-yellow-400" 
-                : "text-gray-300"
-          )}
-        />
-      ))}
+      {[...Array(max)].map((_, i) => {
+        const starPosition = i + 1;
+        const fillPercentage = Math.min(Math.max(rating - i, 0), 1);
+        
+        return (
+          <div key={i} className="relative">
+            {/* Background star (empty) */}
+            <Star
+              className={cn(
+                sizeClasses[size],
+                "transition-colors",
+                grayedOut ? "text-gray-300" : "text-gray-300"
+              )}
+            />
+            
+            {/* Foreground star (filled) */}
+            {fillPercentage > 0 && (
+              <div 
+                className="absolute top-0 left-0 overflow-hidden"
+                style={{ width: `${fillPercentage * 100}%` }}
+              >
+                <Star
+                  className={cn(
+                    sizeClasses[size],
+                    "transition-colors",
+                    grayedOut ? "text-gray-300" : "text-yellow-400 fill-yellow-400"
+                  )}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
