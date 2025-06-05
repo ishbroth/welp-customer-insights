@@ -66,7 +66,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   console.log(`ReviewItemHeader: Business profile avatar:`, businessProfile?.avatar);
 
   return (
-    <div className="flex items-start justify-between mb-3">
+    <div className="flex items-start justify-between mb-4">
       <div className="flex items-center space-x-3">
         <Avatar className="h-10 w-10">
           <AvatarImage 
@@ -78,7 +78,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
           </AvatarFallback>
         </Avatar>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-2">
             {(isSubscribed || hasFullAccess) ? (
               <h4 
                 className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
@@ -93,16 +93,18 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
           </div>
           
           {/* Star rating under the business name */}
-          <div className="flex items-center space-x-1 mb-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-4 w-4 ${
-                  i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                }`}
-              />
-            ))}
-            <Badge variant="secondary" className="ml-2">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="flex items-center space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${
+                    i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+            <Badge variant="secondary" className="text-xs">
               {review.rating}/5
             </Badge>
           </div>

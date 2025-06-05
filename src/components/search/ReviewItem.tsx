@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/auth";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
@@ -107,21 +106,10 @@ const ReviewItem = ({
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <ReviewItemHeader 
-            review={review} 
-            hasFullAccess={hasFullAccess} 
-          />
-        </div>
-        
-        {/* Verified badge on the far right */}
-        {review.reviewerVerified && (
-          <div className="ml-4 flex-shrink-0">
-            <VerifiedBadge size="md" />
-          </div>
-        )}
-      </div>
+      <ReviewItemHeader 
+        review={review} 
+        hasFullAccess={hasFullAccess} 
+      />
       
       <ReviewItemContent
         review={review}
