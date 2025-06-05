@@ -81,7 +81,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
           </AvatarFallback>
         </Avatar>
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             {(isSubscribed || hasFullAccess) ? (
               <h4 
                 className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
@@ -92,13 +92,9 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
             ) : (
               <h4 className="font-semibold">{review.reviewerName}</h4>
             )}
-            {/* Verified badge next to business name */}
-            {review.reviewerVerified && (
-              <VerifiedBadge size="sm" />
-            )}
           </div>
           
-          {/* Star rating under the business name */}
+          {/* Star rating directly under the business name */}
           <div className="flex items-center space-x-2 mb-2">
             <div className="flex items-center space-x-1">
               {[...Array(5)].map((_, i) => (
@@ -120,6 +116,13 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
           </p>
         </div>
       </div>
+      
+      {/* Verified badge on the right side */}
+      {review.reviewerVerified && (
+        <div className="flex items-center">
+          <VerifiedBadge size="md" />
+        </div>
+      )}
     </div>
   );
 };
