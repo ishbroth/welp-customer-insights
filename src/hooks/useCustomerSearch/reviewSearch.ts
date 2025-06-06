@@ -72,7 +72,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       });
     }
 
-    // Fetch business verification statuses only (state column doesn't exist in business_info)
+    // Fetch business verification statuses
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
       .select('id, verified, business_name')
@@ -144,11 +144,14 @@ export const searchReviews = async (searchParams: SearchParams) => {
     
     const formattedReview = formatReviewData(reviewWithProfile);
     
-    // Add verification status - ENSURE THIS IS PROPERLY SET
-    const verificationStatus = businessVerificationMap.get(review.business_id) || false;
-    formattedReview.reviewerVerified = verificationStatus;
+    // CRITICAL FIX: Ensure verification status is properly set
+    const verificationStatus = businessVerificationMap.get(review.business_id);
+    console.log(`VERIFICATION DEBUG: Business ID ${review.business_id}, Raw verification from map: ${verificationStatus}, Type: ${typeof verificationStatus}`);
     
-    console.log(`FINAL VERIFICATION CHECK: Business ID ${review.business_id}, Verification Status: ${verificationStatus}, Business Name: ${formattedReview.reviewerName}, Raw Map Value: ${businessVerificationMap.get(review.business_id)}`);
+    // Explicitly set the verification status - ensure it's a boolean
+    formattedReview.reviewerVerified = verificationStatus === true;
+    
+    console.log(`FINAL VERIFICATION CHECK: Business ID ${review.business_id}, Final reviewerVerified: ${formattedReview.reviewerVerified}, Business Name: ${formattedReview.reviewerName}`);
     
     // Pass the business profile state directly to scoring for state matching
     const scoredReview = scoreReview(formattedReview, { 
@@ -161,7 +164,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       zipCode 
     }, businessProfile?.state || null);
     
-    console.log(`Review ${review.id}: Customer "${review.customer_name}", Score: ${scoredReview.searchScore}, Matches: ${scoredReview.matchCount}, Business: ${formattedReview.reviewerName}, Verified: ${verificationStatus}, Business State: ${businessProfile?.state}`);
+    console.log(`Review ${review.id}: Customer "${review.customer_name}", Score: ${scoredReview.searchScore}, Matches: ${scoredReview.matchCount}, Business: ${formattedReview.reviewerName}, Verified: ${scoredReview.reviewerVerified}, Business State: ${businessProfile?.state}`);
     
     return scoredReview;
   });
@@ -175,5 +178,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
   logSearchResults(filteredReviews);
   
   console.log("=== REVIEW SEARCH COMPLETE ===");
+  console.log("Final filtered reviews with verification status:");
+  filteredReviews.forEach(review => {
+    console.log(`Review ID: ${review.id}, Business: ${review.reviewerName}, Verified: ${review.reviewerVerified}`);
+  });
+  
   return filteredReviews;
 };
