@@ -1,8 +1,5 @@
 
 import ReviewsList from "./ReviewsList";
-import CustomerInfo from "./CustomerInfo";
-import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
 
 interface ExpandedCustomerViewProps {
   customer: {
@@ -22,6 +19,12 @@ interface ExpandedCustomerViewProps {
       content: string;
       date: string;
       reviewerVerified?: boolean;
+      customer_name?: string;
+      customer_phone?: string;
+      customer_address?: string;
+      customer_city?: string;
+      customer_zipcode?: string;
+      customerId?: string;
     }>;
   };
   reviews: Array<{
@@ -32,9 +35,15 @@ interface ExpandedCustomerViewProps {
     content: string;
     date: string;
     reviewerVerified?: boolean;
+    customer_name?: string;
+    customer_phone?: string;
+    customer_address?: string;
+    customer_city?: string;
+    customer_zipcode?: string;
+    customerId?: string;
   }>;
   hasFullAccess: (customerId: string) => boolean;
-  isReviewCustomer: boolean;
+  isReviewCustomer?: boolean;
   onReviewUpdate?: () => void;
 }
 
@@ -42,47 +51,16 @@ const ExpandedCustomerView = ({
   customer, 
   reviews, 
   hasFullAccess, 
-  isReviewCustomer,
+  isReviewCustomer = false, 
   onReviewUpdate 
 }: ExpandedCustomerViewProps) => {
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
-  
-  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-  
-  const handleViewProfile = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isBusinessUser && hasFullAccess(customer.id)) {
-      navigate(`/customer/${customer.id}`);
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      <CustomerInfo 
-        customer={customer}
-        isBusinessUser={isBusinessUser}
-        isReviewCustomer={isReviewCustomer}
-        onViewProfile={handleViewProfile}
-        hasAccess={hasFullAccess(customer.id)}
-      />
-      
-      <ReviewsList 
-        reviews={reviews}
-        hasFullAccess={hasFullAccess}
-        customerData={{
-          id: customer.id,
-          firstName: customer.firstName,
-          lastName: customer.lastName,
-          phone: customer.phone,
-          address: customer.address,
-          city: customer.city,
-          state: customer.state,
-          zipCode: customer.zipCode
-        }}
-        onReviewUpdate={onReviewUpdate}
-      />
-    </div>
+    <ReviewsList
+      reviews={reviews}
+      hasFullAccess={hasFullAccess}
+      customerData={customer}
+      onReviewUpdate={onReviewUpdate}
+    />
   );
 };
 
