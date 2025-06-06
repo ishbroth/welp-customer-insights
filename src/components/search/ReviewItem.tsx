@@ -102,17 +102,126 @@ const ReviewItem = ({
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0 relative">
-      <ReviewItemHeader 
-        review={review} 
-        hasFullAccess={hasFullAccess} 
-      />
-      
-      <ReviewItemContent
-        review={review}
-        fullReviewContent={fullReviewContent}
-        hasFullAccess={hasFullAccess}
-        customerData={customerData}
-      />
+      {/* Use the actual ReviewCard component instead of separate header/content */}
+      <div className="border-b border-gray-100 pb-4 last:border-b-0">
+        <div className="flex justify-between items-start">
+          {/* Left side: Rating, Business name, Date */}
+          <div className="flex flex-col space-y-2">
+            {/* Star rating */}
+            <div className="flex items-center space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <div 
+                  key={i}
+                  className={`h-5 w-5 ${
+                    i < (Number(review.rating) || 0) ? 'text-yellow-400' : 'text-gray-300'
+                  }`}
+                >
+                  ⭐
+                </div>
+              ))}
+            </div>
+            
+            {/* Business name */}
+            <div>
+              {(isSubscribed || hasFullAccess) ? (
+                <h4 className="font-semibold text-base cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                  {review.reviewerName}
+                </h4>
+              ) : (
+                <h4 className="font-semibold text-base">{review.reviewerName}</h4>
+              )}
+            </div>
+            
+            {/* Date */}
+            <p className="text-sm text-gray-500">
+              {new Date(review.date).toLocaleDateString()}
+            </p>
+          </div>
+
+          {/* Right side: Verified badge and Avatar */}
+          <div className="flex items-center space-x-3">
+            {/* DEBUG: Add visible indicator for verification status */}
+            <div className="text-xs text-gray-500">
+              Verified: {review.reviewerVerified ? 'YES' : 'NO'}
+            </div>
+            
+            {/* Verified badge - positioned before the avatar */}
+            {review.reviewerVerified && (
+              <div 
+                className="relative inline-flex items-center justify-center bg-blue-600 rounded-full h-5 w-5" 
+                aria-label="Verified business"
+              >
+                <div className="text-white h-3 w-3">✓</div>
+              </div>
+            )}
+            
+            {/* Business avatar placeholder */}
+            <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 font-semibold">
+              {review.reviewerName ? review.reviewerName.charAt(0) : 'B'}
+            </div>
+          </div>
+        </div>
+
+        {/* Review content */}
+        <div className="mt-4">
+          <p className="text-gray-700 leading-relaxed">
+            {fullReviewContent || review.content}
+          </p>
+        </div>
+
+        {/* Customer information - only show if user has full access */}
+        {hasFullAccess && (customerData || review.customer_name) && (
+          <div className="mt-3 p-3 bg-gray-50 rounded-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+              {customerData ? (
+                <>
+                  <div>
+                    <span className="font-medium">Name:</span> {customerData.firstName} {customerData.lastName}
+                  </div>
+                  {customerData.phone && (
+                    <div>
+                      <span className="font-medium">Phone:</span> {customerData.phone}
+                    </div>
+                  )}
+                  {customerData.address && (
+                    <div>
+                      <span className="font-medium">Address:</span> {customerData.address}
+                    </div>
+                  )}
+                  {customerData.city && customerData.state && (
+                    <div>
+                      <span className="font-medium">Location:</span> {customerData.city}, {customerData.state} {customerData.zipCode}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {review.customer_name && (
+                    <div>
+                      <span className="font-medium">Name:</span> {review.customer_name}
+                    </div>
+                  )}
+                  {review.customer_phone && (
+                    <div>
+                      <span className="font-medium">Phone:</span> {review.customer_phone}
+                    </div>
+                  )}
+                  {review.customer_address && (
+                    <div>
+                      <span className="font-medium">Address:</span> {review.customer_address}
+                    </div>
+                  )}
+                  {(review.customer_city || review.customer_zipcode) && (
+                    <div>
+                      <span className="font-medium">Location:</span> {review.customer_city} {review.customer_zipcode}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Show claim button for matching unclaimed reviews */}
       {isClaimableReview && (
