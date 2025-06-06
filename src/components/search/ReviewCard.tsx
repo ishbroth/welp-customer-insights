@@ -91,7 +91,7 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
             ))}
           </div>
           
-          {/* Business name */}
+          {/* Business name - no verified badge here anymore */}
           <div>
             {(isSubscribed || hasFullAccess) ? (
               <h4 
@@ -111,9 +111,9 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
           </p>
         </div>
 
-        {/* Right side: Verified badge and Avatar */}
+        {/* Right side: Verified badge and Avatar - both on the same line */}
         <div className="flex items-center space-x-3">
-          {/* Verified badge */}
+          {/* Verified badge - positioned before the avatar */}
           {review.reviewerVerified && (
             <VerifiedBadge size="md" />
           )}
