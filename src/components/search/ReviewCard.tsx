@@ -1,12 +1,13 @@
 
-import { Star } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+import ReviewRating from "./ReviewRating";
+import ReviewBusinessInfo from "./ReviewBusinessInfo";
+import ReviewBusinessAvatar from "./ReviewBusinessAvatar";
+import ReviewContent from "./ReviewContent";
+import ReviewCustomerInfo from "./ReviewCustomerInfo";
 
 interface ReviewCardProps {
   review: {
@@ -46,26 +47,6 @@ interface ReviewCardProps {
 
 const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) => {
   const { isSubscribed } = useAuth();
-  const navigate = useNavigate();
-
-  // Fetch business profile
-  const { data: businessProfile } = useQuery({
-    queryKey: ['businessProfile', review.reviewerId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, avatar')
-        .eq('id', review.reviewerId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching business profile:", error);
-        return null;
-      }
-      return data;
-    },
-    enabled: !!review.reviewerId
-  });
 
   // Fetch customer profile if we have customerId but no customer data
   const { data: customerProfile } = useQuery({
@@ -92,22 +73,6 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
     enabled: !!review.customerId && !customerData?.avatar
   });
 
-  const handleBusinessClick = () => {
-    if (isSubscribed || hasFullAccess) {
-      navigate(`/business/${review.reviewerId}`);
-    }
-  };
-
-  const getBusinessInitials = () => {
-    if (review.reviewerName) {
-      const names = review.reviewerName.split(' ');
-      return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "B";
-  };
-
-  const validRating = Number(review.rating) || 0;
-
   // Get final customer avatar - prefer customerData, then fetched profile
   const finalCustomerAvatar = customerData?.avatar || customerProfile?.avatar || '';
 
@@ -116,125 +81,31 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
       <div className="flex justify-between items-start">
         {/* Left side: Rating, Business name, Date */}
         <div className="flex flex-col space-y-2">
-          {/* Star rating */}
-          <div className="flex items-center space-x-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-5 w-5 ${
-                  i < validRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          
-          {/* Business name - no verified badge here anymore */}
-          <div>
-            {(isSubscribed || hasFullAccess) ? (
-              <h4 
-                className="font-semibold text-base cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                onClick={handleBusinessClick}
-              >
-                {review.reviewerName}
-              </h4>
-            ) : (
-              <h4 className="font-semibold text-base">{review.reviewerName}</h4>
-            )}
-          </div>
-          
-          {/* Date */}
-          <p className="text-sm text-gray-500">
-            {new Date(review.date).toLocaleDateString()}
-          </p>
+          <ReviewRating rating={review.rating} />
+          <ReviewBusinessInfo 
+            reviewerName={review.reviewerName}
+            reviewerId={review.reviewerId}
+            date={review.date}
+            hasFullAccess={hasFullAccess}
+          />
         </div>
 
-        {/* Right side: Verified badge and Avatar - both on the same line */}
-        <div className="flex items-center space-x-3">
-          {/* Verified badge - positioned before the avatar */}
-          {review.reviewerVerified && (
-            <VerifiedBadge size="md" />
-          )}
-          
-          {/* Business avatar */}
-          <Avatar className="h-12 w-12">
-            <AvatarImage 
-              src={businessProfile?.avatar || ""} 
-              alt={review.reviewerName} 
-            />
-            <AvatarFallback className="bg-blue-100 text-blue-800">
-              {getBusinessInitials()}
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        {/* Right side: Verified badge and Avatar */}
+        <ReviewBusinessAvatar 
+          reviewerId={review.reviewerId}
+          reviewerName={review.reviewerName}
+          reviewerVerified={review.reviewerVerified}
+        />
       </div>
 
-      {/* Review content */}
-      <div className="mt-4">
-        <p className="text-gray-700 leading-relaxed">
-          {review.content}
-        </p>
-      </div>
+      <ReviewContent content={review.content} />
 
-      {/* Customer information - only show if user has full access */}
-      {hasFullAccess && (customerData || review.customer_name) && (
-        <div className="mt-3 p-3 bg-gray-50 rounded-md">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-            {customerData ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={finalCustomerAvatar} alt={`${customerData.firstName} ${customerData.lastName}`} />
-                    <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                      {customerData.firstName?.[0]}{customerData.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <span className="font-medium">Name:</span> {customerData.firstName} {customerData.lastName}
-                  </div>
-                </div>
-                {customerData.phone && (
-                  <div>
-                    <span className="font-medium">Phone:</span> {customerData.phone}
-                  </div>
-                )}
-                {customerData.address && (
-                  <div>
-                    <span className="font-medium">Address:</span> {customerData.address}
-                  </div>
-                )}
-                {customerData.city && customerData.state && (
-                  <div>
-                    <span className="font-medium">Location:</span> {customerData.city}, {customerData.state} {customerData.zipCode}
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {review.customer_name && (
-                  <div>
-                    <span className="font-medium">Name:</span> {review.customer_name}
-                  </div>
-                )}
-                {review.customer_phone && (
-                  <div>
-                    <span className="font-medium">Phone:</span> {review.customer_phone}
-                  </div>
-                )}
-                {review.customer_address && (
-                  <div>
-                    <span className="font-medium">Address:</span> {review.customer_address}
-                  </div>
-                )}
-                {(review.customer_city || review.customer_zipcode) && (
-                  <div>
-                    <span className="font-medium">Location:</span> {review.customer_city} {review.customer_zipcode}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <ReviewCustomerInfo 
+        hasFullAccess={hasFullAccess}
+        customerData={customerData}
+        review={review}
+        finalCustomerAvatar={finalCustomerAvatar}
+      />
 
       {/* Response section with proper conversation flow */}
       <CustomerReviewResponse 
@@ -242,7 +113,7 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
         responses={review.responses || []}
         hasSubscription={isSubscribed}
         isOneTimeUnlocked={hasFullAccess}
-        reviewAuthorId={review.reviewerId} // Pass the review author ID
+        reviewAuthorId={review.reviewerId}
       />
     </div>
   );
