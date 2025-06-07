@@ -76,9 +76,9 @@ export const useCustomerReviewResponses = (reviewId: string) => {
               const lastName = profile.last_name || '';
               authorName = `${firstName} ${lastName}`.trim();
             }
-            // If still no name, use account type
+            // If still no name, use account type with a more descriptive fallback
             else if (profile.type) {
-              authorName = profile.type === 'business' ? 'Business' : 'Customer';
+              authorName = profile.type === 'business' ? 'Business User' : 'Customer';
             }
             
             console.log(`Response author mapping: ${resp.author_id} -> ${authorName} (profile name: ${profile.name}, first: ${profile.first_name}, last: ${profile.last_name}, type: ${profile.type})`);
