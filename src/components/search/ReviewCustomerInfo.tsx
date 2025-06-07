@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,18 +57,68 @@ const ReviewCustomerInfo = ({
     enabled: !!review.customerId
   });
 
-  // Get the final customer avatar - prefer customerData, then fetched profile
-  const customerAvatar = finalCustomerAvatar || customerProfile?.avatar || '';
+  // Fetch customer profile by name if we don't have customerId but have customer_name
+  const { data: customerProfileByName } = useQuery({
+    queryKey: ['customerProfileByName', review.customer_name],
+    queryFn: async () => {
+      if (!review.customer_name) return null;
+      
+      console.log(`ReviewCustomerInfo: Searching for customer profile by name: ${review.customer_name}`);
+      
+      // Try to match by exact name first
+      let { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name, name')
+        .eq('name', review.customer_name)
+        .maybeSingle();
+
+      if (error || !data) {
+        console.log('ReviewCustomerInfo: Exact name match failed, trying first/last name combination');
+        
+        // If no exact match, try to construct from first_name and last_name
+        const nameParts = review.customer_name.split(' ');
+        if (nameParts.length >= 2) {
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(' ');
+          
+          ({ data, error } = await supabase
+            .from('profiles')
+            .select('id, avatar, first_name, last_name, name')
+            .eq('first_name', firstName)
+            .eq('last_name', lastName)
+            .maybeSingle());
+        }
+      }
+
+      if (error) {
+        console.error("ReviewCustomerInfo: Error fetching customer profile by name:", error);
+        return null;
+      }
+
+      console.log(`ReviewCustomerInfo: Customer profile found by name:`, data);
+      return data;
+    },
+    enabled: !!review.customer_name && !review.customerId && !customerData?.avatar
+  });
+
+  // Get the final customer avatar - prefer customerData, then fetched profile by ID, then by name
+  const customerAvatar = finalCustomerAvatar || 
+                        customerProfile?.avatar || 
+                        customerProfileByName?.avatar || 
+                        '';
   
   // Get customer name - prefer customerData, then profile, then review data
   const customerName = customerData 
     ? `${customerData.firstName} ${customerData.lastName}`
     : customerProfile?.name || 
+      customerProfileByName?.name ||
       (customerProfile?.first_name && customerProfile?.last_name 
         ? `${customerProfile.first_name} ${customerProfile.last_name}`
-        : review.customer_name);
+        : customerProfileByName?.first_name && customerProfileByName?.last_name
+          ? `${customerProfileByName.first_name} ${customerProfileByName.last_name}`
+          : review.customer_name);
 
-  if (!hasFullAccess || (!customerData && !review.customer_name && !customerProfile)) {
+  if (!hasFullAccess || (!customerData && !review.customer_name && !customerProfile && !customerProfileByName)) {
     return null;
   }
 
@@ -78,12 +129,24 @@ const ReviewCustomerInfo = ({
     if (customerProfile?.first_name || customerProfile?.last_name) {
       return `${customerProfile.first_name?.[0] || ''}${customerProfile.last_name?.[0] || ''}`;
     }
+    if (customerProfileByName?.first_name || customerProfileByName?.last_name) {
+      return `${customerProfileByName.first_name?.[0] || ''}${customerProfileByName.last_name?.[0] || ''}`;
+    }
     if (review.customer_name) {
       const names = review.customer_name.split(' ');
       return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
     }
     return "C";
   };
+
+  console.log('ReviewCustomerInfo: Final avatar determination:', {
+    customerAvatar,
+    finalCustomerAvatar,
+    customerProfileAvatar: customerProfile?.avatar,
+    customerProfileByNameAvatar: customerProfileByName?.avatar,
+    customerName,
+    reviewCustomerName: review.customer_name
+  });
 
   return (
     <div className="mt-3 p-3 bg-gray-50 rounded-md">
