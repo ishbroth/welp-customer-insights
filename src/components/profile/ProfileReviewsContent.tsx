@@ -8,6 +8,7 @@ import CustomerReviewCard from "@/components/customer/CustomerReviewCard";
 import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
+import ClaimableReviewCard from "@/components/customer/ClaimableReviewCard";
 
 interface ProfileReviewsContentProps {
   customerReviews: Review[];
@@ -43,14 +44,12 @@ const ProfileReviewsContent = ({
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
 
   const handlePurchaseReview = (reviewId: string) => {
-    // Mock purchase functionality - in a real app, this would initiate a payment flow
     toast({
       title: "Purchase initiated",
       description: "Processing payment for review access...",
       duration: 2000,
     });
     
-    // Navigate to the one-time review access page
     navigate(`/one-time-review?customerId=${currentUser?.id}&reviewId=${reviewId}`);
   };
 
@@ -58,24 +57,24 @@ const ProfileReviewsContent = ({
     return hasOneTimeAccess(reviewId) || hasSubscription;
   };
 
-  // Handle toggling reactions - with proper state management
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    // Show notification toast for the customer
     toast({
       title: `You reacted with "${reactionType}"`,
       description: `to the review`,
     });
   };
 
-  // Handle edit review for business users
   const handleEditReview = (review: Review) => {
     navigate(`/edit-review/${review.id}`);
   };
 
-  // Handle delete review for business users
   const handleDeleteReview = (reviewId: string) => {
-    // Implementation would go here
     console.log('Delete review:', reviewId);
+  };
+
+  const handleClaimReview = async (reviewId: string) => {
+    // Refresh the reviews list after claiming
+    window.location.reload(); // Simple refresh for now
   };
 
   if (isLoading) {
@@ -98,30 +97,56 @@ const ProfileReviewsContent = ({
   }
 
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+  const isCustomerUser = currentUser?.type === "customer";
 
   return (
     <div className="space-y-6">
-      {localReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
-        isBusinessUser ? (
-          <BusinessReviewCard
-            key={review.id}
-            review={review}
-            hasSubscription={hasSubscription}
-            onEdit={handleEditReview}
-            onDelete={handleDeleteReview}
-            onReactionToggle={handleReactionToggle}
-          />
-        ) : (
-          <CustomerReviewCard
-            key={review.id}
-            review={review}
-            isUnlocked={isReviewUnlocked(review.id)}
-            onPurchase={handlePurchaseReview}
-            onReactionToggle={handleReactionToggle}
-            hasSubscription={hasSubscription}
-          />
-        )
-      ))}
+      {localReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => {
+        if (isBusinessUser) {
+          return (
+            <BusinessReviewCard
+              key={review.id}
+              review={review}
+              hasSubscription={hasSubscription}
+              onEdit={handleEditReview}
+              onDelete={handleDeleteReview}
+              onReactionToggle={handleReactionToggle}
+            />
+          );
+        } else if (isCustomerUser) {
+          // For customer users, show different components based on claim status
+          const reviewAny = review as any;
+          
+          if (reviewAny.isClaimed === false && (reviewAny.matchType === 'high_quality' || reviewAny.matchType === 'potential')) {
+            // Show claimable review card for unclaimed potential matches
+            return (
+              <ClaimableReviewCard
+                key={review.id}
+                review={review}
+                matchReasons={reviewAny.matchReasons || []}
+                matchScore={reviewAny.matchScore || 0}
+                onClaim={handleClaimReview}
+                isUnlocked={isReviewUnlocked(review.id)}
+                hasSubscription={hasSubscription}
+              />
+            );
+          } else {
+            // Show normal customer review card for claimed reviews
+            return (
+              <CustomerReviewCard
+                key={review.id}
+                review={review}
+                isUnlocked={isReviewUnlocked(review.id)}
+                onPurchase={handlePurchaseReview}
+                onReactionToggle={handleReactionToggle}
+                hasSubscription={hasSubscription}
+              />
+            );
+          }
+        }
+        
+        return null;
+      })}
       
       {totalPages > 1 && (
         <ReviewPagination 
