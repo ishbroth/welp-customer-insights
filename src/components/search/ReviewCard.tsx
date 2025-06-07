@@ -40,6 +40,7 @@ interface ReviewCardProps {
     city?: string;
     state?: string;
     zipCode?: string;
+    avatar?: string;
   };
 }
 
@@ -66,6 +67,31 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
     enabled: !!review.reviewerId
   });
 
+  // Fetch customer profile if we have customerId but no customer data
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerProfile', review.customerId],
+    queryFn: async () => {
+      if (!review.customerId) return null;
+      
+      console.log(`ReviewCard: Fetching customer profile for ID: ${review.customerId}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name, name')
+        .eq('id', review.customerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("ReviewCard: Error fetching customer profile:", error);
+        return null;
+      }
+
+      console.log(`ReviewCard: Customer profile found:`, data);
+      return data;
+    },
+    enabled: !!review.customerId && !customerData?.avatar
+  });
+
   const handleBusinessClick = () => {
     if (isSubscribed || hasFullAccess) {
       navigate(`/business/${review.reviewerId}`);
@@ -81,6 +107,9 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
   };
 
   const validRating = Number(review.rating) || 0;
+
+  // Get final customer avatar - prefer customerData, then fetched profile
+  const finalCustomerAvatar = customerData?.avatar || customerProfile?.avatar || '';
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0">
@@ -152,8 +181,16 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
             {customerData ? (
               <>
-                <div>
-                  <span className="font-medium">Name:</span> {customerData.firstName} {customerData.lastName}
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={finalCustomerAvatar} alt={`${customerData.firstName} ${customerData.lastName}`} />
+                    <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                      {customerData.firstName?.[0]}{customerData.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <span className="font-medium">Name:</span> {customerData.firstName} {customerData.lastName}
+                  </div>
                 </div>
                 {customerData.phone && (
                   <div>
