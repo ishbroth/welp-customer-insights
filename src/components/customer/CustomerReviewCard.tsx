@@ -227,14 +227,15 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             </div>
           )}
           
-          {/* Customer review responses component - hide reply option if user is the review author */}
+          {/* Customer review responses component with proper conversation flow */}
           <CustomerReviewResponse 
             reviewId={review.id}
             responses={review.responses || []}
             hasSubscription={hasSubscription}
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
-            hideReplyOption={isReviewAuthor}
+            hideReplyOption={false}
             onResponseSubmitted={handleResponseSubmitted}
+            reviewAuthorId={review.reviewerId} // Pass the review author ID
           />
         </div>
       ) : (

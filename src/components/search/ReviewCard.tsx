@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 
 interface ReviewCardProps {
   review: {
@@ -22,6 +23,13 @@ interface ReviewCardProps {
     customer_city?: string;
     customer_zipcode?: string;
     customerId?: string;
+    responses?: Array<{
+      id: string;
+      authorId: string;
+      authorName: string;
+      content: string;
+      createdAt: string;
+    }>;
   };
   hasFullAccess: boolean;
   customerData?: {
@@ -190,6 +198,15 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
           </div>
         </div>
       )}
+
+      {/* Response section with proper conversation flow */}
+      <CustomerReviewResponse 
+        reviewId={review.id}
+        responses={review.responses || []}
+        hasSubscription={isSubscribed}
+        isOneTimeUnlocked={hasFullAccess}
+        reviewAuthorId={review.reviewerId} // Pass the review author ID
+      />
     </div>
   );
 };

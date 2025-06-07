@@ -172,31 +172,17 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           />
         </div>
 
-        {/* Customer responses section */}
-        {review.responses && review.responses.length > 0 && (
-          <div className="border-t pt-4 mb-4">
-            <CustomerReviewResponse 
-              reviewId={review.id}
-              responses={review.responses}
-              hasSubscription={hasSubscription}
-              isOneTimeUnlocked={false}
-              hideReplyOption={false} // Allow business to respond
-            />
-          </div>
-        )}
-
-        {/* Show respond option if no responses yet but user is subscribed */}
-        {(!review.responses || review.responses.length === 0) && hasSubscription && (
-          <div className="border-t pt-4 mb-4">
-            <CustomerReviewResponse 
-              reviewId={review.id}
-              responses={[]}
-              hasSubscription={hasSubscription}
-              isOneTimeUnlocked={false}
-              hideReplyOption={false}
-            />
-          </div>
-        )}
+        {/* Customer responses section with proper conversation flow */}
+        <div className="border-t pt-4 mb-4">
+          <CustomerReviewResponse 
+            reviewId={review.id}
+            responses={review.responses || []}
+            hasSubscription={hasSubscription}
+            isOneTimeUnlocked={false}
+            hideReplyOption={false}
+            reviewAuthorId={review.reviewerId} // Pass the review author ID (business who wrote the review)
+          />
+        </div>
 
         {/* Action buttons moved to bottom */}
         <div className="flex justify-end space-x-2 pt-2 border-t">
