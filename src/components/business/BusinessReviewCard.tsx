@@ -13,6 +13,7 @@ import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse
 import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { useReviewResponses } from "@/hooks/useReviewResponses";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -40,6 +41,9 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   const { isSubscribed } = useAuth();
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // Use the useReviewResponses hook to get properly formatted responses
+  const { responses } = useReviewResponses(review.id);
 
   // Load photos from database
   useEffect(() => {
@@ -92,7 +96,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   console.log(`BusinessReviewCard rendering review ${review.id} with reactions:`, review.reactions);
-  console.log(`BusinessReviewCard rendering review ${review.id} with responses:`, review.responses);
+  console.log(`BusinessReviewCard rendering review ${review.id} with responses from hook:`, responses);
 
   return (
     <>
@@ -176,7 +180,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         <div className="border-t pt-4 mb-4">
           <CustomerReviewResponse 
             reviewId={review.id}
-            responses={review.responses || []}
+            responses={responses} // Use responses from the hook instead of props
             hasSubscription={hasSubscription}
             isOneTimeUnlocked={false}
             hideReplyOption={false}
