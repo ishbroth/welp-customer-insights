@@ -81,6 +81,7 @@ const CustomerResponseActions = ({
     );
   }
   
+  // Only show respond button if user can actually respond
   if (canRespond) {
     return (
       !isResponseVisible && (
@@ -95,18 +96,8 @@ const CustomerResponseActions = ({
     );
   }
   
-  return (
-    <Button 
-      variant="outline"
-      asChild
-      className="flex items-center gap-1 text-sm"
-    >
-      <Link to="/subscription">
-        <Lock className="h-4 w-4 mr-1" />
-        Subscribe to respond
-      </Link>
-    </Button>
-  );
+  // If user can't respond, don't show anything (instead of the subscription prompt)
+  return null;
 };
 
 export default CustomerResponseActions;
