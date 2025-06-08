@@ -29,9 +29,11 @@ const CustomerBasicInfo = ({
             size="sm" 
             grayedOut={!currentUser || !hasAccess}
           />
-          <span className={`text-sm font-medium ${!currentUser || !hasAccess ? 'text-gray-400' : 'text-gray-600'}`}>
-            {averageRating.toFixed(1)}
-          </span>
+          {currentUser && hasAccess && (
+            <span className="text-sm font-medium text-gray-600">
+              {averageRating.toFixed(1)}
+            </span>
+          )}
         </div>
       )}
     </div>
