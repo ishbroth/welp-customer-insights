@@ -78,6 +78,9 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
     queryKey: ['reviewResponses', review.id],
     queryFn: async () => {
       console.log(`ReviewCard: Fetching responses for review ${review.id}`);
+      console.log(`ReviewCard: Customer data available:`, customerData);
+      console.log(`ReviewCard: Review customer_name:`, review.customer_name);
+      console.log(`ReviewCard: Review customerId:`, review.customerId);
       
       // First get the responses
       const { data: responseData, error: responseError } = await supabase
@@ -94,6 +97,8 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
       if (!responseData || responseData.length === 0) {
         return [];
       }
+
+      console.log('ReviewCard: Raw response data:', responseData);
 
       // Get author information for each response
       const authorIds = responseData.map(r => r.author_id).filter(Boolean);
@@ -116,48 +121,55 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
 
       console.log('ReviewCard: Profile data found:', profileData);
 
-      // Get the customer name from either customerData or review data
-      const customerFullName = customerData 
-        ? `${customerData.firstName} ${customerData.lastName}`.trim()
-        : review.customer_name || '';
-
-      console.log('ReviewCard: Customer full name for responses:', customerFullName);
-      console.log('ReviewCard: Review customerId:', review.customerId);
-
       // Enhanced logic to get proper names, especially for customer responses
       const formattedResponses = responseData.map((resp: any) => {
         const profile = profileData?.find(p => p.id === resp.author_id);
         
         let authorName = 'User'; // Default fallback
         
-        console.log(`ReviewCard: Processing response from author ${resp.author_id}, customerId: ${review.customerId}`);
+        console.log(`\n=== PROCESSING RESPONSE ${resp.id} ===`);
+        console.log(`Response author_id: ${resp.author_id}`);
+        console.log(`Review customerId: ${review.customerId}`);
+        console.log(`CustomerData:`, customerData);
+        console.log(`Review customer_name: ${review.customer_name}`);
+        console.log(`Profile found:`, profile);
         
         // PRIORITY 1: If this response is from the customer that the review is about
         if (resp.author_id === review.customerId) {
-          console.log('ReviewCard: Response is from the customer that the review is about');
+          console.log('✅ Response is from the customer that the review is about');
           
-          // Use customerData first, then review.customer_name, then profile data
+          // Use customerData first (this should be Isaac Wiley)
           if (customerData && (customerData.firstName || customerData.lastName)) {
             authorName = `${customerData.firstName || ''} ${customerData.lastName || ''}`.trim();
-            console.log('ReviewCard: Using customerData for name:', authorName);
-          } else if (review.customer_name && review.customer_name.trim()) {
+            console.log(`✅ Using customerData for name: "${authorName}"`);
+          } 
+          // Then try review.customer_name
+          else if (review.customer_name && review.customer_name.trim()) {
             authorName = review.customer_name;
-            console.log('ReviewCard: Using review.customer_name for name:', authorName);
-          } else if (profile) {
+            console.log(`✅ Using review.customer_name for name: "${authorName}"`);
+          } 
+          // Finally try profile data
+          else if (profile) {
             if (profile.first_name && profile.last_name) {
               authorName = `${profile.first_name} ${profile.last_name}`;
+              console.log(`✅ Using profile first+last name: "${authorName}"`);
             } else if (profile.first_name) {
               authorName = profile.first_name;
+              console.log(`✅ Using profile first name: "${authorName}"`);
             } else if (profile.last_name) {
               authorName = profile.last_name;
+              console.log(`✅ Using profile last name: "${authorName}"`);
             } else if (profile.name && profile.name.trim()) {
               authorName = profile.name;
+              console.log(`✅ Using profile name field: "${authorName}"`);
             }
-            console.log('ReviewCard: Using profile data for customer name:', authorName);
+          } else {
+            console.log('❌ No name source available, using fallback');
           }
         }
         // PRIORITY 2: If we have profile data for other users
         else if (profile) {
+          console.log('📝 Processing response from other user');
           // For customer accounts, prefer the constructed name from first_name + last_name
           if (profile.type === 'customer') {
             if (profile.first_name && profile.last_name) {
@@ -184,10 +196,13 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
             }
           }
           
-          console.log(`ReviewCard: Response author mapping: ${resp.author_id} -> ${authorName} (profile type: ${profile.type}, first: ${profile.first_name}, last: ${profile.last_name}, name: ${profile.name})`);
+          console.log(`📝 Final name for other user: "${authorName}"`);
         } else {
-          console.log(`ReviewCard: No profile found for author ${resp.author_id}`);
+          console.log(`❌ No profile found for author ${resp.author_id}`);
         }
+
+        console.log(`🎯 FINAL AUTHOR NAME: "${authorName}"`);
+        console.log(`=== END PROCESSING RESPONSE ${resp.id} ===\n`);
 
         return {
           id: resp.id,
@@ -209,6 +224,8 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
 
   // Use enhanced responses if available, otherwise fall back to the original responses
   const responsesToUse = enhancedResponses || review.responses || [];
+
+  console.log('ReviewCard: Final responses to display:', responsesToUse);
 
   return (
     <div className="border-b border-gray-100 pb-4 last:border-b-0">
