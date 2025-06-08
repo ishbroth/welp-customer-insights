@@ -1,15 +1,16 @@
 
 import { useState } from "react";
-import { MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import CustomerActions from "./CustomerActions";
 import ExpandedCustomerView from "./ExpandedCustomerView";
 import NoReviews from "./NoReviews";
-import StarRating from "@/components/StarRating";
+import CustomerBasicInfo from "./CustomerBasicInfo";
+import CustomerContactInfo from "./CustomerContactInfo";
+import CustomerReviewBadge from "./CustomerReviewBadge";
 
 interface CustomerCardProps {
   customer: {
@@ -117,6 +118,7 @@ const CustomerCard = ({
   const averageRating = calculateAverageRating();
   const hasReviews = customer.reviews && customer.reviews.length > 0;
   const hasAccess = currentUser && hasFullAccessFunction(customer.id);
+  const customerName = customerInfo.find(info => info.label === 'Name')?.value || 'Unknown Customer';
 
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
@@ -124,50 +126,25 @@ const CustomerCard = ({
         <div className={`flex items-start justify-between ${currentUser ? 'cursor-pointer' : ''}`} onClick={handleCardClick}>
           <div className="flex-grow min-w-0">
             {/* Customer name with average rating */}
-            <div className="flex items-center gap-3 mb-3">
-              <h3 className="font-semibold text-lg">
-                {customerInfo.find(info => info.label === 'Name')?.value || 'Unknown Customer'}
-              </h3>
-              {hasReviews && (
-                <div className="flex items-center gap-2">
-                  <StarRating 
-                    rating={averageRating} 
-                    size="sm" 
-                    grayedOut={!currentUser || !hasAccess}
-                  />
-                  <span className={`text-sm font-medium ${!currentUser || !hasAccess ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {averageRating.toFixed(1)}
-                  </span>
-                </div>
-              )}
-            </div>
+            <CustomerBasicInfo 
+              customerName={customerName}
+              hasReviews={hasReviews}
+              averageRating={averageRating}
+              currentUser={currentUser}
+              hasAccess={hasAccess}
+            />
 
             {/* Customer information - show all identifying info for everyone */}
-            <div className="space-y-1 text-sm text-gray-600 mb-3">
-              {customerInfo.filter(info => info.label !== 'Name').map((info, index) => (
-                <div key={index} className="flex items-start gap-1">
-                  {info.label === 'Location' && <MapPin className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />}
-                  <span className="font-medium">{info.label}:</span>
-                  <span>{info.value}</span>
-                </div>
-              ))}
-              {!currentUser && (
-                <div className="text-xs text-gray-500 mt-2">
-                  Sign in to view reviews and ratings
-                </div>
-              )}
-            </div>
+            <CustomerContactInfo 
+              customerInfo={customerInfo}
+              currentUser={currentUser}
+            />
             
             {/* Review count */}
-            {hasReviews ? (
-              <Badge variant="secondary" className="text-xs">
-                {customer.reviews.length} review{customer.reviews.length !== 1 ? 's' : ''}
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs text-gray-500">
-                No reviews
-              </Badge>
-            )}
+            <CustomerReviewBadge 
+              hasReviews={hasReviews}
+              reviewCount={customer.reviews?.length || 0}
+            />
           </div>
           
           <div className="flex items-center space-x-2">
