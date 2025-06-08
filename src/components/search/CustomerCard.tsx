@@ -79,15 +79,21 @@ const CustomerCard = ({
     const name = [customer.firstName, customer.lastName].filter(Boolean).join(' ');
     if (name) info.push({ label: 'Name', value: name });
     
-    // Phone
-    if (customer.phone) info.push({ label: 'Phone', value: customer.phone });
+    // Phone - only show if user has access
+    if (customer.phone && currentUser && hasFullAccessFunction(customer.id)) {
+      info.push({ label: 'Phone', value: customer.phone });
+    }
     
-    // Address
-    if (customer.address) info.push({ label: 'Address', value: customer.address });
+    // Address - only show if user has access
+    if (customer.address && currentUser && hasFullAccessFunction(customer.id)) {
+      info.push({ label: 'Address', value: customer.address });
+    }
     
-    // City, State, Zip
+    // City, State, Zip - only show if user has access
     const location = [customer.city, customer.state, customer.zipCode].filter(Boolean).join(', ');
-    if (location) info.push({ label: 'Location', value: location });
+    if (location && currentUser && hasFullAccessFunction(customer.id)) {
+      info.push({ label: 'Location', value: location });
+    }
     
     return info;
   };
@@ -100,17 +106,22 @@ const CustomerCard = ({
   };
 
   const handleCardClick = () => {
+    // Only allow expansion if user is logged in
+    if (!currentUser) {
+      return;
+    }
     setIsExpanded(!isExpanded);
   };
 
   const customerInfo = getCustomerInfo();
   const averageRating = calculateAverageRating();
   const hasReviews = customer.reviews && customer.reviews.length > 0;
+  const hasAccess = currentUser && hasFullAccessFunction(customer.id);
 
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-4">
-        <div className="flex items-start justify-between cursor-pointer" onClick={handleCardClick}>
+        <div className={`flex items-start justify-between ${currentUser ? 'cursor-pointer' : ''}`} onClick={handleCardClick}>
           <div className="flex-grow min-w-0">
             {/* Customer name with average rating */}
             <div className="flex items-center gap-3 mb-3">
@@ -119,15 +130,19 @@ const CustomerCard = ({
               </h3>
               {hasReviews && (
                 <div className="flex items-center gap-2">
-                  <StarRating rating={averageRating} size="sm" />
-                  <span className="text-sm text-gray-600 font-medium">
+                  <StarRating 
+                    rating={averageRating} 
+                    size="sm" 
+                    grayedOut={!hasAccess}
+                  />
+                  <span className={`text-sm font-medium ${!hasAccess ? 'text-gray-400' : 'text-gray-600'}`}>
                     {averageRating.toFixed(1)}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Customer information */}
+            {/* Customer information - limited for non-authenticated users */}
             <div className="space-y-1 text-sm text-gray-600 mb-3">
               {customerInfo.filter(info => info.label !== 'Name').map((info, index) => (
                 <div key={index} className="flex items-start gap-1">
@@ -136,6 +151,11 @@ const CustomerCard = ({
                   <span>{info.value}</span>
                 </div>
               ))}
+              {!currentUser && (
+                <div className="text-xs text-gray-500 mt-2">
+                  Sign in to view full details
+                </div>
+              )}
             </div>
             
             {/* Review count */}
@@ -158,13 +178,15 @@ const CustomerCard = ({
               onActionClick={(e) => e.stopPropagation()}
               onExpandClick={handleCardClick}
             />
-            <Button variant="ghost" size="sm">
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
+            {currentUser && (
+              <Button variant="ghost" size="sm">
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            )}
           </div>
         </div>
         
-        {isExpanded && (
+        {isExpanded && currentUser && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             {sortedReviews && sortedReviews.length > 0 ? (
               <ExpandedCustomerView 

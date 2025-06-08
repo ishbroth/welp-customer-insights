@@ -46,7 +46,7 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) => {
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, currentUser } = useAuth();
 
   // Fetch customer profile if we have customerId but no customer data
   const { data: customerProfile } = useCustomerProfileData(
@@ -54,14 +54,18 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
     !!customerData?.avatar
   );
 
-  // Fetch enhanced responses with proper author names
-  const { data: enhancedResponses } = useEnhancedResponses(review, customerData);
+  // Fetch enhanced responses with proper author names - only if user is logged in
+  const { data: enhancedResponses } = useEnhancedResponses(
+    review, 
+    customerData,
+    !!currentUser // Only fetch if user is logged in
+  );
 
   // Get final customer avatar - prefer customerData, then fetched profile
   const finalCustomerAvatar = customerData?.avatar || customerProfile?.avatar || '';
 
-  // Use enhanced responses if available, otherwise fall back to the original responses
-  const responsesToUse = enhancedResponses || review.responses || [];
+  // Use enhanced responses if available and user is logged in, otherwise fall back to empty array
+  const responsesToUse = currentUser && (enhancedResponses || review.responses || []) || [];
 
   console.log('ReviewCard: Final responses to display:', responsesToUse);
 
@@ -96,14 +100,16 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
         finalCustomerAvatar={finalCustomerAvatar}
       />
 
-      {/* Response section with enhanced conversation flow */}
-      <CustomerReviewResponse 
-        reviewId={review.id}
-        responses={responsesToUse}
-        hasSubscription={isSubscribed}
-        isOneTimeUnlocked={hasFullAccess}
-        reviewAuthorId={review.reviewerId}
-      />
+      {/* Response section - only show if user is logged in */}
+      {currentUser && (
+        <CustomerReviewResponse 
+          reviewId={review.id}
+          responses={responsesToUse}
+          hasSubscription={isSubscribed}
+          isOneTimeUnlocked={hasFullAccess}
+          reviewAuthorId={review.reviewerId}
+        />
+      )}
     </div>
   );
 };

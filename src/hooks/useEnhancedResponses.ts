@@ -26,7 +26,7 @@ interface Review {
   }>;
 }
 
-export const useEnhancedResponses = (review: Review, customerData?: CustomerData) => {
+export const useEnhancedResponses = (review: Review, customerData?: CustomerData, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['reviewResponses', review.id],
     queryFn: async () => {
@@ -167,6 +167,6 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
       console.log('useEnhancedResponses: Enhanced responses with proper author names:', formattedResponses);
       return formattedResponses;
     },
-    enabled: !!review.id
+    enabled: enabled && !!review.id
   });
 };
