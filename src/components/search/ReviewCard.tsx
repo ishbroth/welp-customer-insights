@@ -116,13 +116,48 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
 
       console.log('ReviewCard: Profile data found:', profileData);
 
+      // Get the customer name from either customerData or review data
+      const customerFullName = customerData 
+        ? `${customerData.firstName} ${customerData.lastName}`.trim()
+        : review.customer_name || '';
+
+      console.log('ReviewCard: Customer full name for responses:', customerFullName);
+      console.log('ReviewCard: Review customerId:', review.customerId);
+
       // Enhanced logic to get proper names, especially for customer responses
       const formattedResponses = responseData.map((resp: any) => {
         const profile = profileData?.find(p => p.id === resp.author_id);
         
         let authorName = 'User'; // Default fallback
         
-        if (profile) {
+        console.log(`ReviewCard: Processing response from author ${resp.author_id}, customerId: ${review.customerId}`);
+        
+        // PRIORITY 1: If this response is from the customer that the review is about
+        if (resp.author_id === review.customerId) {
+          console.log('ReviewCard: Response is from the customer that the review is about');
+          
+          // Use customerData first, then review.customer_name, then profile data
+          if (customerData && (customerData.firstName || customerData.lastName)) {
+            authorName = `${customerData.firstName || ''} ${customerData.lastName || ''}`.trim();
+            console.log('ReviewCard: Using customerData for name:', authorName);
+          } else if (review.customer_name && review.customer_name.trim()) {
+            authorName = review.customer_name;
+            console.log('ReviewCard: Using review.customer_name for name:', authorName);
+          } else if (profile) {
+            if (profile.first_name && profile.last_name) {
+              authorName = `${profile.first_name} ${profile.last_name}`;
+            } else if (profile.first_name) {
+              authorName = profile.first_name;
+            } else if (profile.last_name) {
+              authorName = profile.last_name;
+            } else if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+            }
+            console.log('ReviewCard: Using profile data for customer name:', authorName);
+          }
+        }
+        // PRIORITY 2: If we have profile data for other users
+        else if (profile) {
           // For customer accounts, prefer the constructed name from first_name + last_name
           if (profile.type === 'customer') {
             if (profile.first_name && profile.last_name) {
@@ -134,14 +169,7 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
             } else if (profile.name && profile.name.trim()) {
               authorName = profile.name;
             } else {
-              // If this is the customer that the review is about, use the customer name from the review
-              if (resp.author_id === review.customerId && review.customer_name) {
-                authorName = review.customer_name;
-              } else if (customerData && resp.author_id === review.customerId) {
-                authorName = `${customerData.firstName} ${customerData.lastName}`.trim();
-              } else {
-                authorName = 'Customer';
-              }
+              authorName = 'Customer';
             }
           } else {
             // For business accounts, prefer the name field
@@ -159,13 +187,6 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
           console.log(`ReviewCard: Response author mapping: ${resp.author_id} -> ${authorName} (profile type: ${profile.type}, first: ${profile.first_name}, last: ${profile.last_name}, name: ${profile.name})`);
         } else {
           console.log(`ReviewCard: No profile found for author ${resp.author_id}`);
-          
-          // If no profile found but this is the customer the review is about
-          if (resp.author_id === review.customerId && review.customer_name) {
-            authorName = review.customer_name;
-          } else if (customerData && resp.author_id === review.customerId) {
-            authorName = `${customerData.firstName} ${customerData.lastName}`.trim();
-          }
         }
 
         return {
