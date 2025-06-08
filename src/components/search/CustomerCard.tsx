@@ -75,23 +75,23 @@ const CustomerCard = ({
   const getCustomerInfo = () => {
     const info = [];
     
-    // Customer name
+    // Customer name - always show this
     const name = [customer.firstName, customer.lastName].filter(Boolean).join(' ');
     if (name) info.push({ label: 'Name', value: name });
     
-    // Phone - only show if user has access
-    if (customer.phone && currentUser && hasFullAccessFunction(customer.id)) {
+    // Phone - show for everyone (this is public identifying information from the review)
+    if (customer.phone) {
       info.push({ label: 'Phone', value: customer.phone });
     }
     
-    // Address - only show if user has access
-    if (customer.address && currentUser && hasFullAccessFunction(customer.id)) {
+    // Address - show for everyone (this is public identifying information from the review)
+    if (customer.address) {
       info.push({ label: 'Address', value: customer.address });
     }
     
-    // City, State, Zip - only show if user has access
+    // City, State, Zip - show for everyone (this is public identifying information from the review)
     const location = [customer.city, customer.state, customer.zipCode].filter(Boolean).join(', ');
-    if (location && currentUser && hasFullAccessFunction(customer.id)) {
+    if (location) {
       info.push({ label: 'Location', value: location });
     }
     
@@ -133,16 +133,16 @@ const CustomerCard = ({
                   <StarRating 
                     rating={averageRating} 
                     size="sm" 
-                    grayedOut={!hasAccess}
+                    grayedOut={!currentUser || !hasAccess}
                   />
-                  <span className={`text-sm font-medium ${!hasAccess ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span className={`text-sm font-medium ${!currentUser || !hasAccess ? 'text-gray-400' : 'text-gray-600'}`}>
                     {averageRating.toFixed(1)}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Customer information - limited for non-authenticated users */}
+            {/* Customer information - show all identifying info for everyone */}
             <div className="space-y-1 text-sm text-gray-600 mb-3">
               {customerInfo.filter(info => info.label !== 'Name').map((info, index) => (
                 <div key={index} className="flex items-start gap-1">
@@ -153,7 +153,7 @@ const CustomerCard = ({
               ))}
               {!currentUser && (
                 <div className="text-xs text-gray-500 mt-2">
-                  Sign in to view full details
+                  Sign in to view reviews and ratings
                 </div>
               )}
             </div>
