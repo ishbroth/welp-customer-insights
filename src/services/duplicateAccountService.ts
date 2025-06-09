@@ -5,7 +5,7 @@ import { checkCustomerNameAndPhoneExists } from "./duplicateAccount/customerChec
 import { DuplicateCheckResult } from "./duplicateAccount/types";
 
 // Re-export types for backward compatibility
-export { DuplicateCheckResult } from "./duplicateAccount/types";
+export type { DuplicateCheckResult } from "./duplicateAccount/types";
 
 // Re-export individual checkers for direct use if needed
 export { checkEmailExists } from "./duplicateAccount/emailChecker";
