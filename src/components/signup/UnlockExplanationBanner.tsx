@@ -26,7 +26,7 @@ const UnlockExplanationBanner = () => {
               <Star className="h-4 w-4 text-welp-primary" />
               <div>
                 <div className="font-medium text-gray-900">Full subscription</div>
-                <div className="text-gray-500">Access all reviews & features</div>
+                <div className="text-gray-500">$11.99/month - Access all reviews & features</div>
               </div>
             </div>
           </div>
