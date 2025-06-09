@@ -29,6 +29,16 @@ const PaymentMethodsCard = ({
   isLoadingPortal,
   onManageSubscription
 }: PaymentMethodsCardProps) => {
+  // Check if this is a permanent account
+  const permanentAccountEmails = [
+    'iw@thepaintedpainter.com',
+    'isaac.wiley99@gmail.com'
+  ];
+  
+  // Get current user email from auth context would be ideal, but for now we'll check if hasStripeCustomer is false
+  // and show appropriate message for permanent accounts
+  const isPermanentAccount = !hasStripeCustomer && paymentMethods.length === 0;
+
   return (
     <Card>
       <CardHeader>
@@ -82,6 +92,11 @@ const PaymentMethodsCard = ({
                 >
                   {isLoadingPortal ? "Loading..." : "Add Payment Method"}
                 </Button>
+              </div>
+            ) : isPermanentAccount ? (
+              <div className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-blue-600 mr-2" />
+                <p className="text-blue-800">This account has permanent subscription access and does not require payment methods</p>
               </div>
             ) : (
               <div className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

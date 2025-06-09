@@ -49,6 +49,17 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if this is a permanent account that doesn't need Stripe customer portal
+    const permanentAccountEmails = [
+      'iw@thepaintedpainter.com',
+      'isaac.wiley99@gmail.com'
+    ];
+    
+    if (permanentAccountEmails.includes(user.email)) {
+      logStep("Permanent account detected, cannot access customer portal", { email: user.email });
+      throw new Error("This account has permanent subscription access and cannot manage payment methods through Stripe. Contact support for any billing changes.");
+    }
+
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     

@@ -52,8 +52,20 @@ const BillingPage = () => {
     }
   }, [searchParams, processSuccessfulPurchase]);
 
+  // Check if this is a permanent account
+  const permanentAccountEmails = [
+    'iw@thepaintedpainter.com',
+    'isaac.wiley99@gmail.com'
+  ];
+  const isPermanentAccount = currentUser?.email && permanentAccountEmails.includes(currentUser.email);
+
   // Handle opening Stripe customer portal
   const handleManageSubscription = async () => {
+    if (isPermanentAccount) {
+      toast.error("This account has permanent subscription access and cannot manage payment methods through Stripe. Contact support for any billing changes.");
+      return;
+    }
+
     if (!hasStripeCustomer) {
       toast.error("You need to have an active subscription to manage payment methods. Please subscribe first.");
       return;
@@ -70,6 +82,8 @@ const BillingPage = () => {
       if (error.message?.includes("No Stripe customer found")) {
         toast.error("You need to subscribe first to manage your billing settings.");
         setHasStripeCustomer(false);
+      } else if (error.message?.includes("permanent subscription access")) {
+        toast.error("This account has permanent access and cannot manage payment methods through Stripe.");
       } else {
         toast.error("Could not open subscription management portal. Please try again.");
       }
@@ -81,12 +95,7 @@ const BillingPage = () => {
   const handleUnsubscribe = async () => {
     try {
       // For permanent accounts, just update local state
-      const permanentAccountEmails = [
-        'iw@thepaintedpainter.com',
-        'isaac.wiley99@gmail.com'
-      ];
-      
-      if (currentUser?.email && permanentAccountEmails.includes(currentUser.email)) {
+      if (isPermanentAccount) {
         setIsSubscribed(false);
         toast.success("Subscription cancelled successfully.");
         return;
