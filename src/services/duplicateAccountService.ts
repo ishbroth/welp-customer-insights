@@ -72,87 +72,109 @@ export const checkPhoneExists = async (phone: string): Promise<{ exists: boolean
 };
 
 /**
- * Check if business name already exists
+ * Check if business name AND phone exist together
  */
-export const checkBusinessNameExists = async (businessName: string): Promise<boolean> => {
+export const checkBusinessNameAndPhoneExists = async (businessName: string, phone: string): Promise<{ exists: boolean; email?: string }> => {
   try {
-    const { data: businesses, error } = await supabase
-      .from('business_info')
-      .select('business_name')
-      .ilike('business_name', businessName);
+    const cleanPhone = phone.replace(/\D/g, '');
     
-    if (error) {
-      console.error("Error checking business name:", error);
-      return false;
+    // First get all profiles with similar phone numbers
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, phone, email')
+      .ilike('phone', `%${cleanPhone.slice(-10)}%`);
+    
+    if (profileError || !profiles?.length) {
+      return { exists: false };
     }
     
-    return businesses && businesses.length > 0;
+    // Get matching profile by phone
+    const matchingProfile = profiles.find(profile => {
+      const profilePhone = profile.phone?.replace(/\D/g, '') || '';
+      return profilePhone.includes(cleanPhone.slice(-10)) || cleanPhone.includes(profilePhone.slice(-10));
+    });
+    
+    if (!matchingProfile) {
+      return { exists: false };
+    }
+    
+    // Now check if this profile also has a matching business name
+    const { data: businessInfo, error: businessError } = await supabase
+      .from('business_info')
+      .select('business_name')
+      .eq('id', matchingProfile.id)
+      .ilike('business_name', businessName);
+    
+    if (businessError || !businessInfo?.length) {
+      return { exists: false };
+    }
+    
+    return {
+      exists: true,
+      email: matchingProfile.email || undefined
+    };
   } catch (error) {
-    console.error("Error checking business name:", error);
-    return false;
+    console.error("Error checking business name and phone:", error);
+    return { exists: false };
   }
 };
 
 /**
- * Check if customer name already exists
+ * Check if customer name AND phone exist together
  */
-export const checkCustomerNameExists = async (firstName: string, lastName: string): Promise<boolean> => {
+export const checkCustomerNameAndPhoneExists = async (firstName: string, lastName: string, phone: string): Promise<{ exists: boolean; email?: string }> => {
   try {
     const fullName = `${firstName} ${lastName}`.trim();
-    if (!fullName) return false;
+    if (!fullName) return { exists: false };
+    
+    const cleanPhone = phone.replace(/\D/g, '');
     
     const { data: profiles, error } = await supabase
       .from('profiles')
-      .select('first_name, last_name, name')
-      .eq('type', 'customer');
+      .select('first_name, last_name, name, phone, email')
+      .eq('type', 'customer')
+      .ilike('phone', `%${cleanPhone.slice(-10)}%`);
     
-    if (error) {
-      console.error("Error checking customer name:", error);
-      return false;
+    if (error || !profiles?.length) {
+      return { exists: false };
     }
     
-    // Check if any profile has this name combination
-    const matchingProfile = profiles?.find(profile => {
+    // Check if any profile has both matching name and phone
+    const matchingProfile = profiles.find(profile => {
+      const profilePhone = profile.phone?.replace(/\D/g, '') || '';
+      const phoneMatches = profilePhone.includes(cleanPhone.slice(-10)) || cleanPhone.includes(profilePhone.slice(-10));
+      
+      if (!phoneMatches) return false;
+      
       const profileFullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
       const profileName = profile.name?.trim() || '';
-      return profileFullName.toLowerCase() === fullName.toLowerCase() || 
-             profileName.toLowerCase() === fullName.toLowerCase();
+      const nameMatches = profileFullName.toLowerCase() === fullName.toLowerCase() || 
+                         profileName.toLowerCase() === fullName.toLowerCase();
+      
+      return nameMatches;
     });
     
-    return !!matchingProfile;
+    return {
+      exists: !!matchingProfile,
+      email: matchingProfile?.email || undefined
+    };
   } catch (error) {
-    console.error("Error checking customer name:", error);
-    return false;
+    console.error("Error checking customer name and phone:", error);
+    return { exists: false };
   }
 };
 
 /**
  * Comprehensive duplicate account check for business accounts
+ * Only shows popup if name AND phone both match existing accounts
  */
 export const checkForDuplicateAccount = async (
   email: string, 
   phone: string,
   businessName?: string
 ): Promise<DuplicateCheckResult> => {
-  const checks = await Promise.all([
-    checkEmailExists(email),
-    checkPhoneExists(phone),
-    businessName ? checkBusinessNameExists(businessName) : Promise.resolve(false)
-  ]);
-  
-  const [emailExists, phoneResult, businessNameExists] = checks;
-  
-  // Priority order: email/phone duplicates (no continue), then business name (allow continue)
-  if (emailExists && phoneResult.exists) {
-    return {
-      isDuplicate: true,
-      duplicateType: 'both',
-      existingEmail: email,
-      existingPhone: phone,
-      allowContinue: false
-    };
-  }
-  
+  // First check for email duplicates (always block these)
+  const emailExists = await checkEmailExists(email);
   if (emailExists) {
     return {
       isDuplicate: true,
@@ -162,22 +184,18 @@ export const checkForDuplicateAccount = async (
     };
   }
   
-  if (phoneResult.exists) {
-    return {
-      isDuplicate: true,
-      duplicateType: 'phone',
-      existingPhone: phone,
-      existingEmail: phoneResult.email,
-      allowContinue: false
-    };
-  }
-  
-  if (businessNameExists) {
-    return {
-      isDuplicate: true,
-      duplicateType: 'business_name',
-      allowContinue: true
-    };
+  // If business name is provided, check for business name + phone combination
+  if (businessName) {
+    const businessNameAndPhoneResult = await checkBusinessNameAndPhoneExists(businessName, phone);
+    if (businessNameAndPhoneResult.exists) {
+      return {
+        isDuplicate: true,
+        duplicateType: 'business_name',
+        existingPhone: phone,
+        existingEmail: businessNameAndPhoneResult.email,
+        allowContinue: true // Allow continue for business name matches
+      };
+    }
   }
   
   return {
@@ -189,6 +207,7 @@ export const checkForDuplicateAccount = async (
 
 /**
  * Comprehensive duplicate account check for customer accounts
+ * Only shows popup if name AND phone both match existing accounts
  */
 export const checkForDuplicateCustomerAccount = async (
   email: string, 
@@ -196,25 +215,8 @@ export const checkForDuplicateCustomerAccount = async (
   firstName?: string,
   lastName?: string
 ): Promise<DuplicateCheckResult> => {
-  const checks = await Promise.all([
-    checkEmailExists(email),
-    checkPhoneExists(phone),
-    (firstName && lastName) ? checkCustomerNameExists(firstName, lastName) : Promise.resolve(false)
-  ]);
-  
-  const [emailExists, phoneResult, customerNameExists] = checks;
-  
-  // Priority order: email/phone duplicates (no continue), then customer name (allow continue)
-  if (emailExists && phoneResult.exists) {
-    return {
-      isDuplicate: true,
-      duplicateType: 'both',
-      existingEmail: email,
-      existingPhone: phone,
-      allowContinue: false
-    };
-  }
-  
+  // First check for email duplicates (always block these)
+  const emailExists = await checkEmailExists(email);
   if (emailExists) {
     return {
       isDuplicate: true,
@@ -224,22 +226,18 @@ export const checkForDuplicateCustomerAccount = async (
     };
   }
   
-  if (phoneResult.exists) {
-    return {
-      isDuplicate: true,
-      duplicateType: 'phone',
-      existingPhone: phone,
-      existingEmail: phoneResult.email,
-      allowContinue: false
-    };
-  }
-  
-  if (customerNameExists) {
-    return {
-      isDuplicate: true,
-      duplicateType: 'customer_name',
-      allowContinue: true
-    };
+  // If customer name is provided, check for customer name + phone combination
+  if (firstName && lastName) {
+    const customerNameAndPhoneResult = await checkCustomerNameAndPhoneExists(firstName, lastName, phone);
+    if (customerNameAndPhoneResult.exists) {
+      return {
+        isDuplicate: true,
+        duplicateType: 'customer_name',
+        existingPhone: phone,
+        existingEmail: customerNameAndPhoneResult.email,
+        allowContinue: true // Allow continue for customer name matches
+      };
+    }
   }
   
   return {

@@ -80,14 +80,10 @@ export const DuplicateAccountDialog = ({
     switch (duplicateResult.duplicateType) {
       case 'email':
         return `An account with the email ${duplicateResult.existingEmail} already exists.`;
-      case 'phone':
-        return `An account with the phone number ${duplicateResult.existingPhone} already exists.`;
-      case 'both':
-        return `An account with this email and phone number already exists.`;
       case 'business_name':
-        return `A business with this name already exists. You can continue if this is a different location.`;
+        return `A business with this name and phone number already exists. You can continue if this is a different location.`;
       case 'customer_name':
-        return `A customer with this name already exists. You can continue if this is a different person with the same name.`;
+        return `A customer with this name and phone number already exists. You can continue if this is a different person with the same name.`;
       default:
         return "An account with this information already exists.";
     }
@@ -96,9 +92,9 @@ export const DuplicateAccountDialog = ({
   const getDialogTitle = () => {
     switch (duplicateResult.duplicateType) {
       case 'business_name':
-        return 'Business Name Already Exists';
+        return 'Business Already Exists';
       case 'customer_name':
-        return 'Customer Name Already Exists';
+        return 'Customer Already Exists';
       default:
         return 'Account Already Exists';
     }
@@ -197,7 +193,7 @@ export const DuplicateAccountDialog = ({
                   variant="ghost"
                   className="w-full"
                 >
-                  Go Back and Change Name
+                  Go Back and Change Information
                 </Button>
               )}
               
@@ -207,7 +203,7 @@ export const DuplicateAccountDialog = ({
                   variant="ghost"
                   className="w-full"
                 >
-                  Go Back and Change Name
+                  Go Back and Change Information
                 </Button>
               )}
             </>
