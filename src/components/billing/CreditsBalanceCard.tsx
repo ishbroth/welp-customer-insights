@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCredits } from "@/hooks/useCredits";
 
 const CreditsBalanceCard = () => {
-  const { credits, isLoading, refetchCredits } = useCredits();
+  const { balance, isLoading, loadCreditsData } = useCredits();
 
   const handleBuyCredits = () => {
     window.location.href = '/buy-credits';
@@ -28,7 +28,7 @@ const CreditsBalanceCard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-primary">
-                  {credits?.balance || 0}
+                  {balance || 0}
                 </p>
                 <p className="text-sm text-gray-500">
                   Available credits
@@ -38,7 +38,7 @@ const CreditsBalanceCard = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={refetchCredits}
+                  onClick={loadCreditsData}
                   disabled={isLoading}
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
