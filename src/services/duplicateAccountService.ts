@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
-  duplicateType: 'email' | 'phone' | 'both' | 'business_name' | null;
+  duplicateType: 'email' | 'phone' | 'both' | 'business_name' | 'customer_name' | null;
   existingEmail?: string;
   existingPhone?: string;
   allowContinue?: boolean; // New field to control continue option
@@ -94,7 +94,40 @@ export const checkBusinessNameExists = async (businessName: string): Promise<boo
 };
 
 /**
- * Comprehensive duplicate account check
+ * Check if customer name already exists
+ */
+export const checkCustomerNameExists = async (firstName: string, lastName: string): Promise<boolean> => {
+  try {
+    const fullName = `${firstName} ${lastName}`.trim();
+    if (!fullName) return false;
+    
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, name')
+      .eq('type', 'customer');
+    
+    if (error) {
+      console.error("Error checking customer name:", error);
+      return false;
+    }
+    
+    // Check if any profile has this name combination
+    const matchingProfile = profiles?.find(profile => {
+      const profileFullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+      const profileName = profile.name?.trim() || '';
+      return profileFullName.toLowerCase() === fullName.toLowerCase() || 
+             profileName.toLowerCase() === fullName.toLowerCase();
+    });
+    
+    return !!matchingProfile;
+  } catch (error) {
+    console.error("Error checking customer name:", error);
+    return false;
+  }
+};
+
+/**
+ * Comprehensive duplicate account check for business accounts
  */
 export const checkForDuplicateAccount = async (
   email: string, 
@@ -143,6 +176,68 @@ export const checkForDuplicateAccount = async (
     return {
       isDuplicate: true,
       duplicateType: 'business_name',
+      allowContinue: true
+    };
+  }
+  
+  return {
+    isDuplicate: false,
+    duplicateType: null,
+    allowContinue: false
+  };
+};
+
+/**
+ * Comprehensive duplicate account check for customer accounts
+ */
+export const checkForDuplicateCustomerAccount = async (
+  email: string, 
+  phone: string,
+  firstName?: string,
+  lastName?: string
+): Promise<DuplicateCheckResult> => {
+  const checks = await Promise.all([
+    checkEmailExists(email),
+    checkPhoneExists(phone),
+    (firstName && lastName) ? checkCustomerNameExists(firstName, lastName) : Promise.resolve(false)
+  ]);
+  
+  const [emailExists, phoneResult, customerNameExists] = checks;
+  
+  // Priority order: email/phone duplicates (no continue), then customer name (allow continue)
+  if (emailExists && phoneResult.exists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'both',
+      existingEmail: email,
+      existingPhone: phone,
+      allowContinue: false
+    };
+  }
+  
+  if (emailExists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'email',
+      existingEmail: email,
+      allowContinue: false
+    };
+  }
+  
+  if (phoneResult.exists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'phone',
+      existingPhone: phone,
+      existingEmail: phoneResult.email,
+      allowContinue: false
+    };
+  }
+  
+  if (customerNameExists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'customer_name',
       allowContinue: true
     };
   }

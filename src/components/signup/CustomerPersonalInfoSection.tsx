@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
-import { checkForDuplicateAccount, DuplicateCheckResult } from "@/services/duplicateAccountService";
+import { checkForDuplicateCustomerAccount, DuplicateCheckResult } from "@/services/duplicateAccountService";
 import { useState, useEffect } from "react";
 
 interface CustomerPersonalInfoSectionProps {
@@ -46,7 +46,7 @@ export const CustomerPersonalInfoSection = ({
     const timeoutId = setTimeout(async () => {
       setIsChecking(true);
       try {
-        const result = await checkForDuplicateAccount(email, phone);
+        const result = await checkForDuplicateCustomerAccount(email, phone, firstName, lastName);
         setDuplicateResult(result);
         if (result.isDuplicate) {
           setShowDuplicateDialog(true);
@@ -59,7 +59,7 @@ export const CustomerPersonalInfoSection = ({
     }, 1000); // 1 second delay
 
     return () => clearTimeout(timeoutId);
-  }, [email, phone]);
+  }, [email, phone, firstName, lastName]);
 
   return (
     <>

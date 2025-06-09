@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -85,8 +86,21 @@ export const DuplicateAccountDialog = ({
         return `An account with this email and phone number already exists.`;
       case 'business_name':
         return `A business with this name already exists. You can continue if this is a different location.`;
+      case 'customer_name':
+        return `A customer with this name already exists. You can continue if this is a different person with the same name.`;
       default:
         return "An account with this information already exists.";
+    }
+  };
+
+  const getDialogTitle = () => {
+    switch (duplicateResult.duplicateType) {
+      case 'business_name':
+        return 'Business Name Already Exists';
+      case 'customer_name':
+        return 'Customer Name Already Exists';
+      default:
+        return 'Account Already Exists';
     }
   };
 
@@ -142,16 +156,14 @@ export const DuplicateAccountDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {duplicateResult.duplicateType === 'business_name' ? 'Business Name Already Exists' : 'Account Already Exists'}
-          </DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription>
             {getDuplicateMessage()}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-3">
-          {duplicateResult.duplicateType !== 'business_name' && (
+          {!duplicateResult.allowContinue && (
             <>
               <Button
                 onClick={handleSignIn}
@@ -171,23 +183,34 @@ export const DuplicateAccountDialog = ({
           )}
           
           {duplicateResult.allowContinue && (
-            <Button
-              onClick={onClose}
-              variant={duplicateResult.duplicateType === 'business_name' ? 'default' : 'ghost'}
-              className={duplicateResult.duplicateType === 'business_name' ? 'welp-button w-full' : 'w-full'}
-            >
-              Continue Anyway
-            </Button>
-          )}
-          
-          {duplicateResult.duplicateType === 'business_name' && (
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              className="w-full"
-            >
-              Go Back and Change Name
-            </Button>
+            <>
+              <Button
+                onClick={onClose}
+                className="welp-button w-full"
+              >
+                Continue Anyway
+              </Button>
+              
+              {duplicateResult.duplicateType === 'business_name' && (
+                <Button
+                  onClick={onClose}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Go Back and Change Name
+                </Button>
+              )}
+              
+              {duplicateResult.duplicateType === 'customer_name' && (
+                <Button
+                  onClick={onClose}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Go Back and Change Name
+                </Button>
+              )}
+            </>
           )}
         </div>
       </DialogContent>
