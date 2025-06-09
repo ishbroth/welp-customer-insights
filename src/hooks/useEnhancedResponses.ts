@@ -78,6 +78,7 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
 
       console.log('useEnhancedResponses: Customer full name for responses:', customerFullName);
       console.log('useEnhancedResponses: Review author (business):', review.reviewerName);
+      console.log('useEnhancedResponses: Review reviewerId:', review.reviewerId);
 
       // Enhanced logic to get proper names for all response authors
       const formattedResponses = responseData.map((resp: any) => {
@@ -93,7 +94,7 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
         console.log(`Profile found:`, profile);
         
         // PRIORITY 1: If this response is from the customer that the review is about
-        if (resp.author_id === review.customerId) {
+        if (resp.author_id === review.customerId && review.customerId) {
           console.log('✅ Response is from the customer that the review is about');
           
           // Use customerData if available (this should be Isaac Wiley)
@@ -119,7 +120,7 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
           }
         }
         // PRIORITY 2: If this response is from the business who wrote the review
-        else if (resp.author_id === review.reviewerId) {
+        else if (resp.author_id === review.reviewerId && review.reviewerId) {
           console.log('✅ Response is from the business who wrote the review');
           
           // First try to use the reviewer name from the review data
@@ -141,6 +142,9 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
               authorName = 'Business';
               console.log(`✅ Using fallback business name: "${authorName}"`);
             }
+          } else {
+            authorName = 'Business';
+            console.log(`✅ Using fallback business name (no profile): "${authorName}"`);
           }
         }
         // PRIORITY 3: If we have profile data for other users
