@@ -6,7 +6,25 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const checkEmailExists = async (email: string): Promise<boolean> => {
   try {
-    // Try to send a password reset to see if email exists
+    // First check if there's a profile with this email in our profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error("Error checking profile:", profileError);
+      // If there's an error other than "not found", assume email might exist
+      return true;
+    }
+    
+    // If we found a profile with this email, it exists
+    if (profileData) {
+      return true;
+    }
+    
+    // As a fallback, try the password reset method
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + "/reset-password",
     });
@@ -22,7 +40,7 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
       return false;
     }
     
-    // For other errors, assume email might exist
+    // For other errors, assume email might exist to be safe
     return true;
   } catch (error) {
     console.error("Error checking email:", error);
