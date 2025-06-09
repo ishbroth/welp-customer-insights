@@ -1,6 +1,8 @@
 
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface Transaction {
   id: string;
@@ -22,6 +24,8 @@ const TransactionHistoryCard = ({
   transactions,
   hasStripeCustomer
 }: TransactionHistoryCardProps) => {
+  const [showAll, setShowAll] = useState(false);
+  
   const formatCurrency = (amount: number, currency: string = 'usd') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -32,6 +36,10 @@ const TransactionHistoryCard = ({
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
+
+  // Show only first 3 transactions by default, up to 24 when expanded
+  const displayedTransactions = showAll ? transactions.slice(0, 24) : transactions.slice(0, 3);
+  const hasMoreTransactions = transactions.length > 3;
 
   return (
     <Card>
@@ -46,43 +54,67 @@ const TransactionHistoryCard = ({
             Loading transaction history...
           </div>
         ) : transactions.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b text-left text-sm text-gray-500">
-                  <th className="pb-2 font-medium">Date</th>
-                  <th className="pb-2 font-medium">Description</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-gray-100">
-                    <td className="py-3 text-sm">
-                      {formatDate(transaction.created)}
-                    </td>
-                    <td className="py-3 text-sm">
-                      {transaction.description || "Subscription Payment"}
-                    </td>
-                    <td className="py-3 text-sm">
-                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                        transaction.status === 'succeeded' 
-                          ? 'bg-green-100 text-green-800' 
-                          : transaction.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-sm text-right font-medium">
-                      {formatCurrency(transaction.amount, transaction.currency)}
-                    </td>
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b text-left text-sm text-gray-500">
+                    <th className="pb-2 font-medium">Date</th>
+                    <th className="pb-2 font-medium">Description</th>
+                    <th className="pb-2 font-medium">Status</th>
+                    <th className="pb-2 font-medium text-right">Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {displayedTransactions.map((transaction) => (
+                    <tr key={transaction.id} className="border-b border-gray-100">
+                      <td className="py-3 text-sm">
+                        {formatDate(transaction.created)}
+                      </td>
+                      <td className="py-3 text-sm">
+                        {transaction.description || "Subscription Payment"}
+                      </td>
+                      <td className="py-3 text-sm">
+                        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                          transaction.status === 'succeeded' 
+                            ? 'bg-green-100 text-green-800' 
+                            : transaction.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {transaction.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-sm text-right font-medium">
+                        {formatCurrency(transaction.amount, transaction.currency)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {hasMoreTransactions && (
+              <div className="flex justify-center pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAll(!showAll)}
+                  className="flex items-center gap-2"
+                >
+                  {showAll ? (
+                    <>
+                      Show Less
+                      <ChevronUp className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      Show All ({transactions.length > 24 ? '24' : transactions.length} transactions)
+                      <ChevronDown className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-6 text-gray-500">

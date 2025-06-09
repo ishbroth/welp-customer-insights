@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 const ProfilePage = () => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, isSubscribed, setIsSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Handle post-auth redirections

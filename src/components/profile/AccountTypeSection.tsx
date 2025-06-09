@@ -3,14 +3,18 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/sonner";
+import { openCustomerPortal } from "@/services/subscriptionService";
 
 interface AccountTypeSectionProps {
   isSubscribed: boolean;
   currentUserType?: string;
+  currentUserEmail?: string;
   setIsSubscribed: (value: boolean) => void;
 }
 
-const AccountTypeSection = ({ isSubscribed, currentUserType, setIsSubscribed }: AccountTypeSectionProps) => {
+const AccountTypeSection = ({ isSubscribed, currentUserType, currentUserEmail, setIsSubscribed }: AccountTypeSectionProps) => {
   // Function to get the subscription page URL based on account type
   const getSubscriptionUrl = () => {
     return currentUserType === "business" 
@@ -26,6 +30,29 @@ const AccountTypeSection = ({ isSubscribed, currentUserType, setIsSubscribed }: 
       return isSubscribed ? "Business Premium" : "Business Account";
     } else {
       return isSubscribed ? "Premium Customer" : "Customer Account";
+    }
+  };
+
+  // Handle unsubscribe
+  const handleUnsubscribe = async () => {
+    try {
+      // For permanent accounts, just update local state
+      const permanentAccountEmails = [
+        'iw@thepaintedpainter.com',
+        'isaac.wiley99@gmail.com'
+      ];
+      
+      if (currentUserEmail && permanentAccountEmails.includes(currentUserEmail)) {
+        setIsSubscribed(false);
+        toast.success("Subscription cancelled successfully.");
+        return;
+      }
+
+      // For regular users, redirect to customer portal for cancellation
+      await openCustomerPortal();
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      toast.error("Could not cancel subscription. Please try again.");
     }
   };
 
@@ -52,14 +79,31 @@ const AccountTypeSection = ({ isSubscribed, currentUserType, setIsSubscribed }: 
           </div>
           <div>
             {isSubscribed ? (
-              <Button 
-                variant="secondary" 
-                className="bg-green-50 text-green-700 hover:bg-green-100"
-                disabled
-              >
-                <Star className="h-4 w-4 mr-2 fill-green-500" />
-                You are Subscribed!
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    Unsubscribe
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will cancel your subscription and you will lose access to premium features. 
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleUnsubscribe}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Yes, Unsubscribe
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             ) : (
               <Button asChild>
                 <Link to={getSubscriptionUrl()}>
@@ -69,18 +113,6 @@ const AccountTypeSection = ({ isSubscribed, currentUserType, setIsSubscribed }: 
               </Button>
             )}
           </div>
-        </div>
-        
-        {/* For demo purposes - let's add a toggle to simulate subscription */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-2">Demo Controls:</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setIsSubscribed(!isSubscribed)}
-          >
-            {isSubscribed ? "Simulate Unsubscribe" : "Simulate Subscribe"}
-          </Button>
         </div>
       </div>
     </div>

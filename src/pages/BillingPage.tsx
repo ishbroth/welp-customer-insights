@@ -18,7 +18,7 @@ import { useEffect } from "react";
 
 const BillingPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, setIsSubscribed } = useAuth();
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   const [searchParams] = useSearchParams();
   const { processSuccessfulPurchase } = useCredits();
@@ -77,6 +77,31 @@ const BillingPage = () => {
     }
   };
 
+  // Handle unsubscribe
+  const handleUnsubscribe = async () => {
+    try {
+      // For permanent accounts, just update local state
+      const permanentAccountEmails = [
+        'iw@thepaintedpainter.com',
+        'isaac.wiley99@gmail.com'
+      ];
+      
+      if (currentUser?.email && permanentAccountEmails.includes(currentUser.email)) {
+        setIsSubscribed(false);
+        toast.success("Subscription cancelled successfully.");
+        return;
+      }
+
+      // For regular users, call Stripe to cancel subscription
+      setIsLoadingPortal(true);
+      await openCustomerPortal();
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      toast.error("Could not cancel subscription. Please try again.");
+      setIsLoadingPortal(false);
+    }
+  };
+
   if (!currentUser) {
     return <div>Please log in to view billing information.</div>;
   }
@@ -103,7 +128,9 @@ const BillingPage = () => {
                 hasStripeCustomer={hasStripeCustomer}
                 isLoadingPortal={isLoadingPortal}
                 currentUserType={currentUser?.type}
+                currentUserEmail={currentUser?.email}
                 onManageSubscription={handleManageSubscription}
+                onUnsubscribe={handleUnsubscribe}
               />
 
               <PaymentMethodsCard

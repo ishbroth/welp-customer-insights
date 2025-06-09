@@ -2,6 +2,7 @@
 import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -15,7 +16,9 @@ interface CurrentSubscriptionCardProps {
   hasStripeCustomer: boolean;
   isLoadingPortal: boolean;
   currentUserType?: string;
+  currentUserEmail?: string;
   onManageSubscription: () => void;
+  onUnsubscribe: () => void;
 }
 
 const CurrentSubscriptionCard = ({
@@ -24,7 +27,9 @@ const CurrentSubscriptionCard = ({
   hasStripeCustomer,
   isLoadingPortal,
   currentUserType,
-  onManageSubscription
+  currentUserEmail,
+  onManageSubscription,
+  onUnsubscribe
 }: CurrentSubscriptionCardProps) => {
   const getSubscriptionPlanName = () => {
     if (!subscriptionData?.subscribed) return "No Active Subscription";
@@ -40,6 +45,13 @@ const CurrentSubscriptionCard = ({
     if (!subscriptionData?.subscription_end) return "N/A";
     return new Date(subscriptionData.subscription_end).toLocaleDateString();
   };
+
+  // Check if this is a permanent account
+  const permanentAccountEmails = [
+    'iw@thepaintedpainter.com',
+    'isaac.wiley99@gmail.com'
+  ];
+  const isPermanentAccount = currentUserEmail && permanentAccountEmails.includes(currentUserEmail);
 
   return (
     <Card>
@@ -73,15 +85,44 @@ const CurrentSubscriptionCard = ({
               </p>
             )}
             
-            <div className="mt-4 flex items-center justify-end">
-              {hasStripeCustomer && subscriptionData?.subscribed ? (
-                <Button
-                  variant="default"
-                  onClick={onManageSubscription}
-                  disabled={isLoadingPortal}
-                >
-                  {isLoadingPortal ? "Loading..." : "Manage Subscription"}
-                </Button>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              {subscriptionData?.subscribed ? (
+                <>
+                  {hasStripeCustomer && !isPermanentAccount && (
+                    <Button
+                      variant="outline"
+                      onClick={onManageSubscription}
+                      disabled={isLoadingPortal}
+                    >
+                      {isLoadingPortal ? "Loading..." : "Manage Subscription"}
+                    </Button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">
+                        Unsubscribe
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will cancel your subscription and you will lose access to premium features. 
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={onUnsubscribe}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Yes, Unsubscribe
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
               ) : (
                 <Button
                   variant="default"
