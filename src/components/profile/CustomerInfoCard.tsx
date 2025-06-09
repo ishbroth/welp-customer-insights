@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, User as UserIcon } from "lucide-react";
 import { User } from "@/data/mockUsers";
+import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface CustomerInfoCardProps {
   currentUser: User | null;
@@ -28,7 +29,7 @@ const CustomerInfoCard = ({ currentUser }: CustomerInfoCardProps) => {
                 <Phone className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Phone Number</p>
-                  <p className="font-medium">{currentUser?.phone}</p>
+                  <p className="font-medium">{formatPhoneNumber(currentUser?.phone)}</p>
                 </div>
               </div>
             )}

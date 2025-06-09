@@ -9,6 +9,7 @@ import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useState } from "react";
 import { CheckCircle, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 const ProfilePage = () => {
   const { currentUser, loading } = useAuth();
@@ -76,7 +77,7 @@ const ProfilePage = () => {
                     {currentUser.phone && (
                       <div>
                         <label className="text-sm font-medium text-gray-500">Phone</label>
-                        <p className="text-gray-900">{currentUser.phone}</p>
+                        <p className="text-gray-900">{formatPhoneNumber(currentUser.phone)}</p>
                       </div>
                     )}
                     {currentUser.address && (

@@ -5,6 +5,7 @@ import { User } from "@/data/mockUsers";
 import { Link } from "react-router-dom";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface BusinessInfoCardProps {
   currentUser: User | null;
@@ -78,7 +79,7 @@ const BusinessInfoCard = ({ currentUser }: BusinessInfoCardProps) => {
                 <Phone className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-500">Phone Number</p>
-                  <p className="font-medium">{currentUser?.phone}</p>
+                  <p className="font-medium">{formatPhoneNumber(currentUser?.phone)}</p>
                 </div>
               </div>
             )}

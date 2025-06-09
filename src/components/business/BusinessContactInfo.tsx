@@ -1,5 +1,6 @@
 
 import React from "react";
+import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface BusinessContactInfoProps {
   phone?: string;
@@ -27,7 +28,7 @@ const BusinessContactInfo: React.FC<BusinessContactInfoProps> = ({
           </div>
           <div>
             <p className="font-medium">Phone</p>
-            <p className="text-gray-500">{phone}</p>
+            <p className="text-gray-500">{formatPhoneNumber(phone)}</p>
           </div>
         </div>
       )}

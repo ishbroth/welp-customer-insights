@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, User } from "lucide-react";
+import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface CustomerProfileViewProps {
   customerId: string;
@@ -68,7 +69,7 @@ const CustomerProfileView = ({
               <Phone className="h-5 w-5 text-gray-500" />
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium">{phone}</p>
+                <p className="font-medium">{formatPhoneNumber(phone)}</p>
               </div>
             </div>
           )}

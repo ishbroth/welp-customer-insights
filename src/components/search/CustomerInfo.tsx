@@ -1,6 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import StarRating from "@/components/StarRating";
+import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface CustomerInfoProps {
   customer: {
@@ -75,7 +76,7 @@ const CustomerInfo = ({
           </p>
         )}
         {customer.phone && (
-          <p className="mt-1">Phone: {customer.phone}</p>
+          <p className="mt-1">Phone: {formatPhoneNumber(customer.phone)}</p>
         )}
       </div>
     </div>
