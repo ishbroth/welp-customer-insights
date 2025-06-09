@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -32,7 +31,11 @@ export const DuplicateAccountDialog = ({
   const { toast } = useToast();
 
   const handleSignIn = () => {
-    navigate('/login');
+    navigate('/login', { 
+      state: { 
+        email: duplicateResult.existingEmail 
+      }
+    });
   };
 
   const handlePasswordReset = async () => {
@@ -74,6 +77,14 @@ export const DuplicateAccountDialog = ({
     } finally {
       setIsResetting(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    navigate('/forgot-password', { 
+      state: { 
+        email: duplicateResult.existingEmail 
+      }
+    });
   };
 
   const getDuplicateMessage = () => {
@@ -169,7 +180,7 @@ export const DuplicateAccountDialog = ({
               </Button>
               
               <Button
-                onClick={() => setShowPasswordReset(true)}
+                onClick={handleForgotPassword}
                 variant="outline"
                 className="w-full"
               >

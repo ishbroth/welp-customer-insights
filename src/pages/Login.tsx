@@ -27,15 +27,22 @@ const Login = () => {
     location.state?.message || null
   );
   const returnTo = location.state?.returnTo || "/profile";
+  const prefilledEmail = location.state?.email || "";
 
-  // Load remembered credentials on component mount
+  // Load remembered credentials on component mount and handle prefilled email
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem("welp_remembered_email");
-    if (rememberedEmail) {
-      setEmail(rememberedEmail);
-      setRememberMe(true);
+    // First priority: prefilled email from navigation state
+    if (prefilledEmail) {
+      setEmail(prefilledEmail);
+    } else {
+      // Second priority: remembered email from localStorage
+      const rememberedEmail = localStorage.getItem("welp_remembered_email");
+      if (rememberedEmail) {
+        setEmail(rememberedEmail);
+        setRememberMe(true);
+      }
     }
-  }, []);
+  }, [prefilledEmail]);
 
   // Clear the success message after 10 seconds
   useEffect(() => {

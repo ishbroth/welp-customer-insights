@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,16 @@ const ForgotPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResetEmailSent, setIsResetEmailSent] = useState(false);
   const { toast } = useToast();
+  const location = useLocation();
+  
+  const prefilledEmail = location.state?.email || "";
+
+  // Auto-populate email if passed from navigation state
+  useEffect(() => {
+    if (prefilledEmail) {
+      setEmail(prefilledEmail);
+    }
+  }, [prefilledEmail]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
