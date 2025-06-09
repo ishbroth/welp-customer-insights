@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { BusinessContactSection } from "./BusinessContactSection";
 import { BusinessAddressSection } from "./BusinessAddressSection";
@@ -51,7 +50,7 @@ export const BusinessInfoForm = ({
         <label htmlFor="businessName" className="block text-sm font-medium mb-1">Business Name</label>
         <Input
           id="businessName"
-          placeholder="e.g. Acme Plumbing"
+          placeholder="Acme Corporation"
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
           className="welp-input"
@@ -64,6 +63,7 @@ export const BusinessInfoForm = ({
         setBusinessEmail={setBusinessEmail}
         businessPhone={businessPhone}
         setBusinessPhone={setBusinessPhone}
+        businessName={businessName}
       />
       
       <BusinessAddressSection

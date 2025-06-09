@@ -12,13 +12,15 @@ interface BusinessContactSectionProps {
   setBusinessEmail: (value: string) => void;
   businessPhone: string;
   setBusinessPhone: (value: string) => void;
+  businessName?: string; // Add business name prop
 }
 
 export const BusinessContactSection = ({
   businessEmail,
   setBusinessEmail,
   businessPhone,
-  setBusinessPhone
+  setBusinessPhone,
+  businessName
 }: BusinessContactSectionProps) => {
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -31,7 +33,7 @@ export const BusinessContactSection = ({
     const timeoutId = setTimeout(async () => {
       setIsChecking(true);
       try {
-        const result = await checkForDuplicateAccount(businessEmail, businessPhone);
+        const result = await checkForDuplicateAccount(businessEmail, businessPhone, businessName);
         setDuplicateResult(result);
         if (result.isDuplicate) {
           setShowDuplicateDialog(true);
@@ -44,7 +46,7 @@ export const BusinessContactSection = ({
     }, 1000); // 1 second delay
 
     return () => clearTimeout(timeoutId);
-  }, [businessEmail, businessPhone]);
+  }, [businessEmail, businessPhone, businessName]);
 
   return (
     <>

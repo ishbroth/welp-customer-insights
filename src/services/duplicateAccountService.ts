@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
-  duplicateType: 'email' | 'phone' | 'both' | null;
+  duplicateType: 'email' | 'phone' | 'both' | 'business_name' | null;
   existingEmail?: string;
   existingPhone?: string;
+  allowContinue?: boolean; // New field to control continue option
 }
 
 /**
@@ -71,23 +72,51 @@ export const checkPhoneExists = async (phone: string): Promise<{ exists: boolean
 };
 
 /**
+ * Check if business name already exists
+ */
+export const checkBusinessNameExists = async (businessName: string): Promise<boolean> => {
+  try {
+    const { data: businesses, error } = await supabase
+      .from('business_info')
+      .select('business_name')
+      .ilike('business_name', businessName);
+    
+    if (error) {
+      console.error("Error checking business name:", error);
+      return false;
+    }
+    
+    return businesses && businesses.length > 0;
+  } catch (error) {
+    console.error("Error checking business name:", error);
+    return false;
+  }
+};
+
+/**
  * Comprehensive duplicate account check
  */
 export const checkForDuplicateAccount = async (
   email: string, 
-  phone: string
+  phone: string,
+  businessName?: string
 ): Promise<DuplicateCheckResult> => {
-  const [emailExists, phoneResult] = await Promise.all([
+  const checks = await Promise.all([
     checkEmailExists(email),
-    checkPhoneExists(phone)
+    checkPhoneExists(phone),
+    businessName ? checkBusinessNameExists(businessName) : Promise.resolve(false)
   ]);
   
+  const [emailExists, phoneResult, businessNameExists] = checks;
+  
+  // Priority order: email/phone duplicates (no continue), then business name (allow continue)
   if (emailExists && phoneResult.exists) {
     return {
       isDuplicate: true,
       duplicateType: 'both',
       existingEmail: email,
-      existingPhone: phone
+      existingPhone: phone,
+      allowContinue: false
     };
   }
   
@@ -95,7 +124,8 @@ export const checkForDuplicateAccount = async (
     return {
       isDuplicate: true,
       duplicateType: 'email',
-      existingEmail: email
+      existingEmail: email,
+      allowContinue: false
     };
   }
   
@@ -104,12 +134,22 @@ export const checkForDuplicateAccount = async (
       isDuplicate: true,
       duplicateType: 'phone',
       existingPhone: phone,
-      existingEmail: phoneResult.email
+      existingEmail: phoneResult.email,
+      allowContinue: false
+    };
+  }
+  
+  if (businessNameExists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'business_name',
+      allowContinue: true
     };
   }
   
   return {
     isDuplicate: false,
-    duplicateType: null
+    duplicateType: null,
+    allowContinue: false
   };
 };

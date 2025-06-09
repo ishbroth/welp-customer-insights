@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -84,6 +83,8 @@ export const DuplicateAccountDialog = ({
         return `An account with the phone number ${duplicateResult.existingPhone} already exists.`;
       case 'both':
         return `An account with this email and phone number already exists.`;
+      case 'business_name':
+        return `A business with this name already exists. You can continue if this is a different location.`;
       default:
         return "An account with this information already exists.";
     }
@@ -141,35 +142,53 @@ export const DuplicateAccountDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Account Already Exists</DialogTitle>
+          <DialogTitle>
+            {duplicateResult.duplicateType === 'business_name' ? 'Business Name Already Exists' : 'Account Already Exists'}
+          </DialogTitle>
           <DialogDescription>
             {getDuplicateMessage()}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-3">
-          <Button
-            onClick={handleSignIn}
-            className="welp-button w-full"
-          >
-            Sign In Instead
-          </Button>
+          {duplicateResult.duplicateType !== 'business_name' && (
+            <>
+              <Button
+                onClick={handleSignIn}
+                className="welp-button w-full"
+              >
+                Sign In Instead
+              </Button>
+              
+              <Button
+                onClick={() => setShowPasswordReset(true)}
+                variant="outline"
+                className="w-full"
+              >
+                Forgot Password?
+              </Button>
+            </>
+          )}
           
-          <Button
-            onClick={() => setShowPasswordReset(true)}
-            variant="outline"
-            className="w-full"
-          >
-            Forgot Password?
-          </Button>
+          {duplicateResult.allowContinue && (
+            <Button
+              onClick={onClose}
+              variant={duplicateResult.duplicateType === 'business_name' ? 'default' : 'ghost'}
+              className={duplicateResult.duplicateType === 'business_name' ? 'welp-button w-full' : 'w-full'}
+            >
+              Continue Anyway
+            </Button>
+          )}
           
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            className="w-full"
-          >
-            Continue Anyway
-          </Button>
+          {duplicateResult.duplicateType === 'business_name' && (
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              className="w-full"
+            >
+              Go Back and Change Name
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
