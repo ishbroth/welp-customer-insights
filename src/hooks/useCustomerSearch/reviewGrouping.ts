@@ -14,14 +14,14 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
   const cleanPhone1 = review1.customer_phone ? review1.customer_phone.replace(/\D/g, '') : '';
   const cleanPhone2 = review2.customer_phone ? review2.customer_phone.replace(/\D/g, '') : '';
   
-  // Check if phones match (if both exist)
+  // Check if phones match (if both exist) - this is a strong indicator
   const phoneMatch = cleanPhone1 && cleanPhone2 && (
     cleanPhone1 === cleanPhone2 ||
     cleanPhone1.includes(cleanPhone2.slice(-7)) ||
     cleanPhone2.includes(cleanPhone1.slice(-7))
   );
   
-  // Check if names are similar
+  // Check if names are similar (if both exist)
   const name1 = review1.customer_name?.toLowerCase().trim() || '';
   const name2 = review2.customer_name?.toLowerCase().trim() || '';
   const nameMatch = name1 && name2 && (
@@ -29,7 +29,7 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
     name1 === name2
   );
   
-  // Check if addresses are similar
+  // Check if addresses are similar (if both exist)
   const address1 = review1.customer_address?.toLowerCase().trim() || '';
   const address2 = review2.customer_address?.toLowerCase().trim() || '';
   const addressMatch = address1 && address2 && (
@@ -38,16 +38,43 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
     address2.includes(address1)
   );
   
-  // Check if zip codes match
+  // Check if zip codes match (if both exist)
   const zip1 = review1.customer_zipcode?.replace(/\D/g, '') || '';
   const zip2 = review2.customer_zipcode?.replace(/\D/g, '') || '';
   const zipMatch = zip1 && zip2 && zip1 === zip2;
   
-  // Require at least two matching criteria, with phone or name being one of them
-  const matchCount = [phoneMatch, nameMatch, addressMatch, zipMatch].filter(Boolean).length;
-  const hasStrongMatch = phoneMatch || nameMatch;
+  // NEW LOGIC: Group reviews if ANY strong matching criteria is met
+  // Phone match alone is sufficient (strong identifier)
+  if (phoneMatch) {
+    console.log(`Phone match found between reviews: ${cleanPhone1}`);
+    return true;
+  }
   
-  return matchCount >= 2 && hasStrongMatch;
+  // Address + zip match is sufficient (location-based matching)
+  if (addressMatch && zipMatch) {
+    console.log(`Address + zip match found: ${address1} in ${zip1}`);
+    return true;
+  }
+  
+  // Name + address match is sufficient
+  if (nameMatch && addressMatch) {
+    console.log(`Name + address match found: ${name1} at ${address1}`);
+    return true;
+  }
+  
+  // Name + zip match is sufficient
+  if (nameMatch && zipMatch) {
+    console.log(`Name + zip match found: ${name1} in ${zip1}`);
+    return true;
+  }
+  
+  // Name + phone match is sufficient
+  if (nameMatch && phoneMatch) {
+    console.log(`Name + phone match found: ${name1} with ${cleanPhone1}`);
+    return true;
+  }
+  
+  return false;
 };
 
 // Function to merge customer data from multiple reviews
@@ -125,7 +152,7 @@ export const groupReviewsByCustomer = (reviews: ReviewData[]): GroupedReview[] =
       rating: averageRating
     };
     
-    console.log(`Grouped ${matchingReviews.length} reviews for customer: ${mergedCustomerData.customer_name || 'Unknown'}, Average rating: ${averageRating.toFixed(1)}`);
+    console.log(`Grouped ${matchingReviews.length} reviews for customer: ${mergedCustomerData.customer_name || 'Unknown'}, Phone: ${mergedCustomerData.customer_phone || 'N/A'}, Address: ${mergedCustomerData.customer_address || 'N/A'}, Average rating: ${averageRating.toFixed(1)}`);
     
     groupedReviews.push(groupedReview);
   }
