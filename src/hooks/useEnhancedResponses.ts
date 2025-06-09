@@ -17,6 +17,8 @@ interface Review {
   id: string;
   customerId?: string;
   customer_name?: string;
+  reviewerId?: string;
+  reviewerName?: string;
   responses?: Array<{
     id: string;
     authorId: string;
@@ -75,8 +77,9 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
         : review.customer_name || '';
 
       console.log('useEnhancedResponses: Customer full name for responses:', customerFullName);
+      console.log('useEnhancedResponses: Review author (business):', review.reviewerName);
 
-      // Enhanced logic to get proper names, especially for customer responses
+      // Enhanced logic to get proper names for all response authors
       const formattedResponses = responseData.map((resp: any) => {
         const profile = profileData?.find(p => p.id === resp.author_id);
         
@@ -85,16 +88,15 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
         console.log(`\n=== PROCESSING RESPONSE ${resp.id} ===`);
         console.log(`Response author_id: ${resp.author_id}`);
         console.log(`Review customerId: ${review.customerId}`);
+        console.log(`Review reviewerId (business): ${review.reviewerId}`);
         console.log(`CustomerData:`, customerData);
-        console.log(`Review customer_name: ${review.customer_name}`);
         console.log(`Profile found:`, profile);
-        console.log(`Customer full name derived: "${customerFullName}"`);
         
         // PRIORITY 1: If this response is from the customer that the review is about
         if (resp.author_id === review.customerId) {
           console.log('✅ Response is from the customer that the review is about');
           
-          // HIGHEST PRIORITY: Use customerData if available (this should be Isaac Wiley)
+          // Use customerData if available (this should be Isaac Wiley)
           if (customerFullName && customerFullName.trim()) {
             authorName = customerFullName;
             console.log(`✅ Using derived customer full name: "${authorName}"`);
@@ -114,11 +116,34 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
               authorName = profile.name;
               console.log(`✅ Using profile name field: "${authorName}"`);
             }
-          } else {
-            console.log('❌ No name source available, using fallback');
           }
         }
-        // PRIORITY 2: If we have profile data for other users
+        // PRIORITY 2: If this response is from the business who wrote the review
+        else if (resp.author_id === review.reviewerId) {
+          console.log('✅ Response is from the business who wrote the review');
+          
+          // First try to use the reviewer name from the review data
+          if (review.reviewerName && review.reviewerName.trim()) {
+            authorName = review.reviewerName;
+            console.log(`✅ Using review's reviewerName: "${authorName}"`);
+          }
+          // Then try profile data
+          else if (profile) {
+            if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+              console.log(`✅ Using profile name field: "${authorName}"`);
+            } else if (profile.first_name || profile.last_name) {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              authorName = `${firstName} ${lastName}`.trim();
+              console.log(`✅ Using profile first+last name: "${authorName}"`);
+            } else {
+              authorName = 'Business';
+              console.log(`✅ Using fallback business name: "${authorName}"`);
+            }
+          }
+        }
+        // PRIORITY 3: If we have profile data for other users
         else if (profile) {
           console.log('📝 Processing response from other user');
           // For customer accounts, prefer the constructed name from first_name + last_name

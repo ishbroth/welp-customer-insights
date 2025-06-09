@@ -55,8 +55,15 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
   );
 
   // Fetch enhanced responses with proper author names - only if user is logged in
+  // Pass the reviewer information to help with proper name resolution
+  const reviewWithReviewerInfo = {
+    ...review,
+    reviewerId: review.reviewerId,
+    reviewerName: review.reviewerName
+  };
+
   const { data: enhancedResponses } = useEnhancedResponses(
-    review, 
+    reviewWithReviewerInfo, 
     customerData,
     !!currentUser // Only fetch if user is logged in
   );
