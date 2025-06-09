@@ -4,6 +4,9 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
+import { checkForDuplicateAccount, DuplicateCheckResult } from "@/services/duplicateAccountService";
+import { useState, useEffect } from "react";
 
 interface CustomerPersonalInfoSectionProps {
   firstName: string;
@@ -32,6 +35,32 @@ export const CustomerPersonalInfoSection = ({
   onEmailBlur,
   onEmailChange
 }: CustomerPersonalInfoSectionProps) => {
+  const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+
+  // Debounced duplicate checking
+  useEffect(() => {
+    if (!email || !phone) return;
+    
+    const timeoutId = setTimeout(async () => {
+      setIsChecking(true);
+      try {
+        const result = await checkForDuplicateAccount(email, phone);
+        setDuplicateResult(result);
+        if (result.isDuplicate) {
+          setShowDuplicateDialog(true);
+        }
+      } catch (error) {
+        console.error("Error checking for duplicates:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    }, 1000); // 1 second delay
+
+    return () => clearTimeout(timeoutId);
+  }, [email, phone]);
+
   return (
     <>
       <div>
@@ -106,6 +135,23 @@ export const CustomerPersonalInfoSection = ({
         />
         <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
       </div>
+
+      {isChecking && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            Checking for existing accounts...
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {duplicateResult && (
+        <DuplicateAccountDialog
+          isOpen={showDuplicateDialog}
+          onClose={() => setShowDuplicateDialog(false)}
+          duplicateResult={duplicateResult}
+        />
+      )}
     </>
   );
 };

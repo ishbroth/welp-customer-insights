@@ -1,6 +1,11 @@
 
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
+import { checkForDuplicateAccount, DuplicateCheckResult } from "@/services/duplicateAccountService";
+import { useState, useEffect } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface BusinessContactSectionProps {
   businessEmail: string;
@@ -15,6 +20,32 @@ export const BusinessContactSection = ({
   businessPhone,
   setBusinessPhone
 }: BusinessContactSectionProps) => {
+  const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+
+  // Debounced duplicate checking
+  useEffect(() => {
+    if (!businessEmail || !businessPhone) return;
+    
+    const timeoutId = setTimeout(async () => {
+      setIsChecking(true);
+      try {
+        const result = await checkForDuplicateAccount(businessEmail, businessPhone);
+        setDuplicateResult(result);
+        if (result.isDuplicate) {
+          setShowDuplicateDialog(true);
+        }
+      } catch (error) {
+        console.error("Error checking for duplicates:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    }, 1000); // 1 second delay
+
+    return () => clearTimeout(timeoutId);
+  }, [businessEmail, businessPhone]);
+
   return (
     <>
       <div>
@@ -42,6 +73,23 @@ export const BusinessContactSection = ({
           required
         />
       </div>
+
+      {isChecking && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            Checking for existing accounts...
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {duplicateResult && (
+        <DuplicateAccountDialog
+          isOpen={showDuplicateDialog}
+          onClose={() => setShowDuplicateDialog(false)}
+          duplicateResult={duplicateResult}
+        />
+      )}
     </>
   );
 };
