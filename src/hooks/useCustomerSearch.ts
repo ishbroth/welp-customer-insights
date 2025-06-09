@@ -67,12 +67,35 @@ export const useCustomerSearch = () => {
         content: review.content,
         created_at: review.created_at,
         business_id: review.business_id,
-        business_profile: review.business_profile
+        business_profile: review.business_profile,
+        reviewerName: review.reviewerName,
+        reviewerVerified: review.reviewerVerified
       }));
+      
+      // Process review customers (now with grouping logic)
       const reviewCustomers = processReviewCustomers(cleanReviewsData);
       
-      // Combine results
-      const combinedCustomers = [...profileCustomers, ...reviewCustomers];
+      // Combine results - but first check for potential duplicates between profile and review customers
+      const combinedCustomers = [...profileCustomers];
+      
+      // Add review customers that don't match existing profile customers
+      for (const reviewCustomer of reviewCustomers) {
+        const isDuplicate = profileCustomers.some(profileCustomer => {
+          // Check if names and phones match
+          const nameMatch = profileCustomer.firstName === reviewCustomer.firstName && 
+                           profileCustomer.lastName === reviewCustomer.lastName;
+          const phoneMatch = profileCustomer.phone && reviewCustomer.phone && 
+                           profileCustomer.phone.replace(/\D/g, '') === reviewCustomer.phone.replace(/\D/g, '');
+          
+          return nameMatch || phoneMatch;
+        });
+        
+        if (!isDuplicate) {
+          combinedCustomers.push(reviewCustomer);
+        } else {
+          console.log(`Skipping duplicate review customer: ${reviewCustomer.firstName} ${reviewCustomer.lastName}`);
+        }
+      }
       
       console.log("Final combined customers:", combinedCustomers);
       setCustomers(combinedCustomers);

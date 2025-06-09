@@ -1,72 +1,108 @@
 
 import { Customer } from "@/types/search";
+import { supabase } from "@/integrations/supabase/client";
+import { ProfileCustomer, ReviewData } from "./types";
+import { groupReviewsByCustomer } from "./reviewGrouping";
 
-export const processProfileCustomers = async (profilesData: any[]): Promise<Customer[]> => {
-  console.log("processProfileCustomers: Processing", profilesData.length, "profiles");
+export const processProfileCustomers = async (profiles: ProfileCustomer[]): Promise<Customer[]> => {
+  const customerIds = profiles.map(p => p.id);
   
-  return profilesData.map(profile => ({
-    id: profile.id,
-    firstName: profile.first_name || "",
-    lastName: profile.last_name || "",
-    phone: profile.phone || "",
-    address: profile.address || "",
-    city: profile.city || "",
-    state: profile.state || "",
-    zipCode: profile.zipcode || "",
-    avatar: profile.avatar || "",
-    reviews: [] // Reviews will be populated separately if needed
-  }));
+  // Fetch reviews for these customers to get review counts and ratings
+  let reviewsMap = new Map();
+  if (customerIds.length > 0) {
+    const { data: reviews } = await supabase
+      .from('reviews')
+      .select('customer_id, rating')
+      .in('customer_id', customerIds);
+    
+    if (reviews) {
+      reviews.forEach(review => {
+        if (!reviewsMap.has(review.customer_id)) {
+          reviewsMap.set(review.customer_id, []);
+        }
+        reviewsMap.get(review.customer_id).push(review);
+      });
+    }
+  }
+  
+  return profiles.map(profile => {
+    const customerReviews = reviewsMap.get(profile.id) || [];
+    const averageRating = customerReviews.length > 0 
+      ? customerReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / customerReviews.length 
+      : 0;
+    
+    return {
+      id: profile.id,
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      phone: profile.phone,
+      address: profile.address,
+      city: profile.city,
+      state: profile.state,
+      zipCode: profile.zipcode,
+      reviews: customerReviews.map((review: any) => ({
+        id: review.id || `review-${Date.now()}-${Math.random()}`,
+        reviewerId: 'unknown',
+        reviewerName: 'Business Review',
+        rating: review.rating,
+        content: 'Review content not available',
+        date: review.created_at || new Date().toISOString()
+      })),
+      totalReviews: customerReviews.length,
+      averageRating
+    };
+  });
 };
 
-export const processReviewCustomers = (reviewsData: any[]): Customer[] => {
-  console.log("processReviewCustomers: Processing", reviewsData.length, "reviews");
+export const processReviewCustomers = (reviews: ReviewData[]): Customer[] => {
+  console.log("=== PROCESSING REVIEW CUSTOMERS ===");
+  console.log(`Input reviews: ${reviews.length}`);
   
-  // Group reviews by customer identifier (name + phone or address)
-  const customerMap = new Map<string, Customer>();
+  // Group reviews by customer before processing
+  const groupedReviews = groupReviewsByCustomer(reviews);
+  console.log(`Grouped into ${groupedReviews.length} unique customers`);
   
-  reviewsData.forEach(review => {
-    // Parse customer name from customer_name field
-    const customerParts = (review.customer_name || "").split(' ');
-    const firstName = customerParts[0] || "";
-    const lastName = customerParts.slice(1).join(' ') || "";
+  return groupedReviews.map(groupedReview => {
+    const customerId = `review-customer-${groupedReview.id}`;
     
-    // Create a unique identifier for the customer
-    const customerKey = `${firstName.toLowerCase()}_${lastName.toLowerCase()}_${review.customer_phone || review.customer_address || ''}`;
+    // Extract name parts
+    const nameParts = (groupedReview.customer_name || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
     
-    const reviewItem = {
+    // Convert all matching reviews to the expected review format
+    const formattedReviews = groupedReview.matchingReviews.map(review => ({
       id: review.id,
-      reviewerId: review.business_id || review.reviewerId,
-      reviewerName: review.reviewerName || review.business_profile?.name || "Unknown Business",
-      rating: review.rating || 0,
-      content: review.content || "",
-      date: review.date || review.created_at || new Date().toISOString(),
-      reviewerVerified: review.reviewerVerified || false
-    };
-
-    console.log(`processReviewCustomers: Added review with verification status ${review.reviewerVerified} for business ${reviewItem.reviewerName}`);
+      reviewerId: review.business_id || 'unknown',
+      reviewerName: review.reviewerName || 'Business Review',
+      rating: review.rating,
+      content: review.content,
+      date: review.created_at || new Date().toISOString(),
+      reviewerVerified: review.reviewerVerified || false,
+      customer_name: review.customer_name,
+      customer_phone: review.customer_phone,
+      customer_address: review.customer_address,
+      customer_city: review.customer_city,
+      customer_zipcode: review.customer_zipcode,
+      customerId: customerId
+    }));
     
-    if (customerMap.has(customerKey)) {
-      // Add review to existing customer
-      const existingCustomer = customerMap.get(customerKey)!;
-      existingCustomer.reviews = existingCustomer.reviews || [];
-      existingCustomer.reviews.push(reviewItem);
-    } else {
-      // Create new customer
-      const customer: Customer = {
-        id: `review-customer-${review.id}`,
-        firstName: firstName,
-        lastName: lastName,
-        phone: review.customer_phone || "",
-        address: review.customer_address || "",
-        city: review.customer_city || "",
-        state: "", // Reviews don't have customer state
-        zipCode: review.customer_zipcode || "",
-        reviews: [reviewItem]
-      };
-      
-      customerMap.set(customerKey, customer);
-    }
+    const customer: Customer = {
+      id: customerId,
+      firstName,
+      lastName,
+      phone: groupedReview.customer_phone,
+      address: groupedReview.customer_address,
+      city: groupedReview.customer_city,
+      state: '', // Reviews don't typically have state info
+      zipCode: groupedReview.customer_zipcode,
+      reviews: formattedReviews,
+      totalReviews: groupedReview.totalReviews,
+      averageRating: groupedReview.averageRating
+    };
+    
+    console.log(`Processed customer: ${firstName} ${lastName}, Reviews: ${groupedReview.totalReviews}, Avg Rating: ${groupedReview.averageRating.toFixed(1)}`);
+    
+    return customer;
   });
-  
-  return Array.from(customerMap.values());
 };

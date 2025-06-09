@@ -1,20 +1,16 @@
+
 export interface Customer {
   id: string;
   firstName: string;
   lastName: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   avatar?: string;
-  averageRating?: number;
   totalReviews?: number;
-  isSubscriptionNeeded?: boolean;
-  businessProfile?: {
-    name: string;
-    avatar?: string;
-  } | null;
+  averageRating?: number;
   reviews?: Array<{
     id: string;
     reviewerId: string;
@@ -23,20 +19,23 @@ export interface Customer {
     content: string;
     date: string;
     reviewerVerified?: boolean;
+    customer_name?: string;
+    customer_phone?: string;
+    customer_address?: string;
+    customer_city?: string;
+    customer_zipcode?: string;
+    customerId?: string;
+    responses?: Array<{
+      id: string;
+      authorId: string;
+      authorName: string;
+      content: string;
+      createdAt: string;
+    }>;
   }>;
 }
 
-export interface SearchFilters {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-}
-
-export interface SearchResults {
+export interface SearchResult {
   customers: Customer[];
-  totalResults: number;
+  total: number;
 }

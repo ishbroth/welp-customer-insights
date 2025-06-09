@@ -1,0 +1,136 @@
+
+import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { ReviewData } from "./types";
+
+interface GroupedReview extends ReviewData {
+  matchingReviews: ReviewData[];
+  averageRating: number;
+  totalReviews: number;
+}
+
+// Function to determine if two reviews are about the same customer
+const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): boolean => {
+  // Clean phone numbers for comparison
+  const cleanPhone1 = review1.customer_phone ? review1.customer_phone.replace(/\D/g, '') : '';
+  const cleanPhone2 = review2.customer_phone ? review2.customer_phone.replace(/\D/g, '') : '';
+  
+  // Check if phones match (if both exist)
+  const phoneMatch = cleanPhone1 && cleanPhone2 && (
+    cleanPhone1 === cleanPhone2 ||
+    cleanPhone1.includes(cleanPhone2.slice(-7)) ||
+    cleanPhone2.includes(cleanPhone1.slice(-7))
+  );
+  
+  // Check if names are similar
+  const name1 = review1.customer_name?.toLowerCase().trim() || '';
+  const name2 = review2.customer_name?.toLowerCase().trim() || '';
+  const nameMatch = name1 && name2 && (
+    calculateStringSimilarity(name1, name2) > 0.8 ||
+    name1 === name2
+  );
+  
+  // Check if addresses are similar
+  const address1 = review1.customer_address?.toLowerCase().trim() || '';
+  const address2 = review2.customer_address?.toLowerCase().trim() || '';
+  const addressMatch = address1 && address2 && (
+    calculateStringSimilarity(address1, address2) > 0.7 ||
+    address1.includes(address2) ||
+    address2.includes(address1)
+  );
+  
+  // Check if zip codes match
+  const zip1 = review1.customer_zipcode?.replace(/\D/g, '') || '';
+  const zip2 = review2.customer_zipcode?.replace(/\D/g, '') || '';
+  const zipMatch = zip1 && zip2 && zip1 === zip2;
+  
+  // Require at least two matching criteria, with phone or name being one of them
+  const matchCount = [phoneMatch, nameMatch, addressMatch, zipMatch].filter(Boolean).length;
+  const hasStrongMatch = phoneMatch || nameMatch;
+  
+  return matchCount >= 2 && hasStrongMatch;
+};
+
+// Function to merge customer data from multiple reviews
+const mergeCustomerData = (reviews: ReviewData[]): Partial<ReviewData> => {
+  // Sort reviews by date (newest first) to prioritize more recent information
+  const sortedReviews = [...reviews].sort((a, b) => 
+    new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+  );
+  
+  // Take the most complete and recent information
+  const merged: Partial<ReviewData> = {};
+  
+  // Use the first non-empty value for each field, prioritizing newer reviews
+  for (const review of sortedReviews) {
+    if (!merged.customer_name && review.customer_name) {
+      merged.customer_name = review.customer_name;
+    }
+    if (!merged.customer_phone && review.customer_phone) {
+      merged.customer_phone = review.customer_phone;
+    }
+    if (!merged.customer_address && review.customer_address) {
+      merged.customer_address = review.customer_address;
+    }
+    if (!merged.customer_city && review.customer_city) {
+      merged.customer_city = review.customer_city;
+    }
+    if (!merged.customer_zipcode && review.customer_zipcode) {
+      merged.customer_zipcode = review.customer_zipcode;
+    }
+  }
+  
+  return merged;
+};
+
+export const groupReviewsByCustomer = (reviews: ReviewData[]): GroupedReview[] => {
+  const groupedReviews: GroupedReview[] = [];
+  const processedReviewIds = new Set<string>();
+  
+  console.log(`Starting review grouping for ${reviews.length} reviews`);
+  
+  for (const review of reviews) {
+    // Skip if this review has already been processed
+    if (processedReviewIds.has(review.id)) {
+      continue;
+    }
+    
+    // Find all reviews that match this customer
+    const matchingReviews = reviews.filter(otherReview => 
+      !processedReviewIds.has(otherReview.id) && 
+      (otherReview.id === review.id || areReviewsForSameCustomer(review, otherReview))
+    );
+    
+    // Mark all matching reviews as processed
+    matchingReviews.forEach(r => processedReviewIds.add(r.id));
+    
+    // Calculate average rating
+    const totalRating = matchingReviews.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = totalRating / matchingReviews.length;
+    
+    // Merge customer data from all matching reviews
+    const mergedCustomerData = mergeCustomerData(matchingReviews);
+    
+    // Create grouped review using the most recent review as base
+    const mostRecentReview = matchingReviews.sort((a, b) => 
+      new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+    )[0];
+    
+    const groupedReview: GroupedReview = {
+      ...mostRecentReview,
+      ...mergedCustomerData,
+      matchingReviews,
+      averageRating,
+      totalReviews: matchingReviews.length,
+      // Update the rating to be the average
+      rating: averageRating
+    };
+    
+    console.log(`Grouped ${matchingReviews.length} reviews for customer: ${mergedCustomerData.customer_name || 'Unknown'}, Average rating: ${averageRating.toFixed(1)}`);
+    
+    groupedReviews.push(groupedReview);
+  }
+  
+  console.log(`Review grouping complete: ${reviews.length} reviews grouped into ${groupedReviews.length} customers`);
+  
+  return groupedReviews;
+};
