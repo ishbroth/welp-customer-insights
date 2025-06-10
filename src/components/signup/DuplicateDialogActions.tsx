@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DuplicateCheckResult } from "@/services/duplicateAccountService";
+import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 
 interface DuplicateDialogActionsProps {
   duplicateResult: DuplicateCheckResult;
@@ -25,53 +25,26 @@ export const DuplicateDialogActions = ({
   };
 
   const handleForgotPassword = () => {
-    navigate('/forgot-password', { 
-      state: { 
-        email: duplicateResult.existingEmail 
-      }
-    });
+    onShowPasswordReset();
   };
 
-  if (!duplicateResult.allowContinue) {
-    return (
-      <>
-        <Button
-          onClick={handleSignIn}
-          className="welp-button w-full"
-        >
-          Sign In Instead
-        </Button>
-        
-        <Button
-          onClick={handleForgotPassword}
-          variant="outline"
-          className="w-full"
-        >
-          Forgot Password?
-        </Button>
-      </>
-    );
-  }
-
+  // Always show sign in and forgot password options for duplicates
   return (
     <>
       <Button
-        onClick={onClose}
+        onClick={handleSignIn}
         className="welp-button w-full"
       >
-        Continue Anyway
+        Sign In Instead
       </Button>
       
-      {(duplicateResult.duplicateType === 'business_name' || 
-        duplicateResult.duplicateType === 'customer_name') && (
-        <Button
-          onClick={onClose}
-          variant="ghost"
-          className="w-full"
-        >
-          Go Back and Change Information
-        </Button>
-      )}
+      <Button
+        onClick={handleForgotPassword}
+        variant="outline"
+        className="w-full"
+      >
+        Forgot Password?
+      </Button>
     </>
   );
 };

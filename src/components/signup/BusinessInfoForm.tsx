@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input";
+
 import { BusinessContactSection } from "./BusinessContactSection";
 import { BusinessAddressSection } from "./BusinessAddressSection";
 import { BusinessTypeSection } from "./BusinessTypeSection";
@@ -22,6 +22,7 @@ interface BusinessInfoFormProps {
   setBusinessType: (value: string) => void;
   licenseNumber: string;
   setLicenseNumber: (value: string) => void;
+  onDuplicateFound?: (hasDuplicate: boolean) => void;
 }
 
 export const BusinessInfoForm = ({
@@ -42,31 +43,26 @@ export const BusinessInfoForm = ({
   businessType,
   setBusinessType,
   licenseNumber,
-  setLicenseNumber
+  setLicenseNumber,
+  onDuplicateFound
 }: BusinessInfoFormProps) => {
+  const businessAddress = `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`.trim();
+
   return (
-    <div className="space-y-4">
-      <div>
-        <label htmlFor="businessName" className="block text-sm font-medium mb-1">Business Name</label>
-        <Input
-          id="businessName"
-          placeholder="Acme Corporation"
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
-      
+    <div className="space-y-6">
       <BusinessContactSection
         businessEmail={businessEmail}
         setBusinessEmail={setBusinessEmail}
         businessPhone={businessPhone}
         setBusinessPhone={setBusinessPhone}
         businessName={businessName}
+        businessAddress={businessAddress}
+        onDuplicateFound={onDuplicateFound}
       />
       
       <BusinessAddressSection
+        businessName={businessName}
+        setBusinessName={setBusinessName}
         businessStreet={businessStreet}
         setBusinessStreet={setBusinessStreet}
         businessCity={businessCity}
@@ -82,7 +78,6 @@ export const BusinessInfoForm = ({
         setBusinessType={setBusinessType}
         licenseNumber={licenseNumber}
         setLicenseNumber={setLicenseNumber}
-        businessState={businessState}
       />
     </div>
   );

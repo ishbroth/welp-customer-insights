@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -15,6 +14,7 @@ interface BusinessContactSectionProps {
   setBusinessPhone: (value: string) => void;
   businessName: string;
   businessAddress?: string;
+  onDuplicateFound?: (hasDuplicate: boolean) => void;
 }
 
 export const BusinessContactSection = ({
@@ -23,13 +23,22 @@ export const BusinessContactSection = ({
   businessPhone,
   setBusinessPhone,
   businessName,
-  businessAddress
+  businessAddress,
+  onDuplicateFound
 }: BusinessContactSectionProps) => {
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
   const [phoneExists, setPhoneExists] = useState(false);
+  const [hasDuplicates, setHasDuplicates] = useState(false);
+
+  // Notify parent component when duplicates are found
+  useEffect(() => {
+    const duplicateFound = emailExists || phoneExists || (duplicateResult?.isDuplicate ?? false);
+    setHasDuplicates(duplicateFound);
+    onDuplicateFound?.(duplicateFound);
+  }, [emailExists, phoneExists, duplicateResult, onDuplicateFound]);
 
   // Check email immediately when it changes
   useEffect(() => {
@@ -41,6 +50,17 @@ export const BusinessContactSection = ({
           const exists = await checkEmailExistsViaEdgeFunction(businessEmail);
           setEmailExists(exists);
           console.log("Email exists result:", exists);
+          
+          if (exists) {
+            const result: DuplicateCheckResult = {
+              isDuplicate: true,
+              duplicateType: 'email',
+              existingEmail: businessEmail,
+              allowContinue: false
+            };
+            setDuplicateResult(result);
+            setShowDuplicateDialog(true);
+          }
         } catch (error) {
           console.error("Error checking email:", error);
         } finally {
@@ -64,6 +84,17 @@ export const BusinessContactSection = ({
           const exists = await checkPhoneExistsViaEdgeFunction(businessPhone);
           setPhoneExists(exists);
           console.log("Phone exists result:", exists);
+          
+          if (exists) {
+            const result: DuplicateCheckResult = {
+              isDuplicate: true,
+              duplicateType: 'phone',
+              existingPhone: businessPhone,
+              allowContinue: false
+            };
+            setDuplicateResult(result);
+            setShowDuplicateDialog(true);
+          }
         } catch (error) {
           console.error("Error checking phone:", error);
         } finally {
@@ -111,6 +142,11 @@ export const BusinessContactSection = ({
 
     return () => clearTimeout(timeoutId);
   }, [businessEmail, businessPhone, businessName, businessAddress]);
+
+  const handleDialogClose = () => {
+    setShowDuplicateDialog(false);
+    // Keep the duplicate result so registration is still blocked
+  };
 
   return (
     <>
@@ -160,7 +196,7 @@ export const BusinessContactSection = ({
       {duplicateResult && (
         <DuplicateAccountDialog
           isOpen={showDuplicateDialog}
-          onClose={() => setShowDuplicateDialog(false)}
+          onClose={handleDialogClose}
           duplicateResult={duplicateResult}
         />
       )}
