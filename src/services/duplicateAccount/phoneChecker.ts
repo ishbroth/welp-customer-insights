@@ -25,17 +25,47 @@ export const checkPhoneExists = async (phone: string): Promise<boolean> => {
     const randomValue = Math.random().toString(36).substring(7);
     console.log("Query timestamp:", timestamp, "Random:", randomValue);
     
-    // First, let's check all profiles to see what phone numbers exist
+    // Check all profiles to see what data exists
     const { data: allProfiles, error: allError } = await supabase
       .from('profiles')
-      .select('id, phone, email, name, type, created_at')
-      .not('phone', 'is', null)
-      .limit(20);
+      .select('*')
+      .limit(50);
     
-    console.log("All profiles with phone numbers:", allProfiles);
-    console.log("All profiles error:", allError);
+    console.log("All profiles (first 50):", allProfiles);
+    console.log("Profiles query error:", allError);
     
-    // Check for exact match first
+    // Specifically look for profiles with any phone field populated
+    const profilesWithPhone = allProfiles?.filter(p => p.phone) || [];
+    console.log("Profiles with phone field populated:", profilesWithPhone);
+    
+    // Also check business_info table for phone numbers
+    const { data: businessInfo, error: businessError } = await supabase
+      .from('business_info')
+      .select('*')
+      .limit(50);
+    
+    console.log("All business_info records:", businessInfo);
+    console.log("Business info query error:", businessError);
+    
+    // Look for the specific business we know exists
+    const { data: specificBusiness, error: specificError } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('email', '%iw@sdcarealty.com%');
+    
+    console.log("Specific business search (iw@sdcarealty.com):", specificBusiness);
+    console.log("Specific business error:", specificError);
+    
+    // Also search by business name
+    const { data: namedBusiness, error: namedError } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('name', '%Painted Painter%');
+    
+    console.log("Business by name search (Painted Painter):", namedBusiness);
+    console.log("Named business error:", namedError);
+    
+    // Check for exact match first in profiles
     const { data: exactMatch, error: exactError } = await supabase
       .from('profiles')
       .select('id, phone, email, name, type, created_at')
@@ -51,7 +81,7 @@ export const checkPhoneExists = async (phone: string): Promise<boolean> => {
       return true;
     }
     
-    // If no exact match, search by cleaned digits
+    // If no exact match, search by cleaned digits in profiles
     if (cleanedPhone.length >= 10) {
       const { data: cleanedMatches, error: cleanedError } = await supabase
         .from('profiles')
