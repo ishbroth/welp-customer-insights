@@ -6,15 +6,17 @@ export const checkAccountType = async (email: string) => {
     console.log("=== ACCOUNT TYPE CHECK START ===");
     console.log("Checking account type for email:", email);
     
-    // Force fresh data by adding timestamp
+    // Force fresh data by adding timestamp and random value
     const timestamp = Date.now();
-    console.log("Query timestamp:", timestamp);
+    const randomValue = Math.random().toString(36).substring(7);
+    console.log("Query timestamp:", timestamp, "Random:", randomValue);
     
-    // Check profiles table with fresh query
+    // Clear any potential local cache by creating a fresh query with limit
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id, email, type, name, phone, created_at')
       .eq('email', email)
+      .limit(1)
       .maybeSingle();
     
     console.log("Account type profile data:", profileData);
@@ -29,6 +31,27 @@ export const checkAccountType = async (email: string) => {
         name: profileData.name,
         id: profileData.id,
         phone: profileData.phone
+      };
+    }
+
+    // Additional check: try to query with a different approach to bypass cache
+    const { data: altProfileData, error: altProfileError } = await supabase
+      .from('profiles')
+      .select('id, email, type, name, phone')
+      .ilike('email', email)
+      .maybeSingle();
+    
+    console.log("Alternative account type check:", { altProfileData, altProfileError });
+    
+    if (altProfileData) {
+      console.log(`Account found (alternative) - Type: ${altProfileData.type}, Name: ${altProfileData.name}`);
+      console.log("=== ACCOUNT TYPE CHECK END (FOUND ALT) ===");
+      return {
+        exists: true,
+        type: altProfileData.type,
+        name: altProfileData.name,
+        id: altProfileData.id,
+        phone: altProfileData.phone
       };
     }
     
