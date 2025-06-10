@@ -1,6 +1,5 @@
-
 import { Input } from "@/components/ui/input";
-import { StateSelect } from "@/components/search/StateSelect";
+import StateSelect from "@/components/search/StateSelect";
 
 interface BusinessAddressSectionProps {
   businessName: string;

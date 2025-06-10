@@ -1,4 +1,3 @@
-
 import { BusinessContactSection } from "./BusinessContactSection";
 import { BusinessAddressSection } from "./BusinessAddressSection";
 import { BusinessTypeSection } from "./BusinessTypeSection";
@@ -78,6 +77,7 @@ export const BusinessInfoForm = ({
         setBusinessType={setBusinessType}
         licenseNumber={licenseNumber}
         setLicenseNumber={setLicenseNumber}
+        businessState={businessState}
       />
     </div>
   );
