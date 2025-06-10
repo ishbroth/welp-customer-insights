@@ -1,14 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { BUSINESS_TYPE_OPTIONS } from "./businessFormData";
-import { getLicenseLabel, getGuidanceMessage } from "./licenseUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface BusinessTypeSectionProps {
   businessType: string;
@@ -23,43 +15,44 @@ export const BusinessTypeSection = ({
   setBusinessType,
   licenseNumber,
   setLicenseNumber,
-  businessState
+  businessState,
 }: BusinessTypeSectionProps) => {
-  const licenseLabel = getLicenseLabel(businessType);
-  const guidanceMessage = getGuidanceMessage(businessState, businessType);
-
   return (
-    <>
+    <div className="space-y-4">
       <div>
-        <label htmlFor="businessType" className="block text-sm font-medium mb-1">Business Type</label>
-        <Select value={businessType} onValueChange={setBusinessType}>
+        <label htmlFor="businessType" className="block text-sm font-medium mb-1">License Type</label>
+        <Select value={businessType} onValueChange={setBusinessType} required>
           <SelectTrigger className="welp-input">
-            <SelectValue placeholder="Select Business Type" />
+            <SelectValue placeholder="Select license type" />
           </SelectTrigger>
-          <SelectContent className="bg-white">
-            {BUSINESS_TYPE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
+          <SelectContent>
+            <SelectItem value="ein">EIN</SelectItem>
+            <SelectItem value="contractor">Contractor</SelectItem>
+            <SelectItem value="professional">Professional</SelectItem>
+            <SelectItem value="restaurant">Restaurant</SelectItem>
+            <SelectItem value="liquor">Liquor</SelectItem>
+            <SelectItem value="general">General Business</SelectItem>
           </SelectContent>
         </Select>
       </div>
       
       <div>
-        <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1">{licenseLabel}</label>
+        <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1">
+          License Number
+          {businessState && (
+            <span className="text-sm text-gray-500 ml-1">({businessState})</span>
+          )}
+        </label>
         <Input
           id="licenseNumber"
-          placeholder={`Enter your ${licenseLabel}`}
+          type="text"
+          placeholder="Enter your license number"
           value={licenseNumber}
           onChange={(e) => setLicenseNumber(e.target.value)}
           className="welp-input"
           required
         />
-        {guidanceMessage && (
-          <p className="text-xs text-gray-500 mt-1">{guidanceMessage}</p>
-        )}
       </div>
-    </>
+    </div>
   );
 };
