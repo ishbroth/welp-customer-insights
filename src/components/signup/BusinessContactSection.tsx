@@ -1,18 +1,18 @@
 
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { checkForDuplicateAccount } from "@/services/duplicateAccountService";
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
-import { checkForDuplicateAccount, DuplicateCheckResult } from "@/services/duplicateAccountService";
-import { useState, useEffect } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 
 interface BusinessContactSectionProps {
   businessEmail: string;
   setBusinessEmail: (value: string) => void;
   businessPhone: string;
   setBusinessPhone: (value: string) => void;
-  businessName?: string; // Add business name prop
+  businessName: string;
+  businessAddress?: string;
 }
 
 export const BusinessContactSection = ({
@@ -20,33 +20,59 @@ export const BusinessContactSection = ({
   setBusinessEmail,
   businessPhone,
   setBusinessPhone,
-  businessName
+  businessName,
+  businessAddress
 }: BusinessContactSectionProps) => {
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
 
-  // Debounced duplicate checking
+  // Debounced duplicate check
   useEffect(() => {
-    if (!businessEmail || !businessPhone) return;
-    
-    const timeoutId = setTimeout(async () => {
-      setIsChecking(true);
-      try {
-        const result = await checkForDuplicateAccount(businessEmail, businessPhone, businessName);
-        setDuplicateResult(result);
-        if (result.isDuplicate) {
-          setShowDuplicateDialog(true);
-        }
-      } catch (error) {
-        console.error("Error checking for duplicates:", error);
-      } finally {
-        setIsChecking(false);
+    const timeoutId = setTimeout(() => {
+      if (businessEmail && businessPhone && businessName) {
+        checkDuplicates();
       }
-    }, 1000); // 1 second delay
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [businessEmail, businessPhone, businessName]);
+  }, [businessEmail, businessPhone, businessName, businessAddress]);
+
+  const checkDuplicates = async () => {
+    if (!businessEmail || !businessPhone || !businessName) return;
+    
+    setIsCheckingDuplicates(true);
+    
+    try {
+      console.log("Checking for duplicates with:", {
+        email: businessEmail,
+        phone: businessPhone,
+        businessName,
+        address: businessAddress
+      });
+      
+      const result = await checkForDuplicateAccount(
+        businessEmail,
+        businessPhone,
+        businessName,
+        businessAddress
+      );
+      
+      console.log("Duplicate check result:", result);
+      
+      if (result.isDuplicate) {
+        setDuplicateResult(result);
+        setShowDuplicateDialog(true);
+      } else {
+        setDuplicateResult(null);
+        setShowDuplicateDialog(false);
+      }
+    } catch (error) {
+      console.error("Error checking for duplicates:", error);
+    } finally {
+      setIsCheckingDuplicates(false);
+    }
+  };
 
   return (
     <>
@@ -55,41 +81,37 @@ export const BusinessContactSection = ({
         <Input
           id="businessEmail"
           type="email"
-          placeholder="business@example.com"
+          placeholder="contact@business.com"
           value={businessEmail}
           onChange={(e) => setBusinessEmail(e.target.value)}
           className="welp-input"
           required
         />
-        <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
       </div>
       
       <div>
         <label htmlFor="businessPhone" className="block text-sm font-medium mb-1">Business Phone</label>
         <PhoneInput
           id="businessPhone"
-          placeholder="(555) 123-4567"
           value={businessPhone}
-          onChange={(e) => setBusinessPhone(e.target.value)}
+          onChange={(value) => setBusinessPhone(value || "")}
           className="welp-input"
           required
         />
+        {isCheckingDuplicates && (
+          <p className="text-sm text-gray-500 mt-1">Checking for duplicates...</p>
+        )}
       </div>
-
-      {isChecking && (
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            Checking for existing accounts...
-          </AlertDescription>
-        </Alert>
-      )}
 
       {duplicateResult && (
         <DuplicateAccountDialog
           isOpen={showDuplicateDialog}
           onClose={() => setShowDuplicateDialog(false)}
           duplicateResult={duplicateResult}
+          currentEmail={businessEmail}
+          currentPhone={businessPhone}
+          currentName={businessName}
+          currentAddress={businessAddress}
         />
       )}
     </>

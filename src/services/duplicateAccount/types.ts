@@ -1,8 +1,9 @@
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
-  duplicateType: 'email' | 'phone' | 'both' | 'business_name' | 'customer_name' | null;
+  duplicateType: 'email' | 'phone' | 'address' | 'business_name' | 'business_address' | 'customer_name' | null;
   existingEmail?: string;
   existingPhone?: string;
-  allowContinue?: boolean; // New field to control continue option
+  existingAddress?: string;
+  allowContinue: boolean;
 }
