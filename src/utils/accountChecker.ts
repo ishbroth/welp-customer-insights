@@ -29,9 +29,9 @@ export const checkAccountType = async (email: string) => {
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
     console.log("Auth users check:", { authUsers, authError });
     
-    if (authUsers?.users) {
-      const userInAuth = authUsers.users.find(user => 
-        user.email?.toLowerCase() === email.toLowerCase()
+    if (authUsers?.users && authUsers.users.length > 0) {
+      const userInAuth = authUsers.users.find((user: any) => 
+        user.email && user.email.toLowerCase() === email.toLowerCase()
       );
       
       if (userInAuth) {
@@ -53,7 +53,7 @@ export const checkAccountType = async (email: string) => {
       id: null
     };
     
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error checking account type:", error);
     return {
       exists: false,
