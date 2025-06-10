@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import StateSelect from "@/components/search/StateSelect";
 
@@ -87,8 +88,6 @@ export const BusinessAddressSection = ({
         <StateSelect
           value={businessState}
           onValueChange={setBusinessState}
-          placeholder="Select state"
-          required
         />
       </div>
     </div>
