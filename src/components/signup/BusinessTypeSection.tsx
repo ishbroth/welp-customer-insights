@@ -1,6 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BUSINESS_TYPE_OPTIONS } from "./businessFormData";
 
 interface BusinessTypeSectionProps {
   businessType: string;
@@ -26,12 +27,11 @@ export const BusinessTypeSection = ({
             <SelectValue placeholder="Select license type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ein">EIN</SelectItem>
-            <SelectItem value="contractor">Contractor</SelectItem>
-            <SelectItem value="professional">Professional</SelectItem>
-            <SelectItem value="restaurant">Restaurant</SelectItem>
-            <SelectItem value="liquor">Liquor</SelectItem>
-            <SelectItem value="general">General Business</SelectItem>
+            {BUSINESS_TYPE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
