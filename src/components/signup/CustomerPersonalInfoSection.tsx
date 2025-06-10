@@ -129,7 +129,7 @@ export const CustomerPersonalInfoSection = ({
           id="customerPhone"
           placeholder="(555) 123-4567"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={setPhone}
           className="welp-input"
           required
         />

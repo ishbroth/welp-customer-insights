@@ -113,7 +113,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
         <PhoneInput
           id="customerPhone"
           value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
+          onChange={setCustomerPhone}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}
         />

@@ -55,6 +55,15 @@ const SearchField = ({
     } as React.ChangeEvent<HTMLInputElement>;
     onChange(syntheticEvent);
   };
+
+  // Handle phone input change
+  const handlePhoneChange = (value: string) => {
+    // Create a synthetic event to maintain consistency
+    const syntheticEvent = {
+      target: { value }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onChange(syntheticEvent);
+  };
   
   if (isFirstNameField) {
     return (
@@ -74,7 +83,7 @@ const SearchField = ({
       <PhoneInput
         placeholder={placeholder}
         value={value}
-        onChange={handleAddressChange}
+        onChange={handlePhoneChange}
         className={`welp-input ${className || ""}`}
         required={required}
       />
