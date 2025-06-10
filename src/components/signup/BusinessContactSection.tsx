@@ -2,9 +2,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { checkForDuplicateAccount } from "@/services/duplicateAccountService";
-import { checkEmailExists } from "@/services/duplicateAccount/emailChecker";
-import { checkPhoneExists } from "@/services/duplicateAccount/phoneChecker";
+import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction, checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,10 +35,10 @@ export const BusinessContactSection = ({
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (businessEmail && businessEmail.includes('@')) {
-        console.log("Checking email exists:", businessEmail);
+        console.log("Checking email exists via edge function:", businessEmail);
         setIsCheckingDuplicates(true);
         try {
-          const exists = await checkEmailExists(businessEmail);
+          const exists = await checkEmailExistsViaEdgeFunction(businessEmail);
           setEmailExists(exists);
           console.log("Email exists result:", exists);
         } catch (error) {
@@ -48,6 +46,8 @@ export const BusinessContactSection = ({
         } finally {
           setIsCheckingDuplicates(false);
         }
+      } else {
+        setEmailExists(false);
       }
     }, 500);
 
@@ -57,11 +57,11 @@ export const BusinessContactSection = ({
   // Check phone immediately when it changes
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
-      if (businessPhone && businessPhone.length >= 10) {
-        console.log("Checking phone exists:", businessPhone);
+      if (businessPhone && businessPhone.replace(/\D/g, '').length >= 10) {
+        console.log("Checking phone exists via edge function:", businessPhone);
         setIsCheckingDuplicates(true);
         try {
-          const exists = await checkPhoneExists(businessPhone);
+          const exists = await checkPhoneExistsViaEdgeFunction(businessPhone);
           setPhoneExists(exists);
           console.log("Phone exists result:", exists);
         } catch (error) {
@@ -69,6 +69,8 @@ export const BusinessContactSection = ({
         } finally {
           setIsCheckingDuplicates(false);
         }
+      } else {
+        setPhoneExists(false);
       }
     }, 500);
 
@@ -77,50 +79,38 @@ export const BusinessContactSection = ({
 
   // Comprehensive duplicate check when we have enough info
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       if (businessEmail && businessPhone && businessName) {
-        checkDuplicates();
+        console.log("Running comprehensive duplicate check via edge function");
+        setIsCheckingDuplicates(true);
+        
+        try {
+          const result = await checkDuplicatesViaEdgeFunction(
+            businessEmail,
+            businessPhone,
+            businessName,
+            businessAddress
+          );
+          
+          console.log("Comprehensive duplicate check result:", result);
+          
+          if (result.isDuplicate) {
+            setDuplicateResult(result);
+            setShowDuplicateDialog(true);
+          } else {
+            setDuplicateResult(null);
+            setShowDuplicateDialog(false);
+          }
+        } catch (error) {
+          console.error("Error in comprehensive duplicate check:", error);
+        } finally {
+          setIsCheckingDuplicates(false);
+        }
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [businessEmail, businessPhone, businessName, businessAddress]);
-
-  const checkDuplicates = async () => {
-    if (!businessEmail || !businessPhone || !businessName) return;
-    
-    setIsCheckingDuplicates(true);
-    
-    try {
-      console.log("Checking for duplicates with:", {
-        email: businessEmail,
-        phone: businessPhone,
-        businessName,
-        address: businessAddress
-      });
-      
-      const result = await checkForDuplicateAccount(
-        businessEmail,
-        businessPhone,
-        businessName,
-        businessAddress
-      );
-      
-      console.log("Duplicate check result:", result);
-      
-      if (result.isDuplicate) {
-        setDuplicateResult(result);
-        setShowDuplicateDialog(true);
-      } else {
-        setDuplicateResult(null);
-        setShowDuplicateDialog(false);
-      }
-    } catch (error) {
-      console.error("Error checking for duplicates:", error);
-    } finally {
-      setIsCheckingDuplicates(false);
-    }
-  };
 
   return (
     <>
