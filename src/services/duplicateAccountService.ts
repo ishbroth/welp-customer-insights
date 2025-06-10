@@ -1,5 +1,6 @@
 
 import { checkEmailExists } from "./duplicateAccount/emailChecker";
+import { checkPhoneExists } from "./duplicateAccount/phoneChecker";
 import { checkBusinessNameAndPhoneExists } from "./duplicateAccount/businessChecker";
 import { checkCustomerNameAndPhoneExists } from "./duplicateAccount/customerChecker";
 import { DuplicateCheckResult } from "./duplicateAccount/types";
@@ -15,7 +16,7 @@ export { checkCustomerNameAndPhoneExists } from "./duplicateAccount/customerChec
 
 /**
  * Comprehensive duplicate account check for business accounts
- * Only shows popup if name AND phone both match existing accounts
+ * Checks for individual matches of email, phone, or business name+phone combinations
  */
 export const checkForDuplicateAccount = async (
   email: string, 
@@ -33,7 +34,18 @@ export const checkForDuplicateAccount = async (
     };
   }
   
-  // If business name is provided, check for business name + phone combination
+  // Check for phone duplicates (should also block/warn)
+  const phoneExists = await checkPhoneExists(phone);
+  if (phoneExists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'phone',
+      existingPhone: phone,
+      allowContinue: true // Allow continue for phone matches
+    };
+  }
+  
+  // If business name is provided, check for business name + phone combination as additional check
   if (businessName) {
     const businessNameAndPhoneResult = await checkBusinessNameAndPhoneExists(businessName, phone);
     if (businessNameAndPhoneResult.exists) {
@@ -56,7 +68,7 @@ export const checkForDuplicateAccount = async (
 
 /**
  * Comprehensive duplicate account check for customer accounts
- * Only shows popup if name AND phone both match existing accounts
+ * Checks for individual matches of email, phone, or customer name+phone combinations
  */
 export const checkForDuplicateCustomerAccount = async (
   email: string, 
@@ -75,7 +87,18 @@ export const checkForDuplicateCustomerAccount = async (
     };
   }
   
-  // If customer name is provided, check for customer name + phone combination
+  // Check for phone duplicates (should also block/warn)
+  const phoneExists = await checkPhoneExists(phone);
+  if (phoneExists) {
+    return {
+      isDuplicate: true,
+      duplicateType: 'phone',
+      existingPhone: phone,
+      allowContinue: true // Allow continue for phone matches
+    };
+  }
+  
+  // If customer name is provided, check for customer name + phone combination as additional check
   if (firstName && lastName) {
     const customerNameAndPhoneResult = await checkCustomerNameAndPhoneExists(firstName, lastName, phone);
     if (customerNameAndPhoneResult.exists) {
