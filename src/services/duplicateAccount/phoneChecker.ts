@@ -20,52 +20,49 @@ export const checkPhoneExists = async (phone: string): Promise<boolean> => {
     const cleanedPhone = cleanPhoneNumber(phone);
     console.log("Cleaned phone number:", cleanedPhone);
     
-    // Force a fresh query by adding a timestamp and random value to bypass any caching
-    const timestamp = Date.now();
-    const randomValue = Math.random().toString(36).substring(7);
-    console.log("Query timestamp:", timestamp, "Random:", randomValue);
+    // First, let's check authentication status
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log("Current authenticated user:", user?.id, "Auth error:", authError);
     
-    // Check all profiles to see what data exists
+    // Check if we can query profiles at all with a simple count
+    const { count: profileCount, error: countError } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+    
+    console.log("Total profiles count:", profileCount, "Count error:", countError);
+    
+    // Try querying profiles without any RLS restrictions by using service role if possible
     const { data: allProfiles, error: allError } = await supabase
       .from('profiles')
-      .select('*')
-      .limit(50);
+      .select('id, phone, email, name, type, created_at')
+      .limit(10);
     
-    console.log("All profiles (first 50):", allProfiles);
+    console.log("Sample profiles:", allProfiles);
     console.log("Profiles query error:", allError);
     
-    // Specifically look for profiles with any phone field populated
-    const profilesWithPhone = allProfiles?.filter(p => p.phone) || [];
-    console.log("Profiles with phone field populated:", profilesWithPhone);
+    // If we have no profiles at all, something is fundamentally wrong
+    if (!allProfiles || allProfiles.length === 0) {
+      console.log("WARNING: No profiles found in database - this suggests data issue or RLS blocking access");
+      
+      // Try a different approach - check if the specific email exists first
+      const { data: emailCheck, error: emailError } = await supabase
+        .from('profiles')
+        .select('id, email, phone, name')
+        .eq('email', 'iw@sdcarealty.com')
+        .maybeSingle();
+      
+      console.log("Direct email check for iw@sdcarealty.com:", emailCheck, "Error:", emailError);
+      
+      // If email check also fails, we have a deeper issue
+      if (!emailCheck) {
+        console.log("CRITICAL: Known business email not found - data may have been deleted or RLS is blocking access");
+        console.log("=== PHONE DUPLICATE CHECK END (DATA ISSUE) ===");
+        return false;
+      }
+    }
     
-    // Also check business_info table for phone numbers
-    const { data: businessInfo, error: businessError } = await supabase
-      .from('business_info')
-      .select('*')
-      .limit(50);
-    
-    console.log("All business_info records:", businessInfo);
-    console.log("Business info query error:", businessError);
-    
-    // Look for the specific business we know exists
-    const { data: specificBusiness, error: specificError } = await supabase
-      .from('profiles')
-      .select('*')
-      .ilike('email', '%iw@sdcarealty.com%');
-    
-    console.log("Specific business search (iw@sdcarealty.com):", specificBusiness);
-    console.log("Specific business error:", specificError);
-    
-    // Also search by business name
-    const { data: namedBusiness, error: namedError } = await supabase
-      .from('profiles')
-      .select('*')
-      .ilike('name', '%Painted Painter%');
-    
-    console.log("Business by name search (Painted Painter):", namedBusiness);
-    console.log("Named business error:", namedError);
-    
-    // Check for exact match first in profiles
+    // Now do the actual phone checks
+    // Check for exact match first
     const { data: exactMatch, error: exactError } = await supabase
       .from('profiles')
       .select('id, phone, email, name, type, created_at')
@@ -81,18 +78,19 @@ export const checkPhoneExists = async (phone: string): Promise<boolean> => {
       return true;
     }
     
-    // If no exact match, search by cleaned digits in profiles
+    // Check for cleaned phone matches
     if (cleanedPhone.length >= 10) {
-      const { data: cleanedMatches, error: cleanedError } = await supabase
+      const { data: allPhoneProfiles, error: phoneError } = await supabase
         .from('profiles')
         .select('id, phone, email, name, type, created_at')
         .not('phone', 'is', null);
       
-      console.log("All phone records for manual comparison:", cleanedMatches);
+      console.log("All profiles with phone numbers:", allPhoneProfiles);
+      console.log("Phone profiles error:", phoneError);
       
-      if (cleanedMatches) {
+      if (allPhoneProfiles && allPhoneProfiles.length > 0) {
         // Check each phone number by cleaning it
-        for (const profile of cleanedMatches) {
+        for (const profile of allPhoneProfiles) {
           if (profile.phone) {
             const profileCleanedPhone = cleanPhoneNumber(profile.phone);
             console.log(`Comparing cleaned phones: ${cleanedPhone} vs ${profileCleanedPhone} (original: ${profile.phone})`);
@@ -104,6 +102,8 @@ export const checkPhoneExists = async (phone: string): Promise<boolean> => {
             }
           }
         }
+      } else {
+        console.log("No profiles with phone numbers found");
       }
     }
     
