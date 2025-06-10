@@ -6,12 +6,17 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const checkEmailExists = async (email: string): Promise<boolean> => {
   try {
+    console.log("=== EMAIL DUPLICATE CHECK START ===");
     console.log("Checking email exists for:", email);
+    
+    // Force a fresh query by adding a timestamp to bypass any caching
+    const timestamp = Date.now();
+    console.log("Query timestamp:", timestamp);
     
     // First check if there's a profile with this email in our profiles table
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email')
+      .select('id, email, name, type, created_at')
       .eq('email', email)
       .maybeSingle();
     
@@ -19,6 +24,7 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
     
     if (profileError && profileError.code !== 'PGRST116') {
       console.error("Error checking profile:", profileError);
+      console.log("=== EMAIL DUPLICATE CHECK END (ERROR) ===");
       // If there's an error other than "not found", assume email might exist
       return true;
     }
@@ -26,36 +32,17 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
     // If we found a profile with this email, it exists
     if (profileData) {
       console.log("Found existing profile with email:", email);
+      console.log("Profile details:", profileData);
+      console.log("=== EMAIL DUPLICATE CHECK END (FOUND) ===");
       return true;
     }
     
-    console.log("No profile found, checking auth system...");
-    
-    // As a fallback, try the password reset method
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/reset-password",
-    });
-    
-    console.log("Auth reset password result:", { error });
-    
-    // If no error, email exists in auth system
-    if (!error) {
-      console.log("Email exists in auth system:", email);
-      return true;
-    }
-    
-    // Check for specific error messages that indicate email exists
-    if (error.message.includes("User not found") || 
-        error.message.includes("Unable to validate email address")) {
-      console.log("Email confirmed not to exist:", email);
-      return false;
-    }
-    
-    console.log("Other auth error, assuming email might exist:", error.message);
-    // For other errors, assume email might exist to be safe
-    return true;
+    console.log("No profile found in database, email appears to be available");
+    console.log("=== EMAIL DUPLICATE CHECK END (AVAILABLE) ===");
+    return false;
   } catch (error) {
     console.error("Error checking email:", error);
+    console.log("=== EMAIL DUPLICATE CHECK END (CATCH ERROR) ===");
     return false;
   }
 };

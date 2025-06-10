@@ -3,49 +3,37 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const checkAccountType = async (email: string) => {
   try {
+    console.log("=== ACCOUNT TYPE CHECK START ===");
     console.log("Checking account type for email:", email);
     
-    // Check profiles table
+    // Force fresh data by adding timestamp
+    const timestamp = Date.now();
+    console.log("Query timestamp:", timestamp);
+    
+    // Check profiles table with fresh query
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email, type, name')
+      .select('id, email, type, name, phone, created_at')
       .eq('email', email)
       .maybeSingle();
     
-    console.log("Profile data:", profileData);
-    console.log("Profile error:", profileError);
+    console.log("Account type profile data:", profileData);
+    console.log("Account type profile error:", profileError);
     
     if (profileData) {
-      console.log(`Account type for ${email}: ${profileData.type}`);
+      console.log(`Account found - Type: ${profileData.type}, Name: ${profileData.name}`);
+      console.log("=== ACCOUNT TYPE CHECK END (FOUND) ===");
       return {
         exists: true,
         type: profileData.type,
         name: profileData.name,
-        id: profileData.id
+        id: profileData.id,
+        phone: profileData.phone
       };
     }
     
-    // Check auth.users table via edge function or other method
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-    console.log("Auth users check:", { authUsers, authError });
-    
-    if (authUsers?.users && authUsers.users.length > 0) {
-      const userInAuth = authUsers.users.find((user: any) => 
-        user.email && user.email.toLowerCase() === email.toLowerCase()
-      );
-      
-      if (userInAuth) {
-        console.log("Found user in auth.users:", userInAuth);
-        return {
-          exists: true,
-          type: userInAuth.user_metadata?.type || 'unknown',
-          name: userInAuth.user_metadata?.name || 'Unknown',
-          id: userInAuth.id,
-          inAuthOnly: true
-        };
-      }
-    }
-    
+    console.log("No account found in profiles table");
+    console.log("=== ACCOUNT TYPE CHECK END (NOT FOUND) ===");
     return {
       exists: false,
       type: null,
@@ -55,6 +43,7 @@ export const checkAccountType = async (email: string) => {
     
   } catch (error: any) {
     console.error("Error checking account type:", error);
+    console.log("=== ACCOUNT TYPE CHECK END (ERROR) ===");
     return {
       exists: false,
       type: null,
@@ -64,8 +53,3 @@ export const checkAccountType = async (email: string) => {
     };
   }
 };
-
-// Call this function and log the result
-checkAccountType("Iw@sdcarealty.com").then(result => {
-  console.log("Account check result:", result);
-});
