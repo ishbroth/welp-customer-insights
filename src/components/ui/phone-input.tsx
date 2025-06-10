@@ -2,7 +2,11 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-const PhoneInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+interface PhoneInputProps extends Omit<React.ComponentProps<"input">, 'onChange'> {
+  onChange?: (value: string) => void;
+}
+
+const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ className, onChange, value, ...props }, ref) => {
     const formatPhoneNumber = (value: string) => {
       console.log("formatPhoneNumber input:", value);
@@ -30,18 +34,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"inpu
       const inputValue = e.target.value;
       const formatted = formatPhoneNumber(inputValue);
       
-      // Create a new event with the formatted value
-      const syntheticEvent = {
-        ...e,
-        target: {
-          ...e.target,
-          value: formatted
-        }
-      };
-      
       console.log("calling onChange with formatted value:", formatted);
       // Call the original onChange if provided
-      onChange?.(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
+      onChange?.(formatted);
     };
 
     // Format the initial value if provided

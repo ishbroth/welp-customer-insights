@@ -108,10 +108,6 @@ export const BusinessContactSection = ({
           isOpen={showDuplicateDialog}
           onClose={() => setShowDuplicateDialog(false)}
           duplicateResult={duplicateResult}
-          currentEmail={businessEmail}
-          currentPhone={businessPhone}
-          currentName={businessName}
-          currentAddress={businessAddress}
         />
       )}
     </>
