@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -5,7 +6,7 @@ import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction, check
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, AlertTriangle } from "lucide-react";
 
 interface BusinessContactSectionProps {
   businessEmail: string;
@@ -35,7 +36,7 @@ export const BusinessContactSection = ({
 
   // Notify parent component when duplicates are found
   useEffect(() => {
-    const duplicateFound = emailExists || phoneExists || (duplicateResult?.isDuplicate ?? false);
+    const duplicateFound = emailExists || phoneExists || (duplicateResult?.isDuplicate && !duplicateResult?.allowContinue);
     setHasDuplicates(duplicateFound);
     onDuplicateFound?.(duplicateFound);
   }, [emailExists, phoneExists, duplicateResult, onDuplicateFound]);
@@ -111,7 +112,7 @@ export const BusinessContactSection = ({
   // Comprehensive duplicate check when we have enough info
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
-      if (businessEmail && businessPhone && businessName) {
+      if (businessEmail && businessPhone && businessName && businessAddress) {
         console.log("Running comprehensive duplicate check via edge function");
         setIsCheckingDuplicates(true);
         
@@ -128,10 +129,15 @@ export const BusinessContactSection = ({
           
           if (result.isDuplicate) {
             setDuplicateResult(result);
-            setShowDuplicateDialog(true);
+            if (!result.allowContinue) {
+              setShowDuplicateDialog(true);
+            }
           } else {
-            setDuplicateResult(null);
-            setShowDuplicateDialog(false);
+            // Only clear if no individual field duplicates exist
+            if (!emailExists && !phoneExists) {
+              setDuplicateResult(null);
+              setShowDuplicateDialog(false);
+            }
           }
         } catch (error) {
           console.error("Error in comprehensive duplicate check:", error);
@@ -139,14 +145,33 @@ export const BusinessContactSection = ({
           setIsCheckingDuplicates(false);
         }
       }
-    }, 500);
+    }, 1000); // Longer delay for comprehensive check
 
     return () => clearTimeout(timeoutId);
-  }, [businessEmail, businessPhone, businessName, businessAddress]);
+  }, [businessEmail, businessPhone, businessName, businessAddress, emailExists, phoneExists]);
 
   const handleDialogClose = () => {
     setShowDuplicateDialog(false);
     // Keep the duplicate result so registration is still blocked
+  };
+
+  const getDuplicateMessage = () => {
+    if (!duplicateResult) return null;
+
+    switch (duplicateResult.duplicateType) {
+      case 'email':
+        return "This email is already registered with an existing business account.";
+      case 'phone':
+        return "This phone number is already registered with an existing business account.";
+      case 'business_combination':
+        return "A business with similar details already exists in our system.";
+      case 'address':
+        return "This address is already registered with another business.";
+      case 'business_name':
+        return "A business with a similar name already exists.";
+      default:
+        return "This information matches an existing business account.";
+    }
   };
 
   return (
@@ -163,10 +188,10 @@ export const BusinessContactSection = ({
           required
         />
         {emailExists && (
-          <Alert className="mt-2 bg-amber-50 border-amber-200">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              This email is already registered with an existing account.
+          <Alert className="mt-2 bg-red-50 border-red-200">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              This email is already registered with an existing business account.
             </AlertDescription>
           </Alert>
         )}
@@ -182,10 +207,18 @@ export const BusinessContactSection = ({
           required
         />
         {phoneExists && (
-          <Alert className="mt-2 bg-amber-50 border-amber-200">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              This phone number is already registered with an existing account.
+          <Alert className="mt-2 bg-red-50 border-red-200">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              This phone number is already registered with an existing business account.
+            </AlertDescription>
+          </Alert>
+        )}
+        {duplicateResult && duplicateResult.duplicateType === 'business_combination' && (
+          <Alert className="mt-2 bg-red-50 border-red-200">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {getDuplicateMessage()}
             </AlertDescription>
           </Alert>
         )}

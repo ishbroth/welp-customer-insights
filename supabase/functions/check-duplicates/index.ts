@@ -30,11 +30,11 @@ serve(async (req) => {
       }
     )
 
-    // Check email duplicates within the same account type
+    // Check email duplicates within the same account type (highest priority - always block)
     if (email && accountType) {
       const { data: emailProfile, error: emailError } = await supabaseAdmin
         .from('profiles')
-        .select('id, email, name, type, phone')
+        .select('id, email, name, type, phone, address')
         .eq('email', email)
         .eq('type', accountType)
         .maybeSingle();
@@ -58,7 +58,7 @@ serve(async (req) => {
       }
     }
 
-    // Check phone duplicates within the same account type
+    // Check phone duplicates within the same account type (second priority - always block)
     if (phone && accountType) {
       // Clean phone for comparison
       const cleanedPhone = phone.replace(/\D/g, '');
@@ -67,7 +67,7 @@ serve(async (req) => {
       // Get all profiles with phones of the same account type
       const { data: allProfiles, error: profilesError } = await supabaseAdmin
         .from('profiles')
-        .select('id, phone, email, name, type')
+        .select('id, phone, email, name, type, address')
         .eq('type', accountType)
         .not('phone', 'is', null);
 
@@ -101,7 +101,66 @@ serve(async (req) => {
       }
     }
 
-    // For business accounts, check address and business name duplicates
+    // For business accounts, check if combination of details matches existing business
+    if (accountType === 'business' && businessName && address) {
+      console.log("Checking business combination for:", { businessName, address });
+      
+      // Get all business profiles and check for matches
+      const { data: businessProfiles, error: businessError } = await supabaseAdmin
+        .from('profiles')
+        .select('id, name, address, email, phone, type')
+        .eq('type', 'business');
+
+      console.log("All business profiles:", businessProfiles?.length, businessError);
+
+      if (businessProfiles) {
+        for (const profile of businessProfiles) {
+          let matchCount = 0;
+          const matches = [];
+
+          // Check business name similarity (case insensitive)
+          if (profile.name && businessName) {
+            const profileNameLower = profile.name.toLowerCase().trim();
+            const businessNameLower = businessName.toLowerCase().trim();
+            if (profileNameLower.includes(businessNameLower) || businessNameLower.includes(profileNameLower)) {
+              matchCount++;
+              matches.push('business_name');
+            }
+          }
+
+          // Check address match
+          if (profile.address && address) {
+            if (profile.address.toLowerCase().trim() === address.toLowerCase().trim()) {
+              matchCount++;
+              matches.push('address');
+            }
+          }
+
+          // If we have 2 or more matches, this is likely the same business
+          if (matchCount >= 2) {
+            console.log("Found business combination match:", { profile, matches, matchCount });
+            console.log("=== DUPLICATE CHECK END (BUSINESS COMBINATION FOUND) ===");
+            return new Response(
+              JSON.stringify({
+                isDuplicate: true,
+                duplicateType: 'business_combination',
+                existingEmail: profile.email,
+                existingPhone: profile.phone,
+                existingAddress: profile.address,
+                matchedFields: matches,
+                allowContinue: false
+              }),
+              { 
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200 
+              }
+            );
+          }
+        }
+      }
+    }
+
+    // Individual field checks for business accounts (lower priority, allow continue)
     if (accountType === 'business') {
       // Check address duplicates within business accounts
       if (address) {
