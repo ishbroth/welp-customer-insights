@@ -7,6 +7,7 @@ import { BusinessVerificationDisplay } from "./BusinessVerificationDisplay";
 import { PhoneVerificationFlow } from "./PhoneVerificationFlow";
 import { PasswordSetupStep } from "./PasswordSetupStep";
 import VerificationSuccessPopup from "./VerificationSuccessPopup";
+import AccountCreatedPopup from "./AccountCreatedPopup";
 import { useBusinessVerification } from "@/hooks/useBusinessVerification";
 import { useBusinessAccountCreation } from "@/hooks/useBusinessAccountCreation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -51,8 +52,9 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
 
   const {
     isSubmitting,
-    showSuccessPopup,
-    setShowSuccessPopup,
+    showAccountCreatedPopup,
+    setShowAccountCreatedPopup,
+    createdBusinessData,
     createBusinessAccount
   } = useBusinessAccountCreation();
   
@@ -103,8 +105,8 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       businessType
     );
     
-    if (result.success && !result.showPopup) {
-      // Navigation is handled in the hook
+    if (result.success) {
+      // The popup will be shown automatically
     }
   };
   
@@ -197,11 +199,21 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
         />
       )}
       
-      {showSuccessPopup && realVerificationDetails && (
+      {realVerificationDetails && (
         <VerificationSuccessPopup
-          isOpen={showSuccessPopup}
+          isOpen={!!realVerificationDetails}
           businessName={realVerificationDetails.businessName}
           verificationDetails={realVerificationDetails.verificationDetails}
+        />
+      )}
+
+      {showAccountCreatedPopup && createdBusinessData && (
+        <AccountCreatedPopup
+          isOpen={showAccountCreatedPopup}
+          businessName={createdBusinessData.businessName || createdBusinessData.name}
+          businessPhone={businessPhone}
+          setBusinessPhone={setBusinessPhone}
+          businessData={createdBusinessData}
         />
       )}
     </>

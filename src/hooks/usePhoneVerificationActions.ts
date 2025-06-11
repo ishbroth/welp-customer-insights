@@ -60,75 +60,28 @@ export const usePhoneVerificationActions = ({
       });
       
       if (isValid) {
-        // Sign up with Supabase
-        const { error: signUpError, data } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name,
-              phone: phoneNumber,
-              type: accountType,
-              address,
-              city,
-              state,
-              zipCode
-            },
-            emailRedirectTo: window.location.origin + '/login'
-          }
-        });
-        
-        if (signUpError) {
-          toast({
-            title: "Signup Error",
-            description: signUpError.message,
-            variant: "destructive"
-          });
-          setIsVerifying(false);
-          return;
-        }
-        
-        // Confirm email immediately since phone is verified
-        if (data.user) {
-          try {
-            await supabase.functions.invoke('confirm-email', {
-              body: { userId: data.user.id, email }
-            });
-          } catch (confirmError) {
-            console.error("Error confirming email:", confirmError);
-            // Continue with account creation even if email confirmation fails
-          }
-        }
-        
-        // Create profile
-        const { error: profileError } = await supabase.functions.invoke('create-profile', {
-          body: {
-            userId: data.user?.id,
-            name,
-            phone: phoneNumber,
-            address,
-            city,
-            state,
-            zipCode,
-            type: accountType,
-            businessName
-          }
-        });
-        
-        if (profileError) {
-          console.error("Profile creation error:", profileError);
-        }
-        
         // Show success toast
         toast({
           title: "Success!",
-          description: "Your account has been created successfully.",
+          description: "Your phone number has been verified and account is now active.",
         });
         
-        // Redirect to login page with success message
-        navigate("/login", { 
-          state: { message: "Account created successfully! Please sign in to continue." } 
+        // Sign in the user automatically since account was just created
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
         });
+        
+        if (signInError) {
+          console.error("Auto sign-in error:", signInError);
+          // Redirect to login with success message instead
+          navigate("/login", { 
+            state: { message: "Account created successfully! Please sign in to continue." } 
+          });
+        } else {
+          // Redirect to profile page
+          navigate("/profile");
+        }
       } else {
         setIsCodeValid(false);
         toast({

@@ -1,16 +1,13 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useBusinessAccountCreation = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { signup } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showAccountCreatedPopup, setShowAccountCreatedPopup] = useState(false);
+  const [createdBusinessData, setCreatedBusinessData] = useState<any>(null);
+  const { toast } = useToast();
 
   const createBusinessAccount = async (
     businessName: string,
@@ -25,97 +22,119 @@ export const useBusinessAccountCreation = () => {
     licenseNumber: string,
     businessType: string
   ) => {
-    if (
-      !businessEmail || 
-      !businessPassword || 
-      businessPassword !== businessConfirmPassword
-    ) {
+    // Validate passwords
+    if (businessPassword !== businessConfirmPassword) {
       toast({
-        title: "Error",
-        description: "Please check your form inputs and try again.",
-        variant: "destructive",
+        title: "Password Mismatch",
+        description: "Passwords do not match. Please check and try again.",
+        variant: "destructive"
       });
       return { success: false };
     }
-    
+
+    if (businessPassword.length < 8) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive"
+      });
+      return { success: false };
+    }
+
     setIsSubmitting(true);
-    
+
     try {
-      // Get verification data from session storage
-      const verificationDataStr = sessionStorage.getItem("businessVerificationData");
-      const verificationInfo = verificationDataStr ? JSON.parse(verificationDataStr) : null;
-      
-      const fullBusinessName = `${businessName} (${businessType})`;
-      
-      const { success, error } = await signup({
+      // Create the account with Supabase Auth
+      const { error: signUpError, data } = await supabase.auth.signUp({
         email: businessEmail,
         password: businessPassword,
-        name: fullBusinessName,
-        phone: businessPhone,
-        zipCode: businessZipCode,
-        type: "business",
-        address: businessStreet,
-        city: businessCity,
-        state: businessState
-      });
-      
-      if (success) {
-        // If this was real verification, update the business_info table immediately
-        if (verificationInfo?.verificationMethod === "real_license") {
-          try {
-            // Wait a moment for the profile to be created
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { error: updateError } = await supabase
-                .from('business_info')
-                .upsert({
-                  id: user.id,
-                  business_name: businessName,
-                  license_number: licenseNumber,
-                  license_type: businessType,
-                  license_state: businessState,
-                  verified: true,
-                  license_status: verificationInfo.realVerificationResult?.details?.status || "Active",
-                  additional_info: `Real-time verified: ${verificationInfo.realVerificationResult?.details?.issuingAuthority || 'State Database'}`
-                });
-                
-              if (updateError) {
-                console.error("Error updating business info:", updateError);
-              } else {
-                console.log("Business info updated with verification status");
-              }
-            }
-          } catch (updateError) {
-            console.error("Error in post-signup verification update:", updateError);
-          }
-          
-          // Show success popup for real verification
-          setShowSuccessPopup(true);
-          return { success: true, showPopup: true };
-        } else {
-          toast({
-            title: "Account Created",
-            description: "Your business account has been created with limited access. Complete verification for full access.",
-          });
-          navigate("/business-verification-success");
-          return { success: true, showPopup: false };
+        options: {
+          data: {
+            name: businessName,
+            phone: businessPhone,
+            type: 'business',
+            address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+            city: businessCity,
+            state: businessState,
+            zipCode: businessZipCode,
+            businessId: licenseNumber,
+            businessType: businessType
+          },
+          emailRedirectTo: window.location.origin + '/login'
         }
-      } else {
+      });
+
+      if (signUpError) {
         toast({
-          title: "Signup Failed",
-          description: error || "An error occurred while creating your account.",
-          variant: "destructive",
+          title: "Signup Error",
+          description: signUpError.message,
+          variant: "destructive"
         });
         return { success: false };
       }
+
+      // Confirm email immediately since we'll do phone verification instead
+      if (data.user) {
+        try {
+          await supabase.functions.invoke('confirm-email', {
+            body: { userId: data.user.id, email: businessEmail }
+          });
+        } catch (confirmError) {
+          console.error("Error confirming email:", confirmError);
+          // Continue with account creation even if email confirmation fails
+        }
+      }
+
+      // Create profile using edge function
+      const { error: profileError } = await supabase.functions.invoke('create-profile', {
+        body: {
+          userId: data.user?.id,
+          name: businessName,
+          phone: businessPhone,
+          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+          city: businessCity,
+          state: businessState,
+          zipCode: businessZipCode,
+          type: 'business',
+          businessName,
+          businessId: licenseNumber,
+          businessType: businessType
+        }
+      });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+      }
+
+      // Store business data for the popup
+      const businessData = {
+        name: businessName,
+        email: businessEmail,
+        password: businessPassword,
+        phone: businessPhone,
+        address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+        street: businessStreet,
+        city: businessCity,
+        state: businessState,
+        zipCode: businessZipCode,
+        businessName: businessName,
+        businessId: licenseNumber,
+        businessType: businessType,
+        verificationMethod: "phone",
+        isFullyVerified: false
+      };
+
+      setCreatedBusinessData(businessData);
+      setShowAccountCreatedPopup(true);
+
+      return { success: true };
+
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Account creation error:", error);
       toast({
-        title: "Signup Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred during account creation.",
+        variant: "destructive"
       });
       return { success: false };
     } finally {
@@ -125,8 +144,9 @@ export const useBusinessAccountCreation = () => {
 
   return {
     isSubmitting,
-    showSuccessPopup,
-    setShowSuccessPopup,
+    showAccountCreatedPopup,
+    setShowAccountCreatedPopup,
+    createdBusinessData,
     createBusinessAccount
   };
 };
