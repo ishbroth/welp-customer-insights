@@ -1,17 +1,13 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
-import { BusinessInfoForm } from "./BusinessInfoForm";
 import { BusinessVerificationDisplay } from "./BusinessVerificationDisplay";
 import { PhoneVerificationFlow } from "./PhoneVerificationFlow";
 import { PasswordSetupStep } from "./PasswordSetupStep";
-import VerificationSuccessPopup from "./VerificationSuccessPopup";
-import AccountCreatedPopup from "./AccountCreatedPopup";
+import { BusinessVerificationStep } from "./BusinessVerificationStep";
+import { BusinessSignupPopups } from "./BusinessSignupPopups";
 import { useBusinessVerification } from "@/hooks/useBusinessVerification";
 import { useBusinessAccountCreation } from "@/hooks/useBusinessAccountCreation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { useBusinessFormState } from "@/hooks/useBusinessFormState";
 
 interface BusinessSignupFormProps {
   step: number;
@@ -21,19 +17,33 @@ interface BusinessSignupFormProps {
 const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
   const { currentUser } = useAuth();
   
-  // Business form state
-  const [businessName, setBusinessName] = useState("");
-  const [businessStreet, setBusinessStreet] = useState("");
-  const [businessCity, setBusinessCity] = useState("");
-  const [businessState, setBusinessState] = useState("");
-  const [businessZipCode, setBusinessZipCode] = useState("");
-  const [businessPhone, setBusinessPhone] = useState("");
-  const [businessType, setBusinessType] = useState("ein");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [businessEmail, setBusinessEmail] = useState("");
-  const [businessPassword, setBusinessPassword] = useState("");
-  const [businessConfirmPassword, setBusinessConfirmPassword] = useState("");
-  const [hasDuplicates, setHasDuplicates] = useState(false);
+  // Use custom hook for form state management
+  const {
+    businessName,
+    setBusinessName,
+    businessStreet,
+    setBusinessStreet,
+    businessCity,
+    setBusinessCity,
+    businessState,
+    setBusinessState,
+    businessZipCode,
+    setBusinessZipCode,
+    businessPhone,
+    setBusinessPhone,
+    businessType,
+    setBusinessType,
+    licenseNumber,
+    setLicenseNumber,
+    businessEmail,
+    setBusinessEmail,
+    businessPassword,
+    setBusinessPassword,
+    businessConfirmPassword,
+    setBusinessConfirmPassword,
+    hasDuplicates,
+    setHasDuplicates
+  } = useBusinessFormState();
   
   // Use custom hooks for verification and account creation
   const {
@@ -113,52 +123,32 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
   return (
     <>
       {step === 1 && !verificationData && !showTextVerification && (
-        <form onSubmit={handleBusinessVerification}>
-          <BusinessInfoForm
-            businessName={businessName}
-            setBusinessName={setBusinessName}
-            businessEmail={businessEmail}
-            setBusinessEmail={setBusinessEmail}
-            businessStreet={businessStreet}
-            setBusinessStreet={setBusinessStreet}
-            businessCity={businessCity}
-            setBusinessCity={setBusinessCity}
-            businessState={businessState}
-            setBusinessState={setBusinessState}
-            businessZipCode={businessZipCode}
-            setBusinessZipCode={setBusinessZipCode}
-            businessPhone={businessPhone}
-            setBusinessPhone={setBusinessPhone}
-            businessType={businessType}
-            setBusinessType={setBusinessType}
-            licenseNumber={licenseNumber}
-            setLicenseNumber={setLicenseNumber}
-            onDuplicateFound={setHasDuplicates}
-          />
-          
-          {verificationError && (
-            <div className="p-3 bg-red-100 text-red-700 rounded-md text-sm mt-4">
-              {verificationError}
-            </div>
-          )}
-          
-          {hasDuplicates && (
-            <Alert className="mt-4 bg-red-50 border-red-200">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                An account with this email or phone number already exists. Please sign in to your existing account or use different contact information.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <Button 
-            type="submit" 
-            className="welp-button w-full mt-6" 
-            disabled={isVerifying || hasDuplicates}
-          >
-            {isVerifying ? "Verifying..." : (isVerified ? "Update License Information" : "Verify Business")}
-          </Button>
-        </form>
+        <BusinessVerificationStep
+          businessName={businessName}
+          setBusinessName={setBusinessName}
+          businessEmail={businessEmail}
+          setBusinessEmail={setBusinessEmail}
+          businessStreet={businessStreet}
+          setBusinessStreet={setBusinessStreet}
+          businessCity={businessCity}
+          setBusinessCity={setBusinessCity}
+          businessState={businessState}
+          setBusinessState={setBusinessState}
+          businessZipCode={businessZipCode}
+          setBusinessZipCode={setBusinessZipCode}
+          businessPhone={businessPhone}
+          setBusinessPhone={setBusinessPhone}
+          businessType={businessType}
+          setBusinessType={setBusinessType}
+          licenseNumber={licenseNumber}
+          setLicenseNumber={setLicenseNumber}
+          hasDuplicates={hasDuplicates}
+          onDuplicateFound={setHasDuplicates}
+          verificationError={verificationError}
+          isVerifying={isVerifying}
+          isVerified={isVerified}
+          onSubmit={handleBusinessVerification}
+        />
       )}
 
       {step === 1 && showTextVerification && !verificationData && (
@@ -199,23 +189,13 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
         />
       )}
       
-      {realVerificationDetails && (
-        <VerificationSuccessPopup
-          isOpen={!!realVerificationDetails}
-          businessName={realVerificationDetails.businessName}
-          verificationDetails={realVerificationDetails.verificationDetails}
-        />
-      )}
-
-      {showAccountCreatedPopup && createdBusinessData && (
-        <AccountCreatedPopup
-          isOpen={showAccountCreatedPopup}
-          businessName={createdBusinessData.businessName || createdBusinessData.name}
-          businessPhone={businessPhone}
-          setBusinessPhone={setBusinessPhone}
-          businessData={createdBusinessData}
-        />
-      )}
+      <BusinessSignupPopups
+        realVerificationDetails={realVerificationDetails}
+        showAccountCreatedPopup={showAccountCreatedPopup}
+        createdBusinessData={createdBusinessData}
+        businessPhone={businessPhone}
+        setBusinessPhone={setBusinessPhone}
+      />
     </>
   );
 };
