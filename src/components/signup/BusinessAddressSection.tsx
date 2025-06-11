@@ -98,8 +98,10 @@ export const BusinessAddressSection = ({
         <StateSelect
           value={businessState}
           onValueChange={setBusinessState}
-          required
         />
+        {!businessState && (
+          <p className="text-sm text-red-500 mt-1">Please select a state</p>
+        )}
       </div>
     </div>
   );

@@ -61,7 +61,7 @@ export const BusinessVerificationStep = ({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
+    // Validate required fields including state
     if (!businessName.trim()) {
       return;
     }
