@@ -31,6 +31,13 @@ export const useBusinessVerification = (currentUserId?: string) => {
       setIsVerifying(false);
       return { success: false };
     }
+
+    // Validate required state field
+    if (!businessState || !businessState.trim()) {
+      setVerificationError("Please select a state for your business location.");
+      setIsVerifying(false);
+      return { success: false };
+    }
     
     try {
       // Use the business verification utility with state-specific verification
@@ -42,9 +49,11 @@ export const useBusinessVerification = (currentUserId?: string) => {
         
         setRealVerificationDetails({
           businessName,
-          verificationDetails: result.details || {
-            type: "Business License",
-            status: "Active"
+          verificationDetails: {
+            type: result.details?.type || "Business License",
+            status: result.details?.status || "Active",
+            issuingAuthority: result.details?.issuingAuthority || `${businessState} State Database`,
+            licenseState: businessState
           }
         });
         
@@ -67,7 +76,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
         return { success: true, nextStep: 2 };
         
       } else if (result.verified && !result.isRealVerification) {
-        // Mock verification - use existing flow
+        // Mock verification - use existing flow with proper state information
         const businessData = {
           name: businessName,
           email: businessEmail,
@@ -90,7 +99,8 @@ export const useBusinessVerification = (currentUserId?: string) => {
           email: businessEmail,
           licenseStatus: "Active",
           licenseType: result.details?.type || "General Business",
-          licenseExpiration: result.details?.expirationDate || "2025-12-31"
+          licenseExpiration: result.details?.expirationDate || "2025-12-31",
+          licenseState: businessState
         });
         setVerificationError("");
         return { success: true, nextStep: 1 };

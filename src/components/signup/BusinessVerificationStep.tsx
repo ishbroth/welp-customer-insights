@@ -57,8 +57,44 @@ export const BusinessVerificationStep = ({
   isVerified,
   onSubmit
 }: BusinessVerificationStepProps) => {
+  
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!businessName.trim()) {
+      return;
+    }
+    if (!businessEmail.trim()) {
+      return;
+    }
+    if (!businessStreet.trim()) {
+      return;
+    }
+    if (!businessCity.trim()) {
+      return;
+    }
+    if (!businessState.trim()) {
+      return;
+    }
+    if (!businessZipCode.trim()) {
+      return;
+    }
+    if (!businessPhone.trim()) {
+      return;
+    }
+    if (!businessType.trim()) {
+      return;
+    }
+    if (!licenseNumber.trim()) {
+      return;
+    }
+    
+    onSubmit(e);
+  };
+
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleFormSubmit}>
       <BusinessInfoForm
         businessName={businessName}
         setBusinessName={setBusinessName}
@@ -99,7 +135,7 @@ export const BusinessVerificationStep = ({
       <Button 
         type="submit" 
         className="welp-button w-full mt-6" 
-        disabled={isVerifying || hasDuplicates}
+        disabled={isVerifying || hasDuplicates || !businessState.trim()}
       >
         {isVerifying ? "Verifying..." : (isVerified ? "Update License Information" : "Verify Business")}
       </Button>

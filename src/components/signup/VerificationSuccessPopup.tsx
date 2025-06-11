@@ -13,6 +13,7 @@ interface VerificationSuccessPopupProps {
     type: string;
     status: string;
     issuingAuthority?: string;
+    licenseState?: string;
   };
 }
 
@@ -57,6 +58,9 @@ const VerificationSuccessPopup = ({
             <div className="text-sm text-gray-700 space-y-1">
               <p><strong>License Type:</strong> {verificationDetails.type}</p>
               <p><strong>Status:</strong> {verificationDetails.status}</p>
+              {verificationDetails.licenseState && (
+                <p><strong>State:</strong> {verificationDetails.licenseState}</p>
+              )}
               {verificationDetails.issuingAuthority && (
                 <p><strong>Authority:</strong> {verificationDetails.issuingAuthority}</p>
               )}

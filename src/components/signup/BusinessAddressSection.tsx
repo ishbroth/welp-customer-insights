@@ -30,7 +30,9 @@ export const BusinessAddressSection = ({
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="businessName" className="block text-sm font-medium mb-1">Business Name</label>
+        <label htmlFor="businessName" className="block text-sm font-medium mb-1">
+          Business Name <span className="text-red-500">*</span>
+        </label>
         <Input
           id="businessName"
           type="text"
@@ -43,7 +45,9 @@ export const BusinessAddressSection = ({
       </div>
       
       <div>
-        <label htmlFor="businessStreet" className="block text-sm font-medium mb-1">Street Address</label>
+        <label htmlFor="businessStreet" className="block text-sm font-medium mb-1">
+          Street Address <span className="text-red-500">*</span>
+        </label>
         <Input
           id="businessStreet"
           type="text"
@@ -57,7 +61,9 @@ export const BusinessAddressSection = ({
       
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="businessCity" className="block text-sm font-medium mb-1">City</label>
+          <label htmlFor="businessCity" className="block text-sm font-medium mb-1">
+            City <span className="text-red-500">*</span>
+          </label>
           <Input
             id="businessCity"
             type="text"
@@ -70,7 +76,9 @@ export const BusinessAddressSection = ({
         </div>
         
         <div>
-          <label htmlFor="businessZipCode" className="block text-sm font-medium mb-1">Zip Code</label>
+          <label htmlFor="businessZipCode" className="block text-sm font-medium mb-1">
+            Zip Code <span className="text-red-500">*</span>
+          </label>
           <Input
             id="businessZipCode"
             type="text"
@@ -84,10 +92,13 @@ export const BusinessAddressSection = ({
       </div>
       
       <div>
-        <label htmlFor="businessState" className="block text-sm font-medium mb-1">State</label>
+        <label htmlFor="businessState" className="block text-sm font-medium mb-1">
+          State <span className="text-red-500">*</span>
+        </label>
         <StateSelect
           value={businessState}
           onValueChange={setBusinessState}
+          required
         />
       </div>
     </div>
