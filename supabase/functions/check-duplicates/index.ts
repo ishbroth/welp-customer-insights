@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { email, phone, businessName, address } = await req.json()
+    const { email, phone, businessName, address, accountType } = await req.json()
     
     console.log("=== DUPLICATE CHECK EDGE FUNCTION START ===");
-    console.log("Checking duplicates for:", { email, phone, businessName, address });
+    console.log("Checking duplicates for:", { email, phone, businessName, address, accountType });
 
     // Create service role client that bypasses RLS
     const supabaseAdmin = createClient(
@@ -30,15 +30,16 @@ serve(async (req) => {
       }
     )
 
-    // Check email duplicates
-    if (email) {
+    // Check email duplicates within the same account type
+    if (email && accountType) {
       const { data: emailProfile, error: emailError } = await supabaseAdmin
         .from('profiles')
         .select('id, email, name, type, phone')
         .eq('email', email)
+        .eq('type', accountType)
         .maybeSingle();
 
-      console.log("Email check result:", { emailProfile, emailError });
+      console.log("Email check result (filtered by account type):", { emailProfile, emailError, accountType });
 
       if (emailProfile) {
         console.log("=== DUPLICATE CHECK END (EMAIL FOUND) ===");
@@ -57,25 +58,26 @@ serve(async (req) => {
       }
     }
 
-    // Check phone duplicates
-    if (phone) {
+    // Check phone duplicates within the same account type
+    if (phone && accountType) {
       // Clean phone for comparison
       const cleanedPhone = phone.replace(/\D/g, '');
-      console.log("Checking phone:", phone, "cleaned:", cleanedPhone);
+      console.log("Checking phone:", phone, "cleaned:", cleanedPhone, "for account type:", accountType);
 
-      // Get all profiles with phones and check
+      // Get all profiles with phones of the same account type
       const { data: allProfiles, error: profilesError } = await supabaseAdmin
         .from('profiles')
         .select('id, phone, email, name, type')
+        .eq('type', accountType)
         .not('phone', 'is', null);
 
-      console.log("All profiles with phones:", allProfiles?.length, profilesError);
+      console.log("All profiles with phones for account type:", accountType, allProfiles?.length, profilesError);
 
       if (allProfiles) {
         for (const profile of allProfiles) {
           if (profile.phone) {
             const profileCleanedPhone = profile.phone.replace(/\D/g, '');
-            console.log(`Comparing: ${cleanedPhone} vs ${profileCleanedPhone}`);
+            console.log(`Comparing: ${cleanedPhone} vs ${profileCleanedPhone} (account type: ${accountType})`);
             
             if (profileCleanedPhone === cleanedPhone) {
               console.log("Found phone match:", profile);
@@ -86,7 +88,7 @@ serve(async (req) => {
                   duplicateType: 'phone',
                   existingPhone: phone,
                   existingEmail: profile.email,
-                  allowContinue: true
+                  allowContinue: false
                 }),
                 { 
                   headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -99,35 +101,67 @@ serve(async (req) => {
       }
     }
 
-    // Check address duplicates if provided
-    if (address) {
-      const { data: addressProfile, error: addressError } = await supabaseAdmin
-        .from('profiles')
-        .select('id, address, email, name, type')
-        .eq('address', address)
-        .maybeSingle();
+    // For business accounts, check address and business name duplicates
+    if (accountType === 'business') {
+      // Check address duplicates within business accounts
+      if (address) {
+        const { data: addressProfile, error: addressError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, address, email, name, type')
+          .eq('address', address)
+          .eq('type', 'business')
+          .maybeSingle();
 
-      console.log("Address check result:", { addressProfile, addressError });
+        console.log("Address check result (business accounts only):", { addressProfile, addressError });
 
-      if (addressProfile) {
-        console.log("=== DUPLICATE CHECK END (ADDRESS FOUND) ===");
-        return new Response(
-          JSON.stringify({
-            isDuplicate: true,
-            duplicateType: 'address',
-            existingAddress: address,
-            existingEmail: addressProfile.email,
-            allowContinue: true
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        );
+        if (addressProfile) {
+          console.log("=== DUPLICATE CHECK END (ADDRESS FOUND) ===");
+          return new Response(
+            JSON.stringify({
+              isDuplicate: true,
+              duplicateType: 'address',
+              existingAddress: address,
+              existingEmail: addressProfile.email,
+              allowContinue: true
+            }),
+            { 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200 
+            }
+          );
+        }
+      }
+
+      // Check business name duplicates within business accounts
+      if (businessName) {
+        const { data: businessProfile, error: businessError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, name, email, type')
+          .ilike('name', `%${businessName}%`)
+          .eq('type', 'business')
+          .maybeSingle();
+
+        console.log("Business name check result (business accounts only):", { businessProfile, businessError });
+
+        if (businessProfile) {
+          console.log("=== DUPLICATE CHECK END (BUSINESS NAME FOUND) ===");
+          return new Response(
+            JSON.stringify({
+              isDuplicate: true,
+              duplicateType: 'business_name',
+              existingEmail: businessProfile.email,
+              allowContinue: true
+            }),
+            { 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200 
+            }
+          );
+        }
       }
     }
 
-    console.log("No duplicates found");
+    console.log("No duplicates found within account type:", accountType);
     console.log("=== DUPLICATE CHECK END (AVAILABLE) ===");
 
     return new Response(

@@ -47,7 +47,7 @@ export const BusinessContactSection = ({
         console.log("Checking email exists via edge function:", businessEmail);
         setIsCheckingDuplicates(true);
         try {
-          const exists = await checkEmailExistsViaEdgeFunction(businessEmail);
+          const exists = await checkEmailExistsViaEdgeFunction(businessEmail, 'business');
           setEmailExists(exists);
           console.log("Email exists result:", exists);
           
@@ -81,7 +81,7 @@ export const BusinessContactSection = ({
         console.log("Checking phone exists via edge function:", businessPhone);
         setIsCheckingDuplicates(true);
         try {
-          const exists = await checkPhoneExistsViaEdgeFunction(businessPhone);
+          const exists = await checkPhoneExistsViaEdgeFunction(businessPhone, 'business');
           setPhoneExists(exists);
           console.log("Phone exists result:", exists);
           
@@ -120,7 +120,8 @@ export const BusinessContactSection = ({
             businessEmail,
             businessPhone,
             businessName,
-            businessAddress
+            businessAddress,
+            'business'
           );
           
           console.log("Comprehensive duplicate check result:", result);
