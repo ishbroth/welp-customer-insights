@@ -62,21 +62,28 @@ serve(async (req) => {
     
     console.log("Twilio configuration verified");
     
-    // Import Twilio
+    // Import and initialize Twilio with proper error handling
     let twilioClient;
     try {
-      const twilioModule = await import("https://esm.sh/twilio@4.20.0");
-      const Twilio = twilioModule.default || twilioModule;
-      twilioClient = Twilio(accountSid, authToken);
+      // Use direct import instead of dynamic import
+      const { default: Twilio } = await import("https://esm.sh/twilio@5.2.2");
+      twilioClient = new Twilio(accountSid, authToken);
       console.log("Twilio client initialized successfully");
     } catch (twilioError) {
       console.error("Failed to initialize Twilio:", twilioError);
-      throw new Error("Failed to initialize SMS service");
+      throw new Error(`Failed to initialize SMS service: ${twilioError.message}`);
     }
     
-    // Clean phone number (remove non-digits)
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
-    console.log("Cleaned phone number length:", cleanPhone.length);
+    // Clean phone number (remove non-digits and ensure it starts with +1 for US numbers)
+    let cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.length === 10) {
+      cleanPhone = '+1' + cleanPhone;
+    } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
+      cleanPhone = '+' + cleanPhone;
+    } else if (!cleanPhone.startsWith('+')) {
+      cleanPhone = '+1' + cleanPhone;
+    }
+    console.log("Cleaned phone number:", cleanPhone);
     
     // For actionType "send" we send a verification code
     if (actionType === "send") {
@@ -109,12 +116,12 @@ serve(async (req) => {
       
       // Send SMS using Twilio
       try {
-        console.log(`Attempting to send SMS to ${phoneNumber}`);
+        console.log(`Attempting to send SMS to ${cleanPhone}`);
         
         const message = await twilioClient.messages.create({
           body: `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`,
           from: fromNumber,
-          to: phoneNumber
+          to: cleanPhone
         });
         
         console.log(`SMS sent successfully. Message SID: ${message.sid}`);
