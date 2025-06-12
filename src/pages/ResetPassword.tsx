@@ -20,20 +20,49 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Check if we have a valid reset session
+  // Check if we have a valid reset session on component mount
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      // For password reset, we need to check if this is a recovery session
-      if (session && session.user) {
-        setIsValidSession(true);
-      } else {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Current session:", session);
+        
+        if (error) {
+          console.error("Session error:", error);
+          setIsValidSession(false);
+          return;
+        }
+        
+        // For password reset, we need an active session
+        if (session && session.user) {
+          console.log("Valid reset session found");
+          setIsValidSession(true);
+        } else {
+          console.log("No valid session for password reset");
+          setIsValidSession(false);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
         setIsValidSession(false);
       }
     };
 
     checkSession();
+
+    // Also listen for auth state changes in case the session is established after component mount
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsValidSession(true);
+      } else if (session && session.user) {
+        setIsValidSession(true);
+      } else if (event === 'SIGNED_OUT') {
+        setIsValidSession(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -74,6 +103,7 @@ const ResetPassword = () => {
       });
       
       if (error) {
+        console.error("Password update error:", error);
         toast({
           title: "Error",
           description: error.message,
@@ -93,6 +123,7 @@ const ResetPassword = () => {
         });
       }
     } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

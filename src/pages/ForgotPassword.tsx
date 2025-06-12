@@ -42,20 +42,25 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
     
     try {
+      console.log("Sending password reset email to:", email);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/reset-password",
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       
       if (error) {
+        console.error("Password reset error:", error);
         toast({
           title: "Error",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log("Password reset email sent successfully");
         setIsResetEmailSent(true);
       }
     } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
