@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import SearchResults from "@/pages/SearchResults";
@@ -31,6 +30,7 @@ import CustomerVerification from "@/pages/CustomerVerification";
 import CustomerBenefits from "@/pages/CustomerBenefits";
 import CustomerStories from "@/pages/CustomerStories";
 import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import AdminLogin from "@/pages/AdminLogin";
 import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
@@ -47,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/business-password-setup" element={<BusinessPasswordSetup />} />
       <Route path="/verification" element={<Verification />} />
