@@ -22,7 +22,7 @@ serve(async (req) => {
       throw new Error("Phone number is required");
     }
 
-    // Initialize Twilio client using dynamic import
+    // Initialize Twilio client
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -31,8 +31,9 @@ serve(async (req) => {
       throw new Error("Twilio credentials not properly configured");
     }
     
-    // Use dynamic import for Twilio
-    const { default: Twilio } = await import("https://esm.sh/twilio@4.20.0");
+    // Import Twilio using a more compatible approach for Deno
+    const twilioModule = await import("https://esm.sh/twilio@4.20.0");
+    const Twilio = twilioModule.default || twilioModule;
     const twilioClient = Twilio(accountSid, authToken);
     
     // For actionType "send" we send a verification code
