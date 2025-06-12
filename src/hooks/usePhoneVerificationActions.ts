@@ -2,7 +2,6 @@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { verifyPhoneNumber, resendVerificationCode } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 
 interface UsePhoneVerificationActionsProps {
   email: string | null;
@@ -41,7 +40,7 @@ export const usePhoneVerificationActions = ({
   const navigate = useNavigate();
 
   const handleVerifyCode = async (verificationCode: string) => {
-    if (!phoneNumber || !verificationCode || !email || !password) {
+    if (!phoneNumber || !verificationCode || !email) {
       toast({
         title: "Error",
         description: "Missing required information for verification.",
@@ -62,25 +61,32 @@ export const usePhoneVerificationActions = ({
       if (isValid) {
         // Show success toast
         toast({
-          title: "Success!",
-          description: "Your phone number has been verified and account is now active.",
+          title: "Phone Verified!",
+          description: "Your phone number has been verified. Now let's set up your password.",
         });
         
-        // Sign in the user automatically since account was just created
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (signInError) {
-          console.error("Auto sign-in error:", signInError);
-          // Redirect to login with success message instead
-          navigate("/login", { 
-            state: { message: "Account created successfully! Please sign in to continue." } 
+        // Redirect to password setup instead of auto-creating account
+        if (accountType === 'business') {
+          navigate('/business-password-setup', {
+            state: {
+              businessEmail: email,
+              phone: phoneNumber,
+              businessName,
+              address,
+              city,
+              state,
+              zipCode
+            }
           });
         } else {
-          // Redirect to profile page
-          navigate("/profile");
+          // For customer accounts, we'll need a similar password setup page
+          // For now, redirect to login with a message
+          navigate("/login", {
+            state: {
+              message: "Phone verified! Please complete your account setup by logging in.",
+              email: email
+            }
+          });
         }
       } else {
         setIsCodeValid(false);

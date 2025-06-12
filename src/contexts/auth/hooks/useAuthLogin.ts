@@ -6,6 +6,7 @@ interface LoginResult {
   success: boolean;
   error?: string;
   needsPhoneVerification?: boolean;
+  needsPasswordSetup?: boolean;
   phone?: string;
   verificationData?: any;
 }
@@ -141,6 +142,32 @@ export const useAuthLogin = () => {
             console.error("Error confirming email:", confirmError);
             return { success: false, error: "Unable to verify account. Please contact support." };
           }
+        }
+      }
+      
+      // Check if this is a "user not found" error, which might indicate incomplete registration
+      if (error && error.message === "Invalid login credentials") {
+        console.log("Invalid login credentials - checking if user exists but needs password setup");
+        
+        // Check if a user exists with this email but might need password setup
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, type, phone')
+            .eq('email', email)
+            .single();
+          
+          if (profile && !profileError) {
+            console.log("User profile found but login failed - likely needs password setup");
+            return { 
+              success: false, 
+              needsPasswordSetup: true,
+              error: "Account found but password not set. Please complete your registration by setting up your password.",
+              phone: profile.phone
+            };
+          }
+        } catch (profileCheckError) {
+          console.error("Error checking profile for incomplete registration:", profileCheckError);
         }
       }
       

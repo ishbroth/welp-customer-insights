@@ -113,6 +113,23 @@ const Login = () => {
         // Redirect to the returnTo URL or default to profile
         navigate(returnTo);
       } else {
+        // Check if user needs password setup
+        if (result.needsPasswordSetup) {
+          toast({
+            title: "Complete Registration",
+            description: "Please complete your account setup.",
+          });
+          
+          // Redirect to password setup with user info
+          navigate('/business-password-setup', {
+            state: {
+              businessEmail: email,
+              phone: result.phone
+            }
+          });
+          return;
+        }
+        
         toast({
           title: "Login Failed",
           description: result.error || "Invalid email or password. Please try again.",

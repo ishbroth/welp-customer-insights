@@ -7,6 +7,7 @@ interface LoginResult {
   success: boolean;
   error?: string;
   needsPhoneVerification?: boolean;
+  needsPasswordSetup?: boolean;
   phone?: string;
   verificationData?: any;
 }

@@ -23,6 +23,7 @@ import NotificationsPage from "@/pages/NotificationsPage";
 import BillingPage from "@/pages/BillingPage";
 import BuyCredits from "@/pages/BuyCredits";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
+import BusinessPasswordSetup from "@/pages/BusinessPasswordSetup";
 import SuccessStories from "@/pages/SuccessStories";
 import Verification from "@/pages/Verification";
 import VerificationResources from "@/pages/VerificationResources";
@@ -47,6 +48,7 @@ const AppRoutes = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
+      <Route path="/business-password-setup" element={<BusinessPasswordSetup />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/verification-resources" element={<VerificationResources />} />
       <Route path="/verify-license" element={
