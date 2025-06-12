@@ -11,6 +11,42 @@ export const useAuthLogin = () => {
     'isaac.wiley99@gmail.com'
   ];
 
+  // Check if user needs phone verification
+  const checkPhoneVerificationStatus = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('phone, type')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error("Error checking profile:", error);
+        return { needsPhoneVerification: false };
+      }
+
+      // If it's a business account and has a phone but no verification completed
+      // Check if there's verification data in session storage
+      const verificationData = sessionStorage.getItem("businessVerificationData");
+      const hasUncompletedVerification = verificationData && 
+        JSON.parse(verificationData).verificationMethod === "phone" && 
+        !JSON.parse(verificationData).isFullyVerified;
+
+      if (profile?.type === 'business' && profile?.phone && hasUncompletedVerification) {
+        return { 
+          needsPhoneVerification: true, 
+          phone: profile.phone,
+          verificationData: JSON.parse(verificationData)
+        };
+      }
+
+      return { needsPhoneVerification: false };
+    } catch (error) {
+      console.error("Error in phone verification check:", error);
+      return { needsPhoneVerification: false };
+    }
+  };
+
   // Login function using Supabase (email/password only)
   const login = async (email: string, password: string) => {
     try {
@@ -45,7 +81,17 @@ export const useAuthLogin = () => {
               return { success: false, error: confirmedError.message };
             }
             
-            // Session and user will be set by the auth state listener
+            // Check phone verification status
+            const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
+            if (phoneCheck.needsPhoneVerification) {
+              return { 
+                success: true, 
+                needsPhoneVerification: true,
+                phone: phoneCheck.phone,
+                verificationData: phoneCheck.verificationData
+              };
+            }
+            
             return { success: true };
           } catch (confirmError) {
             console.error("Error confirming email:", confirmError);
@@ -70,7 +116,17 @@ export const useAuthLogin = () => {
               return { success: false, error: confirmedError.message };
             }
             
-            // Session and user will be set by the auth state listener
+            // Check phone verification status
+            const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
+            if (phoneCheck.needsPhoneVerification) {
+              return { 
+                success: true, 
+                needsPhoneVerification: true,
+                phone: phoneCheck.phone,
+                verificationData: phoneCheck.verificationData
+              };
+            }
+            
             return { success: true };
           } catch (confirmError) {
             console.error("Error confirming email:", confirmError);
@@ -82,6 +138,17 @@ export const useAuthLogin = () => {
       if (error) {
         console.error("Login error:", error);
         return { success: false, error: error.message };
+      }
+
+      // Check phone verification status for successful login
+      const phoneCheck = await checkPhoneVerificationStatus(data.user.id);
+      if (phoneCheck.needsPhoneVerification) {
+        return { 
+          success: true, 
+          needsPhoneVerification: true,
+          phone: phoneCheck.phone,
+          verificationData: phoneCheck.verificationData
+        };
       }
 
       // Session and user will be set by the auth state listener

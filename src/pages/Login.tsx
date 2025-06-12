@@ -69,14 +69,41 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const { success, error } = await login(email, password);
+      const result = await login(email, password);
       
-      if (success) {
+      if (result.success) {
         // Handle remember me functionality
         if (rememberMe) {
           localStorage.setItem("welp_remembered_email", email);
         } else {
           localStorage.removeItem("welp_remembered_email");
+        }
+        
+        // Check if phone verification is needed
+        if (result.needsPhoneVerification) {
+          const params = new URLSearchParams({
+            email: email,
+            password: password,
+            phone: result.phone || '',
+            accountType: 'business'
+          });
+          
+          // Add verification data if available
+          if (result.verificationData) {
+            Object.entries(result.verificationData).forEach(([key, value]) => {
+              if (value && key !== 'password') {
+                params.append(key, String(value));
+              }
+            });
+          }
+          
+          toast({
+            title: "Phone Verification Required",
+            description: "Please complete phone verification to access your account.",
+          });
+          
+          navigate(`/verify-phone?${params.toString()}`);
+          return;
         }
         
         toast({
@@ -88,7 +115,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: error || "Invalid email or password. Please try again.",
+          description: result.error || "Invalid email or password. Please try again.",
           variant: "destructive",
         });
       }
