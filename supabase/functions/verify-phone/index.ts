@@ -14,13 +14,37 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Verify-phone function called");
+    
     const requestData = await req.json();
+    console.log("Request data:", { ...requestData, code: requestData.code ? "***" : undefined });
+    
     const { phoneNumber, code, actionType } = requestData;
 
     // Simple validation
     if (!phoneNumber) {
+      console.error("Phone number is required");
       throw new Error("Phone number is required");
     }
+
+    if (!actionType) {
+      console.error("Action type is required");
+      throw new Error("Action type is required");
+    }
+
+    console.log(`Processing ${actionType} action for phone: ${phoneNumber}`);
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase configuration");
+      throw new Error("Database configuration not properly set up");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log("Supabase client initialized");
 
     // Initialize Twilio client
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
@@ -28,49 +52,72 @@ serve(async (req) => {
     const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
     
     if (!accountSid || !authToken || !fromNumber) {
+      console.error("Missing Twilio configuration:", { 
+        accountSid: !!accountSid, 
+        authToken: !!authToken, 
+        fromNumber: !!fromNumber 
+      });
       throw new Error("Twilio credentials not properly configured");
     }
     
-    // Import Twilio using a more compatible approach for Deno
-    const twilioModule = await import("https://esm.sh/twilio@4.20.0");
-    const Twilio = twilioModule.default || twilioModule;
-    const twilioClient = Twilio(accountSid, authToken);
+    console.log("Twilio configuration verified");
+    
+    // Import Twilio
+    let twilioClient;
+    try {
+      const twilioModule = await import("https://esm.sh/twilio@4.20.0");
+      const Twilio = twilioModule.default || twilioModule;
+      twilioClient = Twilio(accountSid, authToken);
+      console.log("Twilio client initialized successfully");
+    } catch (twilioError) {
+      console.error("Failed to initialize Twilio:", twilioError);
+      throw new Error("Failed to initialize SMS service");
+    }
+    
+    // Clean phone number (remove non-digits)
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    console.log("Cleaned phone number length:", cleanPhone.length);
     
     // For actionType "send" we send a verification code
-    // For actionType "verify" we verify the code
     if (actionType === "send") {
+      console.log("Sending verification code");
+      
       // Generate a random 6-digit code
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log("Generated verification code");
       
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-      
-      // Store the code in a verification_codes table
-      const { error } = await supabase
-        .from("verification_codes")
-        .upsert({
-          phone: phoneNumber.replace(/\D/g, ''), // Remove non-digits
-          code: verificationCode,
-          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
-        }, { onConflict: 'phone' });
-      
-      if (error) {
-        throw error;
+      // Store the code in the verification_codes table
+      try {
+        const { error: dbError } = await supabase
+          .from("verification_codes")
+          .upsert({
+            phone: cleanPhone,
+            code: verificationCode,
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
+          }, { onConflict: 'phone' });
+        
+        if (dbError) {
+          console.error("Database error:", dbError);
+          throw new Error(`Database error: ${dbError.message}`);
+        }
+        
+        console.log("Verification code stored in database");
+      } catch (dbError) {
+        console.error("Failed to store verification code:", dbError);
+        throw new Error("Failed to store verification code in database");
       }
       
       // Send SMS using Twilio
       try {
-        console.log(`Sending verification code to ${phoneNumber}`);
+        console.log(`Attempting to send SMS to ${phoneNumber}`);
         
-        await twilioClient.messages.create({
+        const message = await twilioClient.messages.create({
           body: `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`,
           from: fromNumber,
           to: phoneNumber
         });
         
-        console.log(`Verification code sent successfully to ${phoneNumber}`);
+        console.log(`SMS sent successfully. Message SID: ${message.sid}`);
         
         return new Response(
           JSON.stringify({ 
@@ -79,62 +126,99 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+        
       } catch (twilioError) {
-        console.error("Twilio error:", twilioError);
-        throw new Error(`Failed to send verification code: ${twilioError.message}`);
+        console.error("Twilio error details:", {
+          message: twilioError.message,
+          code: twilioError.code,
+          moreInfo: twilioError.moreInfo,
+          status: twilioError.status
+        });
+        
+        // Return a more specific error message based on Twilio error
+        let errorMessage = "Failed to send verification code";
+        if (twilioError.code === 21211) {
+          errorMessage = "Invalid phone number format";
+        } else if (twilioError.code === 21614) {
+          errorMessage = "Invalid phone number - unable to send to this number";
+        } else if (twilioError.code === 21408) {
+          errorMessage = "Permission denied - check Twilio account settings";
+        }
+        
+        throw new Error(`${errorMessage}: ${twilioError.message}`);
       }
     } 
     else if (actionType === "verify") {
+      console.log("Verifying code");
+      
       if (!code) {
+        console.error("Verification code is required");
         throw new Error("Verification code is required");
       }
       
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-      
       // Check if the code is valid and not expired
-      const { data, error } = await supabase
-        .from("verification_codes")
-        .select("*")
-        .eq("phone", phoneNumber.replace(/\D/g, ''))
-        .eq("code", code)
-        .gt("expires_at", new Date().toISOString())
-        .single();
-      
-      if (error || !data) {
+      try {
+        const { data, error: dbError } = await supabase
+          .from("verification_codes")
+          .select("*")
+          .eq("phone", cleanPhone)
+          .eq("code", code)
+          .gt("expires_at", new Date().toISOString())
+          .single();
+        
+        if (dbError || !data) {
+          console.log("Invalid or expired verification code:", { 
+            hasData: !!data, 
+            error: dbError?.message 
+          });
+          
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              isValid: false, 
+              message: "Invalid or expired verification code"
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        console.log("Valid verification code found");
+        
+        // Remove the used code
+        const { error: deleteError } = await supabase
+          .from("verification_codes")
+          .delete()
+          .eq("phone", cleanPhone);
+        
+        if (deleteError) {
+          console.error("Error deleting used code:", deleteError);
+          // Don't fail the verification, just log the error
+        }
+        
+        console.log("Verification successful");
+        
         return new Response(
           JSON.stringify({ 
-            success: false, 
-            isValid: false, 
-            message: "Invalid or expired verification code"
+            success: true, 
+            isValid: true, 
+            message: "Phone number verified successfully"
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+        
+      } catch (dbError) {
+        console.error("Database error during verification:", dbError);
+        throw new Error("Database error during verification");
       }
-      
-      // Valid code found
-      // Remove the used code
-      await supabase
-        .from("verification_codes")
-        .delete()
-        .eq("phone", phoneNumber.replace(/\D/g, ''));
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          isValid: true, 
-          message: "Phone number verified successfully"
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     } else {
+      console.error("Invalid action type:", actionType);
       throw new Error("Invalid action type");
     }
+    
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in verify-phone function:", errorMessage);
+    console.error("Full error:", error);
     
     return new Response(
       JSON.stringify({ success: false, message: errorMessage }),
