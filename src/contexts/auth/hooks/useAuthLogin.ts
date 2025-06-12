@@ -1,6 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the return type for login function
+interface LoginResult {
+  success: boolean;
+  error?: string;
+  needsPhoneVerification?: boolean;
+  phone?: string;
+  verificationData?: any;
+}
+
 /**
  * Hook for handling login-related functionality
  */
@@ -48,7 +57,7 @@ export const useAuthLogin = () => {
   };
 
   // Login function using Supabase (email/password only)
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
       // First attempt a regular login
       const { data, error } = await supabase.auth.signInWithPassword({
