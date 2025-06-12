@@ -46,7 +46,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     console.log("Supabase client initialized");
 
-    // Initialize Twilio client
+    // Get Twilio credentials
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -61,18 +61,6 @@ serve(async (req) => {
     }
     
     console.log("Twilio configuration verified");
-    
-    // Import and initialize Twilio with proper error handling
-    let twilioClient;
-    try {
-      // Use direct import instead of dynamic import
-      const { default: Twilio } = await import("https://esm.sh/twilio@5.2.2");
-      twilioClient = new Twilio(accountSid, authToken);
-      console.log("Twilio client initialized successfully");
-    } catch (twilioError) {
-      console.error("Failed to initialize Twilio:", twilioError);
-      throw new Error(`Failed to initialize SMS service: ${twilioError.message}`);
-    }
     
     // Clean phone number (remove non-digits and ensure it starts with +1 for US numbers)
     let cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -114,17 +102,34 @@ serve(async (req) => {
         throw new Error("Failed to store verification code in database");
       }
       
-      // Send SMS using Twilio
+      // Send SMS using Twilio REST API directly
       try {
         console.log(`Attempting to send SMS to ${cleanPhone}`);
         
-        const message = await twilioClient.messages.create({
-          body: `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`,
-          from: fromNumber,
-          to: cleanPhone
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+        const auth = btoa(`${accountSid}:${authToken}`);
+        
+        const response = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            To: cleanPhone,
+            From: fromNumber,
+            Body: `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`
+          })
         });
         
-        console.log(`SMS sent successfully. Message SID: ${message.sid}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Twilio API error:", response.status, errorText);
+          throw new Error(`Twilio API error: ${response.status} - ${errorText}`);
+        }
+        
+        const messageData = await response.json();
+        console.log(`SMS sent successfully. Message SID: ${messageData.sid}`);
         
         return new Response(
           JSON.stringify({ 
@@ -135,24 +140,8 @@ serve(async (req) => {
         );
         
       } catch (twilioError) {
-        console.error("Twilio error details:", {
-          message: twilioError.message,
-          code: twilioError.code,
-          moreInfo: twilioError.moreInfo,
-          status: twilioError.status
-        });
-        
-        // Return a more specific error message based on Twilio error
-        let errorMessage = "Failed to send verification code";
-        if (twilioError.code === 21211) {
-          errorMessage = "Invalid phone number format";
-        } else if (twilioError.code === 21614) {
-          errorMessage = "Invalid phone number - unable to send to this number";
-        } else if (twilioError.code === 21408) {
-          errorMessage = "Permission denied - check Twilio account settings";
-        }
-        
-        throw new Error(`${errorMessage}: ${twilioError.message}`);
+        console.error("Twilio error details:", twilioError);
+        throw new Error(`Failed to send SMS: ${twilioError.message}`);
       }
     } 
     else if (actionType === "verify") {
