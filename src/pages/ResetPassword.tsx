@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,10 +21,15 @@ const ResetPassword = () => {
 
   // Check if we have a valid reset session on component mount
   useEffect(() => {
+    console.log("ResetPassword component mounted");
+    console.log("Current URL:", window.location.href);
+    console.log("Search params:", Object.fromEntries(searchParams.entries()));
+    
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log("Current session:", session);
+        console.log("Session error:", error);
         
         if (error) {
           console.error("Session error:", error);
@@ -35,7 +39,7 @@ const ResetPassword = () => {
         
         // For password reset, we need an active session
         if (session && session.user) {
-          console.log("Valid reset session found");
+          console.log("Valid reset session found for user:", session.user.email);
           setIsValidSession(true);
         } else {
           console.log("No valid session for password reset");
@@ -54,16 +58,19 @@ const ResetPassword = () => {
       console.log("Auth state changed:", event, session);
       
       if (event === 'PASSWORD_RECOVERY') {
+        console.log("Password recovery event detected");
         setIsValidSession(true);
       } else if (session && session.user) {
+        console.log("Session established for user:", session.user.email);
         setIsValidSession(true);
       } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
         setIsValidSession(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [searchParams]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +151,9 @@ const ResetPassword = () => {
             <Card className="max-w-md mx-auto p-6">
               <div className="text-center">
                 <p>Validating reset link...</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Current URL: {window.location.href}
+                </p>
               </div>
             </Card>
           </div>
@@ -170,10 +180,13 @@ const ResetPassword = () => {
                 </AlertDescription>
               </Alert>
               
-              <div className="text-center">
-                <Link to="/forgot-password" className="text-welp-primary hover:underline">
+              <div className="text-center space-y-2">
+                <Link to="/forgot-password" className="text-welp-primary hover:underline block">
                   Request New Password Reset
                 </Link>
+                <p className="text-xs text-gray-500">
+                  Debug: Current URL - {window.location.href}
+                </p>
               </div>
             </Card>
           </div>
