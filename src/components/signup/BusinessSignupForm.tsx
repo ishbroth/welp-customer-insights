@@ -54,6 +54,9 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
     setVerificationError,
     showTextVerification,
     realVerificationDetails,
+    showAccountCreatedPopup: verificationAccountCreatedPopup,
+    setShowAccountCreatedPopup: setVerificationAccountCreatedPopup,
+    createdBusinessData: verificationCreatedBusinessData,
     performBusinessVerification,
     handleVerificationSuccess,
     handleEditInformation,
@@ -62,9 +65,9 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
 
   const {
     isSubmitting,
-    showAccountCreatedPopup,
-    setShowAccountCreatedPopup,
-    createdBusinessData,
+    showAccountCreatedPopup: passwordAccountCreatedPopup,
+    setShowAccountCreatedPopup: setPasswordAccountCreatedPopup,
+    createdBusinessData: passwordCreatedBusinessData,
     createBusinessAccount
   } = useBusinessAccountCreation();
   
@@ -191,8 +194,9 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       
       <BusinessSignupPopups
         realVerificationDetails={realVerificationDetails}
-        showAccountCreatedPopup={showAccountCreatedPopup}
-        createdBusinessData={createdBusinessData}
+        showAccountCreatedPopup={verificationAccountCreatedPopup || passwordAccountCreatedPopup}
+        setShowAccountCreatedPopup={verificationAccountCreatedPopup ? setVerificationAccountCreatedPopup : setPasswordAccountCreatedPopup}
+        createdBusinessData={verificationCreatedBusinessData || passwordCreatedBusinessData}
         businessPhone={businessPhone}
         setBusinessPhone={setBusinessPhone}
       />

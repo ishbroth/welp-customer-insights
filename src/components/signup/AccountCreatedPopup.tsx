@@ -11,6 +11,7 @@ import { useVerificationTimer } from "@/hooks/useVerificationTimer";
 
 interface AccountCreatedPopupProps {
   isOpen: boolean;
+  onClose?: () => void;
   businessName: string;
   businessPhone: string;
   setBusinessPhone: (value: string) => void;
@@ -19,6 +20,7 @@ interface AccountCreatedPopupProps {
 
 const AccountCreatedPopup = ({ 
   isOpen, 
+  onClose,
   businessName, 
   businessPhone, 
   setBusinessPhone, 
@@ -63,6 +65,11 @@ const AccountCreatedPopup = ({
           description: `A verification code has been sent to ${businessPhone}.`,
         });
         
+        // Close the popup if onClose is provided
+        if (onClose) {
+          onClose();
+        }
+        
         // Redirect to the verification page with necessary parameters
         const params = new URLSearchParams({
           email: businessData.email,
@@ -98,7 +105,7 @@ const AccountCreatedPopup = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={onClose || (() => {})}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
           <div className="flex justify-center mb-4">

@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { verifyBusinessId } from "@/utils/businessVerification";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const useBusinessVerification = (currentUserId?: string) => {
   const { isVerified } = useVerifiedStatus(currentUserId);
@@ -10,6 +12,9 @@ export const useBusinessVerification = (currentUserId?: string) => {
   const [verificationError, setVerificationError] = useState("");
   const [showTextVerification, setShowTextVerification] = useState(false);
   const [realVerificationDetails, setRealVerificationDetails] = useState<any>(null);
+  const [showAccountCreatedPopup, setShowAccountCreatedPopup] = useState(false);
+  const [createdBusinessData, setCreatedBusinessData] = useState<any>(null);
+  const { toast } = useToast();
 
   const performBusinessVerification = async (
     businessName: string,
@@ -105,10 +110,18 @@ export const useBusinessVerification = (currentUserId?: string) => {
         setVerificationError("");
         return { success: true, nextStep: 1 };
       } else {
-        // Offer text verification as an alternative
-        setVerificationData(null);
-        setShowTextVerification(true);
-        setVerificationError(result.message || `We couldn't verify your business license. ${isVerified ? 'You can update your license information or' : 'You can'} proceed with phone verification instead.`);
+        // Verification failed - create account immediately and show popup
+        await createUnverifiedAccount(
+          businessName,
+          businessEmail,
+          businessPhone,
+          businessStreet,
+          businessCity,
+          businessState,
+          businessZipCode,
+          licenseNumber,
+          businessType
+        );
         return { success: false };
       }
     } catch (error) {
@@ -117,6 +130,113 @@ export const useBusinessVerification = (currentUserId?: string) => {
       return { success: false };
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const createUnverifiedAccount = async (
+    businessName: string,
+    businessEmail: string,
+    businessPhone: string,
+    businessStreet: string,
+    businessCity: string,
+    businessState: string,
+    businessZipCode: string,
+    licenseNumber: string,
+    businessType: string
+  ) => {
+    try {
+      // Generate a temporary password for account creation
+      const tempPassword = Math.random().toString(36).slice(-12) + "Temp123!";
+      
+      // Create the account with Supabase Auth
+      const { error: signUpError, data } = await supabase.auth.signUp({
+        email: businessEmail,
+        password: tempPassword,
+        options: {
+          data: {
+            name: businessName,
+            phone: businessPhone,
+            type: 'business',
+            address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+            city: businessCity,
+            state: businessState,
+            zipCode: businessZipCode,
+            businessId: licenseNumber,
+            businessType: businessType
+          },
+          emailRedirectTo: window.location.origin + '/login'
+        }
+      });
+
+      if (signUpError) {
+        toast({
+          title: "Signup Error",
+          description: signUpError.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Confirm email immediately
+      if (data.user) {
+        try {
+          await supabase.functions.invoke('confirm-email', {
+            body: { userId: data.user.id, email: businessEmail }
+          });
+        } catch (confirmError) {
+          console.error("Error confirming email:", confirmError);
+        }
+      }
+
+      // Create profile using edge function
+      const { error: profileError } = await supabase.functions.invoke('create-profile', {
+        body: {
+          userId: data.user?.id,
+          name: businessName,
+          phone: businessPhone,
+          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+          city: businessCity,
+          state: businessState,
+          zipCode: businessZipCode,
+          type: 'business',
+          businessName,
+          businessId: licenseNumber,
+          businessType: businessType
+        }
+      });
+
+      if (profileError) {
+        console.error("Profile creation error:", profileError);
+      }
+
+      // Store business data and show popup
+      const businessData = {
+        name: businessName,
+        email: businessEmail,
+        password: tempPassword,
+        phone: businessPhone,
+        address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+        street: businessStreet,
+        city: businessCity,
+        state: businessState,
+        zipCode: businessZipCode,
+        businessName: businessName,
+        businessId: licenseNumber,
+        businessType: businessType,
+        verificationMethod: "phone",
+        isFullyVerified: false
+      };
+
+      setCreatedBusinessData(businessData);
+      setShowAccountCreatedPopup(true);
+
+    } catch (error) {
+      console.error("Account creation error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred during account creation.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -145,6 +265,9 @@ export const useBusinessVerification = (currentUserId?: string) => {
     setVerificationError,
     showTextVerification,
     realVerificationDetails,
+    showAccountCreatedPopup,
+    setShowAccountCreatedPopup,
+    createdBusinessData,
     performBusinessVerification,
     handleVerificationSuccess,
     handleEditInformation,

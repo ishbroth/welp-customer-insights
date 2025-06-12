@@ -5,6 +5,7 @@ import AccountCreatedPopup from "./AccountCreatedPopup";
 interface BusinessSignupPopupsProps {
   realVerificationDetails: any;
   showAccountCreatedPopup: boolean;
+  setShowAccountCreatedPopup: (show: boolean) => void;
   createdBusinessData: any;
   businessPhone: string;
   setBusinessPhone: (value: string) => void;
@@ -13,6 +14,7 @@ interface BusinessSignupPopupsProps {
 export const BusinessSignupPopups = ({
   realVerificationDetails,
   showAccountCreatedPopup,
+  setShowAccountCreatedPopup,
   createdBusinessData,
   businessPhone,
   setBusinessPhone
@@ -30,6 +32,7 @@ export const BusinessSignupPopups = ({
       {showAccountCreatedPopup && createdBusinessData && (
         <AccountCreatedPopup
           isOpen={showAccountCreatedPopup}
+          onClose={() => setShowAccountCreatedPopup(false)}
           businessName={createdBusinessData.businessName || createdBusinessData.name}
           businessPhone={businessPhone}
           setBusinessPhone={setBusinessPhone}
