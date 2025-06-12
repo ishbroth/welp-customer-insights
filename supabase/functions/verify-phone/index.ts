@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
-import twilio from "https://esm.sh/twilio@4.20.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +22,7 @@ serve(async (req) => {
       throw new Error("Phone number is required");
     }
 
-    // Initialize Twilio client
+    // Initialize Twilio client using dynamic import
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -32,7 +31,9 @@ serve(async (req) => {
       throw new Error("Twilio credentials not properly configured");
     }
     
-    const twilioClient = twilio(accountSid, authToken);
+    // Use dynamic import for Twilio
+    const { default: Twilio } = await import("https://esm.sh/twilio@4.20.0");
+    const twilioClient = Twilio(accountSid, authToken);
     
     // For actionType "send" we send a verification code
     // For actionType "verify" we verify the code
