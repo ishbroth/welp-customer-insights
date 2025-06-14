@@ -100,8 +100,8 @@ export const CustomerAddressSection = ({
       </div>
       
       <div>
-        <label htmlFor="customerState" className="block text-sm font-medium mb-1">State</label>
-        <Select value={state} onValueChange={setState}>
+        <label htmlFor="customerState" className="block text-sm font-medium mb-1">State *</label>
+        <Select value={state} onValueChange={setState} required>
           <SelectTrigger className="welp-input">
             <SelectValue placeholder="Select State" />
           </SelectTrigger>
