@@ -1,10 +1,9 @@
-
 import { checkEmailExists } from "./duplicateAccount/emailChecker";
 import { checkPhoneExists } from "./duplicateAccount/phoneChecker";
 import { checkAddressExists } from "./duplicateAccount/addressChecker";
 import { checkBusinessNameAndPhoneExists } from "./duplicateAccount/businessChecker";
 import { checkBusinessNameAndAddressExists } from "./duplicateAccount/businessAddressChecker";
-import { checkCustomerNameAndPhoneExists } from "./duplicateAccount/customerChecker";
+import { checkCustomerNameAndPhoneExists, checkCustomerPhoneExists, checkEmailExistsAcrossAllAccounts } from "./duplicateAccount/customerChecker";
 import { DuplicateCheckResult } from "./duplicateAccount/types";
 
 // Re-export types for backward compatibility
@@ -16,7 +15,7 @@ export { checkPhoneExists } from "./duplicateAccount/phoneChecker";
 export { checkAddressExists } from "./duplicateAccount/addressChecker";
 export { checkBusinessNameAndPhoneExists } from "./duplicateAccount/businessChecker";
 export { checkBusinessNameAndAddressExists } from "./duplicateAccount/businessAddressChecker";
-export { checkCustomerNameAndPhoneExists } from "./duplicateAccount/customerChecker";
+export { checkCustomerNameAndPhoneExists, checkCustomerPhoneExists, checkEmailExistsAcrossAllAccounts } from "./duplicateAccount/customerChecker";
 
 /**
  * Comprehensive duplicate account check for business accounts
@@ -100,7 +99,7 @@ export const checkForDuplicateAccount = async (
 
 /**
  * Comprehensive duplicate account check for customer accounts
- * Checks for individual matches of email, phone, address, or customer name combinations
+ * Checks phone numbers only within customer accounts, but emails across all account types
  */
 export const checkForDuplicateCustomerAccount = async (
   email: string, 
@@ -109,8 +108,8 @@ export const checkForDuplicateCustomerAccount = async (
   lastName?: string,
   address?: string
 ): Promise<DuplicateCheckResult> => {
-  // First check for email duplicates (always block these)
-  const emailExists = await checkEmailExists(email);
+  // Check for email duplicates across both customer and business accounts (always block these)
+  const emailExists = await checkEmailExistsAcrossAllAccounts(email);
   if (emailExists) {
     return {
       isDuplicate: true,
@@ -120,8 +119,8 @@ export const checkForDuplicateCustomerAccount = async (
     };
   }
   
-  // Check for phone duplicates (should also block/warn)
-  const phoneExists = await checkPhoneExists(phone);
+  // Check for phone duplicates only within customer accounts
+  const phoneExists = await checkCustomerPhoneExists(phone);
   if (phoneExists) {
     return {
       isDuplicate: true,
@@ -144,7 +143,7 @@ export const checkForDuplicateCustomerAccount = async (
     }
   }
   
-  // If customer name is provided, check for customer name + phone combination as additional check
+  // If customer name is provided, check for customer name + phone combination within customer accounts only
   if (firstName && lastName) {
     const customerNameAndPhoneResult = await checkCustomerNameAndPhoneExists(firstName, lastName, phone);
     if (customerNameAndPhoneResult.exists) {

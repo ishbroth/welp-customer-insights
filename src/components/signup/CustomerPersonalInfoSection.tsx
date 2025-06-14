@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,7 +38,7 @@ export const CustomerPersonalInfoSection = ({
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
-  // Debounced duplicate checking
+  // Debounced duplicate checking - now uses the updated customer-specific logic
   useEffect(() => {
     if (!email || !phone) return;
     
