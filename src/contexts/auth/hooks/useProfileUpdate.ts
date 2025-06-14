@@ -43,6 +43,7 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
         type: currentUser.type,
         bio: updates.bio ?? currentUser.bio ?? '',
         businessId: updates.businessId ?? currentUser.businessId ?? '',
+        licenseType: updates.licenseType ?? currentUser.licenseType ?? '',
         avatar: updates.avatar ?? currentUser.avatar ?? '',
         email: updates.email ?? currentUser.email ?? '',
         businessName: currentUser.type === 'business' ? (updates.name ?? currentUser.name) : null,

@@ -38,4 +38,5 @@ export interface SignupData {
   state?: string;
   type: "customer" | "business";
   businessName?: string;
+  licenseType?: string;
 }

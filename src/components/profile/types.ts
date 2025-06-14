@@ -6,6 +6,7 @@ export const profileSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   bio: z.string().optional(),
   businessId: z.string().optional(),
+  licenseType: z.string().optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),

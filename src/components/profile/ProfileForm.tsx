@@ -25,6 +25,7 @@ const ProfileForm = () => {
       email: currentUser?.email || "",
       bio: currentUser?.bio || "",
       businessId: currentUser?.businessId || "",
+      licenseType: currentUser?.licenseType || "",
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
       city: currentUser?.city || "",
@@ -45,6 +46,7 @@ const ProfileForm = () => {
       if (data.email) updateData.email = data.email;
       if (data.bio !== undefined) updateData.bio = data.bio;
       if (data.businessId !== undefined) updateData.businessId = data.businessId;
+      if (data.licenseType !== undefined) updateData.licenseType = data.licenseType;
       if (data.phone) updateData.phone = data.phone;
       if (data.address) updateData.address = data.address;
       if (data.city) updateData.city = data.city;
@@ -90,7 +92,7 @@ const ProfileForm = () => {
         
         <ContactInfoForm form={form} />
 
-        {/* Only render businessId field for business accounts */}
+        {/* Only render business info fields for business accounts */}
         {isBusinessAccount && <BusinessInfoForm form={form} />}
         
         <div className="flex gap-4">
