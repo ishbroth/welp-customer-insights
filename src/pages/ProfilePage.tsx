@@ -29,10 +29,24 @@ const ProfilePage = () => {
   // Extract license information
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
+  const licenseType = currentUser.licenseType;
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
   // Check if business is verified (placeholder - would come from database)
   const isVerified = false;
+
+  // Format the license display text
+  const getLicenseDisplayText = () => {
+    if (licenseType && licenseState) {
+      return `${licenseType} • ${licenseState}`;
+    } else if (licenseType) {
+      return licenseType;
+    } else if (licenseState) {
+      return `Business License • ${licenseState}`;
+    } else {
+      return "Business License";
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -102,11 +116,9 @@ const ProfilePage = () => {
                         <div>
                           <label className="text-sm font-medium text-gray-500">License Number</label>
                           <p className="text-gray-900">{licenseNumber}</p>
-                          {licenseState && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              Business License • {licenseState}
-                            </p>
-                          )}
+                          <p className="text-sm text-gray-600 mt-1">
+                            {getLicenseDisplayText()}
+                          </p>
                           <div className="mt-2">
                             {isVerified ? (
                               <div className="flex items-center gap-2 text-green-600">
