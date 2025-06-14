@@ -1,6 +1,10 @@
 
+import { AlertCircle, CheckCircle, Crown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface BusinessReviewsSubscriptionBannerProps {
   hasSubscription: boolean;
@@ -8,40 +12,64 @@ interface BusinessReviewsSubscriptionBannerProps {
 
 const BusinessReviewsSubscriptionBanner = ({ hasSubscription }: BusinessReviewsSubscriptionBannerProps) => {
   const navigate = useNavigate();
-
-  const handleSubscribeClick = () => {
-    navigate('/subscription');
-  };
+  const { currentUser } = useAuth();
+  const { isVerified } = useVerifiedStatus(currentUser?.id);
 
   if (hasSubscription) {
     return (
-      <div className="mb-6 p-4 border border-green-300 bg-green-50 rounded-md">
-        <div className="flex items-center">
-          <div>
-            <h3 className="font-semibold text-green-800">Premium Features Enabled</h3>
-            <p className="text-sm text-green-700">
-              You have full access to all review responses and premium features.
-            </p>
+      <Alert className="mb-6 border-green-200 bg-green-50">
+        <Crown className="h-4 w-4 text-green-600" />
+        <AlertDescription className="text-green-800">
+          <div className="flex items-center justify-between">
+            <span>You have full access to write and manage customer reviews.</span>
+            {isVerified && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Verified Business</span>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <div className="mb-6 p-4 border border-yellow-300 bg-yellow-50 rounded-md">
-      <div className="flex flex-col sm:flex-row justify-between items-center">
-        <div className="mb-4 sm:mb-0">
-          <h3 className="font-semibold text-yellow-800">Premium Features Disabled</h3>
-          <p className="text-sm text-yellow-700">
-            Your subscription has expired. Subscribe to enable review responses and premium features.
-          </p>
+    <Alert className="mb-6 border-blue-200 bg-blue-50">
+      <AlertCircle className="h-4 w-4 text-blue-600" />
+      <AlertDescription className="text-blue-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium mb-1">You can write customer reviews</p>
+            <p className="text-sm">
+              {isVerified 
+                ? "As a verified business, your reviews get priority in search results."
+                : "Your reviews are permanent and searchable. Get verified for higher search ranking."
+              }
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {!isVerified && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate("/verify-license")}
+                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                Get Verified
+              </Button>
+            )}
+            <Button 
+              size="sm"
+              onClick={() => navigate("/billing")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Upgrade to Premium
+            </Button>
+          </div>
         </div>
-        <Button onClick={handleSubscribeClick} className="bg-yellow-600 hover:bg-yellow-700">
-          Subscribe Now
-        </Button>
-      </div>
-    </div>
+      </AlertDescription>
+    </Alert>
   );
 };
 
