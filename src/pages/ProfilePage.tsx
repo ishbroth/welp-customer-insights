@@ -7,8 +7,7 @@ import WelcomeSection from "@/components/profile/WelcomeSection";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useState } from "react";
-import { CheckCircle, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CheckCircle } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
 
 const ProfilePage = () => {
@@ -125,19 +124,11 @@ const ProfilePage = () => {
                             {getLicenseDisplayText()}
                           </p>
                           <div className="mt-2">
-                            {isVerified ? (
+                            {isVerified && (
                               <div className="flex items-center gap-2 text-green-600">
                                 <CheckCircle className="h-4 w-4" />
                                 <span className="text-sm font-medium">Verified License</span>
                               </div>
-                            ) : (
-                              <Link 
-                                to="/verify-license" 
-                                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                                Update License Information
-                              </Link>
                             )}
                           </div>
                         </div>
