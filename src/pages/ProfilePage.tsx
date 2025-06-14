@@ -37,10 +37,15 @@ const ProfilePage = () => {
 
   // Format the license display text
   const getLicenseDisplayText = () => {
-    if (licenseType && licenseState) {
-      return `${licenseType} • ${licenseState}`;
-    } else if (licenseType) {
-      return licenseType;
+    const capitalizedLicenseType = licenseType ? 
+      licenseType.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ') : null;
+
+    if (capitalizedLicenseType && licenseState) {
+      return `${capitalizedLicenseType} • ${licenseState}`;
+    } else if (capitalizedLicenseType) {
+      return capitalizedLicenseType;
     } else if (licenseState) {
       return `Business License • ${licenseState}`;
     } else {
