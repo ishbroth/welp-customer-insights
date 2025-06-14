@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -12,6 +11,7 @@ export interface User {
   avatar?: string;
   bio?: string;
   businessId?: string;
+  licenseType?: string;
 }
 
 export interface Review {
