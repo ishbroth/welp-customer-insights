@@ -91,9 +91,9 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           };
         });
 
-        // Filter responses to show active conversation
-        const activeResponses = getActiveResponses(formattedResponses);
-        setResponses(activeResponses);
+        // Filter responses to show only valid conversation chains
+        const validResponses = getValidConversationResponses(formattedResponses);
+        setResponses(validResponses);
       } catch (error) {
         console.error('Error fetching responses:', error);
       }
@@ -102,36 +102,63 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     fetchResponses();
   }, [review.id, review.customerId]);
 
-  // Filter responses to only show active conversation
-  const getActiveResponses = (allResponses: Response[]): Response[] => {
-    if (!review.customerId) return allResponses;
+  // Filter responses to only show valid conversation chains
+  // A business response is only valid if there's a customer response that came before it
+  const getValidConversationResponses = (allResponses: Response[]): Response[] => {
+    if (!review.customerId || !currentUser) return allResponses;
     
     const sortedResponses = [...allResponses].sort((a, b) => 
       new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
     
-    const activeResponses: Response[] = [];
-    let customerHasActiveResponse = false;
+    const validResponses: Response[] = [];
+    let lastCustomerResponseIndex = -1;
     
-    for (const response of sortedResponses) {
+    // Find all customer responses and mark their positions
+    sortedResponses.forEach((response, index) => {
       if (response.authorId === review.customerId) {
         // Customer response - always include
-        activeResponses.push(response);
-        customerHasActiveResponse = true;
-      } else if (response.authorId === currentUser?.id && customerHasActiveResponse) {
-        // Business response - only include if customer has an active response
-        activeResponses.push(response);
-      } else if (response.authorId === currentUser?.id && !customerHasActiveResponse) {
-        // Business response with no customer response - this should be archived
-        // The useArchivedResponses hook will handle showing archived content if needed
-        console.log(`Business response ${response.id} should be archived - no active customer response`);
+        validResponses.push(response);
+        lastCustomerResponseIndex = index;
+      } else if (response.authorId === currentUser.id && lastCustomerResponseIndex !== -1) {
+        // Business response - only include if there's a customer response before it
+        // and no newer customer response after it that would invalidate this chain
+        const hasNewerCustomerResponse = sortedResponses
+          .slice(index + 1)
+          .some(r => r.authorId === review.customerId);
+        
+        if (!hasNewerCustomerResponse) {
+          validResponses.push(response);
+        } else {
+          // Archive this business response as it's part of an old conversation chain
+          console.log(`Archiving business response ${response.id} - newer customer response found`);
+          archiveBusinessResponse(response);
+        }
+      } else if (response.authorId === currentUser.id && lastCustomerResponseIndex === -1) {
+        // Business response with no customer response - should be archived
+        console.log(`Archiving business response ${response.id} - no customer response found`);
+        archiveBusinessResponse(response);
       }
-    }
+    });
     
-    return activeResponses;
+    return validResponses;
   };
 
-  console.log(`BusinessReviewCardResponses rendering review ${review.id} with active responses:`, responses);
+  // Archive a business response when it becomes invalid
+  const archiveBusinessResponse = (response: Response) => {
+    if (!currentUser || !review.id) return;
+    
+    const archivedKey = `archived_response_${review.id}_${currentUser.id}`;
+    const archivedData = {
+      responses: [response],
+      archivedAt: new Date().toISOString(),
+      originalCustomerResponseId: review.customerId
+    };
+    
+    localStorage.setItem(archivedKey, JSON.stringify(archivedData));
+  };
+
+  console.log(`BusinessReviewCardResponses rendering review ${review.id} with valid responses:`, responses);
   console.log(`Archived response available:`, !!archivedResponse);
 
   return (
