@@ -2,12 +2,16 @@
 import { useAuth } from "@/contexts/auth";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import { useCustomerVerificationFix } from "@/hooks/useCustomerVerificationFix";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const WelcomeSection = () => {
   const { currentUser } = useAuth();
   const { isVerified: isBusinessVerified } = useVerifiedStatus(currentUser?.id);
+  
+  // Apply the verification fix for existing customer accounts
+  useCustomerVerificationFix();
 
   // Fetch customer verification status from profiles table
   const { data: customerProfile } = useQuery({
