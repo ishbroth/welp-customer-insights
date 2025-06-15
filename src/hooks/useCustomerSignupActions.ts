@@ -113,7 +113,7 @@ export const useCustomerSignupActions = (
       // Show a success toast and redirect to verification page
       toast({
         title: "Verification Code Sent",
-        description: `A verification code has been sent to ${customerPhone}. Please verify your phone number.`,
+        description: `A verification code has been sent to ${customerPhone}. Please verify your phone number to complete registration.`,
       });
       
       // Redirect to verification page

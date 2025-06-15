@@ -41,7 +41,7 @@ export const usePhoneVerificationActions = ({
   const navigate = useNavigate();
 
   const handleVerifyCode = async (verificationCode: string) => {
-    if (!phoneNumber || !verificationCode || !email) {
+    if (!phoneNumber || !verificationCode || !email || !password) {
       toast({
         title: "Error",
         description: "Missing required information for verification.",
@@ -60,57 +60,113 @@ export const usePhoneVerificationActions = ({
       });
       
       if (isValid) {
-        // For customer accounts, mark as verified after phone verification
-        if (accountType === 'customer') {
-          try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
+        // Now create the actual user account
+        console.log("Phone verified, creating user account...");
+        
+        // Split name into first and last name
+        const nameParts = (name || '').trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Create the user account in Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { 
+              name, 
+              type: accountType,
+              address,
+              city,
+              state,
+              zipCode: zipCode,
+              phone: phoneNumber,
+              first_name: firstName,
+              last_name: lastName
+            },
+            emailRedirectTo: window.location.origin + '/login',
+          }
+        });
+
+        if (authError) {
+          console.error("Auth signup error:", authError);
+          throw new Error(authError.message);
+        }
+
+        if (authData.user) {
+          console.log("User created in auth, creating profile...");
+          
+          // Create profile using the edge function
+          const { error: profileError } = await supabase.functions.invoke('create-profile', {
+            body: {
+              userId: authData.user.id,
+              name: name,
+              phone: phoneNumber,
+              address: address,
+              city: city,
+              state: state,
+              zipCode: zipCode,
+              type: accountType,
+              businessName: businessName,
+              email: email
+            }
+          });
+
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+            throw new Error(profileError.message);
+          }
+
+          console.log("Profile created successfully");
+
+          // For customer accounts, mark as verified since phone verification is complete
+          if (accountType === 'customer') {
+            try {
               const { error: updateError } = await supabase
                 .from('profiles')
                 .update({ verified: true })
-                .eq('id', user.id);
+                .eq('id', authData.user.id);
               
               if (updateError) {
                 console.error("Error marking customer as verified:", updateError);
               } else {
                 console.log("Customer marked as verified after phone verification");
               }
+            } catch (verificationError) {
+              console.error("Error updating customer verification status:", verificationError);
             }
-          } catch (verificationError) {
-            console.error("Error updating customer verification status:", verificationError);
           }
-        }
 
-        // Show success toast
-        toast({
-          title: "Phone Verified!",
-          description: accountType === 'customer' 
-            ? "Your phone number has been verified and your account is now verified!" 
-            : "Your phone number has been verified. Now let's set up your password.",
-        });
-        
-        // Redirect to password setup instead of auto-creating account
-        if (accountType === 'business') {
-          navigate('/business-password-setup', {
-            state: {
-              businessEmail: email,
-              phone: phoneNumber,
-              businessName,
-              address,
-              city,
-              state,
-              zipCode
-            }
+          // Show success toast
+          toast({
+            title: "Account Created Successfully!",
+            description: accountType === 'customer' 
+              ? "Your account has been created and verified. You can now log in." 
+              : "Your phone number has been verified. Now let's set up your password.",
           });
-        } else {
-          // For customer accounts, we'll need a similar password setup page
-          // For now, redirect to login with a message
-          navigate("/login", {
-            state: {
-              message: "Phone verified! Please complete your account setup by logging in.",
-              email: email
-            }
-          });
+          
+          // Redirect based on account type
+          if (accountType === 'business') {
+            navigate('/business-password-setup', {
+              state: {
+                businessEmail: email,
+                phone: phoneNumber,
+                businessName,
+                address,
+                city,
+                state,
+                zipCode
+              }
+            });
+          } else {
+            // For customer accounts, redirect to login with success message
+            navigate("/login", {
+              state: {
+                message: "Account created successfully! Please log in with your credentials.",
+                email: email
+              }
+            });
+          }
         }
       } else {
         setIsCodeValid(false);
