@@ -40,12 +40,12 @@ export const useProfileReviewsFetching = () => {
           return b.matchScore - a.matchScore;
         });
 
-        // Fetch business profiles and responses for each review
-        const reviewsWithProfilesAndResponses = await Promise.all(
+        // Fetch business profiles for each review but don't format responses here
+        // Let useSimplifiedResponses handle that
+        const reviewsWithProfiles = await Promise.all(
           sortedMatches.map(async (match) => {
             const review = match.review;
             let businessProfile = null;
-            let responses = [];
 
             // Fetch business profile if business_id exists
             if (review.business_id) {
@@ -56,50 +56,11 @@ export const useProfileReviewsFetching = () => {
               }
             }
 
-            // Fetch responses for this review
-            try {
-              const { data: responseData, error: responseError } = await supabase
-                .from('responses')
-                .select('id, author_id, content, created_at')
-                .eq('review_id', review.id)
-                .order('created_at', { ascending: true });
-
-              if (!responseError && responseData && responseData.length > 0) {
-                const authorIds = responseData.map(r => r.author_id).filter(Boolean);
-                
-                if (authorIds.length > 0) {
-                  const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('id, name, first_name, last_name')
-                    .in('id', authorIds);
-
-                  if (!profileError && profileData) {
-                    responses = responseData.map((resp: any) => {
-                      const profile = profileData.find(p => p.id === resp.author_id);
-                      const authorName = profile?.name || 
-                                       (profile?.first_name && profile?.last_name 
-                                         ? `${profile.first_name} ${profile.last_name}` 
-                                         : 'User');
-
-                      return {
-                        id: resp.id,
-                        authorId: resp.author_id || '',
-                        authorName,
-                        content: resp.content,
-                        createdAt: resp.created_at
-                      };
-                    });
-                  }
-                }
-              }
-            } catch (error) {
-              console.error(`Error fetching responses for review ${review.id}:`, error);
-            }
-
+            // Don't fetch and format responses here - let useSimplifiedResponses handle it
             return {
               ...review,
               business_profile: businessProfile,
-              responses: responses,
+              responses: [], // Empty array, will be populated by useSimplifiedResponses
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
@@ -109,7 +70,7 @@ export const useProfileReviewsFetching = () => {
         );
 
         // Format the reviews data
-        const formattedReviews = reviewsWithProfilesAndResponses.map(review => 
+        const formattedReviews = reviewsWithProfiles.map(review => 
           formatReview(review, currentUser)
         );
 
