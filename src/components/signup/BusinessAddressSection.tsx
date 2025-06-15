@@ -101,21 +101,19 @@ export const BusinessAddressSection = ({
         />
       </div>
       
-      {setBusinessApartmentSuite && (
-        <div>
-          <label htmlFor="businessApartmentSuite" className="block text-sm font-medium mb-1">
-            Suite, Unit, Floor, etc. (Optional)
-          </label>
-          <Input
-            id="businessApartmentSuite"
-            type="text"
-            placeholder="Suite 100, Unit B, Floor 2, etc."
-            value={businessApartmentSuite || ''}
-            onChange={(e) => setBusinessApartmentSuite(e.target.value)}
-            className="welp-input"
-          />
-        </div>
-      )}
+      <div>
+        <label htmlFor="businessApartmentSuite" className="block text-sm font-medium mb-1">
+          Suite, Unit, Floor, etc. (Optional)
+        </label>
+        <Input
+          id="businessApartmentSuite"
+          type="text"
+          placeholder="Suite 100, Unit B, Floor 2, etc."
+          value={businessApartmentSuite || ''}
+          onChange={(e) => setBusinessApartmentSuite?.(e.target.value)}
+          className="welp-input"
+        />
+      </div>
       
       <div className="grid grid-cols-2 gap-4">
         <div>

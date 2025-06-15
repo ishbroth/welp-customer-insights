@@ -23,6 +23,8 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
     setBusinessName,
     businessStreet,
     setBusinessStreet,
+    businessApartmentSuite,
+    setBusinessApartmentSuite,
     businessCity,
     setBusinessCity,
     businessState,
@@ -133,6 +135,8 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
           setBusinessEmail={setBusinessEmail}
           businessStreet={businessStreet}
           setBusinessStreet={setBusinessStreet}
+          businessApartmentSuite={businessApartmentSuite}
+          setBusinessApartmentSuite={setBusinessApartmentSuite}
           businessCity={businessCity}
           setBusinessCity={setBusinessCity}
           businessState={businessState}

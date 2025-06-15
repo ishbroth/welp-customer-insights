@@ -47,7 +47,9 @@ export const BusinessContactSection = ({
   return (
     <>
       <div>
-        <label htmlFor="businessEmail" className="block text-sm font-medium mb-1">Business Email</label>
+        <label htmlFor="businessEmail" className="block text-sm font-medium mb-1">
+          Business Email <span className="text-red-500">*</span>
+        </label>
         <Input
           id="businessEmail"
           type="email"
@@ -57,11 +59,14 @@ export const BusinessContactSection = ({
           className="welp-input"
           required
         />
+        <p className="text-sm text-gray-500 mt-1">This will be used to sign in to your account</p>
         <EmailValidationAlert emailExists={emailExists} />
       </div>
       
       <div>
-        <label htmlFor="businessPhone" className="block text-sm font-medium mb-1">Business Phone</label>
+        <label htmlFor="businessPhone" className="block text-sm font-medium mb-1">
+          Business Phone <span className="text-red-500">*</span>
+        </label>
         <PhoneInput
           id="businessPhone"
           value={businessPhone}
@@ -69,6 +74,7 @@ export const BusinessContactSection = ({
           className="welp-input"
           required
         />
+        <p className="text-sm text-gray-500 mt-1">This will be used for account verification</p>
         <PhoneValidationAlert phoneExists={phoneExists} />
         <DuplicateBusinessAlert duplicateResult={duplicateResult} />
         <CheckingDuplicatesIndicator isCheckingDuplicates={isCheckingDuplicates} />

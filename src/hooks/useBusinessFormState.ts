@@ -4,6 +4,7 @@ import { useState } from "react";
 export const useBusinessFormState = () => {
   const [businessName, setBusinessName] = useState("");
   const [businessStreet, setBusinessStreet] = useState("");
+  const [businessApartmentSuite, setBusinessApartmentSuite] = useState("");
   const [businessCity, setBusinessCity] = useState("");
   const [businessState, setBusinessState] = useState("");
   const [businessZipCode, setBusinessZipCode] = useState("");
@@ -20,6 +21,8 @@ export const useBusinessFormState = () => {
     setBusinessName,
     businessStreet,
     setBusinessStreet,
+    businessApartmentSuite,
+    setBusinessApartmentSuite,
     businessCity,
     setBusinessCity,
     businessState,

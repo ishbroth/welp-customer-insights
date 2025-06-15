@@ -1,3 +1,4 @@
+
 import { BusinessContactSection } from "./BusinessContactSection";
 import { BusinessAddressSection } from "./BusinessAddressSection";
 import { BusinessTypeSection } from "./BusinessTypeSection";
@@ -9,6 +10,8 @@ interface BusinessInfoFormProps {
   setBusinessEmail: (value: string) => void;
   businessStreet: string;
   setBusinessStreet: (value: string) => void;
+  businessApartmentSuite: string;
+  setBusinessApartmentSuite: (value: string) => void;
   businessCity: string;
   setBusinessCity: (value: string) => void;
   businessState: string;
@@ -31,6 +34,8 @@ export const BusinessInfoForm = ({
   setBusinessEmail,
   businessStreet,
   setBusinessStreet,
+  businessApartmentSuite,
+  setBusinessApartmentSuite,
   businessCity,
   setBusinessCity,
   businessState,
@@ -45,7 +50,7 @@ export const BusinessInfoForm = ({
   setLicenseNumber,
   onDuplicateFound
 }: BusinessInfoFormProps) => {
-  const businessAddress = `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`.trim();
+  const businessAddress = `${businessStreet}${businessApartmentSuite ? `, ${businessApartmentSuite}` : ''}, ${businessCity}, ${businessState} ${businessZipCode}`.trim();
 
   return (
     <div className="space-y-6">
@@ -64,6 +69,8 @@ export const BusinessInfoForm = ({
         setBusinessName={setBusinessName}
         businessStreet={businessStreet}
         setBusinessStreet={setBusinessStreet}
+        businessApartmentSuite={businessApartmentSuite}
+        setBusinessApartmentSuite={setBusinessApartmentSuite}
         businessCity={businessCity}
         setBusinessCity={setBusinessCity}
         businessState={businessState}
