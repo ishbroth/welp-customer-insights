@@ -73,8 +73,8 @@ const ReviewReactions = ({
 
   return (
     <div className="flex flex-col gap-3 my-2">
-      {/* Business Avatar - Only shown for customer users with access */}
-      {isCustomerUser && businessId && (businessAvatar || businessName) && (
+      {/* Only show business avatar for business users with access - NOT for customer users */}
+      {!isCustomerUser && businessId && (businessAvatar || businessName) && (
         <div className="flex items-center mb-2">
           {hasAccess ? (
             <Link to={`/business/${businessId}`} className="flex items-center">
