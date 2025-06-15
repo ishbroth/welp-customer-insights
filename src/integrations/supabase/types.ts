@@ -366,6 +366,8 @@ export type Database = {
       reviews: {
         Row: {
           business_id: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           content: string
           created_at: string
           customer_address: string | null
@@ -380,6 +382,8 @@ export type Database = {
         }
         Insert: {
           business_id?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           content: string
           created_at?: string
           customer_address?: string | null
@@ -394,6 +398,8 @@ export type Database = {
         }
         Update: {
           business_id?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           content?: string
           created_at?: string
           customer_address?: string | null
@@ -463,6 +469,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_review_notifications: {
+        Row: {
+          id: string
+          review_id: string | null
+          shown_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          review_id?: string | null
+          shown_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          review_id?: string | null
+          shown_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_review_notifications_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_login: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_login?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_login?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       verification_codes: {
         Row: {

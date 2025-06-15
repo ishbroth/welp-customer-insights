@@ -1,15 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Review } from "@/types";
-import CustomerReviewCard from "@/components/customer/CustomerReviewCard";
 import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
-import ClaimableReviewCard from "@/components/customer/ClaimableReviewCard";
+import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
 import { useSimplifiedResponses } from "@/hooks/useSimplifiedResponses";
+import { useSessionTracking } from "@/hooks/useSessionTracking";
 
 interface ProfileReviewsContentProps {
   customerReviews: Review[];
@@ -27,6 +26,7 @@ const ProfileReviewsContent = ({
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { markReviewAsShown } = useSessionTracking();
 
   // Update local reviews when customerReviews prop changes
   useEffect(() => {
@@ -36,11 +36,42 @@ const ProfileReviewsContent = ({
       userType: currentUser?.type,
       userId: currentUser?.id
     });
-  }, [customerReviews, currentUser]);
+
+    // Mark new reviews as shown
+    customerReviews.forEach(review => {
+      const reviewAny = review as any;
+      if (reviewAny.isNewReview) {
+        markReviewAsShown(review.id);
+      }
+    });
+  }, [customerReviews, currentUser, markReviewAsShown]);
 
   // Pagination settings
   const reviewsPerPage = 5;
-  const totalPages = Math.ceil(localReviews.length / reviewsPerPage);
+  
+  // Sort reviews: new reviews first, then claimed, then by match quality, then by date
+  const sortedReviews = [...localReviews].sort((a, b) => {
+    const aData = a as any;
+    const bData = b as any;
+    
+    // New reviews first
+    if (aData.isNewReview && !bData.isNewReview) return -1;
+    if (!aData.isNewReview && bData.isNewReview) return 1;
+    
+    // Then claimed reviews
+    if (aData.matchType === 'claimed' && bData.matchType !== 'claimed') return -1;
+    if (aData.matchType !== 'claimed' && bData.matchType === 'claimed') return 1;
+    
+    // Then by match quality
+    if (aData.matchType === 'high_quality' && bData.matchType === 'potential') return -1;
+    if (aData.matchType === 'potential' && bData.matchType === 'high_quality') return 1;
+    
+    // Finally by match score, then date
+    if (aData.matchScore !== bData.matchScore) return (bData.matchScore || 0) - (aData.matchScore || 0);
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+
+  const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
 
@@ -73,11 +104,6 @@ const ProfileReviewsContent = ({
     console.log('Delete review:', reviewId);
   };
 
-  const handleClaimReview = async (reviewId: string) => {
-    // Refresh the reviews list after claiming
-    window.location.reload(); // Simple refresh for now
-  };
-
   if (isLoading) {
     return (
       <div className="text-center py-10">
@@ -93,7 +119,7 @@ const ProfileReviewsContent = ({
     );
   }
 
-  if (localReviews.length === 0) {
+  if (sortedReviews.length === 0) {
     return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
 
@@ -102,7 +128,7 @@ const ProfileReviewsContent = ({
 
   return (
     <div className="space-y-6">
-      {localReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => {
+      {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => {
         if (isBusinessUser) {
           return (
             <BusinessReviewCardWrapper
@@ -115,35 +141,16 @@ const ProfileReviewsContent = ({
             />
           );
         } else if (isCustomerUser) {
-          // For customer users, show different components based on claim status
-          const reviewAny = review as any;
-          
-          if (reviewAny.isClaimed === false && (reviewAny.matchType === 'high_quality' || reviewAny.matchType === 'potential')) {
-            // Show claimable review card for unclaimed potential matches
-            return (
-              <ClaimableReviewCard
-                key={review.id}
-                review={review}
-                matchReasons={reviewAny.matchReasons || []}
-                matchScore={reviewAny.matchScore || 0}
-                onClaim={handleClaimReview}
-                isUnlocked={isReviewUnlocked(review.id)}
-                hasSubscription={hasSubscription}
-              />
-            );
-          } else {
-            // Show normal customer review card for claimed reviews
-            return (
-              <CustomerReviewCardWrapper
-                key={review.id}
-                review={review}
-                isUnlocked={isReviewUnlocked(review.id)}
-                onPurchase={handlePurchaseReview}
-                onReactionToggle={handleReactionToggle}
-                hasSubscription={hasSubscription}
-              />
-            );
-          }
+          return (
+            <EnhancedCustomerReviewCard
+              key={review.id}
+              review={review as any}
+              isUnlocked={isReviewUnlocked(review.id)}
+              onPurchase={handlePurchaseReview}
+              onReactionToggle={handleReactionToggle}
+              hasSubscription={hasSubscription}
+            />
+          );
         }
         
         return null;
@@ -179,44 +186,6 @@ const BusinessReviewCardWrapper = ({ review, ...props }: any) => {
   
   return (
     <BusinessReviewCard
-      {...props}
-      review={{
-        ...review,
-        responses: simplifiedResponses || []
-      }}
-    />
-  );
-};
-
-// Wrapper component for CustomerReviewCard that uses simplified responses
-const CustomerReviewCardWrapper = ({ review, ...props }: any) => {
-  const customerData = {
-    firstName: review.customerName?.split(' ')[0] || '',
-    lastName: review.customerName?.split(' ').slice(1).join(' ') || '',
-    phone: review.customer_phone,
-    address: review.customer_address,
-    city: review.customer_city,
-    zipCode: review.customer_zipcode
-  };
-
-  // Make sure we pass the review with proper business name
-  const reviewWithBusinessInfo = {
-    ...review,
-    reviewerId: review.reviewerId || review.business_id,
-    reviewerName: review.reviewerName || review.business_profile?.name || 'Business'
-  };
-
-  console.log('CustomerReviewCardWrapper: Review info:', {
-    reviewId: review.id,
-    reviewerId: reviewWithBusinessInfo.reviewerId,
-    reviewerName: reviewWithBusinessInfo.reviewerName,
-    customerData
-  });
-
-  const { data: simplifiedResponses } = useSimplifiedResponses(reviewWithBusinessInfo, customerData);
-  
-  return (
-    <CustomerReviewCard
       {...props}
       review={{
         ...review,

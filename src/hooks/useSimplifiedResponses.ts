@@ -2,77 +2,73 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface CustomerData {
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  avatar?: string;
-}
-
-interface Review {
-  id: string;
-  customerId?: string;
-  customer_name?: string;
-  reviewerId?: string;
-  reviewerName?: string;
-}
-
-export const useSimplifiedResponses = (review: Review, customerData?: CustomerData, enabled: boolean = true) => {
+export const useSimplifiedResponses = (
+  review: any,
+  customerData?: any,
+  enabled: boolean = true
+) => {
   return useQuery({
-    queryKey: ['simplifiedResponses', review.id],
+    queryKey: ['simplifiedResponses', review.id, review.reviewerId],
     queryFn: async () => {
       console.log(`useSimplifiedResponses: Fetching responses for review ${review.id}`);
       
-      // Fetch the responses
-      const { data: responseData, error: responseError } = await supabase
+      const { data: responses, error } = await supabase
         .from('responses')
-        .select('id, author_id, content, created_at')
+        .select(`
+          id,
+          author_id,
+          content,
+          created_at
+        `)
         .eq('review_id', review.id)
         .order('created_at', { ascending: true });
 
-      if (responseError) {
-        console.error('useSimplifiedResponses: Error fetching responses:', responseError);
+      if (error) {
+        console.error('Error fetching responses:', error);
         return [];
       }
 
-      if (!responseData || responseData.length === 0) {
+      if (!responses || responses.length === 0) {
         return [];
       }
 
-      // Get the customer name from either customerData or review data
-      const customerFullName = customerData 
-        ? `${customerData.firstName} ${customerData.lastName}`.trim()
-        : review.customer_name || 'Customer';
+      // Get unique author IDs
+      const authorIds = [...new Set(responses.map(r => r.author_id))];
+      
+      // Fetch author profiles
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, first_name, last_name')
+        .in('id', authorIds);
 
-      // ALWAYS use the business name from the review - this is displayed in the review card
-      const businessName = review.reviewerName || 'Business';
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      console.log('useSimplifiedResponses: Customer name:', customerFullName);
-      console.log('useSimplifiedResponses: Business name (from review card):', businessName);
+      // Format responses with proper author names
+      const formattedResponses = responses.map(response => {
+        const profile = profilesMap.get(response.author_id);
+        let authorName = 'Unknown';
 
-      // Format responses with strict alternating names - NO profile fetching, NO "User" fallbacks
-      const formattedResponses = responseData.map((resp: any, index: number) => {
-        const isCustomerResponse = index % 2 === 0;
-        
-        // Strict alternating: Customer for even indexes (0, 2, 4...), Business for odd indexes (1, 3, 5...)
-        const authorName = isCustomerResponse ? customerFullName : businessName;
-
-        console.log(`Response ${index + 1}: ${authorName} (${isCustomerResponse ? 'Customer' : 'Business'})`);
+        if (response.author_id === review.reviewerId) {
+          // Business response
+          authorName = review.reviewerName || 'Business';
+        } else if (profile) {
+          // Customer response
+          authorName = profile.name || 
+                     (profile.first_name && profile.last_name 
+                       ? `${profile.first_name} ${profile.last_name}` 
+                       : 'Customer');
+        }
 
         return {
-          id: resp.id,
-          authorId: resp.author_id || '',
-          authorName, // This is the final name - DO NOT OVERRIDE THIS ANYWHERE ELSE
-          content: resp.content,
-          createdAt: resp.created_at
+          id: response.id,
+          authorId: response.author_id,
+          authorName,
+          content: response.content,
+          createdAt: response.created_at
         };
       });
 
-      console.log('useSimplifiedResponses: Final formatted responses (DO NOT OVERRIDE THESE NAMES):', formattedResponses);
+      console.log(`useSimplifiedResponses: Formatted ${formattedResponses.length} responses`);
       return formattedResponses;
     },
     enabled: enabled && !!review.id
