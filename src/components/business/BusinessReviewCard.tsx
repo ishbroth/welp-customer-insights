@@ -51,6 +51,13 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
         <BusinessReviewCardPhotos reviewId={review.id} />
 
+        {/* Move edit/delete actions here, right after the main review content */}
+        <BusinessReviewCardActions 
+          review={review}
+          onEdit={onEdit}
+          handleDeleteClick={handleDeleteClick}
+        />
+
         <BusinessReviewCardReactions 
           review={review}
           onReactionToggle={onReactionToggle}
@@ -59,12 +66,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         <BusinessReviewCardResponses 
           review={review}
           hasSubscription={hasSubscription}
-        />
-
-        <BusinessReviewCardActions 
-          review={review}
-          onEdit={onEdit}
-          handleDeleteClick={handleDeleteClick}
         />
       </div>
 

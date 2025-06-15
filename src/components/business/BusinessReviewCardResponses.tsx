@@ -102,8 +102,8 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     fetchResponses();
   }, [review.id, review.customerId]);
 
-  // Filter responses to only show valid conversation chains
-  // A business response is only valid if there's a customer response that came before it
+  // Updated logic: Only show responses that form a valid conversation chain
+  // If customer deleted their response, business responses after that point should be archived
   const getValidConversationResponses = (allResponses: Response[]): Response[] => {
     if (!review.customerId || !currentUser) return allResponses;
     
@@ -112,34 +112,42 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     );
     
     const validResponses: Response[] = [];
-    let lastCustomerResponseIndex = -1;
+    let lastValidCustomerResponseIndex = -1;
     
-    // Find all customer responses and mark their positions
-    sortedResponses.forEach((response, index) => {
+    // Find the last valid customer response
+    for (let i = 0; i < sortedResponses.length; i++) {
+      const response = sortedResponses[i];
       if (response.authorId === review.customerId) {
-        // Customer response - always include
+        lastValidCustomerResponseIndex = i;
         validResponses.push(response);
-        lastCustomerResponseIndex = index;
-      } else if (response.authorId === currentUser.id && lastCustomerResponseIndex !== -1) {
-        // Business response - only include if there's a customer response before it
-        // and no newer customer response after it that would invalidate this chain
-        const hasNewerCustomerResponse = sortedResponses
-          .slice(index + 1)
-          .some(r => r.authorId === review.customerId);
+      }
+    }
+    
+    // Only include business responses that come after the last valid customer response
+    // and before any subsequent customer response (which would start a new chain)
+    if (lastValidCustomerResponseIndex !== -1) {
+      for (let i = lastValidCustomerResponseIndex + 1; i < sortedResponses.length; i++) {
+        const response = sortedResponses[i];
         
-        if (!hasNewerCustomerResponse) {
+        // If we encounter another customer response, stop including business responses
+        if (response.authorId === review.customerId) {
+          break;
+        }
+        
+        // Include business responses from current user only
+        if (response.authorId === currentUser.id) {
           validResponses.push(response);
-        } else {
-          // Archive this business response as it's part of an old conversation chain
-          console.log(`Archiving business response ${response.id} - newer customer response found`);
+        }
+      }
+    } else {
+      // No customer responses exist, so archive any business responses
+      sortedResponses.forEach(response => {
+        if (response.authorId === currentUser.id) {
+          console.log(`Archiving business response ${response.id} - no customer response found`);
           archiveBusinessResponse(response);
         }
-      } else if (response.authorId === currentUser.id && lastCustomerResponseIndex === -1) {
-        // Business response with no customer response - should be archived
-        console.log(`Archiving business response ${response.id} - no customer response found`);
-        archiveBusinessResponse(response);
-      }
-    });
+      });
+    }
     
     return validResponses;
   };
@@ -160,6 +168,13 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 
   console.log(`BusinessReviewCardResponses rendering review ${review.id} with valid responses:`, responses);
   console.log(`Archived response available:`, !!archivedResponse);
+
+  // Only show the response section if there are valid responses or if we can respond
+  const shouldShowResponseSection = responses.length > 0 || (hasSubscription && review.customerId);
+
+  if (!shouldShowResponseSection) {
+    return null;
+  }
 
   return (
     <div className="border-t pt-4 mb-4">
