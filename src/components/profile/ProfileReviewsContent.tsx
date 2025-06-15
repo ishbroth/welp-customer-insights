@@ -9,6 +9,7 @@ import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import ClaimableReviewCard from "@/components/customer/ClaimableReviewCard";
+import { useSimplifiedResponses } from "@/hooks/useSimplifiedResponses";
 
 interface ProfileReviewsContentProps {
   customerReviews: Review[];
@@ -104,7 +105,7 @@ const ProfileReviewsContent = ({
       {localReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => {
         if (isBusinessUser) {
           return (
-            <BusinessReviewCard
+            <BusinessReviewCardWrapper
               key={review.id}
               review={review}
               hasSubscription={hasSubscription}
@@ -133,7 +134,7 @@ const ProfileReviewsContent = ({
           } else {
             // Show normal customer review card for claimed reviews
             return (
-              <CustomerReviewCard
+              <CustomerReviewCardWrapper
                 key={review.id}
                 review={review}
                 isUnlocked={isReviewUnlocked(review.id)}
@@ -156,6 +157,45 @@ const ProfileReviewsContent = ({
         />
       )}
     </div>
+  );
+};
+
+// Wrapper component for BusinessReviewCard that uses simplified responses
+const BusinessReviewCardWrapper = ({ review, ...props }: any) => {
+  const { data: simplifiedResponses } = useSimplifiedResponses(review);
+  
+  return (
+    <BusinessReviewCard
+      {...props}
+      review={{
+        ...review,
+        responses: simplifiedResponses || []
+      }}
+    />
+  );
+};
+
+// Wrapper component for CustomerReviewCard that uses simplified responses
+const CustomerReviewCardWrapper = ({ review, ...props }: any) => {
+  const customerData = {
+    firstName: review.customerName?.split(' ')[0] || '',
+    lastName: review.customerName?.split(' ').slice(1).join(' ') || '',
+    phone: review.customer_phone,
+    address: review.customer_address,
+    city: review.customer_city,
+    zipCode: review.customer_zipcode
+  };
+
+  const { data: simplifiedResponses } = useSimplifiedResponses(review, customerData);
+  
+  return (
+    <CustomerReviewCard
+      {...props}
+      review={{
+        ...review,
+        responses: simplifiedResponses || []
+      }}
+    />
   );
 };
 
