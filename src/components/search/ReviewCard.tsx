@@ -1,118 +1,63 @@
+import React, { useState } from "react";
+import { StarRating } from "@/components/StarRating";
+import { formatDistance } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
+import { Review } from "@/types";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
-import ReviewRating from "./ReviewRating";
-import ReviewBusinessInfo from "./ReviewBusinessInfo";
-import ReviewBusinessAvatar from "./ReviewBusinessAvatar";
-import ReviewContent from "./ReviewContent";
-import ReviewCustomerInfo from "./ReviewCustomerInfo";
-import { useCustomerProfileData } from "@/hooks/useCustomerProfileData";
-import { useSimplifiedResponses } from "@/hooks/useSimplifiedResponses";
 
 interface ReviewCardProps {
-  review: {
-    id: string;
-    reviewerId: string;
-    reviewerName: string;
-    rating: number;
-    content: string;
-    date: string;
-    reviewerVerified?: boolean;
-    customer_name?: string;
-    customer_phone?: string;
-    customer_address?: string;
-    customer_city?: string;
-    customer_zipcode?: string;
-    customerId?: string;
-    responses?: Array<{
-      id: string;
-      authorId: string;
-      authorName: string;
-      content: string;
-      createdAt: string;
-    }>;
-  };
-  hasFullAccess: boolean;
-  customerData?: {
-    firstName: string;
-    lastName: string;
-    phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    avatar?: string;
-  };
+  review: Review;
+  hasSubscription: boolean;
+  isOneTimeUnlocked: boolean;
+  onResponseSubmitted?: (response: any) => void;
 }
 
-const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) => {
-  const { isSubscribed, currentUser } = useAuth();
+const ReviewCard: React.FC<ReviewCardProps> = ({
+  review,
+  hasSubscription,
+  isOneTimeUnlocked,
+  onResponseSubmitted,
+}) => {
+  const { currentUser } = useAuth();
+  const [showResponses, setShowResponses] = useState(false);
+  const [responses, setResponses] = useState<any[]>([]);
 
-  // Fetch customer profile if we have customerId but no customer data
-  const { data: customerProfile } = useCustomerProfileData(
-    review.customerId,
-    !!customerData?.avatar
-  );
-
-  // Use simplified responses with alternating author names
-  const reviewWithReviewerInfo = {
-    ...review,
-    reviewerId: review.reviewerId,
-    reviewerName: review.reviewerName
+  const handleToggleResponses = () => {
+    setShowResponses(!showResponses);
   };
 
-  const { data: simplifiedResponses } = useSimplifiedResponses(
-    reviewWithReviewerInfo, 
-    customerData,
-    !!currentUser // Only fetch if user is logged in
-  );
-
-  // Get final customer avatar - prefer customerData, then fetched profile
-  const finalCustomerAvatar = customerData?.avatar || customerProfile?.avatar || '';
-
-  // Use simplified responses if available and user is logged in, otherwise fall back to empty array
-  const responsesToUse = currentUser && (simplifiedResponses || review.responses || []) || [];
-
-  console.log('ReviewCard: Final responses to display:', responsesToUse);
-
   return (
-    <div className="border-b border-gray-100 pb-4 last:border-b-0">
-      <div className="flex justify-between items-start">
-        {/* Left side: Rating, Business name, Date */}
-        <div className="flex flex-col space-y-2">
-          <ReviewRating rating={review.rating} />
-          <ReviewBusinessInfo 
-            reviewerName={review.reviewerName}
-            reviewerId={review.reviewerId}
-            date={review.date}
-            hasFullAccess={hasFullAccess}
-          />
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <div className="flex items-center mb-2">
+            <StarRating rating={review.rating} />
+            <span className="ml-2 text-sm text-gray-500">
+              {formatDistance(new Date(review.createdAt), new Date(), {
+                addSuffix: true,
+              })}
+            </span>
+          </div>
+          <p className="text-gray-700">{review.content}</p>
         </div>
-
-        {/* Right side: Verified badge and Avatar */}
-        <ReviewBusinessAvatar 
-          reviewerId={review.reviewerId}
-          reviewerName={review.reviewerName}
-          reviewerVerified={review.reviewerVerified}
-        />
       </div>
-
-      <ReviewContent content={review.content} />
-
-      <ReviewCustomerInfo 
-        hasFullAccess={hasFullAccess}
-        customerData={customerData}
-        review={review}
-        finalCustomerAvatar={finalCustomerAvatar}
-      />
-
-      {/* Response section - only show if user is logged in */}
-      {currentUser && (
+      
+      {showResponses && (
         <CustomerReviewResponse 
           reviewId={review.id}
-          responses={responsesToUse}
-          hasSubscription={isSubscribed}
-          isOneTimeUnlocked={hasFullAccess}
+          responses={responses}
+          hasSubscription={hasSubscription}
+          isOneTimeUnlocked={isOneTimeUnlocked}
+          hideReplyOption={false}
           reviewAuthorId={review.reviewerId}
+          onResponseSubmitted={(response) => {
+            setResponses(prev => [...prev, response]);
+            if (onResponseSubmitted) {
+              onResponseSubmitted(response);
+            }
+          }}
         />
       )}
     </div>

@@ -19,13 +19,19 @@ export const useAuthMethods = (
 ) => {
   const { login } = useAuthLogin();
   const { signup } = useAuthSignup();
-  const { logout } = useLogout(setIsSubscribed);
+  const { logout: baseLogout } = useLogout(setIsSubscribed);
   const { updateProfile } = useProfileUpdate(currentUser, setCurrentUser);
   const { hasOneTimeAccess, markOneTimeAccess } = useAccessControl(
     currentUser,
     oneTimeAccessResources,
     setOneTimeAccessResources
   );
+
+  // Enhanced logout that also clears current user
+  const logout = async () => {
+    await baseLogout();
+    setCurrentUser(null);
+  };
 
   return {
     login,
