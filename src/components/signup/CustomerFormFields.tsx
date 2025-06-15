@@ -1,6 +1,8 @@
 
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
+import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 
 interface CustomerFormFieldsProps {
   firstName: string;
@@ -16,6 +18,8 @@ interface CustomerFormFieldsProps {
   existingEmailError: boolean;
   emailExistsCheck: boolean;
   phoneExists: boolean;
+  isChecking: boolean;
+  duplicateResult: DuplicateCheckResult | null;
 }
 
 export const CustomerFormFields = ({
@@ -31,7 +35,9 @@ export const CustomerFormFields = ({
   onEmailChange,
   existingEmailError,
   emailExistsCheck,
-  phoneExists
+  phoneExists,
+  isChecking,
+  duplicateResult
 }: CustomerFormFieldsProps) => {
   return (
     <>
@@ -75,6 +81,20 @@ export const CustomerFormFields = ({
           required
         />
         <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
+        
+        {/* Email-related validation alerts */}
+        {((existingEmailError || emailExistsCheck) || 
+          (duplicateResult && duplicateResult.isDuplicate && duplicateResult.duplicateType === 'email')) && (
+          <div className="mt-2">
+            <CustomerValidationAlerts
+              existingEmailError={existingEmailError}
+              emailExistsCheck={emailExistsCheck}
+              phoneExists={false}
+              isChecking={false}
+              duplicateResult={duplicateResult?.duplicateType === 'email' ? duplicateResult : null}
+            />
+          </div>
+        )}
       </div>
       
       <div>
@@ -88,7 +108,31 @@ export const CustomerFormFields = ({
           required
         />
         <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
+        
+        {/* Phone-related validation alerts */}
+        {(duplicateResult && duplicateResult.isDuplicate && duplicateResult.duplicateType === 'phone') && (
+          <div className="mt-2">
+            <CustomerValidationAlerts
+              existingEmailError={false}
+              emailExistsCheck={false}
+              phoneExists={phoneExists}
+              isChecking={false}
+              duplicateResult={duplicateResult}
+            />
+          </div>
+        )}
       </div>
+      
+      {/* General checking status */}
+      {isChecking && (
+        <CustomerValidationAlerts
+          existingEmailError={false}
+          emailExistsCheck={false}
+          phoneExists={false}
+          isChecking={isChecking}
+          duplicateResult={null}
+        />
+      )}
     </>
   );
 };

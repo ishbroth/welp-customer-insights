@@ -2,7 +2,6 @@
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
 import { useCustomerDuplicateCheck } from "@/hooks/useCustomerDuplicateCheck";
 import { CustomerFormFields } from "./CustomerFormFields";
-import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
 
 interface CustomerPersonalInfoSectionProps {
   firstName: string;
@@ -53,12 +52,6 @@ export const CustomerPersonalInfoSection = ({
         setPhone={setPhone}
         onEmailBlur={onEmailBlur}
         onEmailChange={onEmailChange}
-        existingEmailError={existingEmailError}
-        emailExistsCheck={emailExistsCheck}
-        phoneExists={phoneExists}
-      />
-
-      <CustomerValidationAlerts
         existingEmailError={existingEmailError}
         emailExistsCheck={emailExistsCheck}
         phoneExists={phoneExists}
