@@ -5,6 +5,7 @@ interface ScoredReview {
   searchScore: number;
   matchCount: number;
   reviewerVerified?: boolean;
+  customerVerified?: boolean;
   created_at?: string;
   [key: string]: any;
 }
@@ -22,22 +23,43 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => review.searchScore > minScore || review.matchCount > 0)
     .sort((a, b) => {
-      // First, prioritize verified reviewers
-      if (a.reviewerVerified !== b.reviewerVerified) {
-        return b.reviewerVerified ? 1 : -1;
+      // New priority ranking system:
+      // 1. Reviews by verified business accounts (highest priority)
+      // 2. Reviews claimed by verified customers 
+      // 3. All other reviews
+      // Within each category, sort by date (newest first)
+      
+      const aBusinessVerified = Boolean(a.reviewerVerified);
+      const bBusinessVerified = Boolean(b.reviewerVerified);
+      const aCustomerVerified = Boolean(a.customerVerified);
+      const bCustomerVerified = Boolean(b.customerVerified);
+      
+      // Calculate priority scores
+      const getPriorityScore = (businessVerified: boolean, customerVerified: boolean) => {
+        if (businessVerified) return 3; // Highest priority
+        if (customerVerified) return 2; // Medium priority
+        return 1; // Lowest priority
+      };
+      
+      const aPriority = getPriorityScore(aBusinessVerified, aCustomerVerified);
+      const bPriority = getPriorityScore(bBusinessVerified, bCustomerVerified);
+      
+      // First sort by priority level
+      if (bPriority !== aPriority) {
+        return bPriority - aPriority;
       }
       
-      // Then sort by match count first, then by score
+      // Within same priority level, sort by match count first
       if (b.matchCount !== a.matchCount) {
         return b.matchCount - a.matchCount;
       }
       
-      // If match counts are equal, sort by score
+      // Then by search score
       if (b.searchScore !== a.searchScore) {
         return b.searchScore - a.searchScore;
       }
       
-      // Finally, sort by date (newest first) for reviews with same score and match count
+      // Finally, sort by date (newest first) for reviews with same priority, score and match count
       if (a.created_at && b.created_at) {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
@@ -52,6 +74,6 @@ export const filterAndSortReviews = (
 export const logSearchResults = (reviews: ScoredReview[]): void => {
   console.log("Review search results:", reviews.length);
   reviews.forEach(review => {
-    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}, Verified: ${review.reviewerVerified || false}, Date: ${review.created_at}`);
+    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}, Business Verified: ${review.reviewerVerified || false}, Customer Verified: ${review.customerVerified || false}, Date: ${review.created_at}`);
   });
 };

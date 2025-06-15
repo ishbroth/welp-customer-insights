@@ -125,13 +125,14 @@ const CustomerCard = ({
       <CardContent className="p-4">
         <div className={`flex items-start justify-between ${currentUser ? 'cursor-pointer' : ''}`} onClick={handleCardClick}>
           <div className="flex-grow min-w-0">
-            {/* Customer name with average rating */}
+            {/* Customer name with average rating and verification badge */}
             <CustomerBasicInfo 
               customerName={customerName}
               hasReviews={hasReviews}
               averageRating={averageRating}
               currentUser={currentUser}
               hasAccess={hasAccess}
+              isVerified={customer.verified || false}
             />
 
             {/* Customer information - show all identifying info for everyone */}

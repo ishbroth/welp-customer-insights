@@ -2,6 +2,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { verifyPhoneNumber, resendVerificationCode } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UsePhoneVerificationActionsProps {
   email: string | null;
@@ -59,10 +60,33 @@ export const usePhoneVerificationActions = ({
       });
       
       if (isValid) {
+        // For customer accounts, mark as verified after phone verification
+        if (accountType === 'customer') {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ verified: true })
+                .eq('id', user.id);
+              
+              if (updateError) {
+                console.error("Error marking customer as verified:", updateError);
+              } else {
+                console.log("Customer marked as verified after phone verification");
+              }
+            }
+          } catch (verificationError) {
+            console.error("Error updating customer verification status:", verificationError);
+          }
+        }
+
         // Show success toast
         toast({
           title: "Phone Verified!",
-          description: "Your phone number has been verified. Now let's set up your password.",
+          description: accountType === 'customer' 
+            ? "Your phone number has been verified and your account is now verified!" 
+            : "Your phone number has been verified. Now let's set up your password.",
         });
         
         // Redirect to password setup instead of auto-creating account

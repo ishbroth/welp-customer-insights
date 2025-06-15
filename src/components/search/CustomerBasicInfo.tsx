@@ -1,6 +1,7 @@
 
+import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import StarRating from "@/components/StarRating";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface CustomerBasicInfoProps {
   customerName: string;
@@ -8,6 +9,7 @@ interface CustomerBasicInfoProps {
   averageRating: number;
   currentUser: any;
   hasAccess: boolean;
+  isVerified?: boolean;
 }
 
 const CustomerBasicInfo = ({ 
@@ -15,26 +17,33 @@ const CustomerBasicInfo = ({
   hasReviews, 
   averageRating, 
   currentUser, 
-  hasAccess 
+  hasAccess,
+  isVerified = false
 }: CustomerBasicInfoProps) => {
   return (
-    <div className="flex items-center gap-3 mb-3">
-      <h3 className="font-semibold text-lg">
-        {customerName || 'Unknown Customer'}
+    <div className="flex items-center gap-2 mb-2">
+      <h3 className="text-lg font-semibold text-gray-900 truncate">
+        {customerName}
       </h3>
+      
+      {/* Show verified badge for verified customers */}
+      {isVerified && (
+        <VerifiedBadge size="sm" />
+      )}
+      
       {hasReviews && (
-        <div className="flex items-center gap-2">
-          <StarRating 
-            rating={averageRating} 
-            size="sm" 
-            grayedOut={!currentUser || !hasAccess}
-          />
-          {currentUser && hasAccess && (
-            <span className="text-sm font-medium text-gray-600">
-              {averageRating.toFixed(1)}
-            </span>
-          )}
+        <div className="flex items-center gap-1">
+          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+          <span className="text-sm text-gray-600">
+            {averageRating.toFixed(1)}
+          </span>
         </div>
+      )}
+      
+      {currentUser && hasAccess && (
+        <Badge variant="secondary" className="text-xs">
+          Full Access
+        </Badge>
       )}
     </div>
   );

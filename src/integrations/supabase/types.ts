@@ -250,6 +250,7 @@ export type Database = {
           state: string | null
           type: string
           updated_at: string
+          verified: boolean | null
           zipcode: string | null
         }
         Insert: {
@@ -268,6 +269,7 @@ export type Database = {
           state?: string | null
           type?: string
           updated_at?: string
+          verified?: boolean | null
           zipcode?: string | null
         }
         Update: {
@@ -286,6 +288,7 @@ export type Database = {
           state?: string | null
           type?: string
           updated_at?: string
+          verified?: boolean | null
           zipcode?: string | null
         }
         Relationships: []
