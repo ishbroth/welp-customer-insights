@@ -31,6 +31,10 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
             };
             setDuplicateResult(result);
             setShowDuplicateDialog(true);
+          } else {
+            // Clear duplicate result if phone doesn't exist
+            setDuplicateResult(null);
+            setShowDuplicateDialog(false);
           }
         } catch (error) {
           console.error("Error checking customer phone via edge function:", error);
@@ -40,11 +44,16 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
       } else {
         // Reset phone exists state when phone is cleared or too short
         setPhoneExists(false);
+        // Clear duplicate result when phone is cleared
+        if (duplicateResult?.duplicateType === 'phone') {
+          setDuplicateResult(null);
+          setShowDuplicateDialog(false);
+        }
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [phone]);
+  }, [phone, duplicateResult?.duplicateType]);
 
   // Check email immediately when it changes using edge function
   useEffect(() => {
@@ -67,6 +76,10 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
             };
             setDuplicateResult(result);
             setShowDuplicateDialog(true);
+          } else {
+            // Clear duplicate result if email doesn't exist
+            setDuplicateResult(null);
+            setShowDuplicateDialog(false);
           }
         } catch (error) {
           console.error("Error checking customer email via edge function:", error);
@@ -76,11 +89,16 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
       } else {
         // Reset email exists state when email is cleared or invalid
         setEmailExistsCheck(false);
+        // Clear duplicate result when email is cleared
+        if (duplicateResult?.duplicateType === 'email') {
+          setDuplicateResult(null);
+          setShowDuplicateDialog(false);
+        }
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [email]);
+  }, [email, duplicateResult?.duplicateType]);
 
   // Enhanced duplicate checking specifically for customer accounts using edge function
   useEffect(() => {
@@ -98,6 +116,10 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
         if (result.isDuplicate && !phoneExists && !emailExistsCheck) {
           setDuplicateResult(result);
           setShowDuplicateDialog(true);
+        } else if (!result.isDuplicate && !phoneExists && !emailExistsCheck) {
+          // Clear duplicate result if comprehensive check finds no duplicates
+          setDuplicateResult(null);
+          setShowDuplicateDialog(false);
         }
       } catch (error) {
         console.error("Error checking for customer duplicates via edge function:", error);
