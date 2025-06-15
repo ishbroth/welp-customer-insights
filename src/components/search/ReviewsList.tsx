@@ -44,6 +44,7 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
           key={review.id}
           review={{
             ...review,
+            customerId: review.customerId || customerId,
             customerName: review.customer_name || `${customerData?.firstName || ''} ${customerData?.lastName || ''}`.trim() || 'Unknown Customer',
             address: review.customer_address || '',
             city: review.customer_city || '',
