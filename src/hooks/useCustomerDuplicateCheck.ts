@@ -32,9 +32,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
             setDuplicateResult(result);
             setShowDuplicateDialog(true);
           } else {
-            // Clear duplicate result if phone doesn't exist
-            setDuplicateResult(null);
-            setShowDuplicateDialog(false);
+            // Clear duplicate result if phone doesn't exist and current duplicate is phone-related
+            if (duplicateResult?.duplicateType === 'phone') {
+              setDuplicateResult(null);
+              setShowDuplicateDialog(false);
+            }
           }
         } catch (error) {
           console.error("Error checking customer phone via edge function:", error);
@@ -44,7 +46,7 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
       } else {
         // Reset phone exists state when phone is cleared or too short
         setPhoneExists(false);
-        // Clear duplicate result when phone is cleared
+        // Clear duplicate result when phone is cleared and it's phone-related
         if (duplicateResult?.duplicateType === 'phone') {
           setDuplicateResult(null);
           setShowDuplicateDialog(false);
@@ -77,9 +79,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
             setDuplicateResult(result);
             setShowDuplicateDialog(true);
           } else {
-            // Clear duplicate result if email doesn't exist
-            setDuplicateResult(null);
-            setShowDuplicateDialog(false);
+            // Clear duplicate result if email doesn't exist and current duplicate is email-related
+            if (duplicateResult?.duplicateType === 'email') {
+              setDuplicateResult(null);
+              setShowDuplicateDialog(false);
+            }
           }
         } catch (error) {
           console.error("Error checking customer email via edge function:", error);
@@ -89,7 +93,7 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
       } else {
         // Reset email exists state when email is cleared or invalid
         setEmailExistsCheck(false);
-        // Clear duplicate result when email is cleared
+        // Clear duplicate result when email is cleared and it's email-related
         if (duplicateResult?.duplicateType === 'email') {
           setDuplicateResult(null);
           setShowDuplicateDialog(false);
