@@ -53,35 +53,76 @@ export const checkCustomerNameAndPhoneExists = async (firstName: string, lastNam
 export const checkCustomerPhoneExists = async (phone: string): Promise<boolean> => {
   try {
     const cleanedPhone = phone.replace(/\D/g, '');
-    console.log("=== CUSTOMER PHONE CHECK ===");
+    console.log("=== ENHANCED CUSTOMER PHONE CHECK ===");
     console.log("Input phone:", phone);
     console.log("Cleaned phone:", cleanedPhone);
     
-    // Only check within customer accounts for phone duplicates
-    const { data: allPhones, error } = await supabase
+    // First, try to get ALL profiles to see if RLS is blocking us
+    const { data: allProfiles, error: allError } = await supabase
       .from('profiles')
-      .select('phone, email, name, first_name, last_name')
+      .select('id, phone, email, name, first_name, last_name, type')
+      .limit(10);
+    
+    console.log("ALL PROFILES query result:", { 
+      count: allProfiles?.length, 
+      error: allError,
+      profiles: allProfiles 
+    });
+    
+    // Then try the customer-specific query
+    const { data: customerProfiles, error: customerError } = await supabase
+      .from('profiles')
+      .select('phone, email, name, first_name, last_name, type')
       .eq('type', 'customer')
       .not('phone', 'is', null);
     
-    console.log("Found customer profiles with phones:", allPhones?.length);
-    console.log("All customer phone data:", allPhones);
+    console.log("CUSTOMER PROFILES query result:", { 
+      count: customerProfiles?.length, 
+      error: customerError,
+      profiles: customerProfiles 
+    });
     
-    if (allPhones && allPhones.length > 0) {
-      for (const profile of allPhones) {
+    // Try a different approach - search without type filter first
+    const { data: phonesOnly, error: phonesError } = await supabase
+      .from('profiles')
+      .select('phone, email, name, first_name, last_name, type')
+      .not('phone', 'is', null);
+    
+    console.log("ALL PHONES query result:", { 
+      count: phonesOnly?.length, 
+      error: phonesError,
+      profiles: phonesOnly 
+    });
+    
+    // Try to find your specific profile by email
+    const { data: yourProfile, error: yourError } = await supabase
+      .from('profiles')
+      .select('id, phone, email, name, first_name, last_name, type')
+      .eq('email', 'isaac.wiley99@gmail.com')
+      .maybeSingle();
+    
+    console.log("YOUR PROFILE by email:", { 
+      profile: yourProfile, 
+      error: yourError 
+    });
+    
+    // Check all profiles for phone matches
+    if (phonesOnly && phonesOnly.length > 0) {
+      console.log("Checking all profiles for phone matches...");
+      for (const profile of phonesOnly) {
         if (profile.phone) {
           const profileCleanedPhone = profile.phone.replace(/\D/g, '');
-          console.log(`Comparing: input="${cleanedPhone}" vs stored="${profileCleanedPhone}" (profile: ${profile.name || profile.first_name + ' ' + profile.last_name})`);
+          console.log(`Comparing: input="${cleanedPhone}" vs stored="${profileCleanedPhone}" (type: ${profile.type}, email: ${profile.email})`);
           
           if (profileCleanedPhone === cleanedPhone) {
-            console.log("MATCH FOUND! Phone number exists for:", profile);
+            console.log("PHONE MATCH FOUND!", profile);
             return true;
           }
         }
       }
     }
     
-    console.log("No phone match found");
+    console.log("No phone match found in any approach");
     return false;
   } catch (error) {
     console.error("Error checking customer phone:", error);
@@ -94,8 +135,20 @@ export const checkCustomerPhoneExists = async (phone: string): Promise<boolean> 
  */
 export const checkEmailExistsAcrossAllAccounts = async (email: string): Promise<boolean> => {
   try {
-    console.log("=== EMAIL CHECK ACROSS ALL ACCOUNTS ===");
+    console.log("=== ENHANCED EMAIL CHECK ACROSS ALL ACCOUNTS ===");
     console.log("Checking email:", email);
+    
+    // First try to get ALL profiles to see if RLS is blocking
+    const { data: allProfiles, error: allError } = await supabase
+      .from('profiles')
+      .select('id, email, type')
+      .limit(10);
+    
+    console.log("ALL PROFILES for email check:", { 
+      count: allProfiles?.length, 
+      error: allError,
+      profiles: allProfiles 
+    });
     
     // Check for email in both customer and business accounts
     const { data: profileData, error: profileError } = await supabase
@@ -105,7 +158,10 @@ export const checkEmailExistsAcrossAllAccounts = async (email: string): Promise<
       .limit(1)
       .maybeSingle();
     
-    console.log("Profile data found:", profileData);
+    console.log("EMAIL PROFILE query result:", { 
+      profile: profileData, 
+      error: profileError 
+    });
     
     if (profileData) {
       console.log("Email exists in profiles table for account type:", profileData.type);
