@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -38,22 +39,28 @@ export const CustomerPersonalInfoSection = ({
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
-  // Debounced duplicate checking - now uses the updated customer-specific logic
+  // Enhanced duplicate checking specifically for customer accounts
   useEffect(() => {
-    if (!email || !phone) return;
+    if (!email || !phone || !firstName || !lastName) return;
     
     const timeoutId = setTimeout(async () => {
+      console.log("=== CUSTOMER DUPLICATE CHECK START ===");
+      console.log("Checking for customer duplicates:", { email, phone, firstName, lastName });
+      
       setIsChecking(true);
       try {
         const result = await checkForDuplicateCustomerAccount(email, phone, firstName, lastName);
+        console.log("Customer duplicate check result:", result);
+        
         setDuplicateResult(result);
         if (result.isDuplicate) {
           setShowDuplicateDialog(true);
         }
       } catch (error) {
-        console.error("Error checking for duplicates:", error);
+        console.error("Error checking for customer duplicates:", error);
       } finally {
         setIsChecking(false);
+        console.log("=== CUSTOMER DUPLICATE CHECK END ===");
       }
     }, 1000); // 1 second delay
 
@@ -139,7 +146,24 @@ export const CustomerPersonalInfoSection = ({
         <Alert className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            Checking for existing accounts...
+            Checking for existing customer accounts...
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {duplicateResult && duplicateResult.isDuplicate && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <Info className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            {duplicateResult.duplicateType === 'email' && 
+              "This email is already registered with an existing customer account."
+            }
+            {duplicateResult.duplicateType === 'phone' && 
+              "This phone number is already registered with an existing customer account."
+            }
+            {duplicateResult.duplicateType === 'customer_name' && 
+              "A customer with this name and phone number already exists."
+            }
           </AlertDescription>
         </Alert>
       )}

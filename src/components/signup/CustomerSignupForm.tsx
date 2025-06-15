@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CustomerPersonalInfoSection } from "./CustomerPersonalInfoSection";
 import { CustomerAddressSection } from "./CustomerAddressSection";
 import { CustomerPasswordSection } from "./CustomerPasswordSection";
+import { checkForDuplicateCustomerAccount } from "@/services/duplicateAccountService";
 
 const CustomerSignupForm = () => {
   const navigate = useNavigate();
@@ -87,7 +88,25 @@ const CustomerSignupForm = () => {
       
       if (emailExists) {
         setIsSubmitting(false);
-        // No need for toast here as we'll show an inline error message
+        return;
+      }
+
+      // Final duplicate check before proceeding
+      console.log("=== FINAL CUSTOMER DUPLICATE CHECK ===");
+      const finalDuplicateCheck = await checkForDuplicateCustomerAccount(
+        customerEmail, 
+        customerPhone, 
+        customerFirstName, 
+        customerLastName
+      );
+      
+      if (finalDuplicateCheck.isDuplicate && !finalDuplicateCheck.allowContinue) {
+        toast({
+          title: "Duplicate Account Found",
+          description: "An account with this information already exists. Please check your details or sign in instead.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
         return;
       }
       
