@@ -13,7 +13,8 @@ interface ArchivedResponse {
 interface ArchivedData {
   responses: ArchivedResponse[];
   archivedAt: string;
-  originalCustomerResponseId: string;
+  originalCustomerResponseId?: string;
+  originalBusinessResponseId?: string;
 }
 
 export const useArchivedResponses = (reviewId: string) => {
