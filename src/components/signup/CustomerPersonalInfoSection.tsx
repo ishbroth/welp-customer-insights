@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -70,6 +69,7 @@ export const CustomerPersonalInfoSection = ({
           setIsChecking(false);
         }
       } else {
+        // Reset phone exists state when phone is cleared or too short
         setPhoneExists(false);
       }
     }, 500);
@@ -105,6 +105,7 @@ export const CustomerPersonalInfoSection = ({
           setIsChecking(false);
         }
       } else {
+        // Reset email exists state when email is cleared or invalid
         setEmailExistsCheck(false);
       }
     }, 500);
