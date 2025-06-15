@@ -115,14 +115,14 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     
     // If no customer responses exist, archive all business responses and return empty array
     if (customerResponses.length === 0) {
-      console.log('No customer responses found - archiving all business responses');
+      console.log('No customer responses found - archiving all business responses and returning empty array');
       sortedResponses.forEach(response => {
         if (response.authorId === currentUser.id) {
           console.log(`Archiving business response ${response.id} - no customer response exists`);
           archiveBusinessResponse(response);
         }
       });
-      return [];
+      return []; // Ensure we return empty array
     }
     
     // If we get here, customer responses exist, so we show them along with valid business responses
@@ -164,13 +164,14 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     localStorage.setItem(archivedKey, JSON.stringify(archivedData));
   };
 
-  console.log(`BusinessReviewCardResponses rendering review ${review.id} with valid responses:`, responses);
+  console.log(`BusinessReviewCardResponses rendering review ${review.id} with ${responses.length} valid responses:`, responses);
   console.log(`Archived response available:`, !!archivedResponse);
 
   // Only show the response section if there are valid responses or if we can respond
   const shouldShowResponseSection = responses.length > 0 || (hasSubscription && review.customerId);
 
   if (!shouldShowResponseSection) {
+    console.log('Not showing response section - no valid responses and no subscription access');
     return null;
   }
 
