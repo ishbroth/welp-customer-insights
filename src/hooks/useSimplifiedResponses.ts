@@ -48,13 +48,13 @@ export const useSimplifiedResponses = (review: Review, customerData?: CustomerDa
         ? `${customerData.firstName} ${customerData.lastName}`.trim()
         : review.customer_name || 'Customer';
 
-      // Use the business name that's already displayed in the review card
+      // Use the business name that's displayed in the review card
       const businessName = review.reviewerName || 'Business';
 
       console.log('useSimplifiedResponses: Customer name:', customerFullName);
       console.log('useSimplifiedResponses: Business name (from review card):', businessName);
 
-      // Format responses with alternating names
+      // Format responses with strict alternating names
       // First response (index 0) = Customer
       // Second response (index 1) = Business (the one that wrote the review)
       // Third response (index 2) = Customer
