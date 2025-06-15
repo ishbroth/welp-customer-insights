@@ -11,6 +11,8 @@ interface BusinessVerificationStepProps {
   setBusinessEmail: (value: string) => void;
   businessStreet: string;
   setBusinessStreet: (value: string) => void;
+  businessApartmentSuite: string;
+  setBusinessApartmentSuite: (value: string) => void;
   businessCity: string;
   setBusinessCity: (value: string) => void;
   businessState: string;
@@ -38,6 +40,8 @@ export const BusinessVerificationStep = ({
   setBusinessEmail,
   businessStreet,
   setBusinessStreet,
+  businessApartmentSuite,
+  setBusinessApartmentSuite,
   businessCity,
   setBusinessCity,
   businessState,
@@ -102,6 +106,8 @@ export const BusinessVerificationStep = ({
         setBusinessEmail={setBusinessEmail}
         businessStreet={businessStreet}
         setBusinessStreet={setBusinessStreet}
+        businessApartmentSuite={businessApartmentSuite}
+        setBusinessApartmentSuite={setBusinessApartmentSuite}
         businessCity={businessCity}
         setBusinessCity={setBusinessCity}
         businessState={businessState}
