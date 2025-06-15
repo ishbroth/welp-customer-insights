@@ -23,7 +23,7 @@ interface CustomerReviewResponseProps {
   isOneTimeUnlocked: boolean;
   hideReplyOption?: boolean;
   onResponseSubmitted?: (newResponse: Response) => void;
-  reviewAuthorId?: string; // Add this to know who wrote the review
+  reviewAuthorId?: string;
 }
 
 const CustomerReviewResponse = ({ 
@@ -50,8 +50,56 @@ const CustomerReviewResponse = ({
     handleEditResponse,
     handleSaveEdit,
     handleCancelEdit,
-    handleDeleteResponse
+    handleDeleteResponse: originalHandleDeleteResponse
   } = useCustomerResponseActions(reviewId, responses, setResponses);
+
+  // Filter responses to only show active conversation
+  // Hide business responses that are orphaned (customer deleted their response)
+  const getActiveResponses = (): Response[] => {
+    if (!currentUser) return responses;
+    
+    const sortedResponses = [...responses].sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+    
+    const activeResponses: Response[] = [];
+    let customerHasActiveResponse = false;
+    
+    for (const response of sortedResponses) {
+      if (response.authorId === currentUser.id) {
+        // Customer response - always include
+        activeResponses.push(response);
+        customerHasActiveResponse = true;
+      } else if (response.authorId === reviewAuthorId && customerHasActiveResponse) {
+        // Business response - only include if customer has an active response
+        activeResponses.push(response);
+      }
+    }
+    
+    return activeResponses;
+  };
+
+  const activeResponses = getActiveResponses();
+
+  // Enhanced delete handler that archives business responses
+  const handleDeleteResponse = async () => {
+    if (!currentUser) return;
+
+    // Archive any business responses before deleting customer response
+    const businessResponses = responses.filter(r => r.authorId === reviewAuthorId);
+    
+    // Store archived responses in localStorage for the business owner to retrieve
+    if (businessResponses.length > 0) {
+      const archivedKey = `archived_response_${reviewId}_${reviewAuthorId}`;
+      localStorage.setItem(archivedKey, JSON.stringify({
+        responses: businessResponses,
+        archivedAt: new Date().toISOString(),
+        originalCustomerResponseId: responses.find(r => r.authorId === currentUser.id)?.id
+      }));
+    }
+
+    await originalHandleDeleteResponse();
+  };
 
   // Determine if current user can respond based on conversation flow
   const canUserRespond = (): boolean => {
@@ -59,17 +107,17 @@ const CustomerReviewResponse = ({
     if (!hasSubscription && !isOneTimeUnlocked) return false;
     
     // If user wrote the review, they can't respond to their own review initially
-    if (reviewAuthorId === currentUser.id && responses.length === 0) {
+    if (reviewAuthorId === currentUser.id && activeResponses.length === 0) {
       return false;
     }
     
     // If there are no responses yet, the person who DIDN'T write the review can respond
-    if (responses.length === 0) {
+    if (activeResponses.length === 0) {
       return reviewAuthorId !== currentUser.id;
     }
     
     // If there are responses, check who wrote the last one
-    const sortedResponses = [...responses].sort((a, b) => 
+    const sortedResponses = [...activeResponses].sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     const lastResponse = sortedResponses[0];
@@ -80,7 +128,7 @@ const CustomerReviewResponse = ({
 
   const hasUserResponded = (): boolean => {
     if (!currentUser) return false;
-    return responses.some(response => response.authorId === currentUser.id);
+    return activeResponses.some(response => response.authorId === currentUser.id);
   };
 
   const handleSubmitResponse = async (responseText: string) => {
@@ -117,7 +165,7 @@ const CustomerReviewResponse = ({
   return (
     <div className="mt-4">
       <CustomerResponseList 
-        responses={responses} 
+        responses={activeResponses} 
         editingResponseId={editingResponseId}
         editContent={editContent}
         setEditContent={setEditContent}
@@ -132,6 +180,7 @@ const CustomerReviewResponse = ({
         hideReplyOption={hideReplyOption}
         hasUserResponded={hasUserResponded()}
         currentUserId={currentUser?.id}
+        responses={activeResponses}
         onEditResponse={handleEditResponse}
         onDeleteResponse={handleDeleteResponse}
         hasSubscription={hasSubscription}

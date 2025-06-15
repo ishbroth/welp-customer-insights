@@ -12,6 +12,7 @@ interface CustomerResponseActionsProps {
   hideReplyOption: boolean;
   hasUserResponded?: boolean;
   currentUserId?: string;
+  responses?: Array<{ id: string; authorId: string; content: string }>;
   onEditResponse?: () => void;
   onDeleteResponse?: () => void;
   hasSubscription?: boolean;
@@ -24,6 +25,7 @@ const CustomerResponseActions = ({
   hideReplyOption,
   hasUserResponded = false,
   currentUserId,
+  responses = [],
   onEditResponse,
   onDeleteResponse,
   hasSubscription = false
@@ -41,12 +43,16 @@ const CustomerResponseActions = ({
     setShowDeleteDialog(false);
   };
 
+  // Find the current user's response
+  const userResponse = responses.find(r => r.authorId === currentUserId);
+  const hasUserActuallyResponded = !!userResponse;
+
   if (hideReplyOption) {
     return null;
   }
   
-  // If user has already responded, show edit/delete icons
-  if (hasUserResponded && currentUserId) {
+  // If user has actually responded, show edit/delete icons
+  if (hasUserActuallyResponded && currentUserId) {
     return (
       <>
         <div className="flex justify-end gap-2 mt-2">
@@ -96,7 +102,7 @@ const CustomerResponseActions = ({
     );
   }
   
-  // If user can't respond, don't show anything (instead of the subscription prompt)
+  // If user can't respond, don't show anything
   return null;
 };
 
