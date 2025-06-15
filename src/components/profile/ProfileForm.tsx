@@ -28,6 +28,7 @@ const ProfileForm = () => {
       licenseType: currentUser?.licenseType || "",
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
+      suite: currentUser?.suite || "",
       city: currentUser?.city || "",
       state: currentUser?.state || "",
       zipCode: currentUser?.zipCode || "",
@@ -49,6 +50,7 @@ const ProfileForm = () => {
       if (data.licenseType !== undefined) updateData.licenseType = data.licenseType;
       if (data.phone) updateData.phone = data.phone;
       if (data.address) updateData.address = data.address;
+      if (data.suite !== undefined) updateData.suite = data.suite;
       if (data.city) updateData.city = data.city;
       if (data.state) updateData.state = data.state;
       if (data.zipCode) updateData.zipCode = data.zipCode;

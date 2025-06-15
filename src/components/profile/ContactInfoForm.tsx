@@ -82,6 +82,20 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
 
       <FormField
         control={form.control}
+        name="suite"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Suite, Unit, Floor, etc. (Optional)</FormLabel>
+            <FormControl>
+              <Input placeholder="Suite 100, Unit B, Floor 2, etc." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="city"
         render={({ field }) => (
           <FormItem>

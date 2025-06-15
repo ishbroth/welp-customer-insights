@@ -9,6 +9,7 @@ export const profileSchema = z.object({
   licenseType: z.string().optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
+  suite: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   zipCode: z.string().optional(),
