@@ -23,6 +23,8 @@ const US_STATES = [
 interface CustomerAddressSectionProps {
   street: string;
   setStreet: (value: string) => void;
+  apartmentSuite?: string;
+  setApartmentSuite?: (value: string) => void;
   city: string;
   setCity: (value: string) => void;
   state: string;
@@ -34,6 +36,8 @@ interface CustomerAddressSectionProps {
 export const CustomerAddressSection = ({
   street,
   setStreet,
+  apartmentSuite,
+  setApartmentSuite,
   city,
   setCity,
   state,
@@ -87,6 +91,19 @@ export const CustomerAddressSection = ({
           className="welp-input"
         />
       </div>
+      
+      {setApartmentSuite && (
+        <div>
+          <label htmlFor="customerApartmentSuite" className="block text-sm font-medium mb-1">Apartment, Suite, etc. (Optional)</label>
+          <Input
+            id="customerApartmentSuite"
+            placeholder="Apt 2B, Suite 100, etc."
+            value={apartmentSuite || ''}
+            onChange={(e) => setApartmentSuite(e.target.value)}
+            className="welp-input"
+          />
+        </div>
+      )}
       
       <div>
         <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>

@@ -11,6 +11,7 @@ interface CustomerInfoFormProps {
   customerLastName: string;
   customerPhone: string;
   customerAddress: string;
+  customerApartmentSuite?: string;
   customerCity: string;
   customerState: string;
   customerZipCode: string;
@@ -20,6 +21,7 @@ interface CustomerInfoFormProps {
   setCustomerLastName: (value: string) => void;
   setCustomerPhone: (value: string) => void;
   setCustomerAddress: (value: string) => void;
+  setCustomerApartmentSuite?: (value: string) => void;
   setCustomerCity: (value: string) => void;
   setCustomerState: (value: string) => void;
   setCustomerZipCode: (value: string) => void;
@@ -30,6 +32,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customerLastName,
   customerPhone,
   customerAddress,
+  customerApartmentSuite,
   customerCity,
   customerState,
   customerZipCode,
@@ -39,6 +42,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   setCustomerLastName,
   setCustomerPhone,
   setCustomerAddress,
+  setCustomerApartmentSuite,
   setCustomerCity,
   setCustomerState,
   setCustomerZipCode,
@@ -132,6 +136,20 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
           placeholder="Start typing address..."
         />
       </div>
+      
+      {setCustomerApartmentSuite && (
+        <div>
+          <label htmlFor="customerApartmentSuite" className="block text-sm font-medium mb-1">Apartment, Suite, etc. (Optional)</label>
+          <Input
+            id="customerApartmentSuite"
+            value={customerApartmentSuite || ''}
+            onChange={(e) => setCustomerApartmentSuite(e.target.value)}
+            className="welp-input"
+            disabled={!isNewCustomer && !!customer}
+            placeholder="Apt 2B, Suite 100, etc."
+          />
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>

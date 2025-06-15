@@ -1,5 +1,6 @@
 
 import { Input } from "@/components/ui/input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 
 interface BusinessAddressSectionProps {
@@ -7,6 +8,8 @@ interface BusinessAddressSectionProps {
   setBusinessName: (value: string) => void;
   businessStreet: string;
   setBusinessStreet: (value: string) => void;
+  businessApartmentSuite?: string;
+  setBusinessApartmentSuite?: (value: string) => void;
   businessCity: string;
   setBusinessCity: (value: string) => void;
   businessState: string;
@@ -20,6 +23,8 @@ export const BusinessAddressSection = ({
   setBusinessName,
   businessStreet,
   setBusinessStreet,
+  businessApartmentSuite,
+  setBusinessApartmentSuite,
   businessCity,
   setBusinessCity,
   businessState,
@@ -27,6 +32,42 @@ export const BusinessAddressSection = ({
   businessZipCode,
   setBusinessZipCode,
 }: BusinessAddressSectionProps) => {
+  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
+    if (!place.address_components) return;
+
+    // Extract address components
+    let streetNumber = '';
+    let route = '';
+    let city = '';
+    let state = '';
+    let zipCode = '';
+
+    place.address_components.forEach((component) => {
+      const types = component.types;
+      
+      if (types.includes('street_number')) {
+        streetNumber = component.long_name;
+      } else if (types.includes('route')) {
+        route = component.long_name;
+      } else if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = component.short_name;
+      } else if (types.includes('postal_code')) {
+        zipCode = component.long_name;
+      }
+    });
+
+    // Update form fields with full street address (street number + route)
+    const fullStreetAddress = `${streetNumber} ${route}`.trim();
+    if (fullStreetAddress) setBusinessStreet(fullStreetAddress);
+    
+    // Update other form fields
+    if (city) setBusinessCity(city);
+    if (state) setBusinessState(state);
+    if (zipCode) setBusinessZipCode(zipCode);
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -48,16 +89,33 @@ export const BusinessAddressSection = ({
         <label htmlFor="businessStreet" className="block text-sm font-medium mb-1">
           Street Address <span className="text-red-500">*</span>
         </label>
-        <Input
+        <AddressAutocomplete
           id="businessStreet"
-          type="text"
-          placeholder="123 Main St"
+          placeholder="Start typing your business address..."
           value={businessStreet}
           onChange={(e) => setBusinessStreet(e.target.value)}
+          onAddressChange={setBusinessStreet}
+          onPlaceSelect={handleAddressSelect}
           className="welp-input"
           required
         />
       </div>
+      
+      {setBusinessApartmentSuite && (
+        <div>
+          <label htmlFor="businessApartmentSuite" className="block text-sm font-medium mb-1">
+            Suite, Unit, Floor, etc. (Optional)
+          </label>
+          <Input
+            id="businessApartmentSuite"
+            type="text"
+            placeholder="Suite 100, Unit B, Floor 2, etc."
+            value={businessApartmentSuite || ''}
+            onChange={(e) => setBusinessApartmentSuite(e.target.value)}
+            className="welp-input"
+          />
+        </div>
+      )}
       
       <div className="grid grid-cols-2 gap-4">
         <div>

@@ -10,6 +10,7 @@ interface CustomerSignupData {
   customerEmail: string;
   customerPhone: string;
   customerStreet: string;
+  customerApartmentSuite?: string;
   customerCity: string;
   customerState: string;
   customerZipCode: string;
@@ -31,6 +32,7 @@ export const useCustomerSignupActions = (
       customerEmail,
       customerPhone,
       customerStreet,
+      customerApartmentSuite,
       customerCity,
       customerState,
       customerZipCode,
@@ -65,6 +67,11 @@ export const useCustomerSignupActions = (
         setIsSubmitting(false);
         return;
       }
+
+      // Create full address string including apartment/suite if provided
+      const fullAddress = customerApartmentSuite 
+        ? `${customerStreet}, ${customerApartmentSuite}`
+        : customerStreet;
 
       // Final duplicate check before proceeding
       console.log("=== FINAL CUSTOMER DUPLICATE CHECK ===");
@@ -104,7 +111,7 @@ export const useCustomerSignupActions = (
         name: `${customerFirstName} ${customerLastName}`,
         phone: customerPhone,
         accountType: "customer",
-        address: customerStreet,
+        address: fullAddress,
         city: customerCity,
         state: customerState,
         zipCode: customerZipCode

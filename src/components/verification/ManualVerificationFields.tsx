@@ -39,6 +39,7 @@ interface FormData {
   businessType: string;
   businessSubcategory: string;
   address: string;
+  apartmentSuite?: string;
   city: string;
   state: string;
   zipCode: string;
@@ -145,6 +146,16 @@ const ManualVerificationFields = ({
           onChange={(e) => onInputChange("address", e.target.value)}
           onAddressChange={(address) => onInputChange("address", address)}
           onPlaceSelect={handleAddressSelect}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="apartmentSuite">Suite, Unit, Floor, etc. (Optional)</Label>
+        <Input
+          id="apartmentSuite"
+          value={formData.apartmentSuite || ''}
+          onChange={(e) => onInputChange("apartmentSuite", e.target.value)}
+          placeholder="Suite 100, Unit B, Floor 2, etc."
         />
       </div>
 

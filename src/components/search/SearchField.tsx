@@ -32,6 +32,11 @@ const SearchField = ({
   const isAddressField = placeholder.toLowerCase().includes("address") || 
                         placeholder.toLowerCase().includes("street");
   
+  // Use apartment/suite input for those fields
+  const isApartmentField = placeholder.toLowerCase().includes("apartment") ||
+                          placeholder.toLowerCase().includes("suite") ||
+                          placeholder.toLowerCase().includes("unit");
+  
   // Handle address field restrictions
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isAddressField) {

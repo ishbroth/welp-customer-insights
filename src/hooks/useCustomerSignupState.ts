@@ -8,6 +8,7 @@ export const useCustomerSignupState = () => {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerStreet, setCustomerStreet] = useState("");
+  const [customerApartmentSuite, setCustomerApartmentSuite] = useState("");
   const [customerCity, setCustomerCity] = useState("");
   const [customerState, setCustomerState] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
@@ -28,6 +29,8 @@ export const useCustomerSignupState = () => {
     setCustomerPhone,
     customerStreet,
     setCustomerStreet,
+    customerApartmentSuite,
+    setCustomerApartmentSuite,
     customerCity,
     setCustomerCity,
     customerState,

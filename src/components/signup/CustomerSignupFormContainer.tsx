@@ -19,6 +19,8 @@ export const CustomerSignupFormContainer = () => {
     setCustomerPhone,
     customerStreet,
     setCustomerStreet,
+    customerApartmentSuite,
+    setCustomerApartmentSuite,
     customerCity,
     setCustomerCity,
     customerState,
@@ -57,6 +59,7 @@ export const CustomerSignupFormContainer = () => {
       customerEmail,
       customerPhone,
       customerStreet,
+      customerApartmentSuite,
       customerCity,
       customerState,
       customerZipCode,
@@ -86,6 +89,8 @@ export const CustomerSignupFormContainer = () => {
       <CustomerAddressSection
         street={customerStreet}
         setStreet={setCustomerStreet}
+        apartmentSuite={customerApartmentSuite}
+        setApartmentSuite={setCustomerApartmentSuite}
         city={customerCity}
         setCity={setCustomerCity}
         state={customerState}
