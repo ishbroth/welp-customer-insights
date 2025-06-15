@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +22,7 @@ interface CustomerCardProps {
     state?: string;
     zipCode?: string;
     avatar?: string;
+    verified?: boolean; // Add verified property
     reviews?: Array<{
       id: string;
       reviewerId: string;
