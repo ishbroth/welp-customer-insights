@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { StarRating } from "@/components/StarRating";
+import StarRating from "@/components/StarRating";
 import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Calendar } from "lucide-react";
@@ -35,7 +36,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           <div className="flex items-center mb-2">
             <StarRating rating={review.rating} />
             <span className="ml-2 text-sm text-gray-500">
-              {formatDistance(new Date(review.createdAt), new Date(), {
+              {formatDistance(new Date(review.date), new Date(), {
                 addSuffix: true,
               })}
             </span>

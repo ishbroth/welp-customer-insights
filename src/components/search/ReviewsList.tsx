@@ -42,9 +42,16 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
       {reviews.map((review) => (
         <ReviewCard
           key={review.id}
-          review={review}
-          hasFullAccess={hasFullAccess(customerId)}
-          customerData={customerData}
+          review={{
+            ...review,
+            customerName: review.customer_name || `${customerData?.firstName || ''} ${customerData?.lastName || ''}`.trim() || 'Unknown Customer',
+            address: review.customer_address || '',
+            city: review.customer_city || '',
+            state: '',
+            zipCode: review.customer_zipcode || ''
+          }}
+          hasSubscription={hasFullAccess(customerId)}
+          isOneTimeUnlocked={false}
         />
       ))}
     </div>
