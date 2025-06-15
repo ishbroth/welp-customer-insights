@@ -54,7 +54,7 @@ export const useSimplifiedResponses = (review: Review, customerData?: CustomerDa
       console.log('useSimplifiedResponses: Customer name:', customerFullName);
       console.log('useSimplifiedResponses: Business name (from review card):', businessName);
 
-      // Format responses with strict alternating names - NO "User" fallbacks allowed
+      // Format responses with strict alternating names - NO profile fetching, NO "User" fallbacks
       const formattedResponses = responseData.map((resp: any, index: number) => {
         const isCustomerResponse = index % 2 === 0;
         
@@ -66,13 +66,13 @@ export const useSimplifiedResponses = (review: Review, customerData?: CustomerDa
         return {
           id: resp.id,
           authorId: resp.author_id || '',
-          authorName,
+          authorName, // This is the final name - DO NOT OVERRIDE THIS ANYWHERE ELSE
           content: resp.content,
           createdAt: resp.created_at
         };
       });
 
-      console.log('useSimplifiedResponses: Final formatted responses:', formattedResponses);
+      console.log('useSimplifiedResponses: Final formatted responses (DO NOT OVERRIDE THESE NAMES):', formattedResponses);
       return formattedResponses;
     },
     enabled: enabled && !!review.id
