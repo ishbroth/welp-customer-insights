@@ -1,12 +1,8 @@
-import { Input } from "@/components/ui/input";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
-import { Link } from "react-router-dom";
+
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
-import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction, checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
-import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
-import { useState, useEffect } from "react";
+import { useCustomerDuplicateCheck } from "@/hooks/useCustomerDuplicateCheck";
+import { CustomerFormFields } from "./CustomerFormFields";
+import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
 
 interface CustomerPersonalInfoSectionProps {
   firstName: string;
@@ -35,221 +31,40 @@ export const CustomerPersonalInfoSection = ({
   onEmailBlur,
   onEmailChange
 }: CustomerPersonalInfoSectionProps) => {
-  const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
-  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
-  const [phoneExists, setPhoneExists] = useState(false);
-  const [emailExistsCheck, setEmailExistsCheck] = useState(false);
-
-  // Check phone immediately when it changes using edge function
-  useEffect(() => {
-    const timeoutId = setTimeout(async () => {
-      if (phone && phone.replace(/\D/g, '').length >= 10) {
-        console.log("=== CUSTOMER PHONE CHECK VIA EDGE FUNCTION ===");
-        console.log("Checking phone:", phone);
-        setIsChecking(true);
-        try {
-          const exists = await checkPhoneExistsViaEdgeFunction(phone, 'customer');
-          console.log("Phone exists result via edge function:", exists);
-          setPhoneExists(exists);
-          
-          if (exists) {
-            const result: DuplicateCheckResult = {
-              isDuplicate: true,
-              duplicateType: 'phone',
-              existingPhone: phone,
-              allowContinue: false
-            };
-            setDuplicateResult(result);
-            setShowDuplicateDialog(true);
-          }
-        } catch (error) {
-          console.error("Error checking customer phone via edge function:", error);
-        } finally {
-          setIsChecking(false);
-        }
-      } else {
-        // Reset phone exists state when phone is cleared or too short
-        setPhoneExists(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [phone]);
-
-  // Check email immediately when it changes using edge function
-  useEffect(() => {
-    const timeoutId = setTimeout(async () => {
-      if (email && email.includes('@')) {
-        console.log("=== CUSTOMER EMAIL CHECK VIA EDGE FUNCTION ===");
-        console.log("Checking email:", email);
-        setIsChecking(true);
-        try {
-          const exists = await checkEmailExistsViaEdgeFunction(email, 'customer');
-          console.log("Email exists result via edge function:", exists);
-          setEmailExistsCheck(exists);
-          
-          if (exists) {
-            const result: DuplicateCheckResult = {
-              isDuplicate: true,
-              duplicateType: 'email',
-              existingEmail: email,
-              allowContinue: false
-            };
-            setDuplicateResult(result);
-            setShowDuplicateDialog(true);
-          }
-        } catch (error) {
-          console.error("Error checking customer email via edge function:", error);
-        } finally {
-          setIsChecking(false);
-        }
-      } else {
-        // Reset email exists state when email is cleared or invalid
-        setEmailExistsCheck(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [email]);
-
-  // Enhanced duplicate checking specifically for customer accounts using edge function
-  useEffect(() => {
-    if (!email || !phone || !firstName || !lastName) return;
-    
-    const timeoutId = setTimeout(async () => {
-      console.log("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK VIA EDGE FUNCTION ===");
-      console.log("Checking for customer duplicates:", { email, phone, firstName, lastName });
-      
-      setIsChecking(true);
-      try {
-        const result = await checkDuplicatesViaEdgeFunction(email, phone, undefined, undefined, 'customer');
-        console.log("Customer duplicate check result via edge function:", result);
-        
-        if (result.isDuplicate && !phoneExists && !emailExistsCheck) {
-          setDuplicateResult(result);
-          setShowDuplicateDialog(true);
-        }
-      } catch (error) {
-        console.error("Error checking for customer duplicates via edge function:", error);
-      } finally {
-        setIsChecking(false);
-        console.log("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK END ===");
-      }
-    }, 1000); // 1 second delay
-
-    return () => clearTimeout(timeoutId);
-  }, [email, phone, firstName, lastName, phoneExists, emailExistsCheck]);
+  const {
+    duplicateResult,
+    showDuplicateDialog,
+    setShowDuplicateDialog,
+    isChecking,
+    phoneExists,
+    emailExistsCheck
+  } = useCustomerDuplicateCheck(email, phone, firstName, lastName);
 
   return (
     <>
-      <div>
-        <label htmlFor="customerFirstName" className="block text-sm font-medium mb-1">First Name</label>
-        <Input
-          id="customerFirstName"
-          placeholder="John"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerLastName" className="block text-sm font-medium mb-1">Last Name</label>
-        <Input
-          id="customerLastName"
-          placeholder="Smith"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="customerEmail" className="block text-sm font-medium mb-1">Email Address</label>
-        <Input
-          id="customerEmail"
-          type="email"
-          placeholder="customer@example.com"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            onEmailChange(e.target.value);
-          }}
-          onBlur={onEmailBlur}
-          className={`welp-input ${existingEmailError || emailExistsCheck ? 'border-red-500' : ''}`}
-          required
-        />
-        <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
-        
-        {(existingEmailError || emailExistsCheck) && (
-          <Alert className="mt-2 bg-amber-50 border-amber-200">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-2">
-              <span>This email is already registered.</span>
-              <div>
-                <Link to="/login" className="text-welp-primary hover:underline font-medium">
-                  Sign in instead
-                </Link>
-                {" or "}
-                <Link to="/forgot-password" className="text-welp-primary hover:underline font-medium">
-                  Reset password
-                </Link>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
-      
-      <div>
-        <label htmlFor="customerPhone" className="block text-sm font-medium mb-1">Phone Number</label>
-        <PhoneInput
-          id="customerPhone"
-          placeholder="(555) 123-4567"
-          value={phone}
-          onChange={setPhone}
-          className={`welp-input ${phoneExists ? 'border-red-500' : ''}`}
-          required
-        />
-        <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
-        
-        {phoneExists && (
-          <Alert className="mt-2 bg-amber-50 border-amber-200">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              This phone number is already registered with an existing customer account.
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+      <CustomerFormFields
+        firstName={firstName}
+        setFirstName={setFirstName}
+        lastName={lastName}
+        setLastName={setLastName}
+        email={email}
+        setEmail={setEmail}
+        phone={phone}
+        setPhone={setPhone}
+        onEmailBlur={onEmailBlur}
+        onEmailChange={onEmailChange}
+        existingEmailError={existingEmailError}
+        emailExistsCheck={emailExistsCheck}
+        phoneExists={phoneExists}
+      />
 
-      {isChecking && (
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            Checking for existing customer accounts...
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {duplicateResult && duplicateResult.isDuplicate && (
-        <Alert className="bg-amber-50 border-amber-200">
-          <Info className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            {duplicateResult.duplicateType === 'email' && 
-              "This email is already registered with an existing customer account."
-            }
-            {duplicateResult.duplicateType === 'phone' && 
-              "This phone number is already registered with an existing customer account."
-            }
-            {duplicateResult.duplicateType === 'customer_name' && 
-              "A customer with this name and phone number already exists."
-            }
-          </AlertDescription>
-        </Alert>
-      )}
+      <CustomerValidationAlerts
+        existingEmailError={existingEmailError}
+        emailExistsCheck={emailExistsCheck}
+        phoneExists={phoneExists}
+        isChecking={isChecking}
+        duplicateResult={duplicateResult}
+      />
 
       {duplicateResult && (
         <DuplicateAccountDialog
