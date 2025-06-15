@@ -19,7 +19,7 @@ const WelcomeSection = () => {
         .from('profiles')
         .select('verified')
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching customer verification:", error);
