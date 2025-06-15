@@ -18,6 +18,7 @@ interface CustomerResponseListProps {
   setEditContent?: (content: string) => void;
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
+  onDelete?: (responseId: string) => void;
 }
 
 const CustomerResponseList = ({ 
@@ -26,7 +27,8 @@ const CustomerResponseList = ({
   editContent,
   setEditContent,
   onSaveEdit,
-  onCancelEdit
+  onCancelEdit,
+  onDelete
 }: CustomerResponseListProps) => {
   if (responses.length === 0) {
     return null;

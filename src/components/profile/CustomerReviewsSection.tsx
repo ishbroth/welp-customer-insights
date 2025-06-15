@@ -121,6 +121,7 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
                     hasSubscription={isSubscribed}
                     isOneTimeUnlocked={hasOneTimeAccess(review.id)}
                     hideReplyOption={!isSubscribed}
+                    reviewAuthorId={review.reviewerId}
                   />
                 </div>
               );

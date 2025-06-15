@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -124,7 +125,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
       const newResponseObj: Response = {
         id: data.id,
         authorId: currentUser.id,
-        authorName: currentUser.first_name || currentUser.name || 'Customer',
+        authorName: currentUser.name || 'Customer',
         content: data.content,
         createdAt: data.created_at
       };
@@ -203,8 +204,6 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
       {/* Display existing responses */}
       <CustomerResponseList
         responses={responses}
-        currentUser={currentUser}
-        hasSubscription={hasSubscription}
         onDelete={handleDeleteResponse}
       />
 
