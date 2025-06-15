@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { checkForDuplicateCustomerAccount } from "@/services/duplicateAccountService";
+import { checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 
 interface CustomerSignupData {
   customerFirstName: string;
@@ -60,27 +60,22 @@ export const useCustomerSignupActions = (
     setIsSubmitting(true);
     
     try {
-      // First, check if email is already registered
-      const emailExists = await checkEmailExists(customerEmail);
-      
-      if (emailExists) {
-        setIsSubmitting(false);
-        return;
-      }
-
       // Create full address string including apartment/suite if provided
       const fullAddress = customerApartmentSuite 
         ? `${customerStreet}, ${customerApartmentSuite}`
         : customerStreet;
 
-      // Final duplicate check before proceeding
-      console.log("=== FINAL CUSTOMER DUPLICATE CHECK ===");
-      const finalDuplicateCheck = await checkForDuplicateCustomerAccount(
+      // Final duplicate check before proceeding using edge function
+      console.log("=== FINAL CUSTOMER DUPLICATE CHECK VIA EDGE FUNCTION ===");
+      const finalDuplicateCheck = await checkDuplicatesViaEdgeFunction(
         customerEmail, 
         customerPhone, 
-        customerFirstName, 
-        customerLastName
+        undefined,
+        undefined,
+        'customer'
       );
+      
+      console.log("Final customer duplicate check result:", finalDuplicateCheck);
       
       if (finalDuplicateCheck.isDuplicate && !finalDuplicateCheck.allowContinue) {
         toast({
