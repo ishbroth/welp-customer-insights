@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DuplicateAccountDialog } from "./DuplicateAccountDialog";
-import { checkForDuplicateCustomerAccount, DuplicateCheckResult } from "@/services/duplicateAccountService";
+import { checkForDuplicateCustomerAccount, checkCustomerPhoneExists, checkEmailExistsAcrossAllAccounts, DuplicateCheckResult } from "@/services/duplicateAccountService";
 import { useState, useEffect } from "react";
 
 interface CustomerPersonalInfoSectionProps {
@@ -38,13 +38,85 @@ export const CustomerPersonalInfoSection = ({
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [phoneExists, setPhoneExists] = useState(false);
+  const [emailExistsCheck, setEmailExistsCheck] = useState(false);
+
+  // Check phone immediately when it changes
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (phone && phone.replace(/\D/g, '').length >= 10) {
+        console.log("=== CUSTOMER PHONE CHECK TRIGGERED ===");
+        console.log("Checking phone:", phone);
+        setIsChecking(true);
+        try {
+          const exists = await checkCustomerPhoneExists(phone);
+          console.log("Phone exists result:", exists);
+          setPhoneExists(exists);
+          
+          if (exists) {
+            const result: DuplicateCheckResult = {
+              isDuplicate: true,
+              duplicateType: 'phone',
+              existingPhone: phone,
+              allowContinue: false
+            };
+            setDuplicateResult(result);
+            setShowDuplicateDialog(true);
+          }
+        } catch (error) {
+          console.error("Error checking customer phone:", error);
+        } finally {
+          setIsChecking(false);
+        }
+      } else {
+        setPhoneExists(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [phone]);
+
+  // Check email immediately when it changes
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (email && email.includes('@')) {
+        console.log("=== CUSTOMER EMAIL CHECK TRIGGERED ===");
+        console.log("Checking email:", email);
+        setIsChecking(true);
+        try {
+          const exists = await checkEmailExistsAcrossAllAccounts(email);
+          console.log("Email exists result:", exists);
+          setEmailExistsCheck(exists);
+          
+          if (exists) {
+            const result: DuplicateCheckResult = {
+              isDuplicate: true,
+              duplicateType: 'email',
+              existingEmail: email,
+              allowContinue: false
+            };
+            setDuplicateResult(result);
+            setShowDuplicateDialog(true);
+          }
+        } catch (error) {
+          console.error("Error checking customer email:", error);
+        } finally {
+          setIsChecking(false);
+        }
+      } else {
+        setEmailExistsCheck(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [email]);
 
   // Enhanced duplicate checking specifically for customer accounts
   useEffect(() => {
     if (!email || !phone || !firstName || !lastName) return;
     
     const timeoutId = setTimeout(async () => {
-      console.log("=== CUSTOMER DUPLICATE CHECK START ===");
+      console.log("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK START ===");
       console.log("Checking for customer duplicates:", { email, phone, firstName, lastName });
       
       setIsChecking(true);
@@ -52,20 +124,20 @@ export const CustomerPersonalInfoSection = ({
         const result = await checkForDuplicateCustomerAccount(email, phone, firstName, lastName);
         console.log("Customer duplicate check result:", result);
         
-        setDuplicateResult(result);
-        if (result.isDuplicate) {
+        if (result.isDuplicate && !phoneExists && !emailExistsCheck) {
+          setDuplicateResult(result);
           setShowDuplicateDialog(true);
         }
       } catch (error) {
         console.error("Error checking for customer duplicates:", error);
       } finally {
         setIsChecking(false);
-        console.log("=== CUSTOMER DUPLICATE CHECK END ===");
+        console.log("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK END ===");
       }
     }, 1000); // 1 second delay
 
     return () => clearTimeout(timeoutId);
-  }, [email, phone, firstName, lastName]);
+  }, [email, phone, firstName, lastName, phoneExists, emailExistsCheck]);
 
   return (
     <>
@@ -105,12 +177,12 @@ export const CustomerPersonalInfoSection = ({
             onEmailChange(e.target.value);
           }}
           onBlur={onEmailBlur}
-          className={`welp-input ${existingEmailError ? 'border-red-500' : ''}`}
+          className={`welp-input ${existingEmailError || emailExistsCheck ? 'border-red-500' : ''}`}
           required
         />
         <p className="text-xs text-gray-500 mt-1">This email will be used to log in to your account</p>
         
-        {existingEmailError && (
+        {(existingEmailError || emailExistsCheck) && (
           <Alert className="mt-2 bg-amber-50 border-amber-200">
             <Info className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-2">
@@ -136,10 +208,19 @@ export const CustomerPersonalInfoSection = ({
           placeholder="(555) 123-4567"
           value={phone}
           onChange={setPhone}
-          className="welp-input"
+          className={`welp-input ${phoneExists ? 'border-red-500' : ''}`}
           required
         />
         <p className="text-xs text-gray-500 mt-1">We'll send a verification code to this number</p>
+        
+        {phoneExists && (
+          <Alert className="mt-2 bg-amber-50 border-amber-200">
+            <Info className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              This phone number is already registered with an existing customer account.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       {isChecking && (
