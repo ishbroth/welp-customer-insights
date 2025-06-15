@@ -102,8 +102,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     fetchResponses();
   }, [review.id, review.customerId]);
 
-  // Updated logic: Only show responses that form a valid conversation chain
-  // If customer deleted their response, business responses after that point should be archived
+  // Updated logic: Only show responses if customer still has an active response in the chain
   const getValidConversationResponses = (allResponses: Response[]): Response[] => {
     if (!review.customerId || !currentUser) return allResponses;
     
@@ -111,42 +110,41 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
       new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
     
-    const validResponses: Response[] = [];
-    let lastValidCustomerResponseIndex = -1;
+    // Check if there are any customer responses at all
+    const customerResponses = sortedResponses.filter(r => r.authorId === review.customerId);
     
-    // Find the last valid customer response
-    for (let i = 0; i < sortedResponses.length; i++) {
-      const response = sortedResponses[i];
-      if (response.authorId === review.customerId) {
-        lastValidCustomerResponseIndex = i;
-        validResponses.push(response);
-      }
+    // If no customer responses exist, archive all business responses and return empty array
+    if (customerResponses.length === 0) {
+      console.log('No customer responses found - archiving all business responses');
+      sortedResponses.forEach(response => {
+        if (response.authorId === currentUser.id) {
+          console.log(`Archiving business response ${response.id} - no customer response exists`);
+          archiveBusinessResponse(response);
+        }
+      });
+      return [];
     }
     
-    // Only include business responses that come after the last valid customer response
-    // and before any subsequent customer response (which would start a new chain)
-    if (lastValidCustomerResponseIndex !== -1) {
-      for (let i = lastValidCustomerResponseIndex + 1; i < sortedResponses.length; i++) {
+    // If we get here, customer responses exist, so we show them along with valid business responses
+    const validResponses: Response[] = [];
+    let lastCustomerResponseIndex = -1;
+    
+    // Include all customer responses and track the last one
+    sortedResponses.forEach((response, index) => {
+      if (response.authorId === review.customerId) {
+        validResponses.push(response);
+        lastCustomerResponseIndex = index;
+      }
+    });
+    
+    // Only include business responses that come after the last customer response
+    if (lastCustomerResponseIndex !== -1) {
+      for (let i = lastCustomerResponseIndex + 1; i < sortedResponses.length; i++) {
         const response = sortedResponses[i];
-        
-        // If we encounter another customer response, stop including business responses
-        if (response.authorId === review.customerId) {
-          break;
-        }
-        
-        // Include business responses from current user only
         if (response.authorId === currentUser.id) {
           validResponses.push(response);
         }
       }
-    } else {
-      // No customer responses exist, so archive any business responses
-      sortedResponses.forEach(response => {
-        if (response.authorId === currentUser.id) {
-          console.log(`Archiving business response ${response.id} - no customer response found`);
-          archiveBusinessResponse(response);
-        }
-      });
     }
     
     return validResponses;
