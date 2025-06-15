@@ -71,6 +71,23 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
 
       console.log('useEnhancedResponses: Profile data found:', profileData);
 
+      // Also fetch business info for any business accounts to get business names
+      const businessAuthorIds = profileData?.filter(p => p.type === 'business').map(p => p.id) || [];
+      let businessInfoMap = new Map();
+      
+      if (businessAuthorIds.length > 0) {
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_info')
+          .select('id, business_name')
+          .in('id', businessAuthorIds);
+
+        if (!businessError && businessData) {
+          businessData.forEach(business => {
+            businessInfoMap.set(business.id, business.business_name);
+          });
+        }
+      }
+
       // Get the customer name from either customerData or review data
       const customerFullName = customerData 
         ? `${customerData.firstName} ${customerData.lastName}`.trim()
@@ -90,14 +107,13 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
         console.log(`Response author_id: ${resp.author_id}`);
         console.log(`Review customerId: ${review.customerId}`);
         console.log(`Review reviewerId (business): ${review.reviewerId}`);
-        console.log(`CustomerData:`, customerData);
         console.log(`Profile found:`, profile);
         
         // PRIORITY 1: If this response is from the customer that the review is about
         if (resp.author_id === review.customerId && review.customerId) {
           console.log('✅ Response is from the customer that the review is about');
           
-          // Use customerData if available (this should be Isaac Wiley)
+          // Use customerData if available
           if (customerFullName && customerFullName.trim()) {
             authorName = customerFullName;
             console.log(`✅ Using derived customer full name: "${authorName}"`);
@@ -123,8 +139,14 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
         else if (resp.author_id === review.reviewerId && review.reviewerId) {
           console.log('✅ Response is from the business who wrote the review');
           
-          // First try to use the reviewer name from the review data
-          if (review.reviewerName && review.reviewerName.trim()) {
+          // First check if we have business info for this business
+          const businessName = businessInfoMap.get(resp.author_id);
+          if (businessName && businessName.trim()) {
+            authorName = businessName;
+            console.log(`✅ Using business_info business_name: "${authorName}"`);
+          }
+          // Then try to use the reviewer name from the review data
+          else if (review.reviewerName && review.reviewerName.trim()) {
             authorName = review.reviewerName;
             console.log(`✅ Using review's reviewerName: "${authorName}"`);
           }
@@ -150,8 +172,28 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
         // PRIORITY 3: If we have profile data for other users
         else if (profile) {
           console.log('📝 Processing response from other user');
+          
+          // For business accounts, prioritize business name from business_info
+          if (profile.type === 'business') {
+            const businessName = businessInfoMap.get(resp.author_id);
+            if (businessName && businessName.trim()) {
+              authorName = businessName;
+              console.log(`📝 Using business_info business_name: "${authorName}"`);
+            } else if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+              console.log(`📝 Using profile name field: "${authorName}"`);
+            } else if (profile.first_name || profile.last_name) {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              authorName = `${firstName} ${lastName}`.trim();
+              console.log(`📝 Using profile first+last name: "${authorName}"`);
+            } else {
+              authorName = 'Business';
+              console.log(`📝 Using fallback business name: "${authorName}"`);
+            }
+          }
           // For customer accounts, prefer the constructed name from first_name + last_name
-          if (profile.type === 'customer') {
+          else if (profile.type === 'customer') {
             if (profile.first_name && profile.last_name) {
               authorName = `${profile.first_name} ${profile.last_name}`;
             } else if (profile.first_name) {
@@ -163,8 +205,10 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
             } else {
               authorName = 'Customer';
             }
-          } else {
-            // For business accounts, prefer the name field
+            console.log(`📝 Final name for customer: "${authorName}"`);
+          }
+          // For other account types
+          else {
             if (profile.name && profile.name.trim()) {
               authorName = profile.name;
             } else if (profile.first_name || profile.last_name) {
@@ -172,11 +216,10 @@ export const useEnhancedResponses = (review: Review, customerData?: CustomerData
               const lastName = profile.last_name || '';
               authorName = `${firstName} ${lastName}`.trim();
             } else {
-              authorName = profile.type === 'business' ? 'Business' : 'User';
+              authorName = 'User';
             }
+            console.log(`📝 Final name for other user: "${authorName}"`);
           }
-          
-          console.log(`📝 Final name for other user: "${authorName}"`);
         } else {
           console.log(`❌ No profile found for author ${resp.author_id}`);
         }
