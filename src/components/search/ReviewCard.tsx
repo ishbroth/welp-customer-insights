@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/auth";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 import ReviewRating from "./ReviewRating";
@@ -7,7 +6,7 @@ import ReviewBusinessAvatar from "./ReviewBusinessAvatar";
 import ReviewContent from "./ReviewContent";
 import ReviewCustomerInfo from "./ReviewCustomerInfo";
 import { useCustomerProfileData } from "@/hooks/useCustomerProfileData";
-import { useEnhancedResponses } from "@/hooks/useEnhancedResponses";
+import { useSimplifiedResponses } from "@/hooks/useSimplifiedResponses";
 
 interface ReviewCardProps {
   review: {
@@ -54,15 +53,14 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
     !!customerData?.avatar
   );
 
-  // Fetch enhanced responses with proper author names - only if user is logged in
-  // Pass the reviewer information to help with proper name resolution
+  // Use simplified responses with alternating author names
   const reviewWithReviewerInfo = {
     ...review,
     reviewerId: review.reviewerId,
     reviewerName: review.reviewerName
   };
 
-  const { data: enhancedResponses } = useEnhancedResponses(
+  const { data: simplifiedResponses } = useSimplifiedResponses(
     reviewWithReviewerInfo, 
     customerData,
     !!currentUser // Only fetch if user is logged in
@@ -71,8 +69,8 @@ const ReviewCard = ({ review, hasFullAccess, customerData }: ReviewCardProps) =>
   // Get final customer avatar - prefer customerData, then fetched profile
   const finalCustomerAvatar = customerData?.avatar || customerProfile?.avatar || '';
 
-  // Use enhanced responses if available and user is logged in, otherwise fall back to empty array
-  const responsesToUse = currentUser && (enhancedResponses || review.responses || []) || [];
+  // Use simplified responses if available and user is logged in, otherwise fall back to empty array
+  const responsesToUse = currentUser && (simplifiedResponses || review.responses || []) || [];
 
   console.log('ReviewCard: Final responses to display:', responsesToUse);
 

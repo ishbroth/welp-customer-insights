@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, User } from "lucide-react";
@@ -13,7 +12,7 @@ import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse
 import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { useReviewResponses } from "@/hooks/useReviewResponses";
+import { useSimplifiedResponses } from "@/hooks/useSimplifiedResponses";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -42,8 +41,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
-  // Use the useReviewResponses hook to get properly formatted responses
-  const { responses } = useReviewResponses(review.id);
+  // Use the simplified responses hook instead
+  const { data: responses } = useSimplifiedResponses(review);
 
   // Load photos from database
   useEffect(() => {
@@ -96,7 +95,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   console.log(`BusinessReviewCard rendering review ${review.id} with reactions:`, review.reactions);
-  console.log(`BusinessReviewCard rendering review ${review.id} with responses from hook:`, responses);
+  console.log(`BusinessReviewCard rendering review ${review.id} with responses from simplified hook:`, responses);
 
   return (
     <>
@@ -180,11 +179,11 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         <div className="border-t pt-4 mb-4">
           <CustomerReviewResponse 
             reviewId={review.id}
-            responses={responses} // Use responses from the hook instead of props
+            responses={responses || []}
             hasSubscription={hasSubscription}
             isOneTimeUnlocked={false}
             hideReplyOption={false}
-            reviewAuthorId={review.reviewerId} // Pass the review author ID (business who wrote the review)
+            reviewAuthorId={review.reviewerId}
           />
         </div>
 
