@@ -10,17 +10,17 @@ export const checkPhoneDuplicates = async (
   const cleanedPhone = phone.replace(/\D/g, '');
   console.log("Checking phone:", phone, "cleaned:", cleanedPhone, "for account type:", accountType);
 
-  // Get all profiles with phones of the same account type
-  const { data: allProfiles, error: profilesError } = await supabaseAdmin
+  // Get profiles with phones filtered by the SPECIFIC account type only
+  const { data: profilesForAccountType, error: profilesError } = await supabaseAdmin
     .from('profiles')
     .select('id, phone, email, name, type, address')
-    .eq('type', accountType)
+    .eq('type', accountType)  // Only check within the same account type
     .not('phone', 'is', null);
 
-  console.log("All profiles with phones for account type:", accountType, allProfiles?.length, profilesError);
+  console.log(`Profiles with phones for account type ${accountType}:`, profilesForAccountType?.length, profilesError);
 
-  if (allProfiles) {
-    for (const profile of allProfiles) {
+  if (profilesForAccountType) {
+    for (const profile of profilesForAccountType) {
       if (profile.phone) {
         const profileCleanedPhone = profile.phone.replace(/\D/g, '');
         console.log(`Comparing: ${cleanedPhone} vs ${profileCleanedPhone} (account type: ${accountType})`);
@@ -39,5 +39,6 @@ export const checkPhoneDuplicates = async (
     }
   }
 
+  console.log(`No phone duplicates found within account type: ${accountType}`);
   return null;
 };
