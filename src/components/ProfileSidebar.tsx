@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -24,6 +23,14 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
   const isCustomerAccount = currentUser?.type === "customer";
   
+  // Function to truncate email if too long
+  const truncateEmail = (email: string) => {
+    if (email.length > 18) {
+      return email.substring(0, 18) + "...";
+    }
+    return email;
+  };
+  
   return (
     <>
       <div className="md:hidden flex items-center p-4">
@@ -47,9 +54,11 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                   <AvatarFallback>{currentUser?.name?.[0] || "U"}</AvatarFallback>
                 )}
               </Avatar>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h3 className="font-medium">{currentUser?.name}</h3>
-                <p className="text-sm text-gray-500">{currentUser?.email}</p>
+                <p className="text-sm text-gray-500 truncate">
+                  {currentUser?.email ? truncateEmail(currentUser.email) : ""}
+                </p>
               </div>
             </div>
           </div>

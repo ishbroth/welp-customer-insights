@@ -1,10 +1,12 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, User } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerProfileViewProps {
   customerId: string;
@@ -33,11 +35,33 @@ const CustomerProfileView = ({
 }: CustomerProfileViewProps) => {
   const navigate = useNavigate();
 
+  // Fetch customer's verification status
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerVerification', customerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('verified')
+        .eq('id', customerId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching customer verification:", error);
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!customerId
+  });
+
   const getInitials = () => {
     const firstInitial = firstName ? firstName[0] : "";
     const lastInitial = lastName ? lastName[0] : "";
     return `${firstInitial}${lastInitial}`.toUpperCase();
   };
+
+  const isVerified = customerProfile?.verified || false;
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
@@ -53,11 +77,19 @@ const CustomerProfileView = ({
             )}
           </Avatar>
           <div className="flex-1">
-            <CardTitle className="text-2xl font-bold text-center md:text-left">
-              {firstName} {lastName}
-            </CardTitle>
+            <div className="flex items-center gap-2 justify-center md:justify-start">
+              <CardTitle className="text-2xl font-bold text-center md:text-left">
+                {firstName} {lastName}
+              </CardTitle>
+              {isVerified && <VerifiedBadge size="lg" />}
+            </div>
             {bio && (
               <p className="mt-2 text-gray-600">{bio}</p>
+            )}
+            {isVerified && (
+              <div className="mt-2 text-sm text-green-600 font-medium text-center md:text-left">
+                ✓ Verified Customer
+              </div>
             )}
           </div>
         </div>
