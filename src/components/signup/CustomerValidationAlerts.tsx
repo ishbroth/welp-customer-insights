@@ -39,15 +39,6 @@ export const CustomerValidationAlerts = ({
         </Alert>
       )}
 
-      {phoneExists && (
-        <Alert className="mt-2 bg-amber-50 border-amber-200">
-          <Info className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            This phone number is already registered with an existing customer account.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {isChecking && (
         <Alert className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-600" />
