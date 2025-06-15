@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email } = await req.json();
+    const { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email, verified } = await req.json();
     
-    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email });
+    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email, verified });
     
     // Simple validation
     if (!userId || !type) {
@@ -58,10 +58,13 @@ serve(async (req) => {
       avatar: avatar || '',
       business_id: businessId || '',
       email: email || '',
+      // CRITICAL: Set verified status - customer accounts are auto-verified after phone verification
+      verified: type === 'customer' ? (verified !== undefined ? verified : true) : false,
       updated_at: new Date().toISOString(),
     };
 
     console.log("Profile update data being saved:", profileUpdateData);
+    console.log(`VERIFICATION STATUS: Account type: ${type}, Verified status: ${profileUpdateData.verified}`);
 
     if (existingProfile) {
       // Profile exists, update it - preserve non-empty existing data where new data is empty
@@ -82,6 +85,7 @@ serve(async (req) => {
         business_id: profileUpdateData.business_id || existingProfile.business_id || '',
         email: profileUpdateData.email || existingProfile.email || '',
         type: profileUpdateData.type, // Always use the provided type
+        verified: profileUpdateData.verified, // Always use the provided verification status
         updated_at: profileUpdateData.updated_at,
       };
       
@@ -143,7 +147,7 @@ serve(async (req) => {
           .insert({
             id: userId,
             business_name: name,
-            verified: false,
+            verified: false, // Business accounts start unverified
           });
       }
 
@@ -170,6 +174,7 @@ serve(async (req) => {
     }
 
     console.log("Final verification - data confirmed in database:", finalVerificationData);
+    console.log(`FINAL VERIFICATION STATUS: User ${userId}, Type: ${finalVerificationData.type}, Verified: ${finalVerificationData.verified}`);
 
     return new Response(
       JSON.stringify({ 

@@ -108,7 +108,9 @@ export const usePhoneVerificationActions = ({
               zipCode: zipCode,
               type: accountType,
               businessName: businessName,
-              email: email
+              email: email,
+              // CRITICAL: For customer accounts, set verified to true since phone verification is complete
+              verified: accountType === 'customer' ? true : false
             }
           });
 
@@ -118,24 +120,7 @@ export const usePhoneVerificationActions = ({
           }
 
           console.log("Profile created successfully");
-
-          // For customer accounts, mark as verified since phone verification is complete
-          if (accountType === 'customer') {
-            try {
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ verified: true })
-                .eq('id', authData.user.id);
-              
-              if (updateError) {
-                console.error("Error marking customer as verified:", updateError);
-              } else {
-                console.log("Customer marked as verified after phone verification");
-              }
-            } catch (verificationError) {
-              console.error("Error updating customer verification status:", verificationError);
-            }
-          }
+          console.log(`Customer account verification status set to: ${accountType === 'customer'}`);
 
           // Show success toast
           toast({

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +11,8 @@ import NoReviews from "./NoReviews";
 import CustomerBasicInfo from "./CustomerBasicInfo";
 import CustomerContactInfo from "./CustomerContactInfo";
 import CustomerReviewBadge from "./CustomerReviewBadge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerCardProps {
   customer: {
@@ -22,7 +25,7 @@ interface CustomerCardProps {
     state?: string;
     zipCode?: string;
     avatar?: string;
-    verified?: boolean; // Add verified property
+    verified?: boolean;
     reviews?: Array<{
       id: string;
       reviewerId: string;
@@ -49,6 +52,31 @@ const CustomerCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+
+  // Fetch customer's verification status from profiles table
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerVerification', customer.id],
+    queryFn: async () => {
+      if (!customer.id) return null;
+      
+      console.log(`CustomerCard: Fetching verification for customer ID: ${customer.id}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('verified, type')
+        .eq('id', customer.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("CustomerCard: Error fetching customer verification:", error);
+        return null;
+      }
+
+      console.log(`CustomerCard: Customer ${customer.id} verification status: ${data?.verified}, type: ${data?.type}`);
+      return data;
+    },
+    enabled: !!customer.id
+  });
   
   // Create a function that checks full access for a given customer ID
   const hasFullAccessFunction = (customerId: string): boolean => {
@@ -120,6 +148,11 @@ const CustomerCard = ({
   const hasAccess = currentUser && hasFullAccessFunction(customer.id);
   const customerName = customerInfo.find(info => info.label === 'Name')?.value || 'Unknown Customer';
 
+  // Use verification status from database, fallback to customer prop
+  const isVerified = customerProfile?.verified || customer.verified || false;
+
+  console.log(`CustomerCard: Customer ${customer.id} final verification status: ${isVerified} (from profile: ${customerProfile?.verified}, from prop: ${customer.verified})`);
+
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-4">
@@ -132,7 +165,7 @@ const CustomerCard = ({
               averageRating={averageRating}
               currentUser={currentUser}
               hasAccess={hasAccess}
-              isVerified={customer.verified || false}
+              isVerified={isVerified}
             />
 
             {/* Customer information - show all identifying info for everyone */}
