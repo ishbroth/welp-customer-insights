@@ -28,7 +28,7 @@ const ProfileForm = () => {
       licenseType: currentUser?.licenseType || "",
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
-      suite: currentUser?.suite || "",
+      suite: (currentUser as any)?.suite || "", // Type assertion for suite property
       city: currentUser?.city || "",
       state: currentUser?.state || "",
       zipCode: currentUser?.zipCode || "",
