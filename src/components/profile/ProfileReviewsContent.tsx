@@ -162,7 +162,20 @@ const ProfileReviewsContent = ({
 
 // Wrapper component for BusinessReviewCard that uses simplified responses
 const BusinessReviewCardWrapper = ({ review, ...props }: any) => {
-  const { data: simplifiedResponses } = useSimplifiedResponses(review);
+  // Make sure we pass the review with proper business name
+  const reviewWithBusinessInfo = {
+    ...review,
+    reviewerId: review.reviewerId || review.business_id,
+    reviewerName: review.reviewerName || review.business_profile?.name || 'Business'
+  };
+
+  console.log('BusinessReviewCardWrapper: Review info:', {
+    reviewId: review.id,
+    reviewerId: reviewWithBusinessInfo.reviewerId,
+    reviewerName: reviewWithBusinessInfo.reviewerName
+  });
+
+  const { data: simplifiedResponses } = useSimplifiedResponses(reviewWithBusinessInfo);
   
   return (
     <BusinessReviewCard
@@ -186,7 +199,21 @@ const CustomerReviewCardWrapper = ({ review, ...props }: any) => {
     zipCode: review.customer_zipcode
   };
 
-  const { data: simplifiedResponses } = useSimplifiedResponses(review, customerData);
+  // Make sure we pass the review with proper business name
+  const reviewWithBusinessInfo = {
+    ...review,
+    reviewerId: review.reviewerId || review.business_id,
+    reviewerName: review.reviewerName || review.business_profile?.name || 'Business'
+  };
+
+  console.log('CustomerReviewCardWrapper: Review info:', {
+    reviewId: review.id,
+    reviewerId: reviewWithBusinessInfo.reviewerId,
+    reviewerName: reviewWithBusinessInfo.reviewerName,
+    customerData
+  });
+
+  const { data: simplifiedResponses } = useSimplifiedResponses(reviewWithBusinessInfo, customerData);
   
   return (
     <CustomerReviewCard

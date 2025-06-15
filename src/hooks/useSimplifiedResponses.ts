@@ -48,11 +48,12 @@ export const useSimplifiedResponses = (review: Review, customerData?: CustomerDa
         ? `${customerData.firstName} ${customerData.lastName}`.trim()
         : review.customer_name || 'Customer';
 
-      // Get the business name from review data
+      // Get the business name from review data - make sure it's not empty
       const businessName = review.reviewerName || 'Business';
 
       console.log('useSimplifiedResponses: Customer name:', customerFullName);
       console.log('useSimplifiedResponses: Business name:', businessName);
+      console.log('useSimplifiedResponses: Review object:', { reviewerId: review.reviewerId, reviewerName: review.reviewerName });
 
       // Format responses with alternating names
       const formattedResponses = responseData.map((resp: any, index: number) => {
