@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import ReactionButton from "./reactions/ReactionButton";
 import { useAuth } from "@/contexts/auth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReviewReactionsProps {
   reviewId: string;
@@ -32,6 +34,27 @@ const ReviewReactions = ({
   const { currentUser, hasOneTimeAccess, isSubscribed } = useAuth();
   const userId = currentUser?.id || "";
   const isCustomerUser = currentUser?.type === "customer";
+  
+  // Fetch business profile to get the latest avatar if not provided
+  const { data: businessProfile } = useQuery({
+    queryKey: ['businessProfile', businessId],
+    queryFn: async () => {
+      if (!businessId) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, avatar')
+        .eq('id', businessId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching business profile for avatar:", error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!businessId
+  });
   
   // Check if user has access to see business profile details
   const hasAccess = isSubscribed || hasOneTimeAccess(reviewId);
@@ -63,24 +86,29 @@ const ReviewReactions = ({
 
   // Get the business initials for the avatar fallback
   const getBusinessInitials = () => {
-    if (!businessName) return "B";
-    return businessName.split(' ')
+    const name = businessProfile?.name || businessName;
+    if (!name) return "B";
+    return name.split(' ')
       .map(name => name[0])
       .join('')
       .toUpperCase()
       .substring(0, 2);
   };
 
+  // Get the final avatar URL - prefer fetched profile avatar, then provided businessAvatar
+  const finalBusinessAvatar = businessProfile?.avatar || businessAvatar || '';
+  const finalBusinessName = businessProfile?.name || businessName || "Business";
+
   return (
     <div className="flex flex-col gap-3 my-2">
       {/* Only show business avatar for business users with access - NOT for customer users */}
-      {!isCustomerUser && businessId && (businessAvatar || businessName) && (
+      {!isCustomerUser && businessId && (finalBusinessAvatar || finalBusinessName) && (
         <div className="flex items-center mb-2">
           {hasAccess ? (
             <Link to={`/business/${businessId}`} className="flex items-center">
               <Avatar className="h-8 w-8 mr-2">
-                {businessAvatar ? (
-                  <AvatarImage src={businessAvatar} alt={businessName || "Business"} />
+                {finalBusinessAvatar ? (
+                  <AvatarImage src={finalBusinessAvatar} alt={finalBusinessName} />
                 ) : (
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
                     {getBusinessInitials()}
@@ -88,7 +116,7 @@ const ReviewReactions = ({
                 )}
               </Avatar>
               <span className="text-sm font-medium hover:underline">
-                {businessName || "Business"}
+                {finalBusinessName}
               </span>
             </Link>
           ) : (
@@ -99,7 +127,7 @@ const ReviewReactions = ({
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium">
-                {businessName || "Business"}
+                {finalBusinessName}
               </span>
             </div>
           )}
