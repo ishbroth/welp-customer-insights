@@ -1,75 +1,56 @@
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useArchivedResponses } from "@/hooks/useArchivedResponses";
 
 interface CustomerResponseFormProps {
-  onSubmit: (responseText: string) => void;
-  isSubmitting: boolean;
-  reviewId?: string;
+  onSubmit: (content: string) => Promise<boolean>;
+  onCancel: () => void;
 }
 
-const CustomerResponseForm = ({ onSubmit, isSubmitting, reviewId }: CustomerResponseFormProps) => {
-  const [responseText, setResponseText] = useState("");
-  const { archivedResponse, clearArchivedResponse } = useArchivedResponses(reviewId || "");
+const CustomerResponseForm: React.FC<CustomerResponseFormProps> = ({
+  onSubmit,
+  onCancel
+}) => {
+  const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Autofill with archived response when component mounts
-  useEffect(() => {
-    if (archivedResponse && !responseText) {
-      setResponseText(archivedResponse);
-    }
-  }, [archivedResponse, responseText]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(responseText);
-    setResponseText("");
+  const handleSubmit = async () => {
+    if (!content.trim()) return;
     
-    // Clear archived response after successful submission
-    if (archivedResponse) {
-      clearArchivedResponse();
+    setIsSubmitting(true);
+    const success = await onSubmit(content);
+    setIsSubmitting(false);
+    
+    if (success) {
+      setContent("");
+      onCancel();
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3">
+    <div className="space-y-3">
       <Textarea
-        value={responseText}
-        onChange={(e) => setResponseText(e.target.value)}
-        placeholder={archivedResponse ? "Your previous response has been restored. Edit if needed..." : "Write your response..."}
-        className="w-full min-h-[100px] mb-3"
-        maxLength={1500}
-        disabled={isSubmitting}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Write your response..."
+        className="min-h-[100px]"
       />
-      
-      {archivedResponse && (
-        <p className="text-sm text-blue-600 mb-2">
-          💡 Your previous response has been restored. You can edit it or write a new one.
-        </p>
-      )}
-      
-      <div className="flex justify-end gap-2">
+      <div className="flex space-x-2">
         <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => {
-            setResponseText("");
-            if (archivedResponse) clearArchivedResponse();
-          }}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={!responseText.trim() || isSubmitting}
-          className="welp-button"
+          onClick={handleSubmit}
+          disabled={!content.trim() || isSubmitting}
         >
           {isSubmitting ? "Submitting..." : "Submit Response"}
         </Button>
+        <Button 
+          variant="outline" 
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
       </div>
-    </form>
+    </div>
   );
 };
 
