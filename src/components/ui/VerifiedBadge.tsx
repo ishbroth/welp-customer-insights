@@ -21,8 +21,8 @@ const VerifiedBadge = ({ size = "md", className = "" }: VerifiedBadgeProps) => {
 
   return (
     <div 
-      className={`relative inline-flex items-center justify-center bg-blue-600 rounded-full ${sizeClasses[size]} ${className}`} 
-      aria-label="Verified business"
+      className={`relative inline-flex items-center justify-center bg-green-500 rounded-full ${sizeClasses[size]} ${className}`} 
+      aria-label="Verified account"
     >
       <Check 
         className={`text-white ${checkSizeClasses[size]}`}

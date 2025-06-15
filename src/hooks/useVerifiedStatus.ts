@@ -14,7 +14,7 @@ export const useVerifiedStatus = (userId: string | undefined) => {
         .from('business_info')
         .select('verified')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching verification status:", error);

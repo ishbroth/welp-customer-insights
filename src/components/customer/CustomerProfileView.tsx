@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,7 +44,7 @@ const CustomerProfileView = ({
         .from('profiles')
         .select('verified')
         .eq('id', customerId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching customer verification:", error);
