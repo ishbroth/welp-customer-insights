@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { useArchivedResponses } from "@/hooks/useArchivedResponses";
 import { Review } from "@/types";
 
 interface Response {
@@ -24,6 +25,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 }) => {
   const { currentUser } = useAuth();
   const [responses, setResponses] = useState<Response[]>([]);
+  const { archivedResponse } = useArchivedResponses(review.id);
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -119,6 +121,10 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
       } else if (response.authorId === currentUser?.id && customerHasActiveResponse) {
         // Business response - only include if customer has an active response
         activeResponses.push(response);
+      } else if (response.authorId === currentUser?.id && !customerHasActiveResponse) {
+        // Business response with no customer response - this should be archived
+        // The useArchivedResponses hook will handle showing archived content if needed
+        console.log(`Business response ${response.id} should be archived - no active customer response`);
       }
     }
     
@@ -126,6 +132,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
   };
 
   console.log(`BusinessReviewCardResponses rendering review ${review.id} with active responses:`, responses);
+  console.log(`Archived response available:`, !!archivedResponse);
 
   return (
     <div className="border-t pt-4 mb-4">
