@@ -30,10 +30,10 @@ export const useArchivedResponses = (reviewId: string) => {
     if (archivedData) {
       try {
         const parsed: ArchivedData = JSON.parse(archivedData);
-        // Get the most recent archived response from this business user
-        const businessResponse = parsed.responses.find(r => r.authorId === currentUser.id);
-        if (businessResponse) {
-          setArchivedResponse(businessResponse.content);
+        // Get the most recent archived response from this user (business or customer)
+        const userResponse = parsed.responses.find(r => r.authorId === currentUser.id);
+        if (userResponse) {
+          setArchivedResponse(userResponse.content);
         }
       } catch (error) {
         console.error("Error parsing archived response:", error);
