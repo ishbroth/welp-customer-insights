@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
@@ -39,13 +38,13 @@ export const useEnhancedCustomerReviewCard = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
-  // Fetch business profile for avatar - always fetch since we can identify the business
+  // Fetch business profile for avatar and contact info - always fetch since we can identify the business
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar, name')
+        .select('id, avatar, name, phone, address, city, state, zipcode')
         .eq('id', review.reviewerId)
         .maybeSingle();
 

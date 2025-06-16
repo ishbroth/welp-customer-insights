@@ -8,6 +8,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getBusinessInitials } from "./enhancedReviewCardUtils";
 
 interface ClaimReviewDialogProps {
   open: boolean;
@@ -19,6 +21,15 @@ interface ClaimReviewDialogProps {
     customerCity?: string;
     customerZipcode?: string;
   };
+  businessData?: {
+    name?: string;
+    avatar?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipcode?: string;
+  };
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -27,6 +38,7 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   open,
   onOpenChange,
   reviewData,
+  businessData,
   onConfirm,
   onCancel,
 }) => {
@@ -40,71 +52,74 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
     onOpenChange(false);
   };
 
-  // Check if we have any customer information to display
-  const hasCustomerInfo = reviewData.customerName || 
-                         reviewData.customerPhone || 
-                         reviewData.customerAddress || 
-                         reviewData.customerCity || 
-                         reviewData.customerZipcode;
+  // Check if we have business information to display
+  const hasBusinessInfo = businessData?.name || 
+                         businessData?.phone || 
+                         businessData?.address || 
+                         businessData?.city || 
+                         businessData?.state ||
+                         businessData?.zipcode;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Claim This Review</DialogTitle>
+          <DialogTitle>Do you know this business?</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            The business owner provided the following information when writing this review:
-          </p>
-          
-          {hasCustomerInfo ? (
-            <div className="bg-gray-50 p-4 rounded-md space-y-2">
-              {reviewData.customerName && (
+          {hasBusinessInfo ? (
+            <div className="bg-gray-50 p-4 rounded-md space-y-3">
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-12 w-12">
+                  {businessData?.avatar ? (
+                    <AvatarImage src={businessData.avatar} alt={businessData.name} />
+                  ) : (
+                    <AvatarFallback className="bg-blue-100 text-blue-800">
+                      {getBusinessInitials(businessData?.name)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <div>
-                  <span className="font-medium">Name: </span>
-                  <span>{reviewData.customerName}</span>
+                  <h3 className="font-semibold text-lg">{businessData?.name}</h3>
                 </div>
-              )}
-              {reviewData.customerPhone && (
-                <div>
-                  <span className="font-medium">Phone: </span>
-                  <span>{reviewData.customerPhone}</span>
-                </div>
-              )}
-              {reviewData.customerAddress && (
-                <div>
-                  <span className="font-medium">Street Address: </span>
-                  <span>{reviewData.customerAddress}</span>
-                </div>
-              )}
-              {reviewData.customerCity && (
-                <div>
-                  <span className="font-medium">City: </span>
-                  <span>{reviewData.customerCity}</span>
-                </div>
-              )}
-              {reviewData.customerZipcode && (
-                <div>
-                  <span className="font-medium">Zip Code: </span>
-                  <span>{reviewData.customerZipcode}</span>
-                </div>
-              )}
+              </div>
+              
+              <div className="space-y-2 ml-15">
+                {businessData?.phone && (
+                  <div>
+                    <span className="font-medium">Phone: </span>
+                    <span>{businessData.phone}</span>
+                  </div>
+                )}
+                {businessData?.address && (
+                  <div>
+                    <span className="font-medium">Address: </span>
+                    <span>{businessData.address}</span>
+                  </div>
+                )}
+                {(businessData?.city || businessData?.state || businessData?.zipcode) && (
+                  <div>
+                    <span className="font-medium">Location: </span>
+                    <span>
+                      {businessData.city}
+                      {businessData.city && businessData.state ? ", " : ""}
+                      {businessData.state} {businessData.zipcode}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="bg-gray-50 p-4 rounded-md">
               <p className="text-sm text-gray-600 italic">
-                No specific customer information was provided with this review.
+                Business information is not available for this review.
               </p>
             </div>
           )}
           
           <p className="text-sm font-medium text-center">
-            {hasCustomerInfo 
-              ? "Does this information match you? Are you sure this review was written about you?"
-              : "Are you sure this review was written about you?"
-            }
+            Claim this review to respond to the business that wrote it!
           </p>
         </div>
 

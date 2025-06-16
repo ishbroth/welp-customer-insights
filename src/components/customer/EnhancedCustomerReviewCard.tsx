@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -140,6 +139,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           customerAddress: review.customer_address,
           customerCity: review.customer_city,
           customerZipcode: review.customer_zipcode,
+        }}
+        businessData={{
+          name: review.reviewerName,
+          avatar: finalBusinessAvatar,
+          phone: businessProfile?.phone,
+          address: businessProfile?.address,
+          city: businessProfile?.city,
+          state: businessProfile?.state,
+          zipcode: businessProfile?.zipcode,
         }}
         onConfirm={handleClaimConfirm}
         onCancel={handleClaimCancel}
