@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
@@ -11,17 +12,31 @@ interface MatchingCriteria {
   zipCode?: string;
 }
 
+interface DetailedMatch {
+  field: string;
+  reviewValue: string;
+  searchValue: string;
+  similarity: number;
+  matchType: 'exact' | 'partial' | 'fuzzy';
+}
+
 interface ReviewMatch {
   review: any;
   matchType: 'claimed' | 'high_quality' | 'potential';
   matchScore: number;
   matchReasons: string[];
+  detailedMatches: DetailedMatch[];
 }
 
 export const useProfileReviewsMatching = () => {
-  const calculateMatchScore = (review: any, userProfile: any): { score: number; reasons: string[] } => {
+  const calculateMatchScore = (review: any, userProfile: any): { 
+    score: number; 
+    reasons: string[]; 
+    detailedMatches: DetailedMatch[] 
+  } => {
     let score = 0;
     const reasons: string[] = [];
+    const detailedMatches: DetailedMatch[] = [];
 
     // Get user's full name
     const userFullName = userProfile?.name || 
@@ -34,9 +49,23 @@ export const useProfileReviewsMatching = () => {
       if (similarity >= 0.9) {
         score += 40;
         reasons.push('Exact name match');
+        detailedMatches.push({
+          field: 'Name',
+          reviewValue: review.customer_name,
+          searchValue: userFullName,
+          similarity,
+          matchType: 'exact'
+        });
       } else if (similarity >= 0.7) {
         score += 25;
         reasons.push('Partial name match');
+        detailedMatches.push({
+          field: 'Name',
+          reviewValue: review.customer_name,
+          searchValue: userFullName,
+          similarity,
+          matchType: 'partial'
+        });
       }
     }
 
@@ -48,6 +77,13 @@ export const useProfileReviewsMatching = () => {
       if (reviewPhone && userPhone && reviewPhone === userPhone) {
         score += 35;
         reasons.push('Phone number match');
+        detailedMatches.push({
+          field: 'Phone',
+          reviewValue: review.customer_phone,
+          searchValue: userProfile.phone,
+          similarity: 1.0,
+          matchType: 'exact'
+        });
       }
     }
 
@@ -56,9 +92,23 @@ export const useProfileReviewsMatching = () => {
       if (compareAddresses(review.customer_address, userProfile.address, 0.9)) {
         score += 20;
         reasons.push('Address match');
+        detailedMatches.push({
+          field: 'Address',
+          reviewValue: review.customer_address,
+          searchValue: userProfile.address,
+          similarity: 0.9,
+          matchType: 'exact'
+        });
       } else if (compareAddresses(review.customer_address, userProfile.address, 0.7)) {
         score += 10;
         reasons.push('Partial address match');
+        detailedMatches.push({
+          field: 'Address',
+          reviewValue: review.customer_address,
+          searchValue: userProfile.address,
+          similarity: 0.7,
+          matchType: 'partial'
+        });
       }
     }
 
@@ -68,6 +118,13 @@ export const useProfileReviewsMatching = () => {
       if (similarity >= 0.8) {
         score += 10;
         reasons.push('City match');
+        detailedMatches.push({
+          field: 'City',
+          reviewValue: review.customer_city,
+          searchValue: userProfile.city,
+          similarity,
+          matchType: similarity >= 0.9 ? 'exact' : 'partial'
+        });
       }
     }
 
@@ -76,10 +133,20 @@ export const useProfileReviewsMatching = () => {
       if (review.customer_zipcode === userProfile.zipcode) {
         score += 10;
         reasons.push('ZIP code match');
+        detailedMatches.push({
+          field: 'ZIP Code',
+          reviewValue: review.customer_zipcode,
+          searchValue: userProfile.zipcode,
+          similarity: 1.0,
+          matchType: 'exact'
+        });
       }
     }
 
-    return { score, reasons };
+    // Calculate percentage score (max possible is 40+35+20+10+10 = 115, but cap at 100)
+    const percentageScore = Math.min(100, Math.round(score));
+
+    return { score: percentageScore, reasons, detailedMatches };
   };
 
   const categorizeReviews = async (currentUser: any): Promise<ReviewMatch[]> => {
@@ -153,13 +220,14 @@ export const useProfileReviewsMatching = () => {
           review,
           matchType: 'claimed',
           matchScore: 100,
-          matchReasons: ['Already claimed by you']
+          matchReasons: ['Already claimed by you'],
+          detailedMatches: []
         });
         continue;
       }
 
       // Calculate match score for unclaimed reviews
-      const { score, reasons } = calculateMatchScore(review, userProfile);
+      const { score, reasons, detailedMatches } = calculateMatchScore(review, userProfile);
 
       if (score >= 40) {
         // High quality match (name + phone, or name + address)
@@ -171,7 +239,8 @@ export const useProfileReviewsMatching = () => {
           },
           matchType: 'high_quality',
           matchScore: score,
-          matchReasons: reasons
+          matchReasons: reasons,
+          detailedMatches
         });
       } else if (score >= 15) {
         // Potential match (partial matches)
@@ -183,7 +252,8 @@ export const useProfileReviewsMatching = () => {
           },
           matchType: 'potential',
           matchScore: score,
-          matchReasons: reasons
+          matchReasons: reasons,
+          detailedMatches
         });
       }
     }

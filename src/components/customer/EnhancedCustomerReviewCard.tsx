@@ -15,12 +15,21 @@ import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReview
 import { useReviewPermissions } from "@/components/customer/useReviewPermissions";
 import { getBusinessInitials, getFirstThreeWords } from "./enhancedReviewCardUtils";
 
+interface DetailedMatch {
+  field: string;
+  reviewValue: string;
+  searchValue: string;
+  similarity: number;
+  matchType: 'exact' | 'partial' | 'fuzzy';
+}
+
 interface EnhancedCustomerReviewCardProps {
   review: Review & {
     customerAvatar?: string;
     matchType?: 'claimed' | 'high_quality' | 'potential';
     matchReasons?: string[];
     matchScore?: number;
+    detailedMatches?: DetailedMatch[];
     isNewReview?: boolean;
     customer_phone?: string;
   };
@@ -90,6 +99,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         matchType={review.matchType}
         matchReasons={review.matchReasons}
         matchScore={review.matchScore}
+        detailedMatches={review.detailedMatches}
         isNewReview={review.isNewReview}
         isClaimingReview={isClaimingReview}
         onClaimClick={handleClaimClick}

@@ -22,6 +22,7 @@ export const formatReview = (review: any, currentUser: any) => {
     matchType: review.matchType,
     matchScore: review.matchScore,
     matchReasons: review.matchReasons,
+    detailedMatches: review.detailedMatches || [],
     isClaimed: review.matchType === 'claimed',
     isNewReview: review.isNewReview || false
   };
