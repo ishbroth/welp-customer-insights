@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Eye, Lock, Phone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -304,6 +303,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
               onResponseSubmitted={() => {}}
               reviewAuthorId={review.reviewerId}
             />
+          )}
+          
+          {/* Show claim message for customer users who haven't claimed the review */}
+          {isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed && (
+            <div className="mt-4 flex justify-end">
+              <p className="text-sm text-gray-500">
+                Claim this review in order to respond
+              </p>
+            </div>
           )}
         </div>
       ) : (
