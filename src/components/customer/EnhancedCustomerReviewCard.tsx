@@ -1,19 +1,12 @@
 
 import React from "react";
-import { Eye, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
 import { Review } from "@/types";
-import ReviewReactions from "@/components/ReviewReactions";
-import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import ClaimReviewDialog from "@/components/customer/ClaimReviewDialog";
-import ReviewMatchInfo from "@/components/customer/ReviewMatchInfo";
-import ReviewCustomerAvatar from "@/components/customer/ReviewCustomerAvatar";
+import ReviewMatchInfo from "./ReviewMatchInfo";
+import EnhancedReviewHeader from "./EnhancedReviewHeader";
+import EnhancedReviewContent from "./EnhancedReviewContent";
+import ClaimReviewDialog from "./ClaimReviewDialog";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
-import { useReviewPermissions } from "@/components/customer/useReviewPermissions";
-import { getBusinessInitials, getFirstThreeWords } from "./enhancedReviewCardUtils";
+import { useReviewPermissions } from "./useReviewPermissions";
 
 interface DetailedMatch {
   field: string;
@@ -105,127 +98,38 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onClaimClick={handleClaimClick}
       />
       
-      <div className="flex justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
-              {finalBusinessAvatar ? (
-                <AvatarImage src={finalBusinessAvatar} alt={review.reviewerName} />
-              ) : (
-                <AvatarFallback className="bg-blue-100 text-blue-800">
-                  {getBusinessInitials(review.reviewerName)}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                {(isUnlocked) ? (
-                  <h3 
-                    className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                    onClick={handleBusinessNameClick}
-                  >
-                    {review.reviewerName}
-                  </h3>
-                ) : (
-                  <h3 className="font-semibold">{review.reviewerName}</h3>
-                )}
-                {isVerified && <VerifiedBadge size="sm" />}
-              </div>
-              <p className="text-sm text-gray-500">
-                {new Date(review.date).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <ReviewCustomerAvatar
-          customerName={review.customerName}
-          customerAvatar={finalCustomerAvatar}
-          displayPhone={displayPhone}
-          isReviewClaimed={isReviewClaimed}
-        />
-      </div>
+      <EnhancedReviewHeader
+        reviewerName={review.reviewerName}
+        date={review.date}
+        finalBusinessAvatar={finalBusinessAvatar}
+        isVerified={isVerified}
+        isUnlocked={isUnlocked}
+        onBusinessNameClick={handleBusinessNameClick}
+        customerName={review.customerName}
+        finalCustomerAvatar={finalCustomerAvatar}
+        displayPhone={displayPhone}
+        isReviewClaimed={isReviewClaimed}
+      />
 
-      {shouldShowFullReview() ? (
-        <div>
-          <p className="text-gray-700">{review.content}</p>
-          <div className="mt-2 text-sm text-green-600 flex items-center">
-            <Eye className="h-4 w-4 mr-1" />
-            Full review unlocked
-          </div>
-          
-          {canReact() && (
-            <div className="mt-4 border-t pt-3">
-              <div className="text-sm text-gray-500 mb-1">React to this review:</div>
-              <ReviewReactions 
-                reviewId={review.id}
-                customerId={review.customerId}
-                businessId={review.reviewerId}
-                businessName={review.reviewerName}
-                businessAvatar={finalBusinessAvatar}
-                reactions={reactions}
-                onReactionToggle={handleReactionToggle}
-              />
-            </div>
-          )}
-          
-          {canRespond() && (
-            <CustomerReviewResponse 
-              reviewId={review.id}
-              responses={review.responses || []}
-              hasSubscription={hasSubscription}
-              isOneTimeUnlocked={isUnlocked && !hasSubscription}
-              hideReplyOption={false}
-              onResponseSubmitted={() => {}}
-              reviewAuthorId={review.reviewerId}
-            />
-          )}
-          
-          {shouldShowClaimButton() && (
-            <div className="mt-4 flex justify-end">
-              <p className="text-sm text-gray-500">
-                To Respond, <button 
-                  onClick={handleClaimClick}
-                  className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                >
-                  Claim this Review
-                </button>!
-              </p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div>
-          <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
-          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center text-gray-600">
-                <Lock className="h-4 w-4 mr-2" />
-                <span>Unlock full review for $3</span>
-              </div>
-              <Button 
-                onClick={handlePurchaseClick}
-                size="sm"
-              >
-                Purchase
-              </Button>
-            </div>
-          </div>
-          
-          {shouldShowClaimButton() && (
-            <div className="mt-4 flex justify-end">
-              <p className="text-sm text-gray-500">
-                To Respond, <button 
-                  onClick={handleClaimClick}
-                  className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                >
-                  Claim this Review
-                </button>!
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+      <EnhancedReviewContent
+        content={review.content}
+        shouldShowFullReview={shouldShowFullReview()}
+        canReact={canReact()}
+        canRespond={canRespond()}
+        shouldShowClaimButton={shouldShowClaimButton()}
+        reviewId={review.id}
+        customerId={review.customerId}
+        reviewerId={review.reviewerId}
+        reviewerName={review.reviewerName}
+        finalBusinessAvatar={finalBusinessAvatar}
+        reactions={reactions}
+        responses={review.responses}
+        hasSubscription={hasSubscription}
+        isUnlocked={isUnlocked}
+        onPurchaseClick={handlePurchaseClick}
+        onClaimClick={handleClaimClick}
+        onReactionToggle={handleReactionToggle}
+      />
 
       <ClaimReviewDialog 
         open={showClaimDialog}
