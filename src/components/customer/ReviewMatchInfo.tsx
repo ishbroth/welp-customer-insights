@@ -32,6 +32,7 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
   isClaimingReview,
   onClaimClick,
 }) => {
+  // Don't show the match info section if the review is claimed
   if (!matchType || matchType === 'claimed') return null;
 
   return (

@@ -22,6 +22,8 @@ export const useReviewClaiming = () => {
     setIsClaimingReview(true);
 
     try {
+      console.log('Claiming review:', reviewId, 'for user:', currentUser.id);
+      
       // Update the review to link it to the current user
       const { error: updateError } = await supabase
         .from('reviews')
@@ -32,10 +34,13 @@ export const useReviewClaiming = () => {
         })
         .eq('id', reviewId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating review:', updateError);
+        throw updateError;
+      }
 
       // Mark as claimed for this user to prevent showing as new again
-      await supabase
+      const { error: notificationError } = await supabase
         .from('user_review_notifications')
         .upsert({
           user_id: currentUser.id,
@@ -43,11 +48,17 @@ export const useReviewClaiming = () => {
           shown_at: new Date().toISOString()
         });
 
+      if (notificationError) {
+        console.error('Error updating notification:', notificationError);
+        // Don't throw here, this is not critical
+      }
+
       toast({
         title: "Review claimed successfully",
         description: "This review has been added to your profile.",
       });
 
+      console.log('Review claimed successfully');
       return true;
     } catch (error) {
       console.error('Error claiming review:', error);

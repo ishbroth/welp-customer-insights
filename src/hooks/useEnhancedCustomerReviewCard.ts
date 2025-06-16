@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
@@ -103,13 +104,6 @@ export const useEnhancedCustomerReviewCard = ({
     }
   };
 
-  const handleClaimReview = async () => {
-    const success = await claimReview(review.id);
-    if (success) {
-      window.location.reload(); // Refresh to show updated data
-    }
-  };
-
   const handleClaimClick = () => {
     setShowClaimDialog(true);
   };
@@ -117,7 +111,8 @@ export const useEnhancedCustomerReviewCard = ({
   const handleClaimConfirm = async () => {
     const success = await claimReview(review.id);
     if (success) {
-      window.location.reload(); // Refresh to show updated data
+      // Force a page refresh to show updated data
+      window.location.reload();
     }
   };
 
@@ -152,7 +147,6 @@ export const useEnhancedCustomerReviewCard = ({
     isReviewClaimed,
     isClaimingReview,
     handlePurchaseClick,
-    handleClaimReview,
     handleClaimClick,
     handleClaimConfirm,
     handleClaimCancel,
