@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -30,6 +31,10 @@ export interface Review {
   city?: string;
   state?: string;
   zipCode?: string;
+  customer_address?: string;
+  customer_city?: string;
+  customer_zipcode?: string;
+  customer_phone?: string;
   reactions?: {
     like: string[];
     funny: string[];
