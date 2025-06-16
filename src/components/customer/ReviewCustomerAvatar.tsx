@@ -8,12 +8,14 @@ interface ReviewCustomerAvatarProps {
   customerName?: string;
   customerAvatar: string;
   displayPhone?: string;
+  isReviewClaimed?: boolean;
 }
 
 const ReviewCustomerAvatar: React.FC<ReviewCustomerAvatarProps> = ({
   customerName,
   customerAvatar,
   displayPhone,
+  isReviewClaimed = false,
 }) => {
   if (!customerName) return null;
 
@@ -29,7 +31,7 @@ const ReviewCustomerAvatar: React.FC<ReviewCustomerAvatarProps> = ({
         )}
       </div>
       <Avatar className="h-8 w-8">
-        {customerAvatar ? (
+        {isReviewClaimed && customerAvatar ? (
           <AvatarImage src={customerAvatar} alt={customerName} />
         ) : (
           <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">

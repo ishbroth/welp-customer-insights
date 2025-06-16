@@ -142,6 +142,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           customerName={review.customerName}
           customerAvatar={finalCustomerAvatar}
           displayPhone={displayPhone}
+          isReviewClaimed={isReviewClaimed}
         />
       </div>
 

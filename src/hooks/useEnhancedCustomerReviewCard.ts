@@ -39,7 +39,7 @@ export const useEnhancedCustomerReviewCard = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
-  // Fetch business profile for avatar if not already provided
+  // Fetch business profile for avatar - always fetch since we can identify the business
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
     queryFn: async () => {
@@ -55,10 +55,10 @@ export const useEnhancedCustomerReviewCard = ({
       }
       return data;
     },
-    enabled: !!review.reviewerId && !review.reviewerAvatar
+    enabled: !!review.reviewerId
   });
 
-  // Fetch customer profile for avatar if we have a customer ID
+  // Only fetch customer profile if the review has been claimed
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
@@ -76,7 +76,7 @@ export const useEnhancedCustomerReviewCard = ({
       }
       return data;
     },
-    enabled: !!review.customerId
+    enabled: !!review.customerId && review.matchType === 'claimed'
   });
 
   const isReviewAuthor = currentUser?.id === review.reviewerId;
@@ -85,7 +85,11 @@ export const useEnhancedCustomerReviewCard = ({
   const isCustomerUser = currentUser?.type === "customer";
   const isVerified = review.reviewerVerified || false;
   const finalBusinessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
-  const finalCustomerAvatar = review.customerAvatar || customerProfile?.avatar || '';
+  
+  // Only show customer avatar if review is claimed
+  const finalCustomerAvatar = review.matchType === 'claimed' 
+    ? (review.customerAvatar || customerProfile?.avatar || '') 
+    : '';
 
   // Check if this review has been claimed (matchType === 'claimed' indicates it's been claimed)
   const isReviewClaimed = review.matchType === 'claimed';
