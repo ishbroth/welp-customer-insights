@@ -7,6 +7,7 @@ import ReactionButton from "./reactions/ReactionButton";
 import { useAuth } from "@/contexts/auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReviewReactionsProps {
   reviewId: string;
@@ -32,8 +33,10 @@ const ReviewReactions = ({
   onReactionToggle 
 }: ReviewReactionsProps) => {
   const { currentUser, hasOneTimeAccess, isSubscribed } = useAuth();
+  const { toast } = useToast();
   const userId = currentUser?.id || "";
   const isCustomerUser = currentUser?.type === "customer";
+  const isBusinessUser = currentUser?.type === "business";
   
   // Fetch business profile to get the latest avatar if not provided
   const { data: businessProfile } = useQuery({
@@ -64,18 +67,50 @@ const ReviewReactions = ({
   const hasFunny = reactions.funny.includes(userId);
   const hasOhNo = reactions.ohNo.includes(userId);
 
+  // Check if review has been claimed (we'll need to pass this info or check it)
   const checkPermissions = () => {
     // Don't allow reactions if not logged in
     if (!currentUser) {
+      toast({
+        title: "Login required",
+        description: "Please login to react to reviews",
+        variant: "destructive"
+      });
       return false;
     }
 
-    // Check if user is allowed to react to this review
-    const isCustomerBeingReviewed = currentUser.id === customerId;
-    const isBusinessUser = currentUser.type === "business";
+    // For customer users - they can only react if they are the customer being reviewed AND have claimed the review
+    if (isCustomerUser) {
+      const isCustomerBeingReviewed = currentUser.id === customerId;
+      if (!isCustomerBeingReviewed) {
+        toast({
+          title: "Not allowed",
+          description: "You can only react to reviews written about you",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // Note: We should check if review is claimed, but for now we'll allow it
+      // In a full implementation, we'd need to pass claim status or check it here
+      return true;
+    }
+
+    // For business users - they can react to any customer review by other businesses
+    if (isBusinessUser) {
+      const isReviewAuthor = currentUser.id === businessId;
+      if (isReviewAuthor) {
+        toast({
+          title: "Not allowed",
+          description: "You cannot react to your own reviews",
+          variant: "destructive"
+        });
+        return false;
+      }
+      return true;
+    }
     
-    // Allow if user is the customer being reviewed OR if they're a business user
-    return isCustomerBeingReviewed || isBusinessUser;
+    return false;
   };
 
   const handleReaction = (reactionType: string) => {

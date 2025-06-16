@@ -124,9 +124,45 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   };
 
   const isReviewAuthor = currentUser?.id === review.reviewerId;
+  const isCustomerBeingReviewed = currentUser?.id === review.customerId;
+  const isBusinessUser = currentUser?.type === "business";
+  const isCustomerUser = currentUser?.type === "customer";
   const isVerified = review.reviewerVerified || false;
   const finalBusinessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
   const finalCustomerAvatar = review.customerAvatar || customerProfile?.avatar || '';
+
+  // Check if this review has been claimed (matchType === 'claimed' indicates it's been claimed)
+  const isReviewClaimed = review.matchType === 'claimed';
+
+  // Determine if user can react to this review
+  const canReact = () => {
+    // Customer users can only react if they've claimed the review about them
+    if (isCustomerUser && isCustomerBeingReviewed) {
+      return isReviewClaimed;
+    }
+    
+    // Business users can react to any customer review by other businesses
+    if (isBusinessUser && !isReviewAuthor) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Determine if user can respond to this review
+  const canRespond = () => {
+    // Customer users can only respond if they've claimed the review AND have subscription/one-time access
+    if (isCustomerUser && isCustomerBeingReviewed && isReviewClaimed) {
+      return hasSubscription || isUnlocked;
+    }
+    
+    // Business users can respond if they have subscription/one-time access
+    if (isBusinessUser && !isReviewAuthor) {
+      return hasSubscription || isUnlocked;
+    }
+    
+    return false;
+  };
 
   // Get phone number to display
   const displayPhone = review.customer_phone || customerProfile?.phone;
@@ -241,7 +277,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
             Full review unlocked
           </div>
           
-          {!isReviewAuthor && (
+          {/* Only show reactions if user can react */}
+          {canReact() && (
             <div className="mt-4 border-t pt-3">
               <div className="text-sm text-gray-500 mb-1">React to this review:</div>
               <ReviewReactions 
@@ -256,15 +293,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
             </div>
           )}
           
-          <CustomerReviewResponse 
-            reviewId={review.id}
-            responses={review.responses || []}
-            hasSubscription={hasSubscription}
-            isOneTimeUnlocked={isUnlocked && !hasSubscription}
-            hideReplyOption={false}
-            onResponseSubmitted={() => {}}
-            reviewAuthorId={review.reviewerId}
-          />
+          {/* Only show response section if user can respond */}
+          {canRespond() && (
+            <CustomerReviewResponse 
+              reviewId={review.id}
+              responses={review.responses || []}
+              hasSubscription={hasSubscription}
+              isOneTimeUnlocked={isUnlocked && !hasSubscription}
+              hideReplyOption={false}
+              onResponseSubmitted={() => {}}
+              reviewAuthorId={review.reviewerId}
+            />
+          )}
         </div>
       ) : (
         <div>

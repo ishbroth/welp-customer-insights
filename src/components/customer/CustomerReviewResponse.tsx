@@ -48,12 +48,27 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   console.log('CustomerReviewResponse rendering review', reviewId, 'with valid responses:', responses);
 
   const handleSubmitResponse = async () => {
-    if (!currentUser || (!hasSubscription && !isOneTimeUnlocked)) {
-      toast({
-        title: "Subscription required",
-        description: "You need an active subscription to respond to reviews.",
-        variant: "destructive"
-      });
+    // Enhanced permission check for responses
+    if (!canUserRespond()) {
+      if (!currentUser) {
+        toast({
+          title: "Login required",
+          description: "You need to be logged in to respond to reviews.",
+          variant: "destructive"
+        });
+      } else if (!hasSubscription && !isOneTimeUnlocked) {
+        toast({
+          title: "Subscription or access required",
+          description: "You need an active subscription or one-time access to respond to reviews.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Not allowed",
+          description: "You don't have permission to respond to this review.",
+          variant: "destructive"
+        });
+      }
       return;
     }
 
@@ -104,6 +119,28 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Enhanced permission check for who can respond
+  const canUserRespond = (): boolean => {
+    if (!currentUser) return false;
+    
+    const isCustomerUser = currentUser.type === "customer";
+    const isBusinessUser = currentUser.type === "business";
+    
+    // For customer users: they need subscription or one-time access
+    if (isCustomerUser) {
+      return hasSubscription || isOneTimeUnlocked;
+    }
+    
+    // For business users: they need subscription or one-time access, and cannot respond to their own reviews
+    if (isBusinessUser) {
+      const isReviewAuthor = currentUser.id === reviewAuthorId;
+      if (isReviewAuthor) return false;
+      return hasSubscription || isOneTimeUnlocked;
+    }
+    
+    return false;
   };
 
   const handleEditResponse = (responseId: string) => {
@@ -196,7 +233,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     }
   };
 
-  const canRespond = (hasSubscription || isOneTimeUnlocked) && !hideReplyOption;
+  const canRespond = canUserRespond() && !hideReplyOption;
 
   return (
     <div className="mt-4">
