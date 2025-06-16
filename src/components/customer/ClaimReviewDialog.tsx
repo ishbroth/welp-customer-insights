@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getBusinessInitials } from "./enhancedReviewCardUtils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClaimReviewDialogProps {
   open: boolean;
@@ -30,6 +32,7 @@ interface ClaimReviewDialogProps {
     state?: string;
     zipcode?: string;
   };
+  businessId?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -39,9 +42,52 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   onOpenChange,
   reviewData,
   businessData,
+  businessId,
   onConfirm,
   onCancel,
 }) => {
+  // Fetch comprehensive business profile data
+  const { data: fullBusinessProfile } = useQuery({
+    queryKey: ['fullBusinessProfile', businessId],
+    queryFn: async () => {
+      if (!businessId) return null;
+      
+      console.log("Fetching full business profile for claim dialog:", businessId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          avatar,
+          phone,
+          address,
+          city,
+          state,
+          zipcode,
+          bio,
+          business_info:business_info(
+            business_name,
+            website,
+            business_category,
+            business_subcategory
+          )
+        `)
+        .eq('id', businessId)
+        .eq('type', 'business')
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error fetching full business profile:", error);
+        return null;
+      }
+      
+      console.log("Full business profile fetched:", data);
+      return data;
+    },
+    enabled: !!businessId && open,
+  });
+
   const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);
@@ -52,13 +98,19 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
     onOpenChange(false);
   };
 
-  // Check if we have business information to display
-  const hasBusinessInfo = businessData?.name || 
-                         businessData?.phone || 
-                         businessData?.address || 
-                         businessData?.city || 
-                         businessData?.state ||
-                         businessData?.zipcode;
+  // Use full profile data if available, otherwise fall back to businessData
+  const displayData = fullBusinessProfile || businessData;
+  const businessName = displayData?.name || businessData?.name || 'Business';
+  const businessAvatar = displayData?.avatar || businessData?.avatar || '';
+  
+  // Check if we have comprehensive business information to display
+  const hasBusinessInfo = displayData?.name || 
+                         displayData?.phone || 
+                         displayData?.address || 
+                         displayData?.city || 
+                         displayData?.state ||
+                         displayData?.zipcode ||
+                         displayData?.business_info?.website;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,40 +124,55 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
             <div className="bg-gray-50 p-4 rounded-md space-y-3">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-12 w-12">
-                  {businessData?.avatar ? (
-                    <AvatarImage src={businessData.avatar} alt={businessData.name} />
+                  {businessAvatar ? (
+                    <AvatarImage src={businessAvatar} alt={businessName} />
                   ) : (
                     <AvatarFallback className="bg-blue-100 text-blue-800">
-                      {getBusinessInitials(businessData?.name)}
+                      {getBusinessInitials(businessName)}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">{businessData?.name}</h3>
+                  <h3 className="font-semibold text-lg">{businessName}</h3>
+                  {displayData?.business_info?.business_category && (
+                    <p className="text-sm text-gray-600">{displayData.business_info.business_category}</p>
+                  )}
                 </div>
               </div>
               
               <div className="space-y-2 ml-15">
-                {businessData?.phone && (
+                {displayData?.phone && (
                   <div>
                     <span className="font-medium">Phone: </span>
-                    <span>{businessData.phone}</span>
+                    <span>{displayData.phone}</span>
                   </div>
                 )}
-                {businessData?.address && (
+                {displayData?.address && (
                   <div>
                     <span className="font-medium">Address: </span>
-                    <span>{businessData.address}</span>
+                    <span>{displayData.address}</span>
                   </div>
                 )}
-                {(businessData?.city || businessData?.state || businessData?.zipcode) && (
+                {(displayData?.city || displayData?.state || displayData?.zipcode) && (
                   <div>
                     <span className="font-medium">Location: </span>
                     <span>
-                      {businessData.city}
-                      {businessData.city && businessData.state ? ", " : ""}
-                      {businessData.state} {businessData.zipcode}
+                      {displayData.city}
+                      {displayData.city && displayData.state ? ", " : ""}
+                      {displayData.state} {displayData.zipcode}
                     </span>
+                  </div>
+                )}
+                {displayData?.business_info?.website && (
+                  <div>
+                    <span className="font-medium">Website: </span>
+                    <span className="text-blue-600">{displayData.business_info.website}</span>
+                  </div>
+                )}
+                {displayData?.bio && (
+                  <div>
+                    <span className="font-medium">About: </span>
+                    <span>{displayData.bio}</span>
                   </div>
                 )}
               </div>

@@ -149,6 +149,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           state: businessProfile?.state,
           zipcode: businessProfile?.zipcode,
         }}
+        businessId={review.reviewerId}
         onConfirm={handleClaimConfirm}
         onCancel={handleClaimCancel}
       />
