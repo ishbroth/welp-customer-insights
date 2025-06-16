@@ -75,7 +75,7 @@ export const useEnhancedCustomerReviewCard = ({
       }
       return data;
     },
-    enabled: !!review.customerId && review.matchType === 'claimed'
+    enabled: !!review.customerId && (review.matchType === 'claimed' || review.customerId === currentUser?.id)
   });
 
   const isReviewAuthor = currentUser?.id === review.reviewerId;
@@ -90,8 +90,9 @@ export const useEnhancedCustomerReviewCard = ({
     ? (review.customerAvatar || customerProfile?.avatar || '') 
     : '';
 
-  // Check if this review has been claimed (matchType === 'claimed' indicates it's been claimed)
-  const isReviewClaimed = review.matchType === 'claimed';
+  // Check if this review has been claimed - improved logic to check both matchType and customer_id
+  const isReviewClaimed = review.matchType === 'claimed' || 
+                         (currentUser && review.customerId === currentUser.id);
 
   const handlePurchaseClick = () => {
     // For customer users who haven't claimed the review, show claim dialog first

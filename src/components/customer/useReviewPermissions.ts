@@ -37,12 +37,12 @@ export const useReviewPermissions = ({
 
   // Determine if user can respond to this review
   const canRespond = () => {
-    // Customer users can only respond if they've claimed the review AND have subscription/one-time access
+    // Customer users can respond if they've claimed the review AND have subscription/one-time access
     if (isCustomerUser && isCustomerBeingReviewed && isReviewClaimed) {
       return hasSubscription || isUnlocked;
     }
     
-    // Business users can respond if they have subscription/one-time access
+    // Business users can respond if they have subscription/one-time access and it's not their own review
     if (isBusinessUser && !isReviewAuthor) {
       return hasSubscription || isUnlocked;
     }
@@ -68,10 +68,16 @@ export const useReviewPermissions = ({
     return isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed;
   };
 
+  const shouldShowRespondButton = () => {
+    // Show respond button if user can respond (claimed + has subscription/access)
+    return canRespond();
+  };
+
   return {
     canReact,
     canRespond,
     shouldShowFullReview,
     shouldShowClaimButton,
+    shouldShowRespondButton,
   };
 };

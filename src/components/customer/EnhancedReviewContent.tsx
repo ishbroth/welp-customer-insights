@@ -12,6 +12,7 @@ interface EnhancedReviewContentProps {
   canReact: boolean;
   canRespond: boolean;
   shouldShowClaimButton: boolean;
+  shouldShowRespondButton: boolean;
   reviewId: string;
   customerId?: string;
   reviewerId: string;
@@ -32,6 +33,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   canReact,
   canRespond,
   shouldShowClaimButton,
+  shouldShowRespondButton,
   reviewId,
   customerId,
   reviewerId,
@@ -69,7 +71,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           </div>
         )}
         
-        {canRespond && (
+        {shouldShowRespondButton && (
           <CustomerReviewResponse 
             reviewId={reviewId}
             responses={responses || []}

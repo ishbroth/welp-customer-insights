@@ -72,6 +72,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     canRespond,
     shouldShowFullReview,
     shouldShowClaimButton,
+    shouldShowRespondButton,
   } = useReviewPermissions({
     isCustomerUser,
     isBusinessUser,
@@ -116,6 +117,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         canReact={canReact()}
         canRespond={canRespond()}
         shouldShowClaimButton={shouldShowClaimButton()}
+        shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
         customerId={review.customerId}
         reviewerId={review.reviewerId}
