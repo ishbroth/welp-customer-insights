@@ -110,7 +110,7 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
                          displayData?.city || 
                          displayData?.state ||
                          displayData?.zipcode ||
-                         displayData?.business_info?.website;
+                         (fullBusinessProfile?.business_info && fullBusinessProfile.business_info.website);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,8 +134,8 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-lg">{businessName}</h3>
-                  {displayData?.business_info?.business_category && (
-                    <p className="text-sm text-gray-600">{displayData.business_info.business_category}</p>
+                  {fullBusinessProfile?.business_info?.business_category && (
+                    <p className="text-sm text-gray-600">{fullBusinessProfile.business_info.business_category}</p>
                   )}
                 </div>
               </div>
@@ -163,16 +163,16 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
                     </span>
                   </div>
                 )}
-                {displayData?.business_info?.website && (
+                {fullBusinessProfile?.business_info?.website && (
                   <div>
                     <span className="font-medium">Website: </span>
-                    <span className="text-blue-600">{displayData.business_info.website}</span>
+                    <span className="text-blue-600">{fullBusinessProfile.business_info.website}</span>
                   </div>
                 )}
-                {displayData?.bio && (
+                {fullBusinessProfile?.bio && (
                   <div>
                     <span className="font-medium">About: </span>
-                    <span>{displayData.bio}</span>
+                    <span>{fullBusinessProfile.bio}</span>
                   </div>
                 )}
               </div>
