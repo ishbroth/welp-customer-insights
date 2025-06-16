@@ -64,12 +64,19 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
         />
       ) : (
         <div className="text-sm text-blue-700">
-          <strong>Match reasons:</strong> {matchReasons?.join(', ')}
           {matchScore && (
-            <div className="mt-1">
+            <div className="mb-2">
               <strong>Match score:</strong> {matchScore}%
             </div>
           )}
+          <div>
+            <strong>Match reasons:</strong>
+            <ul className="list-disc list-inside mt-1 ml-2">
+              {matchReasons?.map((reason, index) => (
+                <li key={index}>{reason}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
