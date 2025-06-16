@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +55,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, name, first_name, last_name, type')
+          .select('id, name, first_name, last_name, type, avatar')
           .in('id', authorIds);
 
         if (profileError) {
@@ -64,23 +63,64 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           return;
         }
 
-        // Format responses with proper author names
+        // Format responses with proper author names and avatars
         const formattedResponses = responseData.map((resp: any) => {
           const profile = profileData?.find(p => p.id === resp.author_id);
           
           let authorName = 'User';
           
           if (profile) {
-            if (profile.name && profile.name.trim()) {
-              authorName = profile.name;
-            } else if (profile.first_name || profile.last_name) {
-              const firstName = profile.first_name || '';
-              const lastName = profile.last_name || '';
-              authorName = `${firstName} ${lastName}`.trim();
-            } else if (profile.type) {
-              authorName = profile.type === 'business' ? 'Business User' : 'Customer';
+            // If this is the customer who the review is about (claimed the review)
+            if (resp.author_id === review.customerId) {
+              // Use the customer name from the review or construct from profile
+              if (review.customerName && review.customerName.trim()) {
+                authorName = review.customerName;
+              } else if (profile.first_name && profile.last_name) {
+                authorName = `${profile.first_name} ${profile.last_name}`;
+              } else if (profile.first_name) {
+                authorName = profile.first_name;
+              } else if (profile.last_name) {
+                authorName = profile.last_name;
+              } else if (profile.name && profile.name.trim()) {
+                authorName = profile.name;
+              } else {
+                authorName = 'Customer';
+              }
+            }
+            // If this is a business response
+            else if (profile.type === 'business') {
+              if (profile.name && profile.name.trim()) {
+                authorName = profile.name;
+              } else if (profile.first_name || profile.last_name) {
+                const firstName = profile.first_name || '';
+                const lastName = profile.last_name || '';
+                authorName = `${firstName} ${lastName}`.trim();
+              } else {
+                authorName = 'Business User';
+              }
+            }
+            // Other customer responses
+            else if (profile.type === 'customer') {
+              if (profile.first_name && profile.last_name) {
+                authorName = `${profile.first_name} ${profile.last_name}`;
+              } else if (profile.first_name) {
+                authorName = profile.first_name;
+              } else if (profile.last_name) {
+                authorName = profile.last_name;
+              } else if (profile.name && profile.name.trim()) {
+                authorName = profile.name;
+              } else {
+                authorName = 'Customer';
+              }
             }
           }
+
+          console.log(`BusinessReviewCardResponses: Response ${resp.id} author mapping:`, {
+            authorId: resp.author_id,
+            reviewCustomerId: review.customerId,
+            authorName,
+            profile
+          });
 
           return {
             id: resp.id,
@@ -100,7 +140,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     };
 
     fetchResponses();
-  }, [review.id, review.customerId]);
+  }, [review.id, review.customerId, review.customerName]);
 
   // Updated logic: Only show responses if customer still has an active response in the chain
   const getValidConversationResponses = (allResponses: Response[]): Response[] => {
