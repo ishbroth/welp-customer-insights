@@ -40,6 +40,13 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
     onOpenChange(false);
   };
 
+  // Check if we have any customer information to display
+  const hasCustomerInfo = reviewData.customerName || 
+                         reviewData.customerPhone || 
+                         reviewData.customerAddress || 
+                         reviewData.customerCity || 
+                         reviewData.customerZipcode;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -52,41 +59,52 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
             The business owner provided the following information when writing this review:
           </p>
           
-          <div className="bg-gray-50 p-4 rounded-md space-y-2">
-            {reviewData.customerName && (
-              <div>
-                <span className="font-medium">Name: </span>
-                <span>{reviewData.customerName}</span>
-              </div>
-            )}
-            {reviewData.customerPhone && (
-              <div>
-                <span className="font-medium">Phone: </span>
-                <span>{reviewData.customerPhone}</span>
-              </div>
-            )}
-            {reviewData.customerAddress && (
-              <div>
-                <span className="font-medium">Address: </span>
-                <span>{reviewData.customerAddress}</span>
-              </div>
-            )}
-            {reviewData.customerCity && (
-              <div>
-                <span className="font-medium">City: </span>
-                <span>{reviewData.customerCity}</span>
-              </div>
-            )}
-            {reviewData.customerZipcode && (
-              <div>
-                <span className="font-medium">Zip Code: </span>
-                <span>{reviewData.customerZipcode}</span>
-              </div>
-            )}
-          </div>
+          {hasCustomerInfo ? (
+            <div className="bg-gray-50 p-4 rounded-md space-y-2">
+              {reviewData.customerName && (
+                <div>
+                  <span className="font-medium">Name: </span>
+                  <span>{reviewData.customerName}</span>
+                </div>
+              )}
+              {reviewData.customerPhone && (
+                <div>
+                  <span className="font-medium">Phone: </span>
+                  <span>{reviewData.customerPhone}</span>
+                </div>
+              )}
+              {reviewData.customerAddress && (
+                <div>
+                  <span className="font-medium">Street Address: </span>
+                  <span>{reviewData.customerAddress}</span>
+                </div>
+              )}
+              {reviewData.customerCity && (
+                <div>
+                  <span className="font-medium">City: </span>
+                  <span>{reviewData.customerCity}</span>
+                </div>
+              )}
+              {reviewData.customerZipcode && (
+                <div>
+                  <span className="font-medium">Zip Code: </span>
+                  <span>{reviewData.customerZipcode}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-gray-50 p-4 rounded-md">
+              <p className="text-sm text-gray-600 italic">
+                No specific customer information was provided with this review.
+              </p>
+            </div>
+          )}
           
           <p className="text-sm font-medium text-center">
-            Are you sure this review was written about you?
+            {hasCustomerInfo 
+              ? "Does this information match you? Are you sure this review was written about you?"
+              : "Are you sure this review was written about you?"
+            }
           </p>
         </div>
 
@@ -95,7 +113,7 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
             Go Back
           </Button>
           <Button onClick={handleConfirm}>
-            Yes
+            Yes, This Is About Me
           </Button>
         </DialogFooter>
       </DialogContent>
