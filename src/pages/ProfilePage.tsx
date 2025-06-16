@@ -25,32 +25,14 @@ const ProfilePage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Extract license information - business_id field stores the license type
+  // Extract license information
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
-  const licenseType = currentUser.licenseType || currentUser.businessId; // fallback to business_id if licenseType not set
+  const licenseType = currentUser.licenseType; // This is the actual license type from dropdown
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
   // Check if business is verified (placeholder - would come from database)
   const isVerified = false;
-
-  // Format the license display text
-  const getLicenseDisplayText = () => {
-    const capitalizedLicenseType = licenseType ? 
-      licenseType.split(' ').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      ).join(' ') : null;
-
-    if (capitalizedLicenseType && licenseState) {
-      return `${capitalizedLicenseType} • ${licenseState}`;
-    } else if (capitalizedLicenseType) {
-      return capitalizedLicenseType;
-    } else if (licenseState) {
-      return `Business License • ${licenseState}`;
-    } else {
-      return "Business License";
-    }
-  };
 
   console.log("ProfilePage - currentUser:", currentUser);
   console.log("ProfilePage - licenseType:", licenseType);
@@ -121,16 +103,22 @@ const ProfilePage = () => {
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
                     {licenseType || licenseNumber ? (
                       <div className="space-y-3">
+                        {licenseType && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">License Type</label>
+                            <p className="text-gray-900">{licenseType}</p>
+                          </div>
+                        )}
                         {licenseNumber && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">License Number</label>
                             <p className="text-gray-900">{licenseNumber}</p>
                           </div>
                         )}
-                        {licenseType && (
+                        {licenseState && (
                           <div>
-                            <label className="text-sm font-medium text-gray-500">License Type</label>
-                            <p className="text-gray-900">{getLicenseDisplayText()}</p>
+                            <label className="text-sm font-medium text-gray-500">License State</label>
+                            <p className="text-gray-900">{licenseState}</p>
                           </div>
                         )}
                         <div className="mt-2">
