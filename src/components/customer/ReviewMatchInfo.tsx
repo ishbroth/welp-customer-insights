@@ -21,6 +21,7 @@ interface ReviewMatchInfoProps {
   isNewReview?: boolean;
   isClaimingReview: boolean;
   onClaimClick: () => void;
+  isReviewClaimed: boolean;
 }
 
 const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
@@ -31,9 +32,10 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
   isNewReview,
   isClaimingReview,
   onClaimClick,
+  isReviewClaimed,
 }) => {
-  // Don't show the match info section if the review is claimed
-  if (!matchType || matchType === 'claimed') return null;
+  // Don't show the match info section if the review is claimed (using actual database status)
+  if (!matchType || isReviewClaimed) return null;
 
   return (
     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">

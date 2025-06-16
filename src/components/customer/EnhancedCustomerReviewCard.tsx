@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -96,6 +97,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         isNewReview={review.isNewReview}
         isClaimingReview={isClaimingReview}
         onClaimClick={handleClaimClick}
+        isReviewClaimed={isReviewClaimed}
       />
       
       <EnhancedReviewHeader
