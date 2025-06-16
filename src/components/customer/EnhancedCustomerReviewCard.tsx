@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Eye, Lock, Phone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -230,8 +231,11 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Determine what to show based on user type and subscription status
   const shouldShowFullReview = () => {
     if (isCustomerUser && isCustomerBeingReviewed) {
-      // Customer users can see full review of claimed reviews if subscribed or unlocked
-      return isReviewClaimed && (hasSubscription || isUnlocked);
+      // For customer users viewing reviews about them:
+      // If they have a subscription, show full review regardless of claim status
+      // If they don't have subscription but have claimed + unlocked, show full review
+      if (hasSubscription) return true;
+      return isReviewClaimed && isUnlocked;
     }
     // For business users or other cases, use the existing isUnlocked logic
     return isUnlocked;
