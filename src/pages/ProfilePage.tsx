@@ -25,10 +25,10 @@ const ProfilePage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Extract license information
+  // Extract license information - business_id field stores the license type
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
-  const licenseType = currentUser.licenseType;
+  const licenseType = currentUser.licenseType || currentUser.businessId; // fallback to business_id if licenseType not set
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
   // Check if business is verified (placeholder - would come from database)
@@ -51,6 +51,10 @@ const ProfilePage = () => {
       return "Business License";
     }
   };
+
+  console.log("ProfilePage - currentUser:", currentUser);
+  console.log("ProfilePage - licenseType:", licenseType);
+  console.log("ProfilePage - businessId:", currentUser.businessId);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -115,22 +119,27 @@ const ProfilePage = () => {
                 {isBusinessAccount && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                    {licenseNumber ? (
+                    {licenseType || licenseNumber ? (
                       <div className="space-y-3">
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">License Number</label>
-                          <p className="text-gray-900">{licenseNumber}</p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {getLicenseDisplayText()}
-                          </p>
-                          <div className="mt-2">
-                            {isVerified && (
-                              <div className="flex items-center gap-2 text-green-600">
-                                <CheckCircle className="h-4 w-4" />
-                                <span className="text-sm font-medium">Verified License</span>
-                              </div>
-                            )}
+                        {licenseNumber && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">License Number</label>
+                            <p className="text-gray-900">{licenseNumber}</p>
                           </div>
+                        )}
+                        {licenseType && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">License Type</label>
+                            <p className="text-gray-900">{getLicenseDisplayText()}</p>
+                          </div>
+                        )}
+                        <div className="mt-2">
+                          {isVerified && (
+                            <div className="flex items-center gap-2 text-green-600">
+                              <CheckCircle className="h-4 w-4" />
+                              <span className="text-sm font-medium">Verified License</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : (

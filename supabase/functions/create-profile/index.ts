@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email, verified } = await req.json();
+    const { userId, name, phone, address, city, state, zipCode, type, bio, businessId, licenseType, avatar, email, verified } = await req.json();
     
-    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, bio, businessId, avatar, email, verified });
+    console.log("create-profile function called with:", { userId, name, phone, address, city, state, zipCode, type, bio, businessId, licenseType, avatar, email, verified });
     
     // Simple validation
     if (!userId || !type) {
@@ -56,7 +56,7 @@ serve(async (req) => {
       type: type,
       bio: bio || '',
       avatar: avatar || '',
-      business_id: businessId || '',
+      business_id: businessId || licenseType || '', // Map licenseType to business_id field
       email: email || '',
       // CRITICAL: Set verified status - customer accounts are auto-verified after phone verification
       verified: type === 'customer' ? (verified !== undefined ? verified : true) : false,
@@ -64,6 +64,7 @@ serve(async (req) => {
     };
 
     console.log("Profile update data being saved:", profileUpdateData);
+    console.log(`License Type mapping: licenseType=${licenseType}, businessId=${businessId}, final business_id=${profileUpdateData.business_id}`);
     console.log(`VERIFICATION STATUS: Account type: ${type}, Verified status: ${profileUpdateData.verified}`);
 
     if (existingProfile) {
@@ -90,6 +91,7 @@ serve(async (req) => {
       };
       
       console.log("Merged profile data:", mergedData);
+      console.log("Final business_id (licenseType) value:", mergedData.business_id);
       
       profileOperation = supabase
         .from('profiles')
@@ -130,14 +132,20 @@ serve(async (req) => {
       
       let businessOperation;
       
+      const businessInfoData = {
+        business_name: name,
+        license_type: licenseType || '',
+        license_number: businessId || '',
+      };
+
+      console.log("Business info data:", businessInfoData);
+      
       if (existingBusiness) {
         // Business info exists, update it
         console.log("Updating existing business info");
         businessOperation = supabase
           .from('business_info')
-          .update({
-            business_name: name,
-          })
+          .update(businessInfoData)
           .eq('id', userId);
       } else {
         // Business info doesn't exist, insert it
@@ -146,7 +154,7 @@ serve(async (req) => {
           .from('business_info')
           .insert({
             id: userId,
-            business_name: name,
+            ...businessInfoData,
             verified: false, // Business accounts start unverified
           });
       }
@@ -175,6 +183,7 @@ serve(async (req) => {
 
     console.log("Final verification - data confirmed in database:", finalVerificationData);
     console.log(`FINAL VERIFICATION STATUS: User ${userId}, Type: ${finalVerificationData.type}, Verified: ${finalVerificationData.verified}`);
+    console.log(`FINAL LICENSE TYPE: business_id field = ${finalVerificationData.business_id}`);
 
     return new Response(
       JSON.stringify({ 

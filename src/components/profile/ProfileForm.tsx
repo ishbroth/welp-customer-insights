@@ -28,7 +28,7 @@ const ProfileForm = () => {
       licenseType: currentUser?.licenseType || "",
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
-      suite: (currentUser as any)?.suite || "", // Type assertion for suite property
+      suite: (currentUser as any)?.suite || "",
       city: currentUser?.city || "",
       state: currentUser?.state || "",
       zipCode: currentUser?.zipCode || "",
@@ -40,24 +40,28 @@ const ProfileForm = () => {
       console.log("=== FORM SUBMIT START ===");
       console.log("Form data submitted:", data);
       
-      // Create update object with only the fields that have values
-      const updateData: any = {};
-      
-      if (data.name) updateData.name = data.name;
-      if (data.email) updateData.email = data.email;
-      if (data.bio !== undefined) updateData.bio = data.bio;
-      if (data.businessId !== undefined) updateData.businessId = data.businessId;
-      if (data.licenseType !== undefined) updateData.licenseType = data.licenseType;
-      if (data.phone) updateData.phone = data.phone;
-      if (data.address) updateData.address = data.address;
-      if (data.suite !== undefined) updateData.suite = data.suite;
-      if (data.city) updateData.city = data.city;
-      if (data.state) updateData.state = data.state;
-      if (data.zipCode) updateData.zipCode = data.zipCode;
-      
-      // Always preserve current avatar and type
-      updateData.avatar = currentUser?.avatar || '';
-      updateData.type = currentUser?.type || 'customer';
+      // Create update object - include all fields that have values
+      const updateData: any = {
+        name: data.name || "",
+        email: data.email || "",
+        bio: data.bio || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        suite: data.suite || "",
+        city: data.city || "",
+        state: data.state || "",
+        zipCode: data.zipCode || "",
+        // Always preserve current avatar and type
+        avatar: currentUser?.avatar || '',
+        type: currentUser?.type || 'customer',
+      };
+
+      // For business accounts, include business-specific fields
+      if (isBusinessAccount) {
+        updateData.businessId = data.businessId || "";
+        updateData.licenseType = data.licenseType || "";
+        console.log("Business account - including licenseType:", data.licenseType);
+      }
       
       console.log("Processed update data:", updateData);
       

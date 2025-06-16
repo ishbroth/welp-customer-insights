@@ -56,6 +56,7 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       };
 
       console.log("Complete profile data being sent:", profileData);
+      console.log("License type being sent:", profileData.licenseType);
 
       // Use the edge function to update the profile in the database
       const { data, error } = await supabase.functions.invoke('create-profile', {
@@ -99,6 +100,7 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
         console.error("Verification error:", verifyError);
       } else {
         console.log("Verified data in database:", verificationData);
+        console.log("Verified licenseType in database:", verificationData.business_id);
       }
 
       console.log("=== PROFILE UPDATE COMPLETE ===");
