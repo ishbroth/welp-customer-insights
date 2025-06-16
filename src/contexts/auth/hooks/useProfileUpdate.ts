@@ -1,6 +1,7 @@
 
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user: User | null) => void) => {
   const updateProfile = async (updates: Partial<User>) => {
@@ -31,12 +32,15 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
 
+      // Normalize the address if it's being updated
+      const normalizedAddress = updates.address ? normalizeAddress(updates.address) : currentUser.address;
+
       // Prepare the complete profile data with all current values
       const profileData = {
         userId: currentUser.id,
         name: updates.name ?? currentUser.name ?? '',
         phone: updates.phone ?? currentUser.phone ?? '',
-        address: updates.address ?? currentUser.address ?? '',
+        address: normalizedAddress ?? '',
         city: updates.city ?? currentUser.city ?? '',
         state: updates.state ?? currentUser.state ?? '',
         zipCode: updates.zipCode ?? currentUser.zipCode ?? '',
@@ -73,10 +77,11 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
 
       console.log("Profile update successful:", data);
 
-      // Update the current user state with the merged data immediately
+      // Update the current user state with the merged data immediately (including normalized address)
       const updatedUser: User = {
         ...currentUser,
-        ...updates
+        ...updates,
+        address: normalizedAddress
       };
 
       console.log("Setting updated user in state:", updatedUser);

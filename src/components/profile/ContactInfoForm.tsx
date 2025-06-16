@@ -6,6 +6,7 @@ import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./types";
 import StateSelect from "@/components/search/StateSelect";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface ContactInfoFormProps {
   form: UseFormReturn<ProfileFormValues>;
@@ -44,6 +45,12 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
     if (zipCode) form.setValue('zipCode', zipCode);
   };
 
+  const handleAddressChange = (address: string) => {
+    // Normalize the address when it changes
+    const normalizedAddress = normalizeAddress(address);
+    form.setValue('address', normalizedAddress);
+  };
+
   return (
     <>
       <FormField
@@ -70,8 +77,11 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
               <AddressAutocomplete 
                 placeholder="Start typing your address..."
                 value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value)}
-                onAddressChange={field.onChange}
+                onChange={(e) => {
+                  const normalizedAddress = normalizeAddress(e.target.value);
+                  field.onChange(normalizedAddress);
+                }}
+                onAddressChange={handleAddressChange}
                 onPlaceSelect={handleAddressSelect}
               />
             </FormControl>

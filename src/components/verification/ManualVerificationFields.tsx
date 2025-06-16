@@ -1,8 +1,8 @@
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 const LICENSE_TYPES = [
   "Contractors",
@@ -90,6 +90,11 @@ const ManualVerificationFields = ({
     if (zipCode) onInputChange("zipCode", zipCode);
   };
 
+  const handleAddressChange = (address: string) => {
+    const normalizedAddress = normalizeAddress(address);
+    onInputChange("address", normalizedAddress);
+  };
+
   return (
     <>
       <div>
@@ -143,8 +148,11 @@ const ManualVerificationFields = ({
         <AddressAutocomplete
           id="address"
           value={formData.address}
-          onChange={(e) => onInputChange("address", e.target.value)}
-          onAddressChange={(address) => onInputChange("address", address)}
+          onChange={(e) => {
+            const normalizedAddress = normalizeAddress(e.target.value);
+            onInputChange("address", normalizedAddress);
+          }}
+          onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
         />
       </div>

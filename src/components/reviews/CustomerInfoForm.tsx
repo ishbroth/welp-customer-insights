@@ -5,6 +5,7 @@ import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface CustomerInfoFormProps {
   customerFirstName: string;
@@ -75,12 +76,20 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
 
     // Update form fields with full street address (street number + route)
     const fullStreetAddress = `${streetNumber} ${route}`.trim();
-    if (fullStreetAddress) setCustomerAddress(fullStreetAddress);
+    if (fullStreetAddress) {
+      const normalizedAddress = normalizeAddress(fullStreetAddress);
+      setCustomerAddress(normalizedAddress);
+    }
     
     // Update other form fields
     if (city) setCustomerCity(city);
     if (state) setCustomerState(state);
     if (zipCode) setCustomerZipCode(zipCode);
+  };
+
+  const handleAddressChange = (address: string) => {
+    const normalizedAddress = normalizeAddress(address);
+    setCustomerAddress(normalizedAddress);
   };
 
   return (
@@ -128,8 +137,11 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
         <AddressAutocomplete
           id="customerAddress"
           value={customerAddress}
-          onChange={(e) => setCustomerAddress(e.target.value)}
-          onAddressChange={setCustomerAddress}
+          onChange={(e) => {
+            const normalizedAddress = normalizeAddress(e.target.value);
+            setCustomerAddress(normalizedAddress);
+          }}
+          onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}

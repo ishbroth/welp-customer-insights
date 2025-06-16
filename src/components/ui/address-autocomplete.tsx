@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface AddressAutocompleteProps extends React.ComponentProps<"input"> {
   onPlaceSelect?: (place: google.maps.places.PlaceResult) => void;
@@ -124,12 +125,14 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           console.log("Selected place:", place);
           
           if (place && place.formatted_address) {
-            // Remove comma from the address before setting
+            // Remove comma from the address and normalize it
             const cleanAddress = place.formatted_address.replace(/,/g, '');
+            const normalizedAddress = normalizeAddress(cleanAddress);
             console.log("Clean address:", cleanAddress);
+            console.log("Normalized address:", normalizedAddress);
             
             if (onAddressChange) {
-              onAddressChange(cleanAddress);
+              onAddressChange(normalizedAddress);
             }
             
             if (onPlaceSelect) {

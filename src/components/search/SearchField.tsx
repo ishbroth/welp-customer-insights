@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface SearchFieldProps {
   type?: string;
@@ -37,7 +38,7 @@ const SearchField = ({
                           placeholder.toLowerCase().includes("suite") ||
                           placeholder.toLowerCase().includes("unit");
   
-  // Handle address field restrictions
+  // Handle address field restrictions and normalization
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isAddressField) {
       let value = e.target.value;
@@ -45,18 +46,22 @@ const SearchField = ({
       const commaIndex = value.indexOf(',');
       if (commaIndex !== -1) {
         value = value.substring(0, commaIndex);
-        e.target.value = value;
       }
+      // Normalize the address for consistent searching
+      value = normalizeAddress(value);
+      e.target.value = value;
     }
     
     onChange(e);
   };
 
-  // Handle address autocomplete change
+  // Handle address autocomplete change with normalization
   const handleAddressAutocompleteChange = (address: string) => {
+    // Normalize the address for consistent searching
+    const normalizedAddress = normalizeAddress(address);
     // Create a synthetic event to maintain consistency
     const syntheticEvent = {
-      target: { value: address }
+      target: { value: normalizedAddress }
     } as React.ChangeEvent<HTMLInputElement>;
     onChange(syntheticEvent);
   };
