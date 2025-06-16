@@ -25,6 +25,8 @@ interface CustomerReviewResponseProps {
   hideReplyOption: boolean;
   reviewAuthorId?: string;
   onResponseSubmitted?: (response: Response) => void;
+  onSubmitResponse?: (content: string) => Promise<boolean>;
+  onDeleteResponse?: (responseId: string) => void;
 }
 
 const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
@@ -35,6 +37,8 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   hideReplyOption,
   reviewAuthorId,
   onResponseSubmitted,
+  onSubmitResponse,
+  onDeleteResponse,
 }) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -79,36 +83,44 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase
-        .from('responses')
-        .insert({
-          review_id: reviewId,
+      // Use the provided onSubmitResponse if available, otherwise fall back to default
+      if (onSubmitResponse) {
+        const success = await onSubmitResponse(responseText);
+        if (success) {
+          setResponseText("");
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('responses')
+          .insert({
+            review_id: reviewId,
+            content: responseText,
+            author_id: currentUser.id
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newResponse: Response = {
+          id: data.id,
+          authorId: currentUser.id,
+          authorName: currentUser.name || 'User',
           content: responseText,
-          author_id: currentUser.id
-        })
-        .select()
-        .single();
+          createdAt: new Date().toISOString()
+        };
 
-      if (error) throw error;
+        if (onResponseSubmitted) {
+          onResponseSubmitted(newResponse);
+        }
 
-      const newResponse: Response = {
-        id: data.id,
-        authorId: currentUser.id,
-        authorName: currentUser.name || 'User',
-        content: responseText,
-        createdAt: new Date().toISOString()
-      };
+        setResponseText("");
 
-      if (onResponseSubmitted) {
-        onResponseSubmitted(newResponse);
+        toast({
+          title: "Response submitted",
+          description: "Your response has been added successfully!"
+        });
       }
-
-      setResponseText("");
-
-      toast({
-        title: "Response submitted",
-        description: "Your response has been added successfully!"
-      });
     } catch (error) {
       console.error('Error submitting response:', error);
       toast({
@@ -205,16 +217,21 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     if (!responseToDelete || !currentUser) return;
 
     try {
-      const { error } = await supabase
-        .from('responses')
-        .delete()
-        .eq('id', responseToDelete)
-        .eq('author_id', currentUser.id);
+      // Use the provided onDeleteResponse if available, otherwise fall back to default
+      if (onDeleteResponse) {
+        onDeleteResponse(responseToDelete);
+      } else {
+        const { error } = await supabase
+          .from('responses')
+          .delete()
+          .eq('id', responseToDelete)
+          .eq('author_id', currentUser.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Refresh the page or update the responses list
-      window.location.reload();
+        // Refresh the page or update the responses list
+        window.location.reload();
+      }
 
       toast({
         title: "Response deleted",

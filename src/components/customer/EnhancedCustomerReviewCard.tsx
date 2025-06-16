@@ -7,6 +7,7 @@ import EnhancedReviewContent from "./EnhancedReviewContent";
 import ClaimReviewDialog from "./ClaimReviewDialog";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
+import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
 
 interface DetailedMatch {
   field: string;
@@ -84,6 +85,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isUnlocked,
   });
 
+  // Use the customer response management hook to handle responses properly
+  const {
+    responses,
+    handleSubmitResponse,
+    handleDeleteResponse,
+    canCustomerRespond
+  } = useCustomerResponseManagement(
+    review.id,
+    review.responses || [],
+    review.reviewerId,
+    (newResponse) => {
+      console.log('New response submitted:', newResponse);
+    }
+  );
+
   // Get phone number to display
   const displayPhone = review.customer_phone || customerProfile?.phone;
 
@@ -126,12 +142,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reviewerName={review.reviewerName}
         finalBusinessAvatar={finalBusinessAvatar}
         reactions={reactions}
-        responses={review.responses}
+        responses={responses}
         hasSubscription={hasSubscription}
         isUnlocked={isUnlocked}
         onPurchaseClick={handlePurchaseClick}
         onClaimClick={handleClaimClick}
         onReactionToggle={handleReactionToggle}
+        onSubmitResponse={handleSubmitResponse}
+        onDeleteResponse={handleDeleteResponse}
       />
 
       <ClaimReviewDialog 

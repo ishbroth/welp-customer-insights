@@ -25,6 +25,8 @@ interface EnhancedReviewContentProps {
   onPurchaseClick: () => void;
   onClaimClick: () => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
+  onSubmitResponse?: (content: string) => Promise<boolean>;
+  onDeleteResponse?: (responseId: string) => void;
 }
 
 const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
@@ -46,6 +48,8 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   onPurchaseClick,
   onClaimClick,
   onReactionToggle,
+  onSubmitResponse,
+  onDeleteResponse,
 }) => {
   if (shouldShowFullReview) {
     return (
@@ -78,8 +82,12 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
             hasSubscription={hasSubscription}
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
             hideReplyOption={false}
-            onResponseSubmitted={() => {}}
+            onResponseSubmitted={(response) => {
+              console.log('Response submitted in EnhancedReviewContent:', response);
+            }}
             reviewAuthorId={reviewerId}
+            onSubmitResponse={onSubmitResponse}
+            onDeleteResponse={onDeleteResponse}
           />
         )}
         
