@@ -40,8 +40,7 @@ export const useProfileReviewsFetching = () => {
           return b.matchScore - a.matchScore;
         });
 
-        // Fetch business profiles for each review but don't format responses here
-        // Let useSimplifiedResponses handle that
+        // Fetch business profiles for each review
         const reviewsWithProfiles = await Promise.all(
           sortedMatches.map(async (match) => {
             const review = match.review;
@@ -56,11 +55,13 @@ export const useProfileReviewsFetching = () => {
               }
             }
 
-            // Don't fetch and format responses here - let useSimplifiedResponses handle it
             return {
               ...review,
               business_profile: businessProfile,
-              responses: [], // Empty array, will be populated by useSimplifiedResponses
+              // Ensure we have the business avatar from profile
+              reviewerAvatar: businessProfile?.avatar || '',
+              reviewerName: businessProfile?.name || review.customer_name || 'Business',
+              responses: [],
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
@@ -103,7 +104,18 @@ export const useProfileReviewsFetching = () => {
           return [];
         }
 
-        setCustomerReviews(businessReviews || []);
+        // Add business profile data to business reviews
+        const reviewsWithBusinessProfile = (businessReviews || []).map(review => ({
+          ...review,
+          reviewerAvatar: currentUser.avatar || '',
+          reviewerName: currentUser.name || 'Business',
+          business_profile: {
+            name: currentUser.name,
+            avatar: currentUser.avatar
+          }
+        }));
+
+        setCustomerReviews(reviewsWithBusinessProfile);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
