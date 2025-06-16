@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -16,7 +15,7 @@ const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileRe
           <div>
             <h3 className="font-semibold text-green-800">Premium Subscription Active</h3>
             <p className="text-sm text-green-700">
-              You have full access to all reviews and response features.
+              You have full access to all reviews, and you can respond to claimed reviews.
             </p>
           </div>
         </div>
