@@ -1,5 +1,7 @@
 
 import { Customer } from "@/types/search";
+import { compareAddresses } from "./addressNormalization";
+import { calculateStringSimilarity } from "./stringSimilarity";
 
 interface ReviewMatchData {
   customer_name?: string;
@@ -21,11 +23,10 @@ export const doesReviewMatchUser = (
     ? `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim()
     : `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim();
 
-  // Check name match (case insensitive)
+  // Check name match with fuzzy logic
   if (review.customer_name && userFullName) {
-    const reviewName = review.customer_name.toLowerCase().trim();
-    const userName = userFullName.toLowerCase().trim();
-    if (reviewName === userName) {
+    const similarity = calculateStringSimilarity(review.customer_name, userFullName);
+    if (similarity >= 0.8) {
       return true;
     }
   }
@@ -39,11 +40,11 @@ export const doesReviewMatchUser = (
     }
   }
 
-  // Check address match (case insensitive)
+  // Check address match using fuzzy comparison
   if (review.customer_address && (userProfile?.address || currentUser.address)) {
-    const reviewAddress = review.customer_address.toLowerCase().trim();
-    const userAddress = (userProfile?.address || currentUser.address || '').toLowerCase().trim();
-    if (reviewAddress === userAddress) {
+    const reviewAddress = review.customer_address;
+    const userAddress = userProfile?.address || currentUser.address || '';
+    if (compareAddresses(reviewAddress, userAddress, 0.8)) {
       return true;
     }
   }

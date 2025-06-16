@@ -1,5 +1,5 @@
-
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { compareAddresses } from "@/utils/addressNormalization";
 import { ReviewData } from "./types";
 
 interface GroupedReview extends ReviewData {
@@ -29,14 +29,10 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
     name1 === name2
   );
   
-  // Check if addresses are similar (if both exist)
-  const address1 = review1.customer_address?.toLowerCase().trim() || '';
-  const address2 = review2.customer_address?.toLowerCase().trim() || '';
-  const addressMatch = address1 && address2 && (
-    calculateStringSimilarity(address1, address2) > 0.7 ||
-    address1.includes(address2) ||
-    address2.includes(address1)
-  );
+  // Check if addresses are similar using the new address comparison (if both exist)
+  const address1 = review1.customer_address || '';
+  const address2 = review2.customer_address || '';
+  const addressMatch = address1 && address2 && compareAddresses(address1, address2, 0.8);
   
   // Check if zip codes match (if both exist)
   const zip1 = review1.customer_zipcode?.replace(/\D/g, '') || '';

@@ -1,5 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { compareAddresses } from "@/utils/addressNormalization";
+import { calculateStringSimilarity } from "@/utils/stringSimilarity";
 
 interface MatchingCriteria {
   name?: string;
@@ -26,15 +27,14 @@ export const useProfileReviewsMatching = () => {
     const userFullName = userProfile?.name || 
       `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim();
 
-    // Name matching (highest priority)
+    // Name matching with fuzzy logic (highest priority)
     if (review.customer_name && userFullName) {
-      const reviewName = review.customer_name.toLowerCase().trim();
-      const userName = userFullName.toLowerCase().trim();
+      const similarity = calculateStringSimilarity(review.customer_name, userFullName);
       
-      if (reviewName === userName) {
+      if (similarity >= 0.9) {
         score += 40;
         reasons.push('Exact name match');
-      } else if (reviewName.includes(userName) || userName.includes(reviewName)) {
+      } else if (similarity >= 0.7) {
         score += 25;
         reasons.push('Partial name match');
       }
@@ -51,32 +51,27 @@ export const useProfileReviewsMatching = () => {
       }
     }
 
-    // Address matching
+    // Address matching with fuzzy logic
     if (review.customer_address && userProfile?.address) {
-      const reviewAddress = review.customer_address.toLowerCase().trim();
-      const userAddress = userProfile.address.toLowerCase().trim();
-      
-      if (reviewAddress === userAddress) {
+      if (compareAddresses(review.customer_address, userProfile.address, 0.9)) {
         score += 20;
         reasons.push('Address match');
-      } else if (reviewAddress.includes(userAddress) || userAddress.includes(reviewAddress)) {
+      } else if (compareAddresses(review.customer_address, userProfile.address, 0.7)) {
         score += 10;
         reasons.push('Partial address match');
       }
     }
 
-    // City matching
+    // City matching with fuzzy logic
     if (review.customer_city && userProfile?.city) {
-      const reviewCity = review.customer_city.toLowerCase().trim();
-      const userCity = userProfile.city.toLowerCase().trim();
-      
-      if (reviewCity === userCity) {
+      const similarity = calculateStringSimilarity(review.customer_city, userProfile.city);
+      if (similarity >= 0.8) {
         score += 10;
         reasons.push('City match');
       }
     }
 
-    // State matching
+    // ZIP code matching
     if (review.customer_zipcode && userProfile?.zipcode) {
       if (review.customer_zipcode === userProfile.zipcode) {
         score += 10;

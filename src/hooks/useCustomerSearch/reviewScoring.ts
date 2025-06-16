@@ -1,5 +1,6 @@
 
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { compareAddresses } from "@/utils/addressNormalization";
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { ReviewData } from "./types";
 
@@ -71,15 +72,18 @@ export const scoreReview = (
     }
   }
 
-  // Address matching with fuzzy logic
+  // Address matching with enhanced fuzzy logic
   if (address && review.customer_address) {
-    const similarity = calculateStringSimilarity(address.toLowerCase(), review.customer_address.toLowerCase());
-    if (similarity > REVIEW_SEARCH_CONFIG.SIMILARITY_THRESHOLD) {
-      score += similarity * REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER;
+    // Use the new address comparison function
+    if (compareAddresses(address, review.customer_address, 0.9)) {
+      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 0.9;
+      matches++;
+    } else if (compareAddresses(address, review.customer_address, 0.7)) {
+      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 0.7;
       matches++;
     }
     
-    // Check for house number or street name matches
+    // Fallback to word-by-word matching for partial matches
     const addressWords = address.toLowerCase().split(/\s+/);
     const reviewAddressWords = review.customer_address.toLowerCase().split(/\s+/);
     
@@ -95,7 +99,7 @@ export const scoreReview = (
     }
   }
 
-  // City matching
+  // City matching with fuzzy logic
   if (city && review.customer_city) {
     const similarity = calculateStringSimilarity(city.toLowerCase(), review.customer_city.toLowerCase());
     if (similarity > REVIEW_SEARCH_CONFIG.CITY_SIMILARITY_THRESHOLD || 
