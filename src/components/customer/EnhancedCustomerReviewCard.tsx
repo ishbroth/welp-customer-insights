@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Eye, Lock, Phone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +13,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useReviewClaiming } from "@/hooks/useReviewClaiming";
+import ClaimReviewDialog from "@/components/customer/ClaimReviewDialog";
 
 interface EnhancedCustomerReviewCardProps {
   review: Review & {
@@ -39,6 +40,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { isSubscribed, currentUser } = useAuth();
   const navigate = useNavigate();
   const { claimReview, isClaimingReview } = useReviewClaiming();
+  const [showClaimDialog, setShowClaimDialog] = useState(false);
   const { reactions, toggleReaction } = useReactionPersistence(
     review.id, 
     review.reactions || { like: [], funny: [], ohNo: [] }
@@ -85,7 +87,12 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   });
 
   const handlePurchaseClick = () => {
-    onPurchase(review.id);
+    // For customer users who haven't claimed the review, show claim dialog first
+    if (isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed) {
+      setShowClaimDialog(true);
+    } else {
+      onPurchase(review.id);
+    }
   };
 
   const handleClaimReview = async () => {
@@ -93,6 +100,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     if (success) {
       window.location.reload(); // Refresh to show updated data
     }
+  };
+
+  const handleClaimClick = () => {
+    setShowClaimDialog(true);
+  };
+
+  const handleClaimConfirm = async () => {
+    const success = await claimReview(review.id);
+    if (success) {
+      window.location.reload(); // Refresh to show updated data
+    }
+  };
+
+  const handleClaimCancel = () => {
+    // Dialog will close automatically
   };
 
   const getBusinessInitials = () => {
@@ -191,7 +213,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
             <span className="text-sm text-blue-600">Score: {review.matchScore}%</span>
           </div>
           <Button 
-            onClick={handleClaimReview}
+            onClick={handleClaimClick}
             disabled={isClaimingReview}
             size="sm"
           >
@@ -203,6 +225,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         </div>
       </div>
     );
+  };
+
+  // Determine what to show based on user type and subscription status
+  const shouldShowFullReview = () => {
+    if (isCustomerUser && isCustomerBeingReviewed) {
+      // Customer users can see full review of claimed reviews if subscribed or unlocked
+      return isReviewClaimed && (hasSubscription || isUnlocked);
+    }
+    // For business users or other cases, use the existing isUnlocked logic
+    return isUnlocked;
+  };
+
+  const shouldShowClaimButton = () => {
+    // Show claim button for customer users who haven't claimed the review yet
+    return isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed;
   };
 
   return (
@@ -268,7 +305,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         )}
       </div>
 
-      {isUnlocked ? (
+      {shouldShowFullReview() ? (
         <div>
           <p className="text-gray-700">{review.content}</p>
           <div className="mt-2 text-sm text-green-600 flex items-center">
@@ -306,10 +343,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           )}
           
           {/* Show claim message for customer users who haven't claimed the review */}
-          {isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed && (
+          {shouldShowClaimButton() && (
             <div className="mt-4 flex justify-end">
               <p className="text-sm text-gray-500">
-                Claim this review in order to respond
+                To Respond, <button 
+                  onClick={handleClaimClick}
+                  className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                >
+                  Claim this Review
+                </button>!
               </p>
             </div>
           )}
@@ -331,8 +373,36 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
               </Button>
             </div>
           </div>
+          
+          {/* Show claim message for unclaimed customer reviews even when locked */}
+          {shouldShowClaimButton() && (
+            <div className="mt-4 flex justify-end">
+              <p className="text-sm text-gray-500">
+                To Respond, <button 
+                  onClick={handleClaimClick}
+                  className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                >
+                  Claim this Review
+                </button>!
+              </p>
+            </div>
+          )}
         </div>
       )}
+
+      <ClaimReviewDialog 
+        open={showClaimDialog}
+        onOpenChange={setShowClaimDialog}
+        reviewData={{
+          customerName: review.customerName,
+          customerPhone: review.customer_phone,
+          customerAddress: review.customer_address,
+          customerCity: review.customer_city,
+          customerZipcode: review.customer_zipcode,
+        }}
+        onConfirm={handleClaimConfirm}
+        onCancel={handleClaimCancel}
+      />
     </div>
   );
 };
