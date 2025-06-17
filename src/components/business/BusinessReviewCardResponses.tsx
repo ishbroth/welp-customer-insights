@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,25 +70,14 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 
         console.log('BusinessReviewCardResponses: Fetching profiles for author IDs:', authorIds);
 
-        // Use service role to bypass RLS and get all profile data
-        const { data: profileData, error: profileError } = await supabase
-          .rpc('get_profiles_for_responses', { author_ids: authorIds });
+        // Directly fetch profiles - the app should handle this internally
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, name, first_name, last_name, type, avatar')
+          .in('id', authorIds);
 
-        // Fallback to regular query if RPC doesn't exist
-        let profiles = profileData;
-        if (profileError || !profileData) {
-          console.log('BusinessReviewCardResponses: RPC failed, using regular query:', profileError);
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('profiles')
-            .select('id, name, first_name, last_name, type, avatar')
-            .in('id', authorIds);
-
-          if (fallbackError) {
-            console.error('Error fetching profiles:', fallbackError);
-            profiles = [];
-          } else {
-            profiles = fallbackData || [];
-          }
+        if (profileError) {
+          console.error('Error fetching profiles:', profileError);
         }
 
         console.log('BusinessReviewCardResponses: Profile data found:', profiles);
@@ -140,22 +130,9 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           else if (resp.author_id === currentUser?.id) {
             console.log('✅ This is a response from the current business user');
             
-            if (profile) {
-              if (profile.name && profile.name.trim()) {
-                authorName = profile.name;
-              } else if (profile.first_name || profile.last_name) {
-                const firstName = profile.first_name || '';
-                const lastName = profile.last_name || '';
-                authorName = `${firstName} ${lastName}`.trim();
-              } else {
-                authorName = 'Business User';
-              }
-              authorAvatar = profile.avatar || '';
-            } else {
-              // Use current user data directly - this is what works!
-              authorName = currentUser.name || 'Business User';
-              authorAvatar = currentUser.avatar || '';
-            }
+            // Use current user data directly - this is what works!
+            authorName = currentUser.name || 'Business User';
+            authorAvatar = currentUser.avatar || '';
             
             console.log(`Business user name: ${authorName}`);
           }
