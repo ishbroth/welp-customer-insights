@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +39,13 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
   useEffect(() => {
     const fetchResponses = async () => {
       try {
+        console.log('BusinessReviewCardResponses: Fetching responses for review', review.id);
+        console.log('BusinessReviewCardResponses: Review data:', {
+          id: review.id,
+          customerId: review.customerId,
+          customerName: review.customerName
+        });
+
         const { data: responseData, error: responseError } = await supabase
           .from('responses')
           .select('id, author_id, content, created_at')
@@ -54,7 +62,9 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           return;
         }
 
-        // Get author information for each response, including customer profile data
+        console.log('BusinessReviewCardResponses: Raw response data:', responseData);
+
+        // Get all unique author IDs
         const authorIds = responseData.map(r => r.author_id).filter(Boolean);
         
         if (authorIds.length === 0) {
@@ -62,7 +72,9 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           return;
         }
 
-        // Fetch all profile data with service role to bypass RLS
+        console.log('BusinessReviewCardResponses: Fetching profiles for author IDs:', authorIds);
+
+        // Fetch profile data for all authors using service role to bypass RLS
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, name, first_name, last_name, type, avatar')
@@ -70,38 +82,59 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 
         if (profileError) {
           console.error('Error fetching profiles:', profileError);
-          return;
         }
 
-        // Format responses with proper author names and avatars
+        console.log('BusinessReviewCardResponses: Profile data found:', profileData);
+
+        // Process each response and assign proper author information
         const formattedResponses = responseData.map((resp: any) => {
           const profile = profileData?.find(p => p.id === resp.author_id);
           
           let authorName = 'User';
           let authorAvatar = '';
           
-          if (profile) {
-            // If this is the customer who the review is about (claimed the review)
-            if (resp.author_id === review.customerId) {
-              // Use the customer name from the review or construct from profile
-              if (review.customerName && review.customerName.trim()) {
-                authorName = review.customerName;
-              } else if (profile.first_name && profile.last_name) {
+          console.log(`\n=== Processing response ${resp.id} ===`);
+          console.log(`Author ID: ${resp.author_id}`);
+          console.log(`Review customerId: ${review.customerId}`);
+          console.log(`Profile found:`, profile);
+
+          // Check if this response is from the customer who the review is about
+          if (resp.author_id === review.customerId && review.customerId) {
+            console.log('✅ This is a response from the customer the review is about');
+            
+            // First priority: Use profile data if available
+            if (profile) {
+              // Construct full name from profile
+              if (profile.first_name && profile.last_name) {
                 authorName = `${profile.first_name} ${profile.last_name}`;
+                console.log(`Using profile first+last name: ${authorName}`);
               } else if (profile.first_name) {
                 authorName = profile.first_name;
+                console.log(`Using profile first name: ${authorName}`);
               } else if (profile.last_name) {
                 authorName = profile.last_name;
+                console.log(`Using profile last name: ${authorName}`);
               } else if (profile.name && profile.name.trim()) {
                 authorName = profile.name;
-              } else {
-                authorName = 'Customer';
+                console.log(`Using profile name field: ${authorName}`);
               }
-              // Use customer avatar
+              
+              // Use profile avatar
               authorAvatar = profile.avatar || '';
+              console.log(`Using profile avatar: ${authorAvatar}`);
             }
-            // If this is a business response
-            else if (profile.type === 'business') {
+            
+            // Fallback to review customer name if no profile name available
+            if (authorName === 'User' && review.customerName && review.customerName.trim()) {
+              authorName = review.customerName;
+              console.log(`Fallback to review customerName: ${authorName}`);
+            }
+          }
+          // Check if this response is from the current business user
+          else if (resp.author_id === currentUser?.id) {
+            console.log('✅ This is a response from the current business user');
+            
+            if (profile) {
               if (profile.name && profile.name.trim()) {
                 authorName = profile.name;
               } else if (profile.first_name || profile.last_name) {
@@ -112,9 +145,28 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
                 authorName = 'Business User';
               }
               authorAvatar = profile.avatar || '';
+            } else {
+              authorName = currentUser.name || 'Business User';
+              authorAvatar = currentUser.avatar || '';
             }
-            // Other customer responses
-            else if (profile.type === 'customer') {
+            
+            console.log(`Business user name: ${authorName}`);
+          }
+          // Handle other users
+          else if (profile) {
+            console.log('📝 Processing response from other user');
+            
+            if (profile.type === 'business') {
+              if (profile.name && profile.name.trim()) {
+                authorName = profile.name;
+              } else if (profile.first_name || profile.last_name) {
+                const firstName = profile.first_name || '';
+                const lastName = profile.last_name || '';
+                authorName = `${firstName} ${lastName}`.trim();
+              } else {
+                authorName = 'Business';
+              }
+            } else if (profile.type === 'customer') {
               if (profile.first_name && profile.last_name) {
                 authorName = `${profile.first_name} ${profile.last_name}`;
               } else if (profile.first_name) {
@@ -126,17 +178,14 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
               } else {
                 authorName = 'Customer';
               }
-              authorAvatar = profile.avatar || '';
             }
+            
+            authorAvatar = profile.avatar || '';
+            console.log(`Other user name: ${authorName}`);
           }
 
-          console.log(`BusinessReviewCardResponses: Response ${resp.id} author mapping:`, {
-            authorId: resp.author_id,
-            reviewCustomerId: review.customerId,
-            authorName,
-            authorAvatar,
-            profile
-          });
+          console.log(`🎯 Final author info: name="${authorName}", avatar="${authorAvatar}"`);
+          console.log(`=== End processing response ${resp.id} ===\n`);
 
           return {
             id: resp.id,
@@ -151,13 +200,15 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
         // Filter responses to show only valid conversation chains
         const validResponses = getValidConversationResponses(formattedResponses);
         setResponses(validResponses);
+        
+        console.log('BusinessReviewCardResponses: Final formatted responses:', validResponses);
       } catch (error) {
         console.error('Error fetching responses:', error);
       }
     };
 
     fetchResponses();
-  }, [review.id, review.customerId, review.customerName]);
+  }, [review.id, review.customerId, review.customerName, currentUser]);
 
   // Updated logic: Only show responses if customer still has an active response in the chain
   const getValidConversationResponses = (allResponses: Response[]): Response[] => {

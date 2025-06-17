@@ -39,6 +39,31 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     enabled: !!review.reviewerId
   });
 
+  // Fetch customer profile for avatar when review is claimed
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerProfile', review.customerId],
+    queryFn: async () => {
+      if (!review.customerId) return null;
+      
+      console.log('BusinessReviewCardHeader: Fetching customer profile for ID:', review.customerId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name, name')
+        .eq('id', review.customerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching customer profile:", error);
+        return null;
+      }
+      
+      console.log('BusinessReviewCardHeader: Customer profile found:', data);
+      return data;
+    },
+    enabled: !!review.customerId
+  });
+
   const getBusinessInitials = () => {
     if (review.reviewerName) {
       const names = review.reviewerName.split(' ');
@@ -51,7 +76,34 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   const businessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
   const businessName = review.reviewerName || businessProfile?.name || 'Business';
 
-  console.log('BusinessReviewCardHeader: Avatar info:', {
+  // Get customer info - use profile data if available, fallback to review data
+  let customerAvatar = '';
+  let customerDisplayName = review.customerName || 'Customer';
+
+  if (customerProfile) {
+    customerAvatar = customerProfile.avatar || '';
+    
+    // Construct name from profile if available
+    if (customerProfile.first_name && customerProfile.last_name) {
+      customerDisplayName = `${customerProfile.first_name} ${customerProfile.last_name}`;
+    } else if (customerProfile.first_name) {
+      customerDisplayName = customerProfile.first_name;
+    } else if (customerProfile.last_name) {
+      customerDisplayName = customerProfile.last_name;
+    } else if (customerProfile.name && customerProfile.name.trim()) {
+      customerDisplayName = customerProfile.name;
+    }
+  }
+
+  console.log('BusinessReviewCardHeader: Customer info:', {
+    reviewId: review.id,
+    customerId: review.customerId,
+    customerAvatar,
+    customerDisplayName,
+    hasProfile: !!customerProfile
+  });
+
+  console.log('BusinessReviewCardHeader: Business avatar info:', {
     reviewId: review.id,
     reviewerAvatar: review.reviewerAvatar,
     profileAvatar: businessProfile?.avatar,
@@ -86,12 +138,16 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
         onClick={handleCustomerClick}
       >
         <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-            {getCustomerInitials(review.customerName)}
-          </AvatarFallback>
+          {customerAvatar ? (
+            <AvatarImage src={customerAvatar} alt={customerDisplayName} />
+          ) : (
+            <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+              {getCustomerInitials(customerDisplayName)}
+            </AvatarFallback>
+          )}
         </Avatar>
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-700">{review.customerName}</p>
+          <p className="text-sm font-medium text-gray-700">{customerDisplayName}</p>
           <p className="text-xs text-gray-500">Customer</p>
         </div>
       </div>
