@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistance } from "date-fns";
+import { Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,8 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [responseContent, setResponseContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingResponseId, setEditingResponseId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
   const { archivedResponse } = useArchivedResponses(review.id);
 
   useEffect(() => {
@@ -181,11 +184,9 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           };
         });
 
-        // Filter responses to show only valid conversation chains
-        const validResponses = getValidConversationResponses(formattedResponses);
-        setResponses(validResponses);
+        setResponses(formattedResponses);
         
-        console.log('BusinessReviewCardResponses: Final formatted responses:', validResponses);
+        console.log('BusinessReviewCardResponses: Final formatted responses:', formattedResponses);
       } catch (error) {
         console.error('Error fetching responses:', error);
       }
@@ -194,67 +195,37 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     fetchResponses();
   }, [review.id, review.customerId, review.customerName, currentUser]);
 
-  // Updated logic: Only show responses if customer still has an active response in the chain
-  const getValidConversationResponses = (allResponses: Response[]): Response[] => {
-    if (!review.customerId || !currentUser) return allResponses;
-    
-    const sortedResponses = [...allResponses].sort((a, b) => 
+  // Determine whose turn it is to respond
+  const getConversationStatus = () => {
+    if (!currentUser || !review.customerId) return { canRespond: false, isMyTurn: false };
+
+    // Sort responses by creation time
+    const sortedResponses = [...responses].sort((a, b) => 
       new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
+
+    // If no responses yet, customer should respond first
+    if (sortedResponses.length === 0) {
+      return { canRespond: false, isMyTurn: false }; // Customer hasn't responded yet
+    }
+
+    // Get the last response
+    const lastResponse = sortedResponses[sortedResponses.length - 1];
     
-    // Check if there are any customer responses at all
-    const customerResponses = sortedResponses.filter(r => r.authorId === review.customerId);
-    
-    // If no customer responses exist, archive all business responses and return empty array
-    if (customerResponses.length === 0) {
-      console.log('No customer responses found - archiving all business responses and returning empty array');
-      sortedResponses.forEach(response => {
-        if (response.authorId === currentUser.id) {
-          console.log(`Archiving business response ${response.id} - no customer response exists`);
-          archiveBusinessResponse(response);
-        }
-      });
-      return [];
+    // If the last response was from the customer, it's business's turn
+    if (lastResponse.authorId === review.customerId) {
+      return { canRespond: true, isMyTurn: true };
     }
     
-    // If we get here, customer responses exist, so we show them along with valid business responses
-    const validResponses: Response[] = [];
-    let lastCustomerResponseIndex = -1;
-    
-    // Include all customer responses and track the last one
-    sortedResponses.forEach((response, index) => {
-      if (response.authorId === review.customerId) {
-        validResponses.push(response);
-        lastCustomerResponseIndex = index;
-      }
-    });
-    
-    // Only include business responses that come after the last customer response
-    if (lastCustomerResponseIndex !== -1) {
-      for (let i = lastCustomerResponseIndex + 1; i < sortedResponses.length; i++) {
-        const response = sortedResponses[i];
-        if (response.authorId === currentUser.id) {
-          validResponses.push(response);
-        }
-      }
+    // If the last response was from the business, it's customer's turn
+    if (lastResponse.authorId === currentUser.id) {
+      return { canRespond: false, isMyTurn: false };
     }
-    
-    return validResponses;
+
+    return { canRespond: false, isMyTurn: false };
   };
 
-  // Archive a business response when it becomes invalid
-  const archiveBusinessResponse = (response: Response) => {
-    if (!currentUser || !review.id) return;
-    
-    const archivedKey = `archived_response_${review.id}_${currentUser.id}`;
-    const archivedData = {
-      responses: [response],
-      archivedAt: new Date().toISOString(),
-      originalCustomerResponseId: review.customerId
-    };
-    
-    localStorage.setItem(archivedKey, JSON.stringify(archivedData));
-  };
+  const { canRespond, isMyTurn } = getConversationStatus();
 
   const handleSubmitResponse = async () => {
     if (!currentUser || !hasSubscription || !responseContent.trim()) {
@@ -305,20 +276,91 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     }
   };
 
+  const handleEditResponse = (responseId: string) => {
+    const response = responses.find(r => r.id === responseId);
+    if (response && response.authorId === currentUser?.id) {
+      setEditingResponseId(responseId);
+      setEditContent(response.content);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingResponseId || !currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('responses')
+        .update({ content: editContent })
+        .eq('id', editingResponseId)
+        .eq('author_id', currentUser.id);
+
+      if (error) throw error;
+
+      setResponses(prev => prev.map(response =>
+        response.id === editingResponseId
+          ? { ...response, content: editContent }
+          : response
+      ));
+
+      setEditingResponseId(null);
+      setEditContent("");
+
+      toast({
+        title: "Response updated",
+        description: "Your response has been updated successfully!"
+      });
+    } catch (error) {
+      console.error('Error updating response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update response. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteResponse = async (responseId: string) => {
+    if (!currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('responses')
+        .delete()
+        .eq('id', responseId)
+        .eq('author_id', currentUser.id);
+
+      if (error) throw error;
+
+      setResponses(prev => prev.filter(response => response.id !== responseId));
+
+      toast({
+        title: "Response deleted",
+        description: "Your response has been deleted successfully!"
+      });
+    } catch (error) {
+      console.error('Error deleting response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete response. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getInitials = (name: string) => {
     if (!name) return "U";
     const names = name.split(' ');
     return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  console.log(`BusinessReviewCardResponses rendering review ${review.id} with ${responses.length} valid responses:`, responses);
-  console.log(`Archived response available:`, !!archivedResponse);
+  console.log(`BusinessReviewCardResponses rendering review ${review.id} with ${responses.length} responses:`, responses);
+  console.log(`Conversation status: canRespond=${canRespond}, isMyTurn=${isMyTurn}`);
 
-  // Only show the response section if there are valid responses or if we can respond
+  // Only show the response section if there are responses or if we can respond
   const shouldShowResponseSection = responses.length > 0 || (hasSubscription && review.customerId);
 
   if (!shouldShowResponseSection) {
-    console.log('Not showing response section - no valid responses and no subscription access');
+    console.log('Not showing response section - no responses and no subscription access');
     return null;
   }
 
@@ -348,53 +390,113 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
                   })}
                 </span>
               </div>
-              <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
+              
+              {editingResponseId === resp.id ? (
+                <div>
+                  <Textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full mb-3 min-h-[80px]"
+                    maxLength={1500}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setEditingResponseId(null);
+                        setEditContent("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSaveEdit}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
+                  
+                  {/* Show edit/delete icons for user's own responses */}
+                  {resp.authorId === currentUser?.id && (
+                    <div className="flex justify-end gap-2 mt-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-600 hover:bg-gray-100 h-8 px-2 py-1"
+                        onClick={() => handleEditResponse(resp.id)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2 py-1"
+                        onClick={() => handleDeleteResponse(resp.id)}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
       ))}
       
-      {/* Response form */}
-      {showResponseForm ? (
-        <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
-          <h5 className="font-medium mb-2">Respond to Customer</h5>
-          <Textarea
-            value={responseContent}
-            onChange={(e) => setResponseContent(e.target.value)}
-            placeholder="Write your response to the customer..."
-            className="w-full mb-3 min-h-[80px]"
-            maxLength={1500}
-          />
-          <div className="flex justify-end gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                setShowResponseForm(false);
-                setResponseContent("");
-              }}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={handleSubmitResponse}
-              disabled={isSubmitting || !responseContent.trim()}
-            >
-              {isSubmitting ? "Sending..." : "Send Response"}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 flex justify-end">
-          <Button 
-            onClick={() => setShowResponseForm(true)}
-            size="sm"
-          >
-            Respond to Customer
-          </Button>
-        </div>
+      {/* Response form - only show if it's business's turn to respond */}
+      {canRespond && isMyTurn && (
+        <>
+          {showResponseForm ? (
+            <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
+              <h5 className="font-medium mb-2">Respond to Customer</h5>
+              <Textarea
+                value={responseContent}
+                onChange={(e) => setResponseContent(e.target.value)}
+                placeholder="Write your response to the customer..."
+                className="w-full mb-3 min-h-[80px]"
+                maxLength={1500}
+              />
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setShowResponseForm(false);
+                    setResponseContent("");
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={handleSubmitResponse}
+                  disabled={isSubmitting || !responseContent.trim()}
+                >
+                  {isSubmitting ? "Sending..." : "Send Response"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 flex justify-end">
+              <Button 
+                onClick={() => setShowResponseForm(true)}
+                size="sm"
+              >
+                Respond to Customer
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
