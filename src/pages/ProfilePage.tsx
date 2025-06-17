@@ -60,8 +60,19 @@ const ProfilePage = () => {
   const licenseState = currentUser.state;
   const storedLicenseType = licenseType || currentUser.licenseType;
   
+  // Debug the mapping
+  console.log("=== LICENSE TYPE DEBUGGING ===");
+  console.log("BUSINESS_TYPE_OPTIONS:", BUSINESS_TYPE_OPTIONS);
+  console.log("storedLicenseType value:", storedLicenseType);
+  console.log("typeof storedLicenseType:", typeof storedLicenseType);
+  
   // Map the stored license type value to its display label
-  const licenseTypeLabel = BUSINESS_TYPE_OPTIONS.find(option => option.value === storedLicenseType)?.label || storedLicenseType;
+  const licenseTypeOption = BUSINESS_TYPE_OPTIONS.find(option => {
+    console.log(`Comparing option.value (${option.value}) with storedLicenseType (${storedLicenseType})`);
+    return option.value === storedLicenseType;
+  });
+  
+  const licenseTypeLabel = licenseTypeOption?.label || storedLicenseType;
   
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
@@ -73,6 +84,7 @@ const ProfilePage = () => {
   console.log("ProfilePage - licenseType from currentUser:", currentUser.licenseType);
   console.log("ProfilePage - businessId:", currentUser.businessId);
   console.log("ProfilePage - stored licenseType used:", storedLicenseType);
+  console.log("ProfilePage - found licenseTypeOption:", licenseTypeOption);
   console.log("ProfilePage - licenseTypeLabel to display:", licenseTypeLabel);
 
   return (
@@ -140,7 +152,7 @@ const ProfilePage = () => {
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
                     {licenseTypeLabel || licenseNumber || licenseState ? (
                       <div className="space-y-3">
-                        {licenseTypeLabel && (
+                        {licenseTypeLabel && licenseTypeLabel !== licenseNumber && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">License Type</label>
                             <p className="text-gray-900">{licenseTypeLabel}</p>

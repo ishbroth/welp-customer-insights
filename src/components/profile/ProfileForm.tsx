@@ -10,13 +10,44 @@ import { profileSchema, ProfileFormValues } from "./types";
 import PersonalInfoForm from "./PersonalInfoForm";
 import ContactInfoForm from "./ContactInfoForm";
 import BusinessInfoForm from "./BusinessInfoForm";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfileForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { currentUser, updateProfile } = useAuth();
+  const [databaseLicenseType, setDatabaseLicenseType] = useState<string>("");
   
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
+
+  // Fetch the actual license type from database
+  useEffect(() => {
+    const fetchDatabaseLicenseType = async () => {
+      if (!currentUser?.id || !isBusinessAccount) return;
+
+      try {
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('business_id')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching database license type:", error);
+          return;
+        }
+
+        console.log("=== PROFILE FORM INIT ===");
+        console.log("Database business_id (licenseType):", profileData?.business_id);
+        setDatabaseLicenseType(profileData?.business_id || "");
+      } catch (error) {
+        console.error("Error in fetchDatabaseLicenseType:", error);
+      }
+    };
+
+    fetchDatabaseLicenseType();
+  }, [currentUser?.id, isBusinessAccount]);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -25,7 +56,7 @@ const ProfileForm = () => {
       email: currentUser?.email || "",
       bio: currentUser?.bio || "",
       businessId: currentUser?.businessId || "",
-      licenseType: currentUser?.licenseType || "",
+      licenseType: "", // Will be set below once we fetch from database
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
       suite: (currentUser as any)?.suite || "",
@@ -34,6 +65,14 @@ const ProfileForm = () => {
       zipCode: currentUser?.zipCode || "",
     },
   });
+
+  // Update the licenseType field when database value is loaded
+  useEffect(() => {
+    if (databaseLicenseType) {
+      console.log("Setting form licenseType to:", databaseLicenseType);
+      form.setValue('licenseType', databaseLicenseType);
+    }
+  }, [databaseLicenseType, form]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -61,6 +100,7 @@ const ProfileForm = () => {
         updateData.businessId = data.businessId || "";
         updateData.licenseType = data.licenseType || "";
         console.log("Business account - including licenseType:", data.licenseType);
+        console.log("Business account - including businessId:", data.businessId);
       }
       
       console.log("Processed update data:", updateData);
