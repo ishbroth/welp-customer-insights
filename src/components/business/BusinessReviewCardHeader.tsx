@@ -18,28 +18,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   getCustomerInitials,
   handleCustomerClick,
 }) => {
-  // Fetch business profile for avatar - this ensures we always try to get the business avatar
-  const { data: businessProfile } = useQuery({
-    queryKey: ['businessProfile', review.reviewerId],
-    queryFn: async () => {
-      if (!review.reviewerId) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, avatar, name')
-        .eq('id', review.reviewerId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching business profile:", error);
-        return null;
-      }
-      return data;
-    },
-    enabled: !!review.reviewerId
-  });
-
-  // Fetch customer profile for avatar when review is claimed
+  // Fetch customer profile for avatar and contact info when review is claimed
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
@@ -49,7 +28,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar, first_name, last_name, name')
+        .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode')
         .eq('id', review.customerId)
         .maybeSingle();
 
@@ -64,21 +43,13 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     enabled: !!review.customerId
   });
 
-  const getBusinessInitials = () => {
-    if (review.reviewerName) {
-      const names = review.reviewerName.split(' ');
-      return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "B";
-  };
-
-  // Use avatar from review data first, then from fetched profile, then fallback
-  const businessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
-  const businessName = review.reviewerName || businessProfile?.name || 'Business';
-
   // Get customer info - use profile data if available, fallback to review data
   let customerAvatar = '';
   let customerDisplayName = review.customerName || 'Customer';
+  let customerPhone = review.customer_phone || '';
+  let customerAddress = review.customer_address || '';
+  let customerCity = review.customer_city || '';
+  let customerZipcode = review.customer_zipcode || '';
 
   if (customerProfile) {
     customerAvatar = customerProfile.avatar || '';
@@ -93,62 +64,69 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     } else if (customerProfile.name && customerProfile.name.trim()) {
       customerDisplayName = customerProfile.name;
     }
+
+    // Use profile contact info if available, otherwise fallback to review data
+    customerPhone = customerProfile.phone || customerPhone;
+    customerAddress = customerProfile.address || customerAddress;
+    customerCity = customerProfile.city || customerCity;
+    customerZipcode = customerProfile.zipcode || customerZipcode;
   }
+
+  // Format the address display
+  const formatAddress = () => {
+    const parts = [];
+    if (customerAddress) parts.push(customerAddress);
+    if (customerCity) parts.push(customerCity);
+    if (customerZipcode) parts.push(customerZipcode);
+    return parts.join(', ');
+  };
 
   console.log('BusinessReviewCardHeader: Customer info:', {
     reviewId: review.id,
     customerId: review.customerId,
     customerAvatar,
     customerDisplayName,
+    customerPhone,
+    address: formatAddress(),
     hasProfile: !!customerProfile
-  });
-
-  console.log('BusinessReviewCardHeader: Business avatar info:', {
-    reviewId: review.id,
-    reviewerAvatar: review.reviewerAvatar,
-    profileAvatar: businessProfile?.avatar,
-    finalAvatar: businessAvatar,
-    businessName: businessName
   });
 
   return (
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center space-x-3">
-        {/* Business Avatar */}
-        <Avatar className="h-10 w-10">
-          {businessAvatar ? (
-            <AvatarImage src={businessAvatar} alt={businessName} />
-          ) : (
-            <AvatarFallback className="bg-blue-100 text-blue-800">
-              {getBusinessInitials()}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div>
-          <h3 className="font-semibold">{businessName}</h3>
-          <p className="text-sm text-gray-500">
-            Review written on {formatDate(review.date)}
-          </p>
-        </div>
-      </div>
-      
-      {/* Customer Info */}
-      <div 
-        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-        onClick={handleCustomerClick}
-      >
-        <Avatar className="h-8 w-8">
+        {/* Customer Avatar */}
+        <Avatar 
+          className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={handleCustomerClick}
+        >
           {customerAvatar ? (
             <AvatarImage src={customerAvatar} alt={customerDisplayName} />
           ) : (
-            <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+            <AvatarFallback className="bg-blue-100 text-blue-800">
               {getCustomerInitials(customerDisplayName)}
             </AvatarFallback>
           )}
         </Avatar>
-        <div className="text-right">
-          <p className="text-sm font-medium text-gray-700">{customerDisplayName}</p>
-          <p className="text-xs text-gray-500">Customer</p>
+        <div>
+          <h3 
+            className="font-semibold cursor-pointer hover:text-blue-600 transition-colors"
+            onClick={handleCustomerClick}
+          >
+            {customerDisplayName}
+          </h3>
+          <p className="text-sm text-gray-500">
+            Review written on {formatDate(review.date)}
+          </p>
+          {customerPhone && (
+            <p className="text-sm text-gray-600">
+              Phone: {customerPhone}
+            </p>
+          )}
+          {formatAddress() && (
+            <p className="text-sm text-gray-600">
+              Address: {formatAddress()}
+            </p>
+          )}
         </div>
       </div>
     </div>
