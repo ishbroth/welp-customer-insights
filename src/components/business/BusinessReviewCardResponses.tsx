@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
-import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDistance } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { useToast } from "@/hooks/use-toast";
 import { useArchivedResponses } from "@/hooks/useArchivedResponses";
 import { Review } from "@/types";
 
@@ -11,6 +15,7 @@ interface Response {
   authorName: string;
   content: string;
   createdAt: string;
+  authorAvatar?: string;
 }
 
 interface BusinessReviewCardResponsesProps {
@@ -23,7 +28,11 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
   hasSubscription,
 }) => {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   const [responses, setResponses] = useState<Response[]>([]);
+  const [showResponseForm, setShowResponseForm] = useState(false);
+  const [responseContent, setResponseContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { archivedResponse } = useArchivedResponses(review.id);
 
   useEffect(() => {
@@ -45,7 +54,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           return;
         }
 
-        // Get author information for each response
+        // Get author information for each response, including customer profile data
         const authorIds = responseData.map(r => r.author_id).filter(Boolean);
         
         if (authorIds.length === 0) {
@@ -53,6 +62,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           return;
         }
 
+        // Fetch all profile data with service role to bypass RLS
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, name, first_name, last_name, type, avatar')
@@ -68,6 +78,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           const profile = profileData?.find(p => p.id === resp.author_id);
           
           let authorName = 'User';
+          let authorAvatar = '';
           
           if (profile) {
             // If this is the customer who the review is about (claimed the review)
@@ -86,6 +97,8 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
               } else {
                 authorName = 'Customer';
               }
+              // Use customer avatar
+              authorAvatar = profile.avatar || '';
             }
             // If this is a business response
             else if (profile.type === 'business') {
@@ -98,6 +111,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
               } else {
                 authorName = 'Business User';
               }
+              authorAvatar = profile.avatar || '';
             }
             // Other customer responses
             else if (profile.type === 'customer') {
@@ -112,6 +126,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
               } else {
                 authorName = 'Customer';
               }
+              authorAvatar = profile.avatar || '';
             }
           }
 
@@ -119,6 +134,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
             authorId: resp.author_id,
             reviewCustomerId: review.customerId,
             authorName,
+            authorAvatar,
             profile
           });
 
@@ -127,7 +143,8 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
             authorId: resp.author_id || '',
             authorName,
             content: resp.content,
-            createdAt: resp.created_at
+            createdAt: resp.created_at,
+            authorAvatar
           };
         });
 
@@ -204,6 +221,61 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     localStorage.setItem(archivedKey, JSON.stringify(archivedData));
   };
 
+  const handleSubmitResponse = async () => {
+    if (!currentUser || !hasSubscription || !responseContent.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('responses')
+        .insert({
+          review_id: review.id,
+          content: responseContent.trim(),
+          author_id: currentUser.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newResponse: Response = {
+        id: data.id,
+        authorId: currentUser.id,
+        authorName: currentUser.name || 'Business User',
+        content: responseContent.trim(),
+        createdAt: new Date().toISOString(),
+        authorAvatar: currentUser.avatar || ''
+      };
+
+      setResponses(prev => [...prev, newResponse]);
+      setResponseContent("");
+      setShowResponseForm(false);
+
+      toast({
+        title: "Response submitted",
+        description: "Your response has been added successfully!"
+      });
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit response. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    const names = name.split(' ');
+    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   console.log(`BusinessReviewCardResponses rendering review ${review.id} with ${responses.length} valid responses:`, responses);
   console.log(`Archived response available:`, !!archivedResponse);
 
@@ -217,17 +289,78 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 
   return (
     <div className="border-t pt-4 mb-4">
-      <CustomerReviewResponse 
-        reviewId={review.id}
-        responses={responses}
-        hasSubscription={hasSubscription}
-        isOneTimeUnlocked={false}
-        hideReplyOption={false}
-        reviewAuthorId={review.reviewerId}
-        onResponseSubmitted={(newResponse) => {
-          setResponses(prev => [...prev, newResponse]);
-        }}
-      />
+      <h4 className="text-md font-semibold mb-3">Customer Responses</h4>
+      
+      {/* Display existing responses */}
+      {responses.map((resp) => (
+        <div key={resp.id} className="bg-gray-50 p-3 rounded-md mb-3">
+          <div className="flex items-start gap-3">
+            <Avatar className="h-8 w-8 flex-shrink-0">
+              {resp.authorAvatar ? (
+                <AvatarImage src={resp.authorAvatar} alt={resp.authorName} />
+              ) : (
+                <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
+                  {getInitials(resp.authorName)}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium text-sm">{resp.authorName}</span>
+                <span className="text-xs text-gray-500">
+                  {formatDistance(new Date(resp.createdAt), new Date(), {
+                    addSuffix: true,
+                  })}
+                </span>
+              </div>
+              <p className="text-gray-700 text-sm whitespace-pre-line">{resp.content}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+      
+      {/* Response form */}
+      {showResponseForm ? (
+        <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
+          <h5 className="font-medium mb-2">Respond to Customer</h5>
+          <Textarea
+            value={responseContent}
+            onChange={(e) => setResponseContent(e.target.value)}
+            placeholder="Write your response to the customer..."
+            className="w-full mb-3 min-h-[80px]"
+            maxLength={1500}
+          />
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setShowResponseForm(false);
+                setResponseContent("");
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={handleSubmitResponse}
+              disabled={isSubmitting || !responseContent.trim()}
+            >
+              {isSubmitting ? "Sending..." : "Send Response"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 flex justify-end">
+          <Button 
+            onClick={() => setShowResponseForm(true)}
+            size="sm"
+          >
+            Respond to Customer
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

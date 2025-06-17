@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { Review } from "@/types";
+import StarRating from "@/components/StarRating";
 import BusinessReviewCardHeader from "./BusinessReviewCardHeader";
 import BusinessReviewCardContent from "./BusinessReviewCardContent";
 import BusinessReviewCardPhotos from "./BusinessReviewCardPhotos";
@@ -46,6 +47,15 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           getCustomerInitials={getCustomerInitials}
           handleCustomerClick={handleCustomerClick}
         />
+
+        {/* Add star rating display */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-600">Your Rating:</span>
+            <StarRating rating={review.rating} />
+            <span className="text-sm text-gray-500">({review.rating}/5)</span>
+          </div>
+        </div>
 
         <BusinessReviewCardContent review={review} />
 
