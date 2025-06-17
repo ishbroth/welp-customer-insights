@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
 import { supabase } from "@/integrations/supabase/client";
+import { BUSINESS_TYPE_OPTIONS } from "@/components/signup/businessFormData";
 
 const ProfilePage = () => {
   const { currentUser, loading, isSubscribed, setIsSubscribed } = useAuth();
@@ -57,7 +58,11 @@ const ProfilePage = () => {
   // Extract license information
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
-  const displayLicenseType = licenseType || currentUser.licenseType;
+  const storedLicenseType = licenseType || currentUser.licenseType;
+  
+  // Map the stored license type value to its display label
+  const licenseTypeLabel = BUSINESS_TYPE_OPTIONS.find(option => option.value === storedLicenseType)?.label || storedLicenseType;
+  
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
   // Check if business is verified (placeholder - would come from database)
@@ -67,7 +72,8 @@ const ProfilePage = () => {
   console.log("ProfilePage - licenseType from database:", licenseType);
   console.log("ProfilePage - licenseType from currentUser:", currentUser.licenseType);
   console.log("ProfilePage - businessId:", currentUser.businessId);
-  console.log("ProfilePage - final licenseType used:", displayLicenseType);
+  console.log("ProfilePage - stored licenseType used:", storedLicenseType);
+  console.log("ProfilePage - licenseTypeLabel to display:", licenseTypeLabel);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -132,12 +138,12 @@ const ProfilePage = () => {
                 {isBusinessAccount && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                    {displayLicenseType || licenseNumber || licenseState ? (
+                    {licenseTypeLabel || licenseNumber || licenseState ? (
                       <div className="space-y-3">
-                        {displayLicenseType && (
+                        {licenseTypeLabel && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">License Type</label>
-                            <p className="text-gray-900">{displayLicenseType}</p>
+                            <p className="text-gray-900">{licenseTypeLabel}</p>
                           </div>
                         )}
                         {licenseNumber && (
