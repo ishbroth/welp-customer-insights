@@ -6,15 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDistance } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
-
-interface Response {
-  id: string;
-  authorId: string;
-  authorName: string;
-  content: string;
-  createdAt: string;
-  authorAvatar?: string;
-}
+import { Response } from "@/hooks/responses/types";
 
 interface ResponseItemProps {
   response: Response;
