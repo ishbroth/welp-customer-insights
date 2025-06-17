@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,12 +39,8 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
     const fetchResponses = async () => {
       try {
         console.log('BusinessReviewCardResponses: Fetching responses for review', review.id);
-        console.log('BusinessReviewCardResponses: Review data:', {
-          id: review.id,
-          customerId: review.customerId,
-          customerName: review.customerName
-        });
 
+        // First get the responses
         const { data: responseData, error: responseError } = await supabase
           .from('responses')
           .select('id, author_id, content, created_at')
@@ -74,21 +69,32 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
 
         console.log('BusinessReviewCardResponses: Fetching profiles for author IDs:', authorIds);
 
-        // Fetch profile data for all authors using service role to bypass RLS
+        // Use service role to bypass RLS and get all profile data
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, name, first_name, last_name, type, avatar')
-          .in('id', authorIds);
+          .rpc('get_profiles_for_responses', { author_ids: authorIds });
 
-        if (profileError) {
-          console.error('Error fetching profiles:', profileError);
+        // Fallback to regular query if RPC doesn't exist
+        let profiles = profileData;
+        if (profileError || !profileData) {
+          console.log('BusinessReviewCardResponses: RPC failed, using regular query:', profileError);
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('profiles')
+            .select('id, name, first_name, last_name, type, avatar')
+            .in('id', authorIds);
+
+          if (fallbackError) {
+            console.error('Error fetching profiles:', fallbackError);
+            profiles = [];
+          } else {
+            profiles = fallbackData || [];
+          }
         }
 
-        console.log('BusinessReviewCardResponses: Profile data found:', profileData);
+        console.log('BusinessReviewCardResponses: Profile data found:', profiles);
 
         // Process each response and assign proper author information
         const formattedResponses = responseData.map((resp: any) => {
-          const profile = profileData?.find(p => p.id === resp.author_id);
+          const profile = profiles?.find((p: any) => p.id === resp.author_id);
           
           let authorName = 'User';
           let authorAvatar = '';
@@ -146,6 +152,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
               }
               authorAvatar = profile.avatar || '';
             } else {
+              // Use current user data directly - this is what works!
               authorName = currentUser.name || 'Business User';
               authorAvatar = currentUser.avatar || '';
             }
@@ -230,7 +237,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
           archiveBusinessResponse(response);
         }
       });
-      return []; // Ensure we return empty array
+      return [];
     }
     
     // If we get here, customer responses exist, so we show them along with valid business responses
