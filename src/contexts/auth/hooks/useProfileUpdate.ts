@@ -93,13 +93,28 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
 
       console.log("Fetched updated profile data:", updatedProfileData);
 
+      // Also fetch the business info to get the license type
+      let businessLicenseType = '';
+      if (currentUser.type === 'business') {
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_info')
+          .select('license_type')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (!businessError && businessData) {
+          businessLicenseType = businessData.license_type || '';
+          console.log("Fetched business license type:", businessLicenseType);
+        }
+      }
+
       // Update the current user state with the complete updated data
       const updatedUser: User = {
         ...currentUser,
         ...updates,
         address: normalizedAddress,
-        // Map the business_id field back to licenseType for display
-        licenseType: updatedProfileData.business_id || currentUser.licenseType
+        // Use the license type from business_info table for business accounts
+        licenseType: businessLicenseType || currentUser.licenseType
       };
 
       console.log("Setting updated user in state:", updatedUser);

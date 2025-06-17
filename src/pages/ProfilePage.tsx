@@ -20,32 +20,32 @@ const ProfilePage = () => {
   // Handle post-auth redirections
   usePostAuthRedirect();
 
-  // Fetch license type from database
+  // Fetch license type from business_info table
   useEffect(() => {
     const fetchLicenseType = async () => {
-      if (!currentUser?.id) return;
+      if (!currentUser?.id || currentUser?.type !== "business") return;
 
       try {
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('business_id')
+        const { data: businessData, error } = await supabase
+          .from('business_info')
+          .select('license_type')
           .eq('id', currentUser.id)
           .single();
 
         if (error) {
-          console.error("Error fetching license type:", error);
+          console.error("Error fetching license type from business_info:", error);
           return;
         }
 
-        console.log("Fetched profile data for license type:", profileData);
-        setLicenseType(profileData?.business_id || "");
+        console.log("Fetched business license type from business_info:", businessData?.license_type);
+        setLicenseType(businessData?.license_type || "");
       } catch (error) {
         console.error("Error in fetchLicenseType:", error);
       }
     };
 
     fetchLicenseType();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.type]);
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -58,21 +58,20 @@ const ProfilePage = () => {
   // Extract license information
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
-  const storedLicenseType = licenseType || currentUser.licenseType;
   
   // Debug the mapping
   console.log("=== LICENSE TYPE DEBUGGING ===");
   console.log("BUSINESS_TYPE_OPTIONS:", BUSINESS_TYPE_OPTIONS);
-  console.log("storedLicenseType value:", storedLicenseType);
-  console.log("typeof storedLicenseType:", typeof storedLicenseType);
+  console.log("licenseType from business_info:", licenseType);
+  console.log("typeof licenseType:", typeof licenseType);
   
   // Map the stored license type value to its display label
   const licenseTypeOption = BUSINESS_TYPE_OPTIONS.find(option => {
-    console.log(`Comparing option.value (${option.value}) with storedLicenseType (${storedLicenseType})`);
-    return option.value === storedLicenseType;
+    console.log(`Comparing option.value (${option.value}) with licenseType (${licenseType})`);
+    return option.value === licenseType;
   });
   
-  const licenseTypeLabel = licenseTypeOption?.label || storedLicenseType;
+  const licenseTypeLabel = licenseTypeOption?.label || "";
   
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
@@ -80,10 +79,8 @@ const ProfilePage = () => {
   const isVerified = false;
 
   console.log("ProfilePage - currentUser:", currentUser);
-  console.log("ProfilePage - licenseType from database:", licenseType);
-  console.log("ProfilePage - licenseType from currentUser:", currentUser.licenseType);
-  console.log("ProfilePage - businessId:", currentUser.businessId);
-  console.log("ProfilePage - stored licenseType used:", storedLicenseType);
+  console.log("ProfilePage - licenseType from business_info:", licenseType);
+  console.log("ProfilePage - licenseNumber (businessId):", licenseNumber);
   console.log("ProfilePage - found licenseTypeOption:", licenseTypeOption);
   console.log("ProfilePage - licenseTypeLabel to display:", licenseTypeLabel);
 
@@ -152,7 +149,7 @@ const ProfilePage = () => {
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
                     {licenseTypeLabel || licenseNumber || licenseState ? (
                       <div className="space-y-3">
-                        {licenseTypeLabel && licenseTypeLabel !== licenseNumber && (
+                        {licenseTypeLabel && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">License Type</label>
                             <p className="text-gray-900">{licenseTypeLabel}</p>

@@ -27,20 +27,20 @@ const ProfileForm = () => {
       if (!currentUser?.id || !isBusinessAccount) return;
 
       try {
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('business_id')
+        const { data: businessData, error } = await supabase
+          .from('business_info')
+          .select('license_type')
           .eq('id', currentUser.id)
           .single();
 
         if (error) {
-          console.error("Error fetching database license type:", error);
+          console.error("Error fetching business license type:", error);
           return;
         }
 
         console.log("=== PROFILE FORM INIT ===");
-        console.log("Database business_id (licenseType):", profileData?.business_id);
-        setDatabaseLicenseType(profileData?.business_id || "");
+        console.log("Database license_type from business_info:", businessData?.license_type);
+        setDatabaseLicenseType(businessData?.license_type || "");
       } catch (error) {
         console.error("Error in fetchDatabaseLicenseType:", error);
       }
