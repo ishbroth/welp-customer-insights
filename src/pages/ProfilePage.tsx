@@ -6,16 +6,45 @@ import Footer from "@/components/Footer";
 import WelcomeSection from "@/components/profile/WelcomeSection";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfilePage = () => {
   const { currentUser, loading, isSubscribed, setIsSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [licenseType, setLicenseType] = useState<string>("");
   
   // Handle post-auth redirections
   usePostAuthRedirect();
+
+  // Fetch license type from database
+  useEffect(() => {
+    const fetchLicenseType = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('business_id')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching license type:", error);
+          return;
+        }
+
+        console.log("Fetched profile data for license type:", profileData);
+        setLicenseType(profileData?.business_id || "");
+      } catch (error) {
+        console.error("Error in fetchLicenseType:", error);
+      }
+    };
+
+    fetchLicenseType();
+  }, [currentUser?.id]);
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -28,18 +57,17 @@ const ProfilePage = () => {
   // Extract license information
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
-  // Try to get licenseType from multiple possible sources
-  const licenseType = currentUser.licenseType || (currentUser as any).license_type;
+  const displayLicenseType = licenseType || currentUser.licenseType;
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
   // Check if business is verified (placeholder - would come from database)
   const isVerified = false;
 
   console.log("ProfilePage - currentUser:", currentUser);
-  console.log("ProfilePage - licenseType from currentUser.licenseType:", currentUser.licenseType);
-  console.log("ProfilePage - licenseType from license_type:", (currentUser as any).license_type);
+  console.log("ProfilePage - licenseType from database:", licenseType);
+  console.log("ProfilePage - licenseType from currentUser:", currentUser.licenseType);
   console.log("ProfilePage - businessId:", currentUser.businessId);
-  console.log("ProfilePage - final licenseType used:", licenseType);
+  console.log("ProfilePage - final licenseType used:", displayLicenseType);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -104,12 +132,12 @@ const ProfilePage = () => {
                 {isBusinessAccount && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                    {licenseType || licenseNumber || licenseState ? (
+                    {displayLicenseType || licenseNumber || licenseState ? (
                       <div className="space-y-3">
-                        {licenseType && (
+                        {displayLicenseType && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">License Type</label>
-                            <p className="text-gray-900">{licenseType}</p>
+                            <p className="text-gray-900">{displayLicenseType}</p>
                           </div>
                         )}
                         {licenseNumber && (

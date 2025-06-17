@@ -78,30 +78,33 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
 
       console.log("Profile update successful:", data);
 
-      // Update the current user state with the merged data immediately (including normalized address)
-      const updatedUser: User = {
-        ...currentUser,
-        ...updates,
-        address: normalizedAddress
-      };
-
-      console.log("Setting updated user in state:", updatedUser);
-      setCurrentUser(updatedUser);
-
-      // Verify the data was saved by fetching it back
-      console.log("Verifying saved data...");
-      const { data: verificationData, error: verifyError } = await supabase
+      // Fetch the updated profile data from the database to get the latest state
+      console.log("Fetching updated profile data...");
+      const { data: updatedProfileData, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .single();
 
-      if (verifyError) {
-        console.error("Verification error:", verifyError);
-      } else {
-        console.log("Verified data in database:", verificationData);
-        console.log("Verified licenseType in database:", verificationData.business_id);
+      if (fetchError) {
+        console.error("Error fetching updated profile:", fetchError);
+        throw new Error(`Failed to fetch updated profile: ${fetchError.message}`);
       }
+
+      console.log("Fetched updated profile data:", updatedProfileData);
+
+      // Update the current user state with the complete updated data
+      const updatedUser: User = {
+        ...currentUser,
+        ...updates,
+        address: normalizedAddress,
+        // Map the business_id field back to licenseType for display
+        licenseType: updatedProfileData.business_id || currentUser.licenseType
+      };
+
+      console.log("Setting updated user in state:", updatedUser);
+      console.log("Updated user licenseType:", updatedUser.licenseType);
+      setCurrentUser(updatedUser);
 
       console.log("=== PROFILE UPDATE COMPLETE ===");
       
