@@ -28,15 +28,18 @@ const ProfilePage = () => {
   // Extract license information
   const licenseNumber = currentUser.businessId;
   const licenseState = currentUser.state;
-  const licenseType = currentUser.licenseType; // This is the actual license type from dropdown
+  // Try to get licenseType from multiple possible sources
+  const licenseType = currentUser.licenseType || (currentUser as any).license_type;
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
   
   // Check if business is verified (placeholder - would come from database)
   const isVerified = false;
 
   console.log("ProfilePage - currentUser:", currentUser);
-  console.log("ProfilePage - licenseType:", licenseType);
+  console.log("ProfilePage - licenseType from currentUser.licenseType:", currentUser.licenseType);
+  console.log("ProfilePage - licenseType from license_type:", (currentUser as any).license_type);
   console.log("ProfilePage - businessId:", currentUser.businessId);
+  console.log("ProfilePage - final licenseType used:", licenseType);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -101,7 +104,7 @@ const ProfilePage = () => {
                 {isBusinessAccount && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                    {licenseType || licenseNumber ? (
+                    {licenseType || licenseNumber || licenseState ? (
                       <div className="space-y-3">
                         {licenseType && (
                           <div>
