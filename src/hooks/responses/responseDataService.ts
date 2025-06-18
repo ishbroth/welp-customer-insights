@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { Response } from "./types";
@@ -48,7 +47,25 @@ export const useResponseDataService = () => {
         console.error('Error fetching profiles:', profileError);
       }
 
+      // Fetch business info for business accounts to get proper business names
+      const businessAuthorIds = profiles?.filter(p => p.type === 'business').map(p => p.id) || [];
+      let businessInfoMap = new Map();
+      
+      if (businessAuthorIds.length > 0) {
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_info')
+          .select('id, business_name')
+          .in('id', businessAuthorIds);
+
+        if (!businessError && businessData) {
+          businessData.forEach(business => {
+            businessInfoMap.set(business.id, business.business_name);
+          });
+        }
+      }
+
       console.log('Profile data found:', profiles);
+      console.log('Business info map:', businessInfoMap);
 
       // Process each response and assign proper author information
       const formattedResponses = responseData.map((resp: any) => {
@@ -60,80 +77,69 @@ export const useResponseDataService = () => {
         console.log(`\n=== Processing response ${resp.id} ===`);
         console.log(`Author ID: ${resp.author_id}`);
         console.log(`Review customerId: ${review.customerId}`);
+        console.log(`Review reviewerId (business): ${review.reviewerId}`);
         console.log(`Profile found:`, profile);
 
-        // Check if this response is from the customer who the review is about
-        if (resp.author_id === review.customerId && review.customerId) {
-          console.log('✅ This is a response from the customer the review is about');
-          
-          // First priority: Use profile data if available
-          if (profile) {
-            // Construct full name from profile
+        if (profile) {
+          // If this is a business account responding
+          if (profile.type === 'business') {
+            // First priority: Use business_info business_name
+            const businessName = businessInfoMap.get(resp.author_id);
+            if (businessName && businessName.trim()) {
+              authorName = businessName;
+              console.log(`✅ Using business_info business_name: "${authorName}"`);
+            }
+            // Fallback to profile name
+            else if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+              console.log(`✅ Using profile name for business: "${authorName}"`);
+            }
+            // Last resort: construct from first/last name
+            else if (profile.first_name || profile.last_name) {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              authorName = `${firstName} ${lastName}`.trim();
+              console.log(`✅ Using constructed name for business: "${authorName}"`);
+            }
+            else {
+              authorName = 'Business';
+              console.log(`✅ Using fallback business name: "${authorName}"`);
+            }
+          }
+          // If this is a customer account responding
+          else if (profile.type === 'customer') {
+            // Construct full name from first_name + last_name for customers
             if (profile.first_name && profile.last_name) {
               authorName = `${profile.first_name} ${profile.last_name}`;
-              console.log(`Using profile first+last name: ${authorName}`);
+              console.log(`✅ Using customer first+last name: "${authorName}"`);
             } else if (profile.first_name) {
               authorName = profile.first_name;
-              console.log(`Using profile first name: ${authorName}`);
+              console.log(`✅ Using customer first name: "${authorName}"`);
             } else if (profile.last_name) {
               authorName = profile.last_name;
-              console.log(`Using profile last name: ${authorName}`);
+              console.log(`✅ Using customer last name: "${authorName}"`);
             } else if (profile.name && profile.name.trim()) {
               authorName = profile.name;
-              console.log(`Using profile name field: ${authorName}`);
+              console.log(`✅ Using customer profile name: "${authorName}"`);
+            } else {
+              authorName = 'Customer';
+              console.log(`✅ Using fallback customer name: "${authorName}"`);
             }
-            
-            // Use profile avatar
-            authorAvatar = profile.avatar || '';
-            console.log(`Using profile avatar: ${authorAvatar}`);
           }
-          
-          // Fallback to review customer name if no profile name available
-          if (authorName === 'User' && review.customerName && review.customerName.trim()) {
-            authorName = review.customerName;
-            console.log(`Fallback to review customerName: ${authorName}`);
-          }
-        }
-        // Check if this response is from the current business user
-        else if (resp.author_id === currentUser?.id) {
-          console.log('✅ This is a response from the current business user');
-          
-          // Use current user data directly
-          authorName = currentUser.name || 'Business User';
-          authorAvatar = currentUser.avatar || '';
-          
-          console.log(`Business user name: ${authorName}`);
-        }
-        // Handle other users
-        else if (profile) {
-          console.log('📝 Processing response from other user');
-          
-          if (profile.type === 'business') {
+          // Other account types
+          else {
             if (profile.name && profile.name.trim()) {
               authorName = profile.name;
             } else if (profile.first_name || profile.last_name) {
               const firstName = profile.first_name || '';
               const lastName = profile.last_name || '';
               authorName = `${firstName} ${lastName}`.trim();
-            } else {
-              authorName = 'Business';
             }
-          } else if (profile.type === 'customer') {
-            if (profile.first_name && profile.last_name) {
-              authorName = `${profile.first_name} ${profile.last_name}`;
-            } else if (profile.first_name) {
-              authorName = profile.first_name;
-            } else if (profile.last_name) {
-              authorName = profile.last_name;
-            } else if (profile.name && profile.name.trim()) {
-              authorName = profile.name;
-            } else {
-              authorName = 'Customer';
-            }
+            console.log(`✅ Using name for other account type: "${authorName}"`);
           }
           
+          // Use profile avatar
           authorAvatar = profile.avatar || '';
-          console.log(`Other user name: ${authorName}`);
         }
 
         console.log(`🎯 Final author info: name="${authorName}", avatar="${authorAvatar}"`);

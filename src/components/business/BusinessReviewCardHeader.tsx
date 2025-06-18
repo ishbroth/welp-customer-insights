@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Review } from "@/types";
@@ -54,7 +53,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   if (customerProfile) {
     customerAvatar = customerProfile.avatar || '';
     
-    // Construct name from profile if available
+    // Construct name from profile - prioritize first_name + last_name for customers
     if (customerProfile.first_name && customerProfile.last_name) {
       customerDisplayName = `${customerProfile.first_name} ${customerProfile.last_name}`;
     } else if (customerProfile.first_name) {
@@ -64,6 +63,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     } else if (customerProfile.name && customerProfile.name.trim()) {
       customerDisplayName = customerProfile.name;
     }
+    // If no profile name available, keep the review's customerName
 
     // Use profile contact info if available, otherwise fallback to review data
     customerPhone = customerProfile.phone || customerPhone;
@@ -81,11 +81,11 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     return parts.join(', ');
   };
 
-  console.log('BusinessReviewCardHeader: Customer info:', {
+  console.log('BusinessReviewCardHeader: Customer info display:', {
     reviewId: review.id,
     customerId: review.customerId,
-    customerAvatar,
     customerDisplayName,
+    customerAvatar,
     customerPhone,
     address: formatAddress(),
     hasProfile: !!customerProfile
@@ -94,7 +94,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   return (
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center space-x-3">
-        {/* Customer Avatar */}
+        {/* Customer Avatar - shows profile pic when claimed, initials when not */}
         <Avatar 
           className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={handleCustomerClick}
