@@ -48,6 +48,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       customerPhone: (review as any).phone || '',
       customerAddress: review.address || '',
       customerCity: review.city || '',
+      customerState: review.state || '',
       customerZipCode: review.zipCode || '',
       rating: review.rating.toString(),
       comment: review.content

@@ -32,6 +32,7 @@ const NewReview = () => {
     const customerPhone = searchParams.get('customerPhone');
     const customerAddress = searchParams.get('customerAddress');
     const customerCity = searchParams.get('customerCity');
+    const customerState = searchParams.get('customerState');
     const customerZipCode = searchParams.get('customerZipCode');
     const rating = searchParams.get('rating');
     const comment = searchParams.get('comment');
@@ -41,6 +42,7 @@ const NewReview = () => {
     if (customerPhone) formState.setCustomerPhone(customerPhone);
     if (customerAddress) formState.setCustomerAddress(customerAddress);
     if (customerCity) formState.setCustomerCity(customerCity);
+    if (customerState) formState.setCustomerState(customerState);
     if (customerZipCode) formState.setCustomerZipCode(customerZipCode);
     if (rating) formState.setRating(parseInt(rating));
     if (comment) formState.setComment(comment);
