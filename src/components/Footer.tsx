@@ -29,7 +29,6 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-3">Support</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li><Link to="/contact" className="hover:text-welp-primary transition-colors">Contact Us</Link></li>
               <li><Link to="/faq" className="hover:text-welp-primary transition-colors">FAQ</Link></li>
               <li><Link to="/terms" className="hover:text-welp-primary transition-colors">Terms of Service</Link></li>
               <li><Link to="/privacy" className="hover:text-welp-primary transition-colors">Privacy Policy</Link></li>
