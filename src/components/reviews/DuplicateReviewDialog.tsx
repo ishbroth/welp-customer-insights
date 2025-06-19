@@ -31,15 +31,15 @@ const DuplicateReviewDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Review Already Exists</AlertDialogTitle>
           <AlertDialogDescription>
-            You have already written a review for {customerName}. Would you like to edit your existing review instead?
+            It looks like you've already written a review about this customer. Would you like to edit and resubmit?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel}>
-            Oops, nevermind
+            No, Cancel
           </AlertDialogCancel>
           <AlertDialogAction onClick={onEditExisting}>
-            Edit Existing Review
+            Edit and Resubmit
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
