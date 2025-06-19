@@ -41,8 +41,10 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   const handleEditClick = () => {
-    // Navigate to new review page with customer info pre-filled
+    // Navigate to new review page with customer info pre-filled and edit mode enabled
     const params = new URLSearchParams({
+      edit: 'true',
+      reviewId: review.id,
       customerFirstName: review.customerName?.split(' ')[0] || '',
       customerLastName: review.customerName?.split(' ').slice(1).join(' ') || '',
       customerPhone: (review as any).phone || '',
