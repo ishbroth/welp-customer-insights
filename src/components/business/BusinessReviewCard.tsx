@@ -81,7 +81,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
         {/* Move edit/delete actions here, right after the main review content */}
         <BusinessReviewCardActions 
-          review={review}
           onEdit={handleEditClick}
           handleDeleteClick={handleDeleteClick}
         />
