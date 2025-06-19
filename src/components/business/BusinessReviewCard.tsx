@@ -47,11 +47,11 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       reviewId: review.id,
       customerFirstName: review.customerName?.split(' ')[0] || '',
       customerLastName: review.customerName?.split(' ').slice(1).join(' ') || '',
-      customerPhone: (review as any).phone || '',
-      customerAddress: review.address || '',
-      customerCity: review.city || '',
-      customerState: review.state || '',
-      customerZipCode: review.zipCode || '',
+      customerPhone: (review as any).phone || (review as any).customerPhone || '',
+      customerAddress: review.address || (review as any).customerAddress || '',
+      customerCity: review.city || (review as any).customerCity || '',
+      customerState: (review as any).customerState || (review as any).state || '',
+      customerZipCode: review.zipCode || (review as any).customerZipCode || (review as any).customerZipcode || '',
       rating: review.rating.toString(),
       comment: review.content
     });
