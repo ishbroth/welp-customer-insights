@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/auth";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface CustomerReviewCardProps {
   review: Review & {
@@ -44,7 +45,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
-  // Fetch business profile for avatar if not already provided
+  // Fetch business profile for avatar
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
     queryFn: async () => {
@@ -64,8 +65,11 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
       console.log(`CustomerReviewCard: Business profile found:`, data);
       return data;
     },
-    enabled: !!review.reviewerId && !review.reviewerAvatar
+    enabled: !!review.reviewerId
   });
+
+  // Fetch verification status for the business
+  const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
 
   // Fetch customer profile for avatar if we have a customer ID but no avatar
   const { data: customerProfile } = useQuery({
@@ -133,19 +137,17 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   // Check if current user is the business who wrote this review
   const isReviewAuthor = currentUser?.id === review.reviewerId;
 
-  // Use the reviewerVerified property directly from the review
-  const isVerified = review.reviewerVerified || false;
-
-  // Get the final avatar URLs
-  const finalBusinessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
+  // Get the final avatar URLs - prioritize businessProfile data
+  const finalBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || '';
   const finalCustomerAvatar = review.customerAvatar || customerProfile?.avatar || '';
 
-  console.log('CustomerReviewCard: Avatar info:', {
+  console.log('CustomerReviewCard: Avatar and verification info:', {
     reviewId: review.id,
     businessAvatar: finalBusinessAvatar,
     customerAvatar: finalCustomerAvatar,
     reviewerName: review.reviewerName,
-    customerName: review.customerName
+    customerName: review.customerName,
+    businessIsVerified
   });
 
   return (
@@ -155,13 +157,10 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
           {/* Business Avatar */}
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
-              {finalBusinessAvatar ? (
-                <AvatarImage src={finalBusinessAvatar} alt={review.reviewerName} />
-              ) : (
-                <AvatarFallback className="bg-blue-100 text-blue-800">
-                  {getBusinessInitials()}
-                </AvatarFallback>
-              )}
+              <AvatarImage src={finalBusinessAvatar} alt={review.reviewerName} />
+              <AvatarFallback className="bg-blue-100 text-blue-800">
+                {getBusinessInitials()}
+              </AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
@@ -175,8 +174,8 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
                 ) : (
                   <h3 className="font-semibold">{review.reviewerName}</h3>
                 )}
-                {/* Show verified badge next to business name */}
-                {isVerified && <VerifiedBadge size="sm" />}
+                {/* Show verified badge next to business name if verified */}
+                {businessIsVerified && <VerifiedBadge size="sm" />}
               </div>
               <p className="text-sm text-gray-500">
                 {new Date(review.date).toLocaleDateString()}
@@ -190,13 +189,10 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">About:</span>
             <Avatar className="h-8 w-8">
-              {finalCustomerAvatar ? (
-                <AvatarImage src={finalCustomerAvatar} alt={review.customerName} />
-              ) : (
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {getCustomerInitials()}
-                </AvatarFallback>
-              )}
+              <AvatarImage src={finalCustomerAvatar} alt={review.customerName} />
+              <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                {getCustomerInitials()}
+              </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium text-gray-700">{review.customerName}</span>
           </div>

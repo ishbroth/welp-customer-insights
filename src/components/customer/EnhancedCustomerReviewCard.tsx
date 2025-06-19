@@ -9,6 +9,7 @@ import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface DetailedMatch {
   field: string;
@@ -70,6 +71,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     onReactionToggle,
   });
 
+  // Fetch verification status for the business that wrote this review
+  const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
+
   const {
     canReact,
     canRespond,
@@ -126,7 +130,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reviewerName={review.reviewerName}
         date={review.date}
         finalBusinessAvatar={finalBusinessAvatar}
-        isVerified={isVerified}
+        isVerified={businessIsVerified} // Use the fetched verification status
         isUnlocked={isUnlocked}
         onBusinessNameClick={handleBusinessNameClick}
         customerName={review.customerName}
