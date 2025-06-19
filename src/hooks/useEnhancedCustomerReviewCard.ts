@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
@@ -39,72 +38,113 @@ export const useEnhancedCustomerReviewCard = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
-  // Fetch business profile for avatar and contact info - always fetch since we can identify the business
+  // Always fetch business profile since we need to display business info
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
     queryFn: async () => {
+      console.log(`useEnhancedCustomerReviewCard: Fetching business profile for ID: ${review.reviewerId}`);
+      
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar, name, phone, address, city, state, zipcode')
+        .select('id, avatar, name, phone, address, city, state, zipcode, verified')
         .eq('id', review.reviewerId)
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching business profile:", error);
+        console.error("useEnhancedCustomerReviewCard: Error fetching business profile:", error);
         return null;
       }
+      
+      console.log(`useEnhancedCustomerReviewCard: Business profile result:`, data);
       return data;
     },
     enabled: !!review.reviewerId
   });
 
-  // Check if this review has been claimed - use database field, not matchType
+  // Check if this review has been claimed
   const isReviewClaimed = !!(review.customerId);
+  console.log(`useEnhancedCustomerReviewCard: Review ${review.id} claimed status:`, isReviewClaimed, 'Customer ID:', review.customerId);
 
-  // Fetch customer profile if the review has been claimed
+  // Fetch customer profile if the review has been claimed - ALWAYS try to fetch
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
-      if (!review.customerId) return null;
+      if (!review.customerId) {
+        console.log(`useEnhancedCustomerReviewCard: No customer ID for review ${review.id}`);
+        return null;
+      }
       
-      console.log(`useEnhancedCustomerReviewCard: Fetching customer profile for claimed review. Customer ID: ${review.customerId}`);
+      console.log(`useEnhancedCustomerReviewCard: Fetching customer profile for ID: ${review.customerId}`);
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar, first_name, last_name, name, phone')
+        .select('id, avatar, first_name, last_name, name, phone, verified')
         .eq('id', review.customerId)
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching customer profile:", error);
+        console.error("useEnhancedCustomerReviewCard: Error fetching customer profile:", error);
         return null;
       }
 
-      console.log(`useEnhancedCustomerReviewCard: Customer profile found:`, data);
+      console.log(`useEnhancedCustomerReviewCard: Customer profile result:`, data);
       return data;
     },
-    enabled: isReviewClaimed
+    enabled: !!review.customerId, // Only fetch if we have a customer ID
+    retry: 2 // Retry failed requests
+  });
+
+  // Check business verification status
+  const { data: businessVerificationStatus } = useQuery({
+    queryKey: ['businessVerified', review.reviewerId],
+    queryFn: async () => {
+      if (!review.reviewerId) return false;
+      
+      console.log(`useEnhancedCustomerReviewCard: Checking business verification for: ${review.reviewerId}`);
+      
+      const { data, error } = await supabase
+        .from('business_info')
+        .select('verified')
+        .eq('id', review.reviewerId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("useEnhancedCustomerReviewCard: Error fetching business verification:", error);
+        return false;
+      }
+      
+      console.log(`useEnhancedCustomerReviewCard: Business verification result:`, data?.verified);
+      return data?.verified || false;
+    },
+    enabled: !!review.reviewerId
   });
 
   const isReviewAuthor = currentUser?.id === review.reviewerId;
   const isCustomerBeingReviewed = currentUser?.id === review.customerId;
   const isBusinessUser = currentUser?.type === "business";
   const isCustomerUser = currentUser?.type === "customer";
-  const isVerified = review.reviewerVerified || false;
-  const finalBusinessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
   
-  // Show customer avatar if review is claimed and we have the avatar data
+  // Business verification status
+  const isBusinessVerified = businessVerificationStatus || false;
+  
+  // Customer verification - assume all customers are verified when they create an account
+  const isCustomerVerified = isReviewClaimed && !!customerProfile;
+  
+  const finalBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || '';
+  
+  // Show customer avatar if review is claimed and we have the profile data
   const finalCustomerAvatar = isReviewClaimed && customerProfile?.avatar 
     ? customerProfile.avatar 
     : '';
 
-  console.log('useEnhancedCustomerReviewCard: Review claimed status and avatar info:', {
-    reviewId: review.id,
-    reviewCustomerId: review.customerId,
+  console.log('useEnhancedCustomerReviewCard: Final status for review', review.id, {
     isReviewClaimed,
     customerProfile: customerProfile ? 'found' : 'not found',
     finalCustomerAvatar,
-    customerProfileAvatar: customerProfile?.avatar
+    isCustomerVerified,
+    businessProfile: businessProfile ? 'found' : 'not found',
+    finalBusinessAvatar,
+    isBusinessVerified
   });
 
   const handlePurchaseClick = () => {
@@ -153,7 +193,8 @@ export const useEnhancedCustomerReviewCard = ({
     isCustomerBeingReviewed,
     isBusinessUser,
     isCustomerUser,
-    isVerified,
+    isBusinessVerified,
+    isCustomerVerified,
     finalBusinessAvatar,
     finalCustomerAvatar,
     isReviewClaimed,

@@ -9,7 +9,6 @@ import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
-import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 interface DetailedMatch {
   field: string;
@@ -52,7 +51,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isCustomerBeingReviewed,
     isBusinessUser,
     isCustomerUser,
-    isVerified,
+    isBusinessVerified,
+    isCustomerVerified,
     finalBusinessAvatar,
     finalCustomerAvatar,
     isReviewClaimed,
@@ -70,14 +70,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     onPurchase,
     onReactionToggle,
   });
-
-  // Fetch verification status for the business that wrote this review
-  const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
-
-  // Fetch verification status for the customer (if review is claimed)
-  const { isVerified: customerIsVerified } = useVerifiedStatus(
-    isReviewClaimed ? review.customerId : undefined
-  );
 
   const {
     canReact,
@@ -113,6 +105,17 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Get phone number to display
   const displayPhone = review.customer_phone || customerProfile?.phone;
 
+  console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
+    reviewId: review.id,
+    isReviewClaimed,
+    customerProfile: customerProfile ? 'loaded' : 'not loaded',
+    businessProfile: businessProfile ? 'loaded' : 'not loaded',
+    finalCustomerAvatar,
+    finalBusinessAvatar,
+    isCustomerVerified,
+    isBusinessVerified
+  });
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
       {/* Report button in lower right corner */}
@@ -135,14 +138,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reviewerName={review.reviewerName}
         date={review.date}
         finalBusinessAvatar={finalBusinessAvatar}
-        isVerified={businessIsVerified}
+        isBusinessVerified={isBusinessVerified}
         isUnlocked={isUnlocked}
         onBusinessNameClick={handleBusinessNameClick}
         customerName={review.customerName}
         finalCustomerAvatar={finalCustomerAvatar}
         displayPhone={displayPhone}
         isReviewClaimed={isReviewClaimed}
-        customerIsVerified={customerIsVerified}
+        isCustomerVerified={isCustomerVerified}
       />
 
       <EnhancedReviewContent

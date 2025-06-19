@@ -9,29 +9,39 @@ interface EnhancedReviewHeaderProps {
   reviewerName: string;
   date: string;
   finalBusinessAvatar: string;
-  isVerified: boolean;
+  isBusinessVerified: boolean;
   isUnlocked: boolean;
   onBusinessNameClick: () => void;
   customerName?: string;
   finalCustomerAvatar: string;
   displayPhone?: string;
   isReviewClaimed: boolean;
-  customerIsVerified?: boolean;
+  isCustomerVerified: boolean;
 }
 
 const EnhancedReviewHeader: React.FC<EnhancedReviewHeaderProps> = ({
   reviewerName,
   date,
   finalBusinessAvatar,
-  isVerified,
+  isBusinessVerified,
   isUnlocked,
   onBusinessNameClick,
   customerName,
   finalCustomerAvatar,
   displayPhone,
   isReviewClaimed,
-  customerIsVerified = false,
+  isCustomerVerified,
 }) => {
+  console.log('EnhancedReviewHeader: Rendering with data:', {
+    reviewerName,
+    customerName,
+    finalBusinessAvatar,
+    finalCustomerAvatar,
+    isBusinessVerified,
+    isCustomerVerified,
+    isReviewClaimed
+  });
+
   return (
     <div className="flex justify-between mb-4">
       <div className="flex items-center space-x-3">
@@ -56,7 +66,7 @@ const EnhancedReviewHeader: React.FC<EnhancedReviewHeaderProps> = ({
                 <h3 className="font-semibold">{reviewerName}</h3>
               )}
               {/* Show verified badge next to business name if verified */}
-              {isVerified && <VerifiedBadge size="sm" />}
+              {isBusinessVerified && <VerifiedBadge size="sm" />}
             </div>
             <p className="text-sm text-gray-500">
               {new Date(date).toLocaleDateString()}
@@ -89,7 +99,7 @@ const EnhancedReviewHeader: React.FC<EnhancedReviewHeaderProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">{customerName}</span>
             {/* Show verified badge next to customer name if claimed and verified */}
-            {isReviewClaimed && customerIsVerified && <VerifiedBadge size="sm" />}
+            {isReviewClaimed && isCustomerVerified && <VerifiedBadge size="sm" />}
           </div>
         </div>
       )}
