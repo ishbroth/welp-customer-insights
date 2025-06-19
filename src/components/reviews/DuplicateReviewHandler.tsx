@@ -34,7 +34,7 @@ const DuplicateReviewHandler: React.FC<DuplicateReviewHandlerProps> = ({
         phone: existingReview.customer_phone || ""
       };
       
-      navigate(`/review/new?edit=true&reviewId=${existingReview.id}`, {
+      navigate(`/new-review?edit=true&reviewId=${existingReview.id}`, {
         state: {
           reviewData: reviewDataForEdit,
           isEditing: true
