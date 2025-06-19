@@ -52,6 +52,13 @@ export const useReviewFormState = () => {
     const initializeForm = async () => {
       console.log("useReviewFormState - isEditing:", isEditing, "reviewData:", reviewData, "reviewId:", reviewId);
       
+      // Clear all form data first for new reviews
+      if (!isEditing) {
+        setRating(0);
+        setComment("");
+        setPhotos([]);
+      }
+      
       // Handle pre-filling data if we're editing
       if (isEditing && reviewData) {
         setRating(reviewData.rating);

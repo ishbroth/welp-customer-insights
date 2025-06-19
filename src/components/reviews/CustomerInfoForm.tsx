@@ -165,20 +165,26 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label htmlFor="customerCity" className="block text-sm font-medium mb-1">City</label>
+          <label htmlFor="customerCity" className="block text-sm font-medium mb-1">
+            City <span className="text-red-500">*</span>
+          </label>
           <Input
             id="customerCity"
             value={customerCity}
             onChange={(e) => setCustomerCity(e.target.value)}
             className="welp-input"
             disabled={!isNewCustomer && !!customer}
+            required
           />
         </div>
         <div>
-          <label htmlFor="customerState" className="block text-sm font-medium mb-1">State</label>
+          <label htmlFor="customerState" className="block text-sm font-medium mb-1">
+            State <span className="text-red-500">*</span>
+          </label>
           <StateSelect
             value={customerState}
             onValueChange={setCustomerState}
+            required
           />
         </div>
         <div>
