@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
@@ -19,7 +18,7 @@ interface CustomerInfoFormProps {
   isNewCustomer: boolean;
   customer: any;
   setCustomerFirstName: (value: string) => void;
-  setCustomerLastName: (value: string) => void;
+  setCustomerLastName: (string) => void;
   setCustomerPhone: (value: string) => void;
   setCustomerAddress: (value: string) => void;
   setCustomerApartmentSuite?: (value: string) => void;
@@ -184,7 +183,6 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
           <StateSelect
             value={customerState}
             onValueChange={setCustomerState}
-            required
           />
         </div>
         <div>
