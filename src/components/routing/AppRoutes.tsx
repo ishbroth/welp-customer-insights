@@ -83,7 +83,7 @@ const AppRoutes = () => {
 
       {/* Business routes */}
       <Route path="/new-review" element={<BusinessOwnerRoute><NewReview /></BusinessOwnerRoute>} />
-      <Route path="/review/success" element={<BusinessOwnerRoute><ReviewSuccess /></ReviewSuccess> />
+      <Route path="/review/success" element={<BusinessOwnerRoute><ReviewSuccess /></BusinessOwnerRoute>} />
       <Route path="/business/reviews" element={<BusinessOrAdminRoute><BusinessReviews /></BusinessOrAdminRoute>} />
       <Route path="/business/:businessId" element={<BusinessProfile />} />
       <Route path="/customer/:customerId" element={<CustomerProfile />} />
