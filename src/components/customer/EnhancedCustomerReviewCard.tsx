@@ -5,6 +5,7 @@ import ReviewMatchInfo from "./ReviewMatchInfo";
 import EnhancedReviewHeader from "./EnhancedReviewHeader";
 import EnhancedReviewContent from "./EnhancedReviewContent";
 import ClaimReviewDialog from "./ClaimReviewDialog";
+import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
@@ -104,7 +105,12 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const displayPhone = review.customer_phone || customerProfile?.phone;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border mb-4">
+    <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
+      {/* Report button in lower right corner */}
+      <div className="absolute bottom-4 right-4">
+        <ReportReviewButton reviewId={review.id} />
+      </div>
+
       <ReviewMatchInfo
         matchType={review.matchType}
         matchReasons={review.matchReasons}

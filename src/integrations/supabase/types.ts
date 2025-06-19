@@ -328,6 +328,51 @@ export type Database = {
           },
         ]
       }
+      review_claim_history: {
+        Row: {
+          broken_at: string | null
+          business_id: string
+          claimed_at: string
+          created_at: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_id: string
+          customer_name: string | null
+          customer_phone: string | null
+          customer_zipcode: string | null
+          id: string
+          original_review_id: string | null
+        }
+        Insert: {
+          broken_at?: string | null
+          business_id: string
+          claimed_at?: string
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_zipcode?: string | null
+          id?: string
+          original_review_id?: string | null
+        }
+        Update: {
+          broken_at?: string | null
+          business_id?: string
+          claimed_at?: string
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          customer_zipcode?: string | null
+          id?: string
+          original_review_id?: string | null
+        }
+        Relationships: []
+      }
       review_photos: {
         Row: {
           caption: string | null
@@ -363,6 +408,56 @@ export type Database = {
           },
         ]
       }
+      review_reports: {
+        Row: {
+          complaint: string | null
+          created_at: string
+          id: string
+          is_about_reporter: boolean
+          processed_at: string | null
+          reporter_email: string | null
+          reporter_id: string
+          reporter_name: string | null
+          reporter_phone: string | null
+          review_id: string
+          status: string
+        }
+        Insert: {
+          complaint?: string | null
+          created_at?: string
+          id?: string
+          is_about_reporter?: boolean
+          processed_at?: string | null
+          reporter_email?: string | null
+          reporter_id: string
+          reporter_name?: string | null
+          reporter_phone?: string | null
+          review_id: string
+          status?: string
+        }
+        Update: {
+          complaint?: string | null
+          created_at?: string
+          id?: string
+          is_about_reporter?: boolean
+          processed_at?: string | null
+          reporter_email?: string | null
+          reporter_id?: string
+          reporter_name?: string | null
+          reporter_phone?: string | null
+          review_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           business_id: string | null
@@ -376,6 +471,7 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           customer_zipcode: string | null
+          deleted_at: string | null
           id: string
           rating: number
           updated_at: string
@@ -392,6 +488,7 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_zipcode?: string | null
+          deleted_at?: string | null
           id?: string
           rating: number
           updated_at?: string
@@ -408,6 +505,7 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           customer_zipcode?: string | null
+          deleted_at?: string | null
           id?: string
           rating?: number
           updated_at?: string

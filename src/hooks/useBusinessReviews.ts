@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
@@ -16,7 +17,7 @@ export const useBusinessReviews = () => {
     setIsLoading(true);
     
     try {
-      // Fetch reviews written by this business
+      // Fetch reviews written by this business (not soft deleted)
       const { data: reviewsData, error } = await supabase
         .from('reviews')
         .select(`
@@ -32,6 +33,7 @@ export const useBusinessReviews = () => {
           customer_phone
         `)
         .eq('business_id', currentUser.id)
+        .is('deleted_at', null) // Only get non-deleted reviews
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -141,9 +143,10 @@ export const useBusinessReviews = () => {
 
   const deleteReview = async (reviewId: string) => {
     try {
+      // Soft delete the review by setting deleted_at
       const { error } = await supabase
         .from('reviews')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', reviewId);
 
       if (error) {
