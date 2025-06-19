@@ -31,7 +31,7 @@ const BusinessReviewsHeader = ({ reviewCount, isLoading, onRefresh }: BusinessRe
           </span>
         </div>
         <Button asChild>
-          <Link to="/review/new">
+          <Link to="/new-review">
             <Edit className="mr-2 h-4 w-4" />
             Write New Review
           </Link>
