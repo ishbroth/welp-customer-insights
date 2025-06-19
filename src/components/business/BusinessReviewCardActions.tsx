@@ -2,16 +2,13 @@
 import React from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Review } from "@/types";
 
 interface BusinessReviewCardActionsProps {
-  review: Review;
-  onEdit: (review: Review) => void;
+  onEdit: () => void;
   handleDeleteClick: () => void;
 }
 
 const BusinessReviewCardActions: React.FC<BusinessReviewCardActionsProps> = ({
-  review,
   onEdit,
   handleDeleteClick,
 }) => {
@@ -20,7 +17,7 @@ const BusinessReviewCardActions: React.FC<BusinessReviewCardActionsProps> = ({
       <Button 
         variant="ghost" 
         size="sm" 
-        onClick={() => onEdit(review)}
+        onClick={onEdit}
         className="bg-white hover:bg-gray-100 shadow-sm"
       >
         <Edit className="h-4 w-4" />

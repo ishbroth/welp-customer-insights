@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
 import BusinessReviewCardHeader from "./BusinessReviewCardHeader";
@@ -28,6 +29,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { handleCustomerClick, formatDate, getCustomerInitials } = useBusinessReviewCardLogic(review);
+  const navigate = useNavigate();
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -36,6 +38,22 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   const handleConfirmDelete = () => {
     onDelete(review.id);
     setShowDeleteDialog(false);
+  };
+
+  const handleEditClick = () => {
+    // Navigate to new review page with customer info pre-filled
+    const params = new URLSearchParams({
+      customerFirstName: review.customerName?.split(' ')[0] || '',
+      customerLastName: review.customerName?.split(' ').slice(1).join(' ') || '',
+      customerPhone: (review as any).phone || '',
+      customerAddress: review.address || '',
+      customerCity: review.city || '',
+      customerZipCode: review.zipCode || '',
+      rating: review.rating.toString(),
+      comment: review.content
+    });
+    
+    navigate(`/new-review?${params.toString()}`);
   };
 
   return (
@@ -64,7 +82,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         {/* Move edit/delete actions here, right after the main review content */}
         <BusinessReviewCardActions 
           review={review}
-          onEdit={onEdit}
+          onEdit={handleEditClick}
           handleDeleteClick={handleDeleteClick}
         />
 

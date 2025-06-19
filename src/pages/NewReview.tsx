@@ -1,5 +1,6 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { useReviewSubmission } from "@/hooks/useReviewSubmission";
 import { useDuplicateReviewCheck } from "@/hooks/useDuplicateReviewCheck";
 
 const NewReview = () => {
+  const [searchParams] = useSearchParams();
   const formState = useReviewFormState();
   const { 
     isSubmitting, 
@@ -22,6 +24,27 @@ const NewReview = () => {
     uploadProgress
   } = useReviewSubmission(formState.isEditing, formState.reviewId);
   const { checkForDuplicateReview, isChecking } = useDuplicateReviewCheck();
+
+  // Pre-fill form from URL parameters
+  useEffect(() => {
+    const customerFirstName = searchParams.get('customerFirstName');
+    const customerLastName = searchParams.get('customerLastName');
+    const customerPhone = searchParams.get('customerPhone');
+    const customerAddress = searchParams.get('customerAddress');
+    const customerCity = searchParams.get('customerCity');
+    const customerZipCode = searchParams.get('customerZipCode');
+    const rating = searchParams.get('rating');
+    const comment = searchParams.get('comment');
+
+    if (customerFirstName) formState.setCustomerFirstName(customerFirstName);
+    if (customerLastName) formState.setCustomerLastName(customerLastName);
+    if (customerPhone) formState.setCustomerPhone(customerPhone);
+    if (customerAddress) formState.setCustomerAddress(customerAddress);
+    if (customerCity) formState.setCustomerCity(customerCity);
+    if (customerZipCode) formState.setCustomerZipCode(customerZipCode);
+    if (rating) formState.setRating(parseInt(rating));
+    if (comment) formState.setComment(comment);
+  }, [searchParams, formState]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
