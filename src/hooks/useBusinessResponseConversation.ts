@@ -12,12 +12,12 @@ export const useBusinessResponseConversation = (review: Review, hasSubscription:
   const conversationStatus = useConversationStatus(responses, review);
   const responseActions = useResponseActions(review.id, hasSubscription);
 
-  useEffect(() => {
-    const loadResponses = async () => {
-      const formattedResponses = await fetchAndFormatResponses(review);
-      setResponses(formattedResponses);
-    };
+  const loadResponses = async () => {
+    const formattedResponses = await fetchAndFormatResponses(review);
+    setResponses(formattedResponses);
+  };
 
+  useEffect(() => {
     loadResponses();
   }, [review.id, review.customerId, review.customerName]);
 
@@ -26,8 +26,7 @@ export const useBusinessResponseConversation = (review: Review, hasSubscription:
     
     if (success) {
       // Refresh responses after successful submission
-      const formattedResponses = await fetchAndFormatResponses(review);
-      setResponses(formattedResponses);
+      await loadResponses();
     }
     
     return success;
@@ -63,6 +62,7 @@ export const useBusinessResponseConversation = (review: Review, hasSubscription:
     isMyTurn: conversationStatus.isMyTurn,
     handleSubmitResponse,
     handleUpdateResponse,
-    handleDeleteResponse
+    handleDeleteResponse,
+    refetchResponses: loadResponses
   };
 };
