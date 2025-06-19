@@ -44,7 +44,7 @@ const ReportReview = () => {
         .insert({
           review_id: reviewId,
           reporter_id: currentUser.id,
-          reporter_name: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
+          reporter_name: currentUser.name || 'Anonymous',
           reporter_email: currentUser.email,
           reporter_phone: currentUser.phone,
           is_about_reporter: isAboutReporter,
@@ -61,7 +61,7 @@ const ReportReview = () => {
           type: 'review_report',
           recipientEmail: 'isaac.wiley99@gmail.com',
           data: {
-            reporterName: currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
+            reporterName: currentUser.name || 'Anonymous',
             reporterEmail: currentUser.email,
             reporterPhone: currentUser.phone,
             reviewId,
@@ -115,7 +115,7 @@ const ReportReview = () => {
                 <div className="space-y-4">
                   <div className="p-4 border rounded-lg bg-gray-50">
                     <h3 className="font-semibold mb-2">Reporter Information</h3>
-                    <p><strong>Name:</strong> {currentUser.name || `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim()}</p>
+                    <p><strong>Name:</strong> {currentUser.name || 'Anonymous'}</p>
                     <p><strong>Email:</strong> {currentUser.email}</p>
                     {currentUser.phone && <p><strong>Phone:</strong> {currentUser.phone}</p>}
                   </div>
