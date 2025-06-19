@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -25,28 +25,7 @@ const NewReview = () => {
   } = useReviewSubmission(formState.isEditing, formState.reviewId);
   const { checkForDuplicateReview, isChecking } = useDuplicateReviewCheck();
 
-  // Pre-fill form from URL parameters
-  useEffect(() => {
-    const customerFirstName = searchParams.get('customerFirstName');
-    const customerLastName = searchParams.get('customerLastName');
-    const customerPhone = searchParams.get('customerPhone');
-    const customerAddress = searchParams.get('customerAddress');
-    const customerCity = searchParams.get('customerCity');
-    const customerState = searchParams.get('customerState');
-    const customerZipCode = searchParams.get('customerZipCode');
-    const rating = searchParams.get('rating');
-    const comment = searchParams.get('comment');
-
-    if (customerFirstName) formState.setCustomerFirstName(customerFirstName);
-    if (customerLastName) formState.setCustomerLastName(customerLastName);
-    if (customerPhone) formState.setCustomerPhone(customerPhone);
-    if (customerAddress) formState.setCustomerAddress(customerAddress);
-    if (customerCity) formState.setCustomerCity(customerCity);
-    if (customerState) formState.setCustomerState(customerState);
-    if (customerZipCode) formState.setCustomerZipCode(customerZipCode);
-    if (rating) formState.setRating(parseInt(rating));
-    if (comment) formState.setComment(comment);
-  }, [searchParams, formState]);
+  // Removed the redundant useEffect - useReviewFormState already handles URL parameter initialization
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
