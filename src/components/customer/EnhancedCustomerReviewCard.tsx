@@ -74,6 +74,11 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Fetch verification status for the business that wrote this review
   const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
 
+  // Fetch verification status for the customer (if review is claimed)
+  const { isVerified: customerIsVerified } = useVerifiedStatus(
+    isReviewClaimed ? review.customerId : undefined
+  );
+
   const {
     canReact,
     canRespond,
@@ -130,13 +135,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reviewerName={review.reviewerName}
         date={review.date}
         finalBusinessAvatar={finalBusinessAvatar}
-        isVerified={businessIsVerified} // Use the fetched verification status
+        isVerified={businessIsVerified}
         isUnlocked={isUnlocked}
         onBusinessNameClick={handleBusinessNameClick}
         customerName={review.customerName}
         finalCustomerAvatar={finalCustomerAvatar}
         displayPhone={displayPhone}
         isReviewClaimed={isReviewClaimed}
+        customerIsVerified={customerIsVerified}
       />
 
       <EnhancedReviewContent

@@ -45,6 +45,9 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
+  // Check if this review has been claimed
+  const isReviewClaimed = !!(review.customerId);
+
   // Fetch business profile for avatar
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
@@ -71,17 +74,22 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   // Fetch verification status for the business
   const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
 
-  // Fetch customer profile for avatar if we have a customer ID but no avatar
+  // Fetch verification status for the customer (if review is claimed)
+  const { isVerified: customerIsVerified } = useVerifiedStatus(
+    isReviewClaimed ? review.customerId : undefined
+  );
+
+  // Fetch customer profile for avatar if review is claimed
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
       if (!review.customerId) return null;
       
-      console.log(`CustomerReviewCard: Fetching customer profile for ID: ${review.customerId}`);
+      console.log(`CustomerReviewCard: Fetching customer profile for claimed review. Customer ID: ${review.customerId}`);
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar, first_name, last_name')
+        .select('id, avatar, first_name, last_name, name')
         .eq('id', review.customerId)
         .maybeSingle();
 
@@ -93,7 +101,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
       console.log(`CustomerReviewCard: Customer profile found:`, data);
       return data;
     },
-    enabled: !!review.customerId && !review.customerAvatar
+    enabled: isReviewClaimed
   });
 
   const handlePurchaseClick = () => {
@@ -139,7 +147,11 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
 
   // Get the final avatar URLs - prioritize businessProfile data
   const finalBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || '';
-  const finalCustomerAvatar = review.customerAvatar || customerProfile?.avatar || '';
+  
+  // Show customer avatar only if review is claimed and we have avatar data
+  const finalCustomerAvatar = isReviewClaimed && customerProfile?.avatar 
+    ? customerProfile.avatar 
+    : '';
 
   console.log('CustomerReviewCard: Avatar and verification info:', {
     reviewId: review.id,
@@ -147,7 +159,9 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     customerAvatar: finalCustomerAvatar,
     reviewerName: review.reviewerName,
     customerName: review.customerName,
-    businessIsVerified
+    businessIsVerified,
+    customerIsVerified,
+    isReviewClaimed
   });
 
   return (
@@ -189,12 +203,19 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">About:</span>
             <Avatar className="h-8 w-8">
-              <AvatarImage src={finalCustomerAvatar} alt={review.customerName} />
-              <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                {getCustomerInitials()}
-              </AvatarFallback>
+              {isReviewClaimed && finalCustomerAvatar ? (
+                <AvatarImage src={finalCustomerAvatar} alt={review.customerName} />
+              ) : (
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                  {getCustomerInitials()}
+                </AvatarFallback>
+              )}
             </Avatar>
-            <span className="text-sm font-medium text-gray-700">{review.customerName}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">{review.customerName}</span>
+              {/* Show verified badge next to customer name if claimed and verified */}
+              {isReviewClaimed && customerIsVerified && <VerifiedBadge size="sm" />}
+            </div>
           </div>
         )}
       </div>

@@ -58,15 +58,20 @@ export const useEnhancedCustomerReviewCard = ({
     enabled: !!review.reviewerId
   });
 
-  // Only fetch customer profile if the review has been claimed
+  // Check if this review has been claimed - use database field, not matchType
+  const isReviewClaimed = !!(review.customerId);
+
+  // Fetch customer profile if the review has been claimed
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
       if (!review.customerId) return null;
       
+      console.log(`useEnhancedCustomerReviewCard: Fetching customer profile for claimed review. Customer ID: ${review.customerId}`);
+      
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, avatar, first_name, last_name, phone')
+        .select('id, avatar, first_name, last_name, name, phone')
         .eq('id', review.customerId)
         .maybeSingle();
 
@@ -74,9 +79,11 @@ export const useEnhancedCustomerReviewCard = ({
         console.error("Error fetching customer profile:", error);
         return null;
       }
+
+      console.log(`useEnhancedCustomerReviewCard: Customer profile found:`, data);
       return data;
     },
-    enabled: !!review.customerId && (review.customerId === currentUser?.id)
+    enabled: isReviewClaimed
   });
 
   const isReviewAuthor = currentUser?.id === review.reviewerId;
@@ -86,20 +93,18 @@ export const useEnhancedCustomerReviewCard = ({
   const isVerified = review.reviewerVerified || false;
   const finalBusinessAvatar = review.reviewerAvatar || businessProfile?.avatar || '';
   
-  // Only show customer avatar if review is claimed
-  const finalCustomerAvatar = review.customerId === currentUser?.id
-    ? (review.customerAvatar || customerProfile?.avatar || '') 
+  // Show customer avatar if review is claimed and we have the avatar data
+  const finalCustomerAvatar = isReviewClaimed && customerProfile?.avatar 
+    ? customerProfile.avatar 
     : '';
 
-  // Check if this review has been claimed - use database field, not matchType
-  const isReviewClaimed = !!(review.customerId && currentUser && review.customerId === currentUser.id);
-
-  console.log('Review claimed status check:', {
+  console.log('useEnhancedCustomerReviewCard: Review claimed status and avatar info:', {
     reviewId: review.id,
     reviewCustomerId: review.customerId,
-    currentUserId: currentUser?.id,
     isReviewClaimed,
-    matchType: review.matchType
+    customerProfile: customerProfile ? 'found' : 'not found',
+    finalCustomerAvatar,
+    customerProfileAvatar: customerProfile?.avatar
   });
 
   const handlePurchaseClick = () => {
