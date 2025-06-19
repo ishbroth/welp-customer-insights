@@ -145,7 +145,7 @@ export const useReviewFormState = () => {
     searchParamCity, 
     searchParamState,
     searchParamZipCode
-  ]);
+  ]); // Removed all the setter functions from dependencies
 
   return {
     // URL params
