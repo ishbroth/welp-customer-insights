@@ -45,7 +45,7 @@ const DuplicateReviewHandler: React.FC<DuplicateReviewHandlerProps> = ({
 
   const handleCancelDuplicate = () => {
     setShowDuplicateDialog(false);
-    navigate("/profile");
+    navigate("/profile/business-reviews");
   };
 
   return (

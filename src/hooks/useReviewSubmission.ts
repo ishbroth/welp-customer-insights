@@ -101,7 +101,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
       
       // Navigate based on whether we're editing or creating new
       if (isEditing) {
-        navigate("/business/reviews");
+        navigate("/profile/business-reviews");
       } else {
         navigate("/review/success");
       }
