@@ -87,6 +87,8 @@ export const submitReviewToDatabase = async (
     customer_city: reviewData.customerCity,
     customer_zipcode: reviewData.customerZipCode,
     customer_phone: reviewData.customerPhone,
+    // Clear deleted_at when editing to make the review visible again
+    ...(isEditing && { deleted_at: null })
   };
   
   console.log("Submitting review with data:", supabaseReviewData);
