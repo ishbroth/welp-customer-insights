@@ -3,11 +3,18 @@ import { RefreshCw, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCredits } from "@/hooks/useCredits";
+import { useBillingData } from "@/hooks/useBillingData";
+import { useAuth } from "@/contexts/auth";
 
 const CreditsBalanceCard = () => {
   const { balance, isLoading, loadCreditsData } = useCredits();
+  const { currentUser } = useAuth();
+  const { subscriptionData } = useBillingData(currentUser);
+
+  const isSubscribed = subscriptionData?.subscribed || false;
 
   const handleBuyCredits = () => {
+    if (isSubscribed) return; // Don't navigate if subscribed
     window.location.href = '/buy-credits';
   };
 
@@ -15,7 +22,12 @@ const CreditsBalanceCard = () => {
     <Card>
       <CardHeader>
         <CardTitle>Credits Balance</CardTitle>
-        <CardDescription>Use credits to access premium customer profiles</CardDescription>
+        <CardDescription>
+          {isSubscribed 
+            ? "You have unlimited access with your subscription" 
+            : "Use credits to access premium customer profiles"
+          }
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -28,10 +40,10 @@ const CreditsBalanceCard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-primary">
-                  {balance || 0}
+                  {isSubscribed ? "∞" : (balance || 0)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Available credits
+                  {isSubscribed ? "Unlimited access" : "Available credits"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -43,12 +55,21 @@ const CreditsBalanceCard = () => {
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                 </Button>
-                <Button onClick={handleBuyCredits}>
+                <Button 
+                  onClick={handleBuyCredits}
+                  disabled={isSubscribed}
+                  className={isSubscribed ? "opacity-50 cursor-not-allowed" : ""}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Buy Credits
                 </Button>
               </div>
             </div>
+            {isSubscribed && (
+              <div className="mt-2 text-sm text-green-600">
+                ✓ Premium subscription active - unlimited access included
+              </div>
+            )}
           </div>
         )}
       </CardContent>

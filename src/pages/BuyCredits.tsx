@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, DollarSign, Lock, Plus, Minus } from "lucide-react";
+import { CreditCard, DollarSign, Lock, Plus, Minus, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useCredits } from "@/hooks/useCredits";
+import { useBillingData } from "@/hooks/useBillingData";
 
 const BuyCredits = () => {
   const [creditAmount, setCreditAmount] = useState(1);
@@ -20,8 +21,10 @@ const BuyCredits = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { balance } = useCredits();
+  const { subscriptionData } = useBillingData(currentUser);
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
+  const isSubscribed = subscriptionData?.subscribed || false;
 
   // Check if user is authenticated, if not redirect to login
   useEffect(() => {
@@ -45,6 +48,11 @@ const BuyCredits = () => {
           message: "Please log in to purchase credits"
         }
       });
+      return;
+    }
+
+    if (isSubscribed) {
+      toast.error("You already have unlimited access with your subscription");
       return;
     }
 
@@ -118,9 +126,24 @@ const BuyCredits = () => {
             </p>
           </div>
 
+          {isSubscribed && (
+            <Card className="mb-8 border-green-500 bg-green-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-center text-green-700">
+                  <CheckCircle className="h-6 w-6 mr-2" />
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold">You're All Set!</h3>
+                    <p>You have unlimited access with your {subscriptionData?.subscription_tier || 'Premium'} subscription.</p>
+                    <p className="text-sm mt-1">No need to purchase credits!</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid md:grid-cols-2 gap-8">
             {/* Credit Purchase Card */}
-            <Card>
+            <Card className={isSubscribed ? "opacity-50" : ""}>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <DollarSign className="h-5 w-5 mr-2" />
@@ -138,7 +161,7 @@ const BuyCredits = () => {
                       variant="outline"
                       size="icon"
                       onClick={() => setCreditAmount(Math.max(1, creditAmount - 1))}
-                      disabled={creditAmount <= 1}
+                      disabled={creditAmount <= 1 || isSubscribed}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -149,11 +172,13 @@ const BuyCredits = () => {
                       onChange={(e) => setCreditAmount(Math.max(1, parseInt(e.target.value) || 1))}
                       min="1"
                       className="text-center w-24"
+                      disabled={isSubscribed}
                     />
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => setCreditAmount(creditAmount + 1)}
+                      disabled={isSubscribed}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -179,10 +204,15 @@ const BuyCredits = () => {
 
                 <Button 
                   onClick={handlePurchase}
-                  disabled={isLoading}
-                  className="w-full bg-[#ea384c] hover:bg-[#d63384] text-white"
+                  disabled={isLoading || isSubscribed}
+                  className="w-full bg-[#ea384c] hover:bg-[#d63384] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? "Processing..." : `Purchase ${creditAmount} Credit${creditAmount > 1 ? 's' : ''}`}
+                  {isSubscribed 
+                    ? "Already Subscribed - No Credits Needed" 
+                    : isLoading 
+                      ? "Processing..." 
+                      : `Purchase ${creditAmount} Credit${creditAmount > 1 ? 's' : ''}`
+                  }
                 </Button>
 
                 <p className="text-sm text-gray-500 text-center">
@@ -199,10 +229,13 @@ const BuyCredits = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-[#ea384c]">
-                    {balance} Credit{balance !== 1 ? 's' : ''}
+                    {isSubscribed ? "∞" : `${balance} Credit${balance !== 1 ? 's' : ''}`}
                   </div>
                   <p className="text-gray-600 mt-2">
-                    Available to use for accessing full reviews
+                    {isSubscribed 
+                      ? "Unlimited access with your subscription" 
+                      : "Available to use for accessing full reviews"
+                    }
                   </p>
                 </CardContent>
               </Card>

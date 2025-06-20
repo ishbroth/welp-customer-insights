@@ -9,6 +9,7 @@ interface CustomerActionsProps {
   isExpanded: boolean;
   onActionClick: (e: React.MouseEvent) => void;
   onExpandClick: () => void;
+  isSubscribed?: boolean;
 }
 
 const CustomerActions = ({ 
@@ -16,7 +17,8 @@ const CustomerActions = ({
   hasAccess, 
   isExpanded, 
   onActionClick,
-  onExpandClick 
+  onExpandClick,
+  isSubscribed = false
 }: CustomerActionsProps) => {
   return (
     <div className="flex items-center gap-2">
@@ -27,7 +29,7 @@ const CustomerActions = ({
             Sign Up to View
           </Button>
         </Link>
-      ) : hasAccess ? (
+      ) : hasAccess || isSubscribed ? (
         <Button
           variant="ghost"
           size="sm"
@@ -52,6 +54,7 @@ const CustomerActions = ({
             variant="outline" 
             size="sm"
             className="flex items-center gap-1"
+            disabled={isSubscribed}
           >
             <Lock className="h-3 w-3" />
             Buy Credits
