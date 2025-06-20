@@ -152,7 +152,7 @@ const CustomerCard = ({
                   {/* Business info - left side (larger) */}
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+                      <AvatarImage src={review.reviewerAvatar || ""} alt={review.reviewerName} />
                       <AvatarFallback className="bg-green-100 text-green-800">
                         {getInitials(review.reviewerName)}
                       </AvatarFallback>
