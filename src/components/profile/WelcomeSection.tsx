@@ -44,13 +44,14 @@ const WelcomeSection = () => {
     return "Good evening";
   };
 
-  // For customers, show verified badge if they have a verified profile
+  // For customers, show verified badge if they have a verified profile (should be true by default)
   // For businesses, show verified badge if they are verified in business_info
   const shouldShowVerifiedBadge = () => {
     if (currentUser.type === 'business') {
       return isBusinessVerified;
     } else if (currentUser.type === 'customer') {
-      return customerProfile?.verified || false;
+      // Customers should be verified by default since they complete phone verification during signup
+      return customerProfile?.verified ?? true;
     }
     return false;
   };
@@ -68,7 +69,7 @@ const WelcomeSection = () => {
       <p className="text-gray-600">
         {currentUser.type === 'business' 
           ? `Welcome to your business dashboard${isBusinessVerified ? ' - Your business is verified!' : ''}.`
-          : `Welcome to your customer dashboard${customerProfile?.verified ? ' - Your account is verified!' : ''}.`
+          : `Welcome to your customer dashboard${customerProfile?.verified ?? true ? ' - Your account is verified!' : ''}.`
         }
       </p>
     </div>

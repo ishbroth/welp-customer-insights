@@ -1,10 +1,12 @@
 
 import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useCustomerVerificationFix = () => {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fixCustomerVerification = async () => {
@@ -40,11 +42,14 @@ export const useCustomerVerificationFix = () => {
           console.error("Error updating verification:", updateError);
         } else {
           console.log("Customer account verified successfully!");
-          // Removed toast notification - verification happens silently
+          toast({
+            title: "Account Verified",
+            description: "Your customer account has been verified!",
+          });
         }
       }
     };
 
     fixCustomerVerification();
-  }, [currentUser]);
+  }, [currentUser, toast]);
 };
