@@ -1,10 +1,9 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useReviewClaiming } from "@/hooks/useReviewClaiming";
-import { useReactionPersistence } from "@/hooks/useReactionPersistence";
 import { Review } from "@/types";
+import { useReviewReactions } from "@/hooks/useReviewReactions";
+import { useReviewClaimDialog } from "@/hooks/useReviewClaimDialog";
+import { useReviewNavigation } from "@/hooks/useReviewNavigation";
 
 interface UseReviewActionsProps {
   review: Review & {
@@ -26,15 +25,9 @@ export const useReviewActions = ({
   onPurchase,
   onReactionToggle,
 }: UseReviewActionsProps) => {
-  const { isSubscribed, currentUser } = useAuth();
-  const navigate = useNavigate();
-  const { claimReview, isClaimingReview } = useReviewClaiming();
-  const [showClaimDialog, setShowClaimDialog] = useState(false);
-  const { reactions, toggleReaction } = useReactionPersistence(
-    review.id, 
-    review.reactions || { like: [], funny: [], ohNo: [] }
-  );
+  const { currentUser } = useAuth();
 
+  // User type and permission checks
   const isReviewAuthor = currentUser?.id === review.reviewerId;
   const isCustomerBeingReviewed = currentUser?.id === review.customerId;
   const isBusinessUser = currentUser?.type === "business";
@@ -43,57 +36,57 @@ export const useReviewActions = ({
   // Check if this review has been claimed
   const isReviewClaimed = !!(review.customerId);
 
+  // Use smaller hooks for specific functionality
+  const reactionHook = useReviewReactions({
+    reviewId: review.id,
+    initialReactions: review.reactions || { like: [], funny: [], ohNo: [] },
+    onReactionToggle,
+  });
+
+  const claimDialogHook = useReviewClaimDialog();
+
+  const navigationHook = useReviewNavigation({
+    reviewerId: review.reviewerId,
+    isUnlocked,
+  });
+
   const handlePurchaseClick = () => {
     // For customer users who haven't claimed the review, show claim dialog first
     if (isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed) {
-      setShowClaimDialog(true);
+      claimDialogHook.setShowClaimDialog(true);
     } else {
       onPurchase(review.id);
     }
   };
 
-  const handleClaimClick = () => {
-    setShowClaimDialog(true);
-  };
-
   const handleClaimConfirm = async () => {
-    const success = await claimReview(review.id);
-    if (success) {
-      // Force a page refresh to show updated data
-      window.location.reload();
-    }
-  };
-
-  const handleClaimCancel = () => {
-    // Dialog will close automatically
-  };
-
-  const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    toggleReaction(reactionType as keyof typeof reactions);
-    onReactionToggle(reviewId, reactionType);
-  };
-
-  const handleBusinessNameClick = () => {
-    if (isSubscribed || isUnlocked) {
-      navigate(`/business/${review.reviewerId}`);
-    }
+    await claimDialogHook.handleClaimConfirm(review.id);
   };
 
   return {
-    showClaimDialog,
-    setShowClaimDialog,
-    reactions,
+    // User permissions
     isReviewAuthor,
     isCustomerBeingReviewed,
     isBusinessUser,
     isCustomerUser,
     isReviewClaimed,
-    isClaimingReview,
-    handlePurchaseClick,
-    handleClaimClick,
+    
+    // Reaction functionality
+    reactions: reactionHook.reactions,
+    handleReactionToggle: reactionHook.handleReactionToggle,
+    
+    // Claim dialog functionality
+    showClaimDialog: claimDialogHook.showClaimDialog,
+    setShowClaimDialog: claimDialogHook.setShowClaimDialog,
+    isClaimingReview: claimDialogHook.isClaimingReview,
+    handleClaimClick: claimDialogHook.handleClaimClick,
     handleClaimConfirm,
-    handleClaimCancel,
-    handleReactionToggle,
-    handleBusinessNameClick,
+    handleClaimCancel: claimDialogHook.handleClaimCancel,
+    
+    // Navigation functionality
+    handleBusinessNameClick: navigationHook.handleBusinessNameClick,
+    
+    // Purchase functionality
+    handlePurchaseClick,
   };
 };
