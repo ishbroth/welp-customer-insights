@@ -79,10 +79,8 @@ serve(async (req) => {
       logStep("Created new Stripe customer", { customerId });
     }
 
-    // Set up the price based on account type
-    // These price IDs should match your specific Stripe products
-    // For demo, we're hardcoding a basic amount and will allow Stripe to create prices
-    const amount = userType === "business" ? 1199 : 1199;  // $11.99 for both types
+    // Set up the price - $11.99 for both business and customer plans
+    const amount = 1199;  // $11.99 in cents for both types
     
     const origin = req.headers.get("origin") || "http://localhost:5173";
     
