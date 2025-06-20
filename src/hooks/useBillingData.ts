@@ -66,7 +66,7 @@ export const useBillingData = (currentUser: any) => {
     const mockTransactions: Transaction[] = [
       {
         id: "ch_mock_1",
-        amount: 2999, // $29.99
+        amount: 1199, // $11.99
         currency: "usd",
         status: "succeeded",
         created: Math.floor(Date.now() / 1000) - 86400, // 1 day ago
@@ -74,7 +74,7 @@ export const useBillingData = (currentUser: any) => {
       },
       {
         id: "ch_mock_2",
-        amount: 2999,
+        amount: 1199,
         currency: "usd",
         status: "succeeded",
         created: Math.floor(Date.now() / 1000) - 86400 * 31, // 31 days ago
@@ -82,7 +82,7 @@ export const useBillingData = (currentUser: any) => {
       },
       {
         id: "ch_mock_3",
-        amount: 2999,
+        amount: 1199,
         currency: "usd",
         status: "succeeded",
         created: Math.floor(Date.now() / 1000) - 86400 * 62, // 62 days ago
