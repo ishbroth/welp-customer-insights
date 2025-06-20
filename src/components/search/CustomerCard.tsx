@@ -90,6 +90,9 @@ const CustomerCard = ({
 
   const hasAccess = currentUser && hasFullAccessFunction(customer.id);
 
+  // Format customer info for display
+  const customerInfoText = customerInfo.map(info => info.value).join(' • ');
+
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-4">
@@ -109,8 +112,8 @@ const CustomerCard = ({
                 {isVerified && <VerifiedBadge size="sm" />}
               </div>
               <p className="text-sm text-gray-500">Customer</p>
-              {hasAccess && customerInfo && (
-                <p className="text-sm text-gray-600">{customerInfo}</p>
+              {hasAccess && customerInfoText && (
+                <p className="text-sm text-gray-600">{customerInfoText}</p>
               )}
             </div>
           </div>
