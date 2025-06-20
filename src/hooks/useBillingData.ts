@@ -36,14 +36,88 @@ export const useBillingData = (currentUser: any) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [hasStripeCustomer, setHasStripeCustomer] = useState(false);
 
+  // Check if this is a permanent account that should show mock data
+  const permanentAccountEmails = [
+    'iw@thepaintedpainter.com',
+    'isaac.wiley99@gmail.com'
+  ];
+  const isPermanentAccount = currentUser?.email && permanentAccountEmails.includes(currentUser.email);
+
+  const getMockBillingData = () => {
+    const mockSubscriptionData: SubscriptionData = {
+      subscribed: true,
+      subscription_tier: "Premium",
+      subscription_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+    };
+
+    const mockPaymentMethods: PaymentMethod[] = [
+      {
+        id: "pm_mock_123",
+        type: "card",
+        card: {
+          brand: "visa",
+          last4: "4242",
+          exp_month: 12,
+          exp_year: 2025
+        }
+      }
+    ];
+
+    const mockTransactions: Transaction[] = [
+      {
+        id: "ch_mock_1",
+        amount: 2999, // $29.99
+        currency: "usd",
+        status: "succeeded",
+        created: Math.floor(Date.now() / 1000) - 86400, // 1 day ago
+        description: "Business Premium Subscription"
+      },
+      {
+        id: "ch_mock_2",
+        amount: 2999,
+        currency: "usd",
+        status: "succeeded",
+        created: Math.floor(Date.now() / 1000) - 86400 * 31, // 31 days ago
+        description: "Business Premium Subscription"
+      },
+      {
+        id: "ch_mock_3",
+        amount: 2999,
+        currency: "usd",
+        status: "succeeded",
+        created: Math.floor(Date.now() / 1000) - 86400 * 62, // 62 days ago
+        description: "Business Premium Subscription"
+      }
+    ];
+
+    return {
+      subscriptionData: mockSubscriptionData,
+      paymentMethods: mockPaymentMethods,
+      transactions: mockTransactions
+    };
+  };
+
   const loadBillingData = async () => {
     if (!currentUser) return;
     
     setIsLoadingData(true);
+    
     try {
       console.log("Loading billing data for user:", currentUser.email);
       
-      // Check subscription status
+      // If this is a permanent account, use mock data
+      if (isPermanentAccount) {
+        console.log("Using mock data for permanent account");
+        const mockData = getMockBillingData();
+        setSubscriptionData(mockData.subscriptionData);
+        setPaymentMethods(mockData.paymentMethods);
+        setTransactions(mockData.transactions);
+        setHasStripeCustomer(true);
+        setIsLoadingData(false);
+        return;
+      }
+      
+      // Check subscription status for regular accounts
       const { data: subData, error: subError } = await supabase.functions.invoke("check-subscription");
       
       if (subError) {
