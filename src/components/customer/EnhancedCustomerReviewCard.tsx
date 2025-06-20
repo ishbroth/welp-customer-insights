@@ -2,13 +2,14 @@
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
-import EnhancedReviewHeader from "./EnhancedReviewHeader";
 import EnhancedReviewContent from "./EnhancedReviewContent";
 import ClaimReviewDialog from "./ClaimReviewDialog";
 import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface DetailedMatch {
   field: string;
@@ -102,8 +103,42 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   );
 
+  const getInitials = (name: string) => {
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "U";
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   // Get phone number to display
   const displayPhone = review.customer_phone || customerProfile?.phone;
+
+  // Business info for left side (larger)
+  const businessInfo = {
+    name: review.reviewerName,
+    avatar: finalBusinessAvatar,
+    initials: getInitials(review.reviewerName),
+    verified: isBusinessVerified
+  };
+
+  // Customer info for right side (smaller)
+  const customerInfo = {
+    name: review.customerName,
+    avatar: finalCustomerAvatar,
+    initials: getInitials(review.customerName),
+    verified: isCustomerVerified,
+    phone: displayPhone
+  };
 
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
     reviewId: review.id,
@@ -134,19 +169,57 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         isReviewClaimed={isReviewClaimed}
       />
       
-      <EnhancedReviewHeader
-        reviewerName={review.reviewerName}
-        date={review.date}
-        finalBusinessAvatar={finalBusinessAvatar}
-        isBusinessVerified={isBusinessVerified}
-        isUnlocked={isUnlocked}
-        onBusinessNameClick={handleBusinessNameClick}
-        customerName={review.customerName}
-        finalCustomerAvatar={finalCustomerAvatar}
-        displayPhone={displayPhone}
-        isReviewClaimed={isReviewClaimed}
-        isCustomerVerified={isCustomerVerified}
-      />
+      {/* Header with business on left, customer on right */}
+      <div className="flex items-start justify-between mb-4">
+        {/* Business info - left side (larger) */}
+        <div className="flex items-center space-x-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
+            <AvatarFallback className="bg-blue-100 text-blue-800">
+              {businessInfo.initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 
+                className={`font-semibold text-lg ${
+                  isUnlocked ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''
+                }`}
+                onClick={isUnlocked ? handleBusinessNameClick : undefined}
+              >
+                {businessInfo.name}
+              </h3>
+              {businessInfo.verified && <VerifiedBadge size="sm" />}
+            </div>
+            <p className="text-sm text-gray-500">
+              Review written on {formatDate(review.date)}
+            </p>
+            <p className="text-sm text-gray-500">Business</p>
+          </div>
+        </div>
+
+        {/* Customer info - right side (smaller) */}
+        <div className="flex items-center space-x-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+            <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+              {customerInfo.initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="flex items-center gap-1">
+              <h4 className="font-medium text-sm">{customerInfo.name}</h4>
+              {customerInfo.verified && <VerifiedBadge size="xs" />}
+            </div>
+            <p className="text-xs text-gray-500">Customer</p>
+            {customerInfo.phone && (
+              <p className="text-xs text-gray-600">
+                {customerInfo.phone}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
 
       <EnhancedReviewContent
         content={review.content}

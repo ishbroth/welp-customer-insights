@@ -7,6 +7,9 @@ import CustomerCardHeader from "./CustomerCardHeader";
 import CustomerCardExpandedContent from "./CustomerCardExpandedContent";
 import CustomerCardActionsSection from "./CustomerCardActionsSection";
 import { useCustomerCardData } from "@/hooks/useCustomerCardData";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import StarRating from "@/components/StarRating";
 
 interface CustomerCardProps {
   customer: {
@@ -24,6 +27,7 @@ interface CustomerCardProps {
       id: string;
       reviewerId: string;
       reviewerName: string;
+      reviewerAvatar?: string;
       rating: number;
       content: string;
       date: string;
@@ -56,6 +60,14 @@ const CustomerCard = ({
     sortedReviews
   } = useCustomerCardData(customer);
   
+  const getInitials = (name: string) => {
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "U";
+  };
+  
   // Create a function that checks full access for a given customer ID
   const hasFullAccessFunction = (customerId: string): boolean => {
     return isSubscribed || hasOneTimeAccess(customerId);
@@ -81,18 +93,42 @@ const CustomerCard = ({
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
       <CardContent className="p-4">
+        {/* Header with customer on left, business summary on right */}
         <div className="flex items-start justify-between">
-          <CustomerCardHeader
-            customerName={customerName}
-            customerInfo={customerInfo}
-            hasReviews={hasReviews}
-            averageRating={averageRating}
-            reviewCount={customer.reviews?.length || 0}
-            currentUser={currentUser}
-            hasAccess={hasAccess}
-            isVerified={isVerified}
-            onClick={handleCardClick}
-          />
+          {/* Customer info - left side (larger) */}
+          <div className="flex items-center space-x-4 cursor-pointer" onClick={handleCardClick}>
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={customer.avatar} alt={customerName} />
+              <AvatarFallback className="bg-blue-100 text-blue-800">
+                {getInitials(customerName)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-lg">{customerName}</h3>
+                {isVerified && <VerifiedBadge size="sm" />}
+              </div>
+              <p className="text-sm text-gray-500">Customer</p>
+              {hasAccess && customerInfo && (
+                <p className="text-sm text-gray-600">{customerInfo}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Review summary - right side (smaller) */}
+          {hasReviews && (
+            <div className="flex items-center space-x-2">
+              <div className="text-right">
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <StarRating rating={averageRating} size="sm" />
+                  <span className="text-sm font-medium">{averageRating.toFixed(1)}</span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {customer.reviews?.length || 0} review{(customer.reviews?.length || 0) !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+          )}
           
           <CustomerCardActionsSection
             currentUser={currentUser}
@@ -103,14 +139,55 @@ const CustomerCard = ({
           />
         </div>
         
+        {/* Expanded content showing individual reviews */}
         {isExpanded && currentUser && (
-          <CustomerCardExpandedContent
-            customer={customer}
-            sortedReviews={sortedReviews}
-            hasFullAccessFunction={hasFullAccessFunction}
-            isReviewCustomer={isReviewCustomer}
-            onReviewUpdate={onReviewUpdate}
-          />
+          <div className="mt-4 space-y-4">
+            {sortedReviews.map((review) => (
+              <div key={review.id} className="border-l-4 border-blue-200 pl-4 py-2">
+                {/* Review header with business on left, customer on right */}
+                <div className="flex items-start justify-between mb-2">
+                  {/* Business info - left side (larger) */}
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+                      <AvatarFallback className="bg-green-100 text-green-800">
+                        {getInitials(review.reviewerName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold">{review.reviewerName}</h4>
+                        {review.reviewerVerified && <VerifiedBadge size="xs" />}
+                      </div>
+                      <p className="text-xs text-gray-500">Business</p>
+                    </div>
+                  </div>
+
+                  {/* Customer info - right side (smaller) */}
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={customer.avatar} alt={customerName} />
+                      <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                        {getInitials(customerName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-xs font-medium">{customerName}</p>
+                      <p className="text-xs text-gray-500">Customer</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-2">
+                  <StarRating rating={review.rating} size="sm" />
+                  <span className="ml-2 text-xs text-gray-500">
+                    {new Date(review.date).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700">{review.content}</p>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
