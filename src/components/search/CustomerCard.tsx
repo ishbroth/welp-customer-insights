@@ -157,7 +157,7 @@ const CustomerCard = ({
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold">{review.reviewerName}</h4>
-                        {review.reviewerVerified && <VerifiedBadge size="xs" />}
+                        {review.reviewerVerified && <VerifiedBadge size="sm" />}
                       </div>
                       <p className="text-xs text-gray-500">Business</p>
                     </div>

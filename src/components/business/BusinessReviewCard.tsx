@@ -11,7 +11,7 @@ import BusinessReviewCardActions from "./BusinessReviewCardActions";
 import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { useBusinessReviewCardLogic } from "./useBusinessReviewCardLogic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import VerifiedBudge from "@/components/ui/VerifiedBadge";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -79,7 +79,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   const customerInfo = {
     name: review.customerName,
     avatar: review.customerAvatar,
-    initials: getCustomerInitials(review.customerName)
+    initials: getCustomerInitials()
   };
 
   // Business info for right side (smaller) 
@@ -131,7 +131,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
             <div>
               <div className="flex items-center gap-1">
                 <h4 className="font-medium text-sm">{businessInfo.name}</h4>
-                {businessInfo.verified && <VerifiedBudge size="xs" />}
+                {businessInfo.verified && <VerifiedBadge size="sm" />}
               </div>
               <p className="text-xs text-gray-500">Business</p>
             </div>
