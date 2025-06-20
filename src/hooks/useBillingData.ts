@@ -70,6 +70,9 @@ export const useBillingData = (currentUser: any) => {
         if (!billingError.message?.includes("No Stripe customer found")) {
           toast.error("Error loading billing information");
         }
+        // Set empty arrays for new users without Stripe customers
+        setPaymentMethods([]);
+        setTransactions([]);
       } else {
         console.log("Billing data:", billingData);
         setPaymentMethods(billingData?.payment_methods || []);
@@ -78,7 +81,10 @@ export const useBillingData = (currentUser: any) => {
       }
     } catch (error) {
       console.error("Error in loadBillingData:", error);
-      toast.error("Error loading billing data");
+      // Only show generic error for unexpected issues
+      if (!error.message?.includes("No Stripe customer found")) {
+        toast.error("Error loading billing data");
+      }
     } finally {
       setIsLoadingData(false);
     }
