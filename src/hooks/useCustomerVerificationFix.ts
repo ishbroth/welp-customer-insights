@@ -1,12 +1,10 @@
 
 import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useCustomerVerificationFix = () => {
   const { currentUser } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     const fixCustomerVerification = async () => {
@@ -40,17 +38,9 @@ export const useCustomerVerificationFix = () => {
 
         if (updateError) {
           console.error("Error updating verification:", updateError);
-          toast({
-            title: "Verification Update Failed",
-            description: "Could not update your verification status.",
-            variant: "destructive"
-          });
         } else {
           console.log("Customer account verified successfully!");
-          toast({
-            title: "Account Verified",
-            description: "Your customer account has been verified!",
-          });
+          // Removed toast notification - verification happens silently
         }
       }
     };
