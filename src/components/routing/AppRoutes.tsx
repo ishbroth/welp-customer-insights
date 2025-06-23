@@ -49,6 +49,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/search" element={<SearchResults />} />
       <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/about" element={<About />} />
       <Route path="/faq" element={<FAQ />} />
@@ -69,7 +70,6 @@ const AppRoutes = () => {
       <Route path="/profile/reviews" element={<ProtectedRoute><ProfileReviews /></ProtectedRoute>} />
       <Route path="/profile/business-reviews" element={<BusinessOrAdminRoute><BusinessReviews /></BusinessOrAdminRoute>} />
       <Route path="/report-review" element={<ProtectedRoute><ReportReview /></ProtectedRoute>} />
-      <Route path="/search" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
       <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
       <Route path="/buy-credits" element={<ProtectedRoute><BuyCredits /></ProtectedRoute>} />
       <Route path="/one-time-review" element={<ProtectedRoute><OneTimeReviewAccess /></ProtectedRoute>} />
