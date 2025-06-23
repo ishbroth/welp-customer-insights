@@ -1,6 +1,5 @@
 
 import { Input } from "@/components/ui/input";
-import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { 
   Select, 
   SelectContent, 
@@ -45,49 +44,15 @@ export const CustomerAddressSection = ({
   zipCode,
   setZipCode
 }: CustomerAddressSectionProps) => {
-  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
-    if (!place.address_components) return;
-
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let cityName = '';
-    let stateName = '';
-    let zipCodeValue = '';
-
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        cityName = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        stateName = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCodeValue = component.long_name;
-      }
-    });
-
-    // Update form fields
-    if (cityName) setCity(cityName);
-    if (stateName) setState(stateName);
-    if (zipCodeValue) setZipCode(zipCodeValue);
-  };
-
   return (
     <>
       <div>
         <label htmlFor="customerStreet" className="block text-sm font-medium mb-1">Street Address</label>
-        <AddressAutocomplete
+        <Input
           id="customerStreet"
-          placeholder="Start typing your address..."
+          placeholder="Enter your street address"
           value={street}
           onChange={(e) => setStreet(e.target.value)}
-          onAddressChange={setStreet}
-          onPlaceSelect={handleAddressSelect}
           className="welp-input"
         />
       </div>

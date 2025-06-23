@@ -1,6 +1,5 @@
 
 import { Input } from "@/components/ui/input";
-import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 
 interface BusinessAddressSectionProps {
@@ -32,42 +31,6 @@ export const BusinessAddressSection = ({
   businessZipCode,
   setBusinessZipCode,
 }: BusinessAddressSectionProps) => {
-  const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
-    if (!place.address_components) return;
-
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
-
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
-      }
-    });
-
-    // Update form fields with full street address (street number + route)
-    const fullStreetAddress = `${streetNumber} ${route}`.trim();
-    if (fullStreetAddress) setBusinessStreet(fullStreetAddress);
-    
-    // Update other form fields
-    if (city) setBusinessCity(city);
-    if (state) setBusinessState(state);
-    if (zipCode) setBusinessZipCode(zipCode);
-  };
-
   return (
     <div className="space-y-4">
       <div>
@@ -89,13 +52,11 @@ export const BusinessAddressSection = ({
         <label htmlFor="businessStreet" className="block text-sm font-medium mb-1">
           Street Address <span className="text-red-500">*</span>
         </label>
-        <AddressAutocomplete
+        <Input
           id="businessStreet"
-          placeholder="Start typing your business address..."
+          placeholder="Enter your business street address"
           value={businessStreet}
           onChange={(e) => setBusinessStreet(e.target.value)}
-          onAddressChange={setBusinessStreet}
-          onPlaceSelect={handleAddressSelect}
           className="welp-input"
           required
         />

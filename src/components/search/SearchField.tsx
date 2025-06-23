@@ -3,7 +3,6 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 interface SearchFieldProps {
   type?: string;
@@ -27,15 +26,6 @@ const SearchField = ({
   
   // Use PhoneInput for phone fields
   const isPhoneField = placeholder.toLowerCase().includes("phone") || type === "tel";
-  
-  // Use AddressAutocomplete for address fields
-  const isAddressField = placeholder.toLowerCase().includes("address") || 
-                        placeholder.toLowerCase().includes("street");
-  
-  // Use apartment/suite input for those fields
-  const isApartmentField = placeholder.toLowerCase().includes("apartment") ||
-                          placeholder.toLowerCase().includes("suite") ||
-                          placeholder.toLowerCase().includes("unit");
 
   // Handle phone input change
   const handlePhoneChange = (value: string) => {
@@ -65,18 +55,6 @@ const SearchField = ({
         placeholder={placeholder}
         value={value}
         onChange={handlePhoneChange}
-        className={`welp-input ${className || ""}`}
-        required={required}
-      />
-    );
-  }
-
-  if (isAddressField) {
-    return (
-      <AddressAutocomplete
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
         className={`welp-input ${className || ""}`}
         required={required}
       />
