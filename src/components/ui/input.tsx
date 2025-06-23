@@ -1,25 +1,16 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { normalizeAddress } from "@/utils/addressNormalization"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, placeholder, ...props }, ref) => {
-    const isAddressField = placeholder?.toLowerCase().includes("address") || 
-                          placeholder?.toLowerCase().includes("street");
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Only capitalize first letter for non-address fields
       let value = e.target.value;
-      
-      // Handle address fields specially
-      if (isAddressField) {
-        // Remove commas and stop input after first comma
-        const commaIndex = value.indexOf(',');
-        if (commaIndex !== -1) {
-          value = value.substring(0, commaIndex);
-        }
-        e.target.value = value;
-      } else if (value.length > 0) {
+      const isAddressField = placeholder?.toLowerCase().includes("address") || 
+                            placeholder?.toLowerCase().includes("street");
+
+      if (!isAddressField && value.length > 0) {
         // Capitalize the first letter for non-address fields
         e.target.value = value.charAt(0).toUpperCase() + value.slice(1);
       }

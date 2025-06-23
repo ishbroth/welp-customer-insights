@@ -17,7 +17,7 @@ declare global {
 }
 
 const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(
-  ({ className, onPlaceSelect, onAddressChange, ...props }, ref) => {
+  ({ className, onPlaceSelect, onAddressChange, onChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -62,7 +62,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
 
     useEffect(() => {
       if (!apiKey || !hasApiKey) {
-        console.log("API key not available yet");
+        console.log("API key not available, using regular input");
         return;
       }
 
@@ -131,6 +131,11 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
             console.log("Clean address:", cleanAddress);
             console.log("Normalized address:", normalizedAddress);
             
+            // Update the input value directly
+            if (inputRef.current) {
+              inputRef.current.value = normalizedAddress;
+            }
+            
             if (onAddressChange) {
               onAddressChange(normalizedAddress);
             }
@@ -157,17 +162,20 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       };
     }, [isLoaded, onPlaceSelect, onAddressChange, hasApiKey]);
 
-    // If Google Maps is not loaded or no API key, fall back to regular input
-    if (!isLoaded || !hasApiKey) {
-      return (
-        <Input
-          ref={ref}
-          className={className}
-          placeholder={hasApiKey ? "Loading address autocomplete..." : "Enter your address (autocomplete unavailable)"}
-          {...props}
-        />
-      );
-    }
+    // Handle manual input changes - this preserves normal typing including spaces
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      
+      // Allow normal typing and preserve spaces
+      if (onAddressChange) {
+        onAddressChange(value);
+      }
+      
+      // Call the original onChange prop if provided
+      if (onChange) {
+        onChange(e);
+      }
+    };
 
     return (
       <Input
@@ -180,7 +188,14 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           }
         }}
         className={cn(className)}
-        placeholder="Start typing your address..."
+        placeholder={
+          hasApiKey && isLoaded 
+            ? "Start typing your address..." 
+            : hasApiKey 
+            ? "Loading address autocomplete..." 
+            : "Enter your address"
+        }
+        onChange={handleInputChange}
         {...props}
       />
     );
