@@ -2,6 +2,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
 interface EmptySearchResultsProps {
   isBusinessUser: boolean;
@@ -9,6 +10,7 @@ interface EmptySearchResultsProps {
 
 const EmptySearchResults = ({ isBusinessUser }: EmptySearchResultsProps) => {
   const [searchParams] = useSearchParams();
+  const { currentUser } = useAuth();
   
   // Get search parameters to pre-fill the form
   const firstName = searchParams.get("firstName") || "";
@@ -27,17 +29,32 @@ const EmptySearchResults = ({ isBusinessUser }: EmptySearchResultsProps) => {
   if (city) newReviewParams.append("city", city);
   if (zipCode) newReviewParams.append("zipCode", zipCode);
   
-  const newReviewLink = `/review/new?${newReviewParams.toString()}`;
+  const newReviewLink = `/new-review?${newReviewParams.toString()}`;
   
   return (
     <div className="text-center py-8">
       <p className="text-gray-500 mb-4">No reviews found. Write one!</p>
-      {isBusinessUser && (
+      {currentUser ? (
+        isBusinessUser ? (
+          <div className="flex justify-center">
+            <Link to={newReviewLink}>
+              <Button className="welp-button flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Add Customer Review
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">
+            Only business users can write customer reviews.
+          </p>
+        )
+      ) : (
         <div className="flex justify-center">
-          <Link to={newReviewLink}>
+          <Link to="/signup?unlock=review">
             <Button className="welp-button flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
-              Add Customer Review
+              Sign Up to Write Review
             </Button>
           </Link>
         </div>
