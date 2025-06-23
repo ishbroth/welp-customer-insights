@@ -21,15 +21,13 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const [isGoogleReady, setIsGoogleReady] = useState(false);
-    const [userTyping, setUserTyping] = useState(false);
-    const lastUserInput = useRef<string>("");
+    const [inputValue, setInputValue] = useState(props.value || "");
 
     useEffect(() => {
       let mounted = true;
       
       const initializeGoogle = async () => {
         try {
-          // Try to get API key
           const { data, error } = await supabase.functions.invoke('get-secret', {
             body: { secretName: 'VITE_GOOGLE_MAPS_API_KEY' }
           });
@@ -39,13 +37,11 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
             return;
           }
 
-          // Check if already loaded
           if (window.google && window.google.maps && window.google.maps.places) {
             if (mounted) setIsGoogleReady(true);
             return;
           }
 
-          // Load Google Maps script
           const script = document.createElement('script');
           script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places`;
           script.async = true;
@@ -76,19 +72,16 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       if (!isGoogleReady || !inputRef.current) return;
 
       try {
-        // Clean up existing autocomplete
         if (autocompleteRef.current) {
           window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         }
 
-        // Initialize new autocomplete
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
           componentRestrictions: { country: 'us' },
           fields: ['formatted_address', 'address_components', 'geometry']
         });
 
-        // Handle place selection
         const placeChangedListener = autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
           
@@ -96,18 +89,12 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
             const cleanAddress = place.formatted_address.replace(/,/g, '');
             const normalizedAddress = normalizeAddress(cleanAddress);
             
-            // Update input value
-            if (inputRef.current) {
-              inputRef.current.value = normalizedAddress;
-              lastUserInput.current = normalizedAddress;
-            }
+            // Update the input value in our state
+            setInputValue(normalizedAddress);
             
             // Call callbacks
             onAddressChange?.(normalizedAddress);
             onPlaceSelect?.(place);
-            
-            // Reset user typing flag after autocomplete selection
-            setTimeout(() => setUserTyping(false), 100);
           }
         });
 
@@ -121,33 +108,22 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       }
     }, [isGoogleReady, onPlaceSelect, onAddressChange]);
 
-    // Handle manual typing - this is crucial for space bar functionality
+    // Sync with external value changes
+    useEffect(() => {
+      if (props.value !== undefined && props.value !== inputValue) {
+        setInputValue(props.value as string);
+      }
+    }, [props.value]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       
-      // Track that user is manually typing
-      setUserTyping(true);
-      lastUserInput.current = value;
+      // Always allow the user to type freely
+      setInputValue(value);
       
-      // Allow normal typing behavior
+      // Call callbacks
       onAddressChange?.(value);
       onChange?.(e);
-      
-      // Clear user typing flag after a delay
-      setTimeout(() => setUserTyping(false), 1000);
-    };
-
-    // Handle key events to ensure space bar works
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Always allow space bar and other keys
-      if (e.key === ' ') {
-        setUserTyping(true);
-      }
-      
-      // Call original onKeyDown if provided
-      if (props.onKeyDown) {
-        props.onKeyDown(e);
-      }
     };
 
     const getPlaceholder = () => {
@@ -169,8 +145,8 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
         }}
         className={cn(className)}
         placeholder={getPlaceholder()}
+        value={inputValue}
         onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
         {...props}
       />
     );
