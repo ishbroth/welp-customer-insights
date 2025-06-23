@@ -15,6 +15,7 @@ export const useReviewFormState = () => {
   const searchParamFirstName = searchParams.get("firstName") || "";
   const searchParamLastName = searchParams.get("lastName") || "";
   const searchParamPhone = searchParams.get("phone") || "";
+  const searchParamAddress = searchParams.get("address") || "";
   const searchParamCity = searchParams.get("city") || "";
   const searchParamState = searchParams.get("state") || "";
   const searchParamZipCode = searchParams.get("zipCode") || "";
@@ -29,6 +30,7 @@ export const useReviewFormState = () => {
   const [customerFirstName, setCustomerFirstName] = useState("");
   const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
   const [customerCity, setCustomerCity] = useState("");
   const [customerState, setCustomerState] = useState("");
   const [customerZipCode, setCustomerZipCode] = useState("");
@@ -70,6 +72,7 @@ export const useReviewFormState = () => {
         setCustomerFirstName(firstName);
         setCustomerLastName(lastName);
         setCustomerPhone(reviewData.phone || "");
+        setCustomerAddress(reviewData.address || "");
         setCustomerCity(reviewData.city || "");
         setCustomerState(reviewData.state || "");
         setCustomerZipCode(reviewData.zipCode || "");
@@ -118,6 +121,7 @@ export const useReviewFormState = () => {
         setCustomerFirstName(searchParamFirstName);
         setCustomerLastName(searchParamLastName);
         setCustomerPhone(searchParamPhone);
+        setCustomerAddress(searchParamAddress);
         setCustomerCity(searchParamCity);
         setCustomerState(searchParamState);
         setCustomerZipCode(searchParamZipCode);
@@ -144,6 +148,7 @@ export const useReviewFormState = () => {
     searchParamFirstName, 
     searchParamLastName, 
     searchParamPhone, 
+    searchParamAddress, 
     searchParamCity, 
     searchParamState,
     searchParamZipCode
@@ -172,6 +177,8 @@ export const useReviewFormState = () => {
     setCustomerLastName,
     customerPhone,
     setCustomerPhone,
+    customerAddress,
+    setCustomerAddress,
     customerCity,
     setCustomerCity,
     customerState,

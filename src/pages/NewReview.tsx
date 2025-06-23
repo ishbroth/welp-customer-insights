@@ -37,6 +37,7 @@ const NewReview = () => {
         firstName: formState.customerFirstName,
         lastName: formState.customerLastName,
         phone: formState.customerPhone,
+        address: formState.customerAddress,
         city: formState.customerCity,
         zipCode: formState.customerZipCode
       });
@@ -54,6 +55,7 @@ const NewReview = () => {
       customerFirstName: formState.customerFirstName,
       customerLastName: formState.customerLastName,
       customerPhone: formState.customerPhone,
+      customerAddress: formState.customerAddress,
       customerCity: formState.customerCity,
       customerState: formState.customerState,
       customerZipCode: formState.customerZipCode,
@@ -87,6 +89,8 @@ const NewReview = () => {
                 setCustomerLastName={formState.setCustomerLastName}
                 customerPhone={formState.customerPhone}
                 setCustomerPhone={formState.setCustomerPhone}
+                customerAddress={formState.customerAddress}
+                setCustomerAddress={formState.setCustomerAddress}
                 customerCity={formState.customerCity}
                 setCustomerCity={formState.setCustomerCity}
                 customerState={formState.customerState}

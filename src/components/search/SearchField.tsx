@@ -3,6 +3,8 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface SearchFieldProps {
   type?: string;
@@ -26,6 +28,43 @@ const SearchField = ({
   
   // Use PhoneInput for phone fields
   const isPhoneField = placeholder.toLowerCase().includes("phone") || type === "tel";
+  
+  // Use AddressAutocomplete for address fields
+  const isAddressField = placeholder.toLowerCase().includes("address") || 
+                        placeholder.toLowerCase().includes("street");
+  
+  // Use apartment/suite input for those fields
+  const isApartmentField = placeholder.toLowerCase().includes("apartment") ||
+                          placeholder.toLowerCase().includes("suite") ||
+                          placeholder.toLowerCase().includes("unit");
+  
+  // Handle address field restrictions and normalization
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isAddressField) {
+      let value = e.target.value;
+      // Remove commas and stop input after first comma
+      const commaIndex = value.indexOf(',');
+      if (commaIndex !== -1) {
+        value = value.substring(0, commaIndex);
+      }
+      // Normalize the address for consistent searching
+      value = normalizeAddress(value);
+      e.target.value = value;
+    }
+    
+    onChange(e);
+  };
+
+  // Handle address autocomplete change with normalization
+  const handleAddressAutocompleteChange = (address: string) => {
+    // Normalize the address for consistent searching
+    const normalizedAddress = normalizeAddress(address);
+    // Create a synthetic event to maintain consistency
+    const syntheticEvent = {
+      target: { value: normalizedAddress }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onChange(syntheticEvent);
+  };
 
   // Handle phone input change
   const handlePhoneChange = (value: string) => {
@@ -42,7 +81,7 @@ const SearchField = ({
         type={type}
         placeholder={placeholder}
         value={value}
-        onChange={onChange}
+        onChange={handleAddressChange}
         className={`welp-input ${className || ""}`}
         required={required}
       />
@@ -61,12 +100,25 @@ const SearchField = ({
     );
   }
 
+  if (isAddressField) {
+    return (
+      <AddressAutocomplete
+        placeholder={placeholder}
+        value={value}
+        onChange={handleAddressChange}
+        onAddressChange={handleAddressAutocompleteChange}
+        className={`welp-input ${className || ""}`}
+        required={required}
+      />
+    );
+  }
+
   return (
     <Input
       type={type}
       placeholder={placeholder}
       value={value}
-      onChange={onChange}
+      onChange={handleAddressChange}
       className={`welp-input ${className || ""}`}
       required={required}
     />
