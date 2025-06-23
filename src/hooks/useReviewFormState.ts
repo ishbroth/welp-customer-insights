@@ -61,6 +61,7 @@ export const useReviewFormState = () => {
       
       // Handle pre-filling data if we're editing
       if (isEditing && reviewData) {
+        console.log("Setting form data from reviewData:", reviewData);
         setRating(reviewData.rating);
         setComment(reviewData.content);
         
@@ -116,6 +117,70 @@ export const useReviewFormState = () => {
             console.error("Error loading existing photos:", error);
           }
         }
+      } else if (isEditing && reviewId && !reviewData) {
+        // If we're editing but don't have reviewData, try to fetch it from the database
+        console.log("Editing mode but no reviewData, fetching from database...");
+        try {
+          const { data: review, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('id', reviewId)
+            .maybeSingle();
+
+          if (error) {
+            console.error("Error fetching review for editing:", error);
+          } else if (review) {
+            console.log("Fetched review data:", review);
+            setRating(review.rating);
+            setComment(review.content);
+            
+            const customerName = review.customer_name || "";
+            const nameParts = customerName.split(" ");
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
+            
+            setCustomerFirstName(firstName);
+            setCustomerLastName(lastName);
+            setCustomerPhone(review.customer_phone || "");
+            setCustomerAddress(review.customer_address || "");
+            setCustomerCity(review.customer_city || "");
+            setCustomerState(review.customer_state || "");
+            setCustomerZipCode(review.customer_zipcode || "");
+
+            // Load existing photos
+            const { data: existingPhotos, error: photosError } = await supabase
+              .from('review_photos')
+              .select('*')
+              .eq('review_id', reviewId)
+              .order('display_order');
+
+            if (!photosError && existingPhotos && existingPhotos.length > 0) {
+              console.log("Loading existing photos:", existingPhotos);
+              
+              const photoPromises = existingPhotos.map(async (photo, index) => {
+                try {
+                  const file = await urlToFile(photo.photo_url, `photo-${index}.jpg`);
+                  return {
+                    file,
+                    caption: photo.caption || "",
+                    preview: photo.photo_url,
+                    isExisting: true,
+                    existingId: photo.id
+                  };
+                } catch (error) {
+                  console.error("Error converting photo to file:", error);
+                  return null;
+                }
+              });
+
+              const convertedPhotos = await Promise.all(photoPromises);
+              const validPhotos = convertedPhotos.filter(photo => photo !== null);
+              setPhotos(validPhotos as Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching review data:", error);
+        }
       } else {
         // Pre-fill form with search parameters from URL if not editing
         setCustomerFirstName(searchParamFirstName);
@@ -152,7 +217,7 @@ export const useReviewFormState = () => {
     searchParamCity, 
     searchParamState,
     searchParamZipCode
-  ]); // Removed all the setter functions from dependencies
+  ]);
 
   return {
     // URL params

@@ -54,25 +54,31 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     console.log("Review object:", review);
     console.log("Review ID:", review.id);
     
+    // Prepare review data to pass through navigation state
+    const reviewData = {
+      rating: review.rating,
+      content: review.content,
+      customerName: review.customerName,
+      phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
+      address: (review as any).customer_address || review.address || (review as any).customerAddress || '',
+      city: (review as any).customer_city || review.city || (review as any).customerCity || '',
+      state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
+      zipCode: (review as any).customer_zipcode || review.zipCode || (review as any).customerZipCode || (review as any).customerZipcode || '',
+    };
+    
     // Navigate to new review page with customer info pre-filled and edit mode enabled
     const params = new URLSearchParams({
       edit: 'true',
       reviewId: review.id,
-      customerFirstName: review.customerName?.split(' ')[0] || '',
-      customerLastName: review.customerName?.split(' ').slice(1).join(' ') || '',
-      customerPhone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
-      customerAddress: (review as any).customer_address || review.address || (review as any).customerAddress || '',
-      customerCity: (review as any).customer_city || review.city || (review as any).customerCity || '',
-      customerState: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
-      customerZipCode: (review as any).customer_zipcode || review.zipCode || (review as any).customerZipCode || (review as any).customerZipcode || '',
-      rating: review.rating.toString(),
-      comment: review.content
     });
     
+    console.log("Review data being passed:", reviewData);
     console.log("Navigation params:", Object.fromEntries(params));
     console.log("Full URL:", `/new-review?${params.toString()}`);
     
-    navigate(`/new-review?${params.toString()}`);
+    navigate(`/new-review?${params.toString()}`, {
+      state: { reviewData }
+    });
   };
 
   // Customer info for left side (larger)
