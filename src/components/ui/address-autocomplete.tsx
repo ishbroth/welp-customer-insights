@@ -17,7 +17,7 @@ declare global {
 }
 
 const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(
-  ({ className, onPlaceSelect, onAddressChange, ...props }, ref) => {
+  ({ className, onPlaceSelect, onAddressChange, onChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -157,6 +157,21 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       };
     }, [isLoaded, onPlaceSelect, onAddressChange, hasApiKey]);
 
+    // Handle input changes to ensure normal typing works
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      console.log("Manual typing detected:", e.target.value);
+      
+      // Call the original onChange handler to maintain normal input behavior
+      if (onChange) {
+        onChange(e);
+      }
+      
+      // Also call onAddressChange if provided for consistency
+      if (onAddressChange) {
+        onAddressChange(e.target.value);
+      }
+    };
+
     // If Google Maps is not loaded or no API key, fall back to regular input
     if (!isLoaded || !hasApiKey) {
       return (
@@ -164,6 +179,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           ref={ref}
           className={className}
           placeholder={hasApiKey ? "Loading address autocomplete..." : "Enter your address (autocomplete unavailable)"}
+          onChange={handleInputChange}
           {...props}
         />
       );
@@ -181,6 +197,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
         }}
         className={cn(className)}
         placeholder="Start typing your address..."
+        onChange={handleInputChange}
         {...props}
       />
     );
