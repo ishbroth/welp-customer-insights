@@ -33,31 +33,35 @@ const EmptySearchResults = ({ isBusinessUser }: EmptySearchResultsProps) => {
   
   return (
     <div className="text-center py-8">
-      <p className="text-gray-500 mb-4">No reviews found. Write one!</p>
-      {currentUser ? (
-        isBusinessUser ? (
-          <div className="flex justify-center">
-            <Link to={newReviewLink}>
-              <Button className="welp-button flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                Add Customer Review
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-600">
-            Only business users can write customer reviews.
-          </p>
-        )
-      ) : (
-        <div className="flex justify-center">
-          <Link to="/signup?unlock=review">
-            <Button className="welp-button flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Sign Up to Write Review
-            </Button>
+      {!currentUser ? (
+        <p className="text-gray-500 mb-4">
+          No reviews found. Business Owners{" "}
+          <Link 
+            to="/signup?account_type=business" 
+            className="underline text-blue-600 hover:text-blue-800"
+          >
+            sign up to write one
           </Link>
-        </div>
+          !
+        </p>
+      ) : (
+        <>
+          <p className="text-gray-500 mb-4">No reviews found. Write one!</p>
+          {isBusinessUser ? (
+            <div className="flex justify-center">
+              <Link to={newReviewLink}>
+                <Button className="welp-button flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Add Customer Review
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">
+              Only business users can write customer reviews.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

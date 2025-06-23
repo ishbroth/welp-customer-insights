@@ -26,9 +26,8 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
     return (
       <div className="space-y-4">
         <SearchResultsHeader 
-          totalResults={0} 
-          isLoading={true}
-          onRefresh={onRefresh}
+          resultsCount={0}
+          onClearSearch={() => {}}
         />
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
@@ -48,15 +47,11 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
   return (
     <div className="space-y-4">
       <SearchResultsHeader 
-        totalResults={customers.length} 
-        isLoading={isLoading}
-        onRefresh={onRefresh}
+        resultsCount={customers.length}
+        onClearSearch={() => {}}
       />
       <SearchResultsList 
         customers={displayedCustomers}
-        showAll={showAll}
-        totalCustomers={customers.length}
-        onShowAllToggle={() => setShowAll(!showAll)}
       />
     </div>
   );
