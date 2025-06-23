@@ -144,7 +144,8 @@ export const useReviewFormState = () => {
             setCustomerPhone(review.customer_phone || "");
             setCustomerAddress(review.customer_address || "");
             setCustomerCity(review.customer_city || "");
-            setCustomerState(review.customer_state || "");
+            // Note: customer_state doesn't exist in the database, so we'll leave it empty
+            setCustomerState("");
             setCustomerZipCode(review.customer_zipcode || "");
 
             // Load existing photos
