@@ -20,161 +20,141 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
   ({ className, onPlaceSelect, onAddressChange, onChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [hasApiKey, setHasApiKey] = useState(false);
-    const [apiKey, setApiKey] = useState<string | null>(null);
+    const [isGoogleReady, setIsGoogleReady] = useState(false);
+    const [userTyping, setUserTyping] = useState(false);
+    const lastUserInput = useRef<string>("");
 
     useEffect(() => {
-      // Get API key from Supabase secrets
-      const getApiKey = async () => {
+      let mounted = true;
+      
+      const initializeGoogle = async () => {
         try {
+          // Try to get API key
           const { data, error } = await supabase.functions.invoke('get-secret', {
             body: { secretName: 'VITE_GOOGLE_MAPS_API_KEY' }
           });
           
-          if (error) {
-            console.warn("Could not retrieve Google Maps API key from Supabase:", error);
+          if (error || !data?.secret) {
+            console.log("Google Maps API key not available, using regular input");
             return;
           }
-          
-          if (data?.secret) {
-            console.log("Google Maps API Key retrieved successfully");
-            setApiKey(data.secret);
-            setHasApiKey(true);
-          } else {
-            console.warn("Google Maps API key not found in Supabase secrets");
+
+          // Check if already loaded
+          if (window.google && window.google.maps && window.google.maps.places) {
+            if (mounted) setIsGoogleReady(true);
+            return;
           }
+
+          // Load Google Maps script
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places`;
+          script.async = true;
+          script.defer = true;
+          
+          script.onload = () => {
+            if (mounted) setIsGoogleReady(true);
+          };
+
+          script.onerror = () => {
+            console.warn('Failed to load Google Maps script');
+          };
+
+          document.head.appendChild(script);
         } catch (error) {
-          console.warn("Error retrieving Google Maps API key:", error);
-          
-          // Fallback to environment variable
-          const envApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-          if (envApiKey) {
-            console.log("Using fallback environment variable for Google Maps API key");
-            setApiKey(envApiKey);
-            setHasApiKey(true);
-          }
+          console.warn("Error loading Google Maps:", error);
         }
       };
 
-      getApiKey();
+      initializeGoogle();
+      
+      return () => {
+        mounted = false;
+      };
     }, []);
 
     useEffect(() => {
-      if (!apiKey || !hasApiKey) {
-        console.log("API key not available, using regular input");
-        return;
-      }
-
-      // Check if Google Maps is already loaded
-      if (window.google && window.google.maps && window.google.maps.places) {
-        console.log("Google Maps already loaded");
-        setIsLoaded(true);
-        return;
-      }
-
-      // Load Google Maps script
-      console.log("Loading Google Maps script...");
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        console.log("Google Maps script loaded successfully");
-        setIsLoaded(true);
-      };
-
-      script.onerror = () => {
-        console.error('Failed to load Google Maps script');
-        setIsLoaded(false);
-      };
-
-      document.head.appendChild(script);
-
-      return () => {
-        // Cleanup script if component unmounts
-        const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
-        if (existingScript && existingScript.parentNode) {
-          existingScript.parentNode.removeChild(existingScript);
-        }
-      };
-    }, [apiKey, hasApiKey]);
-
-    useEffect(() => {
-      if (!isLoaded || !inputRef.current || !hasApiKey) {
-        console.log("Autocomplete not ready:", { isLoaded, hasInput: !!inputRef.current, hasApiKey });
-        return;
-      }
+      if (!isGoogleReady || !inputRef.current) return;
 
       try {
-        console.log("Initializing Google Places Autocomplete...");
-        // Initialize autocomplete
+        // Clean up existing autocomplete
+        if (autocompleteRef.current) {
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        }
+
+        // Initialize new autocomplete
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
-          componentRestrictions: { country: 'us' }, // Restrict to US addresses
+          componentRestrictions: { country: 'us' },
           fields: ['formatted_address', 'address_components', 'geometry']
         });
 
-        console.log("Autocomplete initialized, adding listeners...");
-
-        // Add place changed listener
-        autocompleteRef.current.addListener('place_changed', () => {
-          console.log("Place changed event triggered");
+        // Handle place selection
+        const placeChangedListener = autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
-          console.log("Selected place:", place);
           
           if (place && place.formatted_address) {
-            // Remove comma from the address and normalize it
             const cleanAddress = place.formatted_address.replace(/,/g, '');
             const normalizedAddress = normalizeAddress(cleanAddress);
-            console.log("Clean address:", cleanAddress);
-            console.log("Normalized address:", normalizedAddress);
             
-            // Update the input value directly
+            // Update input value
             if (inputRef.current) {
               inputRef.current.value = normalizedAddress;
+              lastUserInput.current = normalizedAddress;
             }
             
-            if (onAddressChange) {
-              onAddressChange(normalizedAddress);
-            }
+            // Call callbacks
+            onAddressChange?.(normalizedAddress);
+            onPlaceSelect?.(place);
             
-            if (onPlaceSelect) {
-              onPlaceSelect(place);
-            }
+            // Reset user typing flag after autocomplete selection
+            setTimeout(() => setUserTyping(false), 100);
           }
         });
 
-        console.log("Autocomplete setup complete");
+        return () => {
+          if (placeChangedListener) {
+            window.google.maps.event.removeListener(placeChangedListener);
+          }
+        };
       } catch (error) {
         console.error('Error initializing Google Places Autocomplete:', error);
       }
+    }, [isGoogleReady, onPlaceSelect, onAddressChange]);
 
-      return () => {
-        if (autocompleteRef.current) {
-          try {
-            window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
-          } catch (error) {
-            console.error('Error clearing autocomplete listeners:', error);
-          }
-        }
-      };
-    }, [isLoaded, onPlaceSelect, onAddressChange, hasApiKey]);
-
-    // Handle manual input changes - this preserves normal typing including spaces
+    // Handle manual typing - this is crucial for space bar functionality
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       
-      // Allow normal typing and preserve spaces
-      if (onAddressChange) {
-        onAddressChange(value);
+      // Track that user is manually typing
+      setUserTyping(true);
+      lastUserInput.current = value;
+      
+      // Allow normal typing behavior
+      onAddressChange?.(value);
+      onChange?.(e);
+      
+      // Clear user typing flag after a delay
+      setTimeout(() => setUserTyping(false), 1000);
+    };
+
+    // Handle key events to ensure space bar works
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Always allow space bar and other keys
+      if (e.key === ' ') {
+        setUserTyping(true);
       }
       
-      // Call the original onChange prop if provided
-      if (onChange) {
-        onChange(e);
+      // Call original onKeyDown if provided
+      if (props.onKeyDown) {
+        props.onKeyDown(e);
       }
+    };
+
+    const getPlaceholder = () => {
+      if (isGoogleReady) {
+        return "Start typing your address...";
+      }
+      return "Enter your address";
     };
 
     return (
@@ -188,14 +168,9 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           }
         }}
         className={cn(className)}
-        placeholder={
-          hasApiKey && isLoaded 
-            ? "Start typing your address..." 
-            : hasApiKey 
-            ? "Loading address autocomplete..." 
-            : "Enter your address"
-        }
+        placeholder={getPlaceholder()}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     );
