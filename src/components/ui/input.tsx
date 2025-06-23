@@ -15,11 +15,27 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         // Only prevent commas, but allow all other characters including spaces
         if (value.includes(',')) {
           value = value.replace(/,/g, '');
-          e.target.value = value;
+          // Update the input value directly
+          if (e.target) {
+            e.target.value = value;
+          }
+          // Create a new event with the cleaned value
+          const newEvent = {
+            ...e,
+            target: {
+              ...e.target,
+              value: value
+            }
+          };
+          onChange?.(newEvent as React.ChangeEvent<HTMLInputElement>);
+          return;
         }
       } else if (value.length > 0) {
         // Capitalize the first letter for non-address fields
-        e.target.value = value.charAt(0).toUpperCase() + value.slice(1);
+        value = value.charAt(0).toUpperCase() + value.slice(1);
+        if (e.target) {
+          e.target.value = value;
+        }
       }
       
       onChange?.(e);
