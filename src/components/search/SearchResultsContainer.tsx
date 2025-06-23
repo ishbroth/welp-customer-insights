@@ -16,9 +16,8 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
   const [showAll, setShowAll] = useState(false);
   const { currentUser } = useAuth();
   
-  // Check if current user is a business user
-  const isBusinessUser = currentUser?.user_metadata?.account_type === 'business' || 
-                        currentUser?.user_metadata?.user_type === 'business';
+  // Check if current user is a business user by checking the type property
+  const isBusinessUser = currentUser?.type === 'business';
 
   const displayedCustomers = showAll ? customers : customers.slice(0, 3);
 
@@ -52,6 +51,8 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
       />
       <SearchResultsList 
         customers={displayedCustomers}
+        isLoading={false}
+        onRefresh={onRefresh}
       />
     </div>
   );
