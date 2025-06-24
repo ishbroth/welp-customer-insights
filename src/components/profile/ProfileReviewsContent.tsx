@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -49,27 +50,63 @@ const ProfileReviewsContent = ({
   // Pagination settings
   const reviewsPerPage = 5;
   
-  // Sort reviews: new reviews first, then claimed, then by match quality, then by date
-  const sortedReviews = [...localReviews].sort((a, b) => {
-    const aData = a as any;
-    const bData = b as any;
-    
-    // New reviews first
-    if (aData.isNewReview && !bData.isNewReview) return -1;
-    if (!aData.isNewReview && bData.isNewReview) return 1;
-    
-    // Then claimed reviews
-    if (aData.matchType === 'claimed' && bData.matchType !== 'claimed') return -1;
-    if (aData.matchType !== 'claimed' && bData.matchType === 'claimed') return 1;
-    
-    // Then by match quality
-    if (aData.matchType === 'high_quality' && bData.matchType === 'potential') return -1;
-    if (aData.matchType === 'potential' && bData.matchType === 'high_quality') return 1;
-    
-    // Finally by match score, then date
-    if (aData.matchScore !== bData.matchScore) return (bData.matchScore || 0) - (aData.matchScore || 0);
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
-  });
+  // For customer users, separate claimed vs unclaimed reviews
+  const isCustomerUser = currentUser?.type === "customer";
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+  
+  let claimedReviews: any[] = [];
+  let unclaimedReviews: any[] = [];
+  let sortedReviews: any[] = [];
+
+  if (isCustomerUser) {
+    // Separate reviews by claim status
+    claimedReviews = localReviews.filter(review => {
+      const reviewData = review as any;
+      return reviewData.matchType === 'claimed' || review.customerId === currentUser?.id;
+    });
+
+    unclaimedReviews = localReviews.filter(review => {
+      const reviewData = review as any;
+      return reviewData.matchType !== 'claimed' && review.customerId !== currentUser?.id;
+    });
+
+    // Sort unclaimed reviews by match quality first, then claimed reviews
+    const sortedUnclaimed = unclaimedReviews.sort((a, b) => {
+      const aData = a as any;
+      const bData = b as any;
+      
+      // New reviews first
+      if (aData.isNewReview && !bData.isNewReview) return -1;
+      if (!aData.isNewReview && bData.isNewReview) return 1;
+      
+      // Then by match quality
+      if (aData.matchType === 'high_quality' && bData.matchType === 'potential') return -1;
+      if (aData.matchType === 'potential' && bData.matchType === 'high_quality') return 1;
+      
+      // Finally by match score, then date
+      if (aData.matchScore !== bData.matchScore) return (bData.matchScore || 0) - (aData.matchScore || 0);
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    const sortedClaimed = claimedReviews.sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    // Show unclaimed first, then claimed
+    sortedReviews = [...sortedUnclaimed, ...sortedClaimed];
+  } else {
+    // For business users, use original sorting
+    sortedReviews = [...localReviews].sort((a, b) => {
+      const aData = a as any;
+      const bData = b as any;
+      
+      // New reviews first
+      if (aData.isNewReview && !bData.isNewReview) return -1;
+      if (!aData.isNewReview && bData.isNewReview) return 1;
+      
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }
 
   const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
@@ -104,6 +141,12 @@ const ProfileReviewsContent = ({
     console.log('Delete review:', reviewId);
   };
 
+  // Handle successful claim - refresh the page to show updated status
+  const handleClaimSuccess = () => {
+    // Force a page refresh to reload the reviews with updated claim status
+    window.location.reload();
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-10">
@@ -123,12 +166,37 @@ const ProfileReviewsContent = ({
     return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
 
-  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-  const isCustomerUser = currentUser?.type === "customer";
-
   return (
     <div className="space-y-6">
-      {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => {
+      {/* Show section headers for customer users */}
+      {isCustomerUser && (
+        <div className="space-y-6">
+          {/* Unclaimed Reviews Section */}
+          {unclaimedReviews.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                Reviews Waiting to be Claimed ({unclaimedReviews.length})
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                These reviews appear to be about you. Click "Claim this Review" to link them to your profile.
+              </p>
+            </div>
+          )}
+          
+          {/* Claimed Reviews Section */}
+          {claimedReviews.length > 0 && unclaimedReviews.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                Your Claimed Reviews ({claimedReviews.length})
+              </h3>
+            </div>
+          )}
+        </div>
+      )}
+
+      {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review, index) => {
+        const isInUnclaimedSection = isCustomerUser && index < unclaimedReviews.length;
+        
         if (isBusinessUser) {
           return (
             <BusinessReviewCardWrapper
@@ -149,6 +217,7 @@ const ProfileReviewsContent = ({
               onPurchase={handlePurchaseReview}
               onReactionToggle={handleReactionToggle}
               hasSubscription={hasSubscription}
+              onClaimSuccess={handleClaimSuccess}
             />
           );
         }

@@ -1,6 +1,4 @@
 
-import { useAuth } from "@/contexts/auth";
-
 interface UseReviewPermissionsProps {
   isCustomerUser: boolean;
   isBusinessUser: boolean;
@@ -20,56 +18,32 @@ export const useReviewPermissions = ({
   hasSubscription,
   isUnlocked,
 }: UseReviewPermissionsProps) => {
-  // Determine if user can react to this review
+  
   const canReact = () => {
-    // Customer users can only react if they've claimed the review about them
-    if (isCustomerUser && isCustomerBeingReviewed) {
-      return isReviewClaimed;
-    }
-    
-    // Business users can react to any customer review by other businesses
-    if (isBusinessUser && !isReviewAuthor) {
-      return true;
-    }
-    
-    return false;
+    // Can react if review is claimed and user has access, or if user has subscription/unlock
+    return isReviewClaimed && (hasSubscription || isUnlocked);
   };
 
-  // Determine if user can respond to this review
   const canRespond = () => {
-    // Customer users can respond if they've claimed the review AND have subscription/one-time access
-    if (isCustomerUser && isCustomerBeingReviewed && isReviewClaimed) {
-      return hasSubscription || isUnlocked;
-    }
-    
-    // Business users can respond if they have subscription/one-time access and it's not their own review
-    if (isBusinessUser && !isReviewAuthor) {
-      return hasSubscription || isUnlocked;
-    }
-    
-    return false;
+    // Can respond if review is claimed and user is the customer being reviewed
+    return isReviewClaimed && isCustomerBeingReviewed && (hasSubscription || isUnlocked);
   };
 
-  // Determine what to show based on user type and subscription status
   const shouldShowFullReview = () => {
-    if (isCustomerUser && isCustomerBeingReviewed) {
-      // For customer users viewing reviews about them:
-      // If they have a subscription, show full review regardless of claim status
-      // If they don't have subscription but have claimed + unlocked, show full review
-      if (hasSubscription) return true;
-      return isReviewClaimed && isUnlocked;
-    }
-    // For business users or other cases, use the existing isUnlocked logic
-    return isUnlocked;
+    // Show full review if claimed and user has access, or if user has subscription/unlock
+    return (isReviewClaimed && (hasSubscription || isUnlocked)) || isReviewAuthor;
   };
 
   const shouldShowClaimButton = () => {
-    // Show claim button for customer users who haven't claimed the review yet
-    return isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed;
+    // Show claim button only if:
+    // 1. User is a customer
+    // 2. Review is NOT claimed yet
+    // 3. User is not the review author (business)
+    return isCustomerUser && !isReviewClaimed && !isReviewAuthor;
   };
 
   const shouldShowRespondButton = () => {
-    // Show respond button if user can respond (claimed + has subscription/access)
+    // Show respond button if review is claimed and user can respond
     return canRespond();
   };
 

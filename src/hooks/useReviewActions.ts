@@ -33,8 +33,16 @@ export const useReviewActions = ({
   const isBusinessUser = currentUser?.type === "business";
   const isCustomerUser = currentUser?.type === "customer";
   
-  // Check if this review has been claimed
-  const isReviewClaimed = !!(review.customerId);
+  // Check if this review has been claimed - this is the key check
+  const isReviewClaimed = !!(review.customerId) || review.matchType === 'claimed';
+
+  console.log('useReviewActions: Review claim status check:', {
+    reviewId: review.id,
+    customerId: review.customerId,
+    matchType: review.matchType,
+    isReviewClaimed,
+    currentUserId: currentUser?.id
+  });
 
   // Use smaller hooks for specific functionality
   const reactionHook = useReviewReactions({
@@ -60,7 +68,8 @@ export const useReviewActions = ({
   };
 
   const handleClaimConfirm = async () => {
-    await claimDialogHook.handleClaimConfirm(review.id);
+    const success = await claimDialogHook.handleClaimConfirm(review.id);
+    return success;
   };
 
   return {

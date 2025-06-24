@@ -33,6 +33,7 @@ interface EnhancedCustomerReviewCardProps {
   hasSubscription: boolean;
   onPurchase: (reviewId: string) => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
+  onClaimSuccess?: () => void;
 }
 
 const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
@@ -41,6 +42,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   hasSubscription,
   onPurchase,
   onReactionToggle,
+  onClaimSuccess,
 }) => {
   const {
     showClaimDialog,
@@ -60,7 +62,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isClaimingReview,
     handlePurchaseClick,
     handleClaimClick,
-    handleClaimConfirm,
+    handleClaimConfirm: originalHandleClaimConfirm,
     handleClaimCancel,
     handleReactionToggle,
     handleBusinessNameClick,
@@ -71,6 +73,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     onPurchase,
     onReactionToggle,
   });
+
+  // Enhanced claim confirm handler that calls the success callback
+  const handleClaimConfirm = async () => {
+    const success = await originalHandleClaimConfirm();
+    if (success && onClaimSuccess) {
+      onClaimSuccess();
+    }
+  };
 
   const {
     canReact,
@@ -143,12 +153,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
     reviewId: review.id,
     isReviewClaimed,
+    matchType: review.matchType,
     customerProfile: customerProfile ? 'loaded' : 'not loaded',
     businessProfile: businessProfile ? 'loaded' : 'not loaded',
     finalCustomerAvatar,
     finalBusinessAvatar,
     isCustomerVerified,
-    isBusinessVerified
+    isBusinessVerified,
+    shouldShowClaimButton: shouldShowClaimButton()
   });
 
   return (
@@ -158,16 +170,19 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         <ReportReviewButton reviewId={review.id} />
       </div>
 
-      <ReviewMatchInfo
-        matchType={review.matchType}
-        matchReasons={review.matchReasons}
-        matchScore={review.matchScore}
-        detailedMatches={review.detailedMatches}
-        isNewReview={review.isNewReview}
-        isClaimingReview={isClaimingReview}
-        onClaimClick={handleClaimClick}
-        isReviewClaimed={isReviewClaimed}
-      />
+      {/* Show match info and claim button for unclaimed reviews */}
+      {!isReviewClaimed && (
+        <ReviewMatchInfo
+          matchType={review.matchType}
+          matchReasons={review.matchReasons}
+          matchScore={review.matchScore}
+          detailedMatches={review.detailedMatches}
+          isNewReview={review.isNewReview}
+          isClaimingReview={isClaimingReview}
+          onClaimClick={handleClaimClick}
+          isReviewClaimed={isReviewClaimed}
+        />
+      )}
       
       {/* Header with business on left, customer on right */}
       <div className="flex items-start justify-between mb-4">
@@ -210,6 +225,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
             <div className="flex items-center gap-1">
               <h4 className="font-medium text-sm">{customerInfo.name}</h4>
               {customerInfo.verified && <VerifiedBadge size="xs" />}
+              {isReviewClaimed && (
+                <span className="text-xs text-green-600 font-medium">Claimed</span>
+              )}
             </div>
             <p className="text-xs text-gray-500">Customer</p>
             {customerInfo.phone && (
