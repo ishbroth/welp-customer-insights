@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
 import RatingInput from "@/components/reviews/RatingInput";
 import ReviewTextInput from "@/components/reviews/ReviewTextInput";
@@ -75,6 +76,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   photos,
   setPhotos,
 }) => {
+  const navigate = useNavigate();
+
+  const handleCancel = () => {
+    navigate("/business/reviews");
+  };
+
   return (
     <form onSubmit={onSubmit}>
       <div className="space-y-6">
@@ -118,7 +125,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           setPhotos={setPhotos}
         />
         
-        <div className="pt-4">
+        <div className="pt-4 space-y-3">
           <Button
             type="submit"
             className="welp-button w-full"
@@ -129,6 +136,19 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
               isChecking ? "Checking..." :
               (isEditing ? "Update Review" : "Submit Review")}
           </Button>
+          
+          {/* Cancel link - only show when editing */}
+          {isEditing && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </form>
