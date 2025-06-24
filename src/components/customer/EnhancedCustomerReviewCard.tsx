@@ -76,9 +76,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   // Enhanced claim confirm handler that calls the success callback
   const handleClaimConfirm = async () => {
-    const success = await originalHandleClaimConfirm();
-    if (success && onClaimSuccess) {
-      onClaimSuccess();
+    try {
+      await originalHandleClaimConfirm();
+      if (onClaimSuccess) {
+        onClaimSuccess();
+      }
+    } catch (error) {
+      console.error('Error claiming review:', error);
     }
   };
 
