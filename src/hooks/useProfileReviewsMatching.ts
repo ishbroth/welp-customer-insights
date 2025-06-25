@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
@@ -180,7 +181,7 @@ export const useProfileReviewsMatching = () => {
         last_login: new Date().toISOString()
       });
 
-    // FIXED: Fetch all potential matching reviews WITHOUT setting customer_id
+    // FIXED: Fetch all potential matching reviews WITHOUT setting customer_id AND exclude soft-deleted reviews
     const { data: allReviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -198,6 +199,7 @@ export const useProfileReviewsMatching = () => {
         claimed_at,
         claimed_by
       `)
+      .is('deleted_at', null) // Only get non-deleted reviews
       .order('created_at', { ascending: false });
 
     if (error) {
