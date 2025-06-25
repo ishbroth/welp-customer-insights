@@ -22,42 +22,58 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const [isGoogleReady, setIsGoogleReady] = useState(false);
     const [inputValue, setInputValue] = useState(props.value || "");
+    const [googleMapsStatus, setGoogleMapsStatus] = useState<'loading' | 'ready' | 'error' | 'no-key'>('loading');
 
     useEffect(() => {
       let mounted = true;
       
       const initializeGoogle = async () => {
         try {
+          console.log('🗺️ Initializing Google Maps...');
           const { data, error } = await supabase.functions.invoke('get-secret', {
             body: { secretName: 'VITE_GOOGLE_MAPS_API_KEY' }
           });
           
           if (error || !data?.secret) {
-            console.log("Google Maps API key not available, using regular input");
+            console.log("❌ Google Maps API key not available, using regular input");
+            setGoogleMapsStatus('no-key');
             return;
           }
+
+          console.log('✅ Google Maps API key retrieved successfully');
 
           if (window.google && window.google.maps && window.google.maps.places) {
-            if (mounted) setIsGoogleReady(true);
+            console.log('✅ Google Maps already loaded');
+            if (mounted) {
+              setIsGoogleReady(true);
+              setGoogleMapsStatus('ready');
+            }
             return;
           }
 
+          console.log('🔄 Loading Google Maps script...');
           const script = document.createElement('script');
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places`;
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places&loading=async`;
           script.async = true;
           script.defer = true;
           
           script.onload = () => {
-            if (mounted) setIsGoogleReady(true);
+            console.log('✅ Google Maps script loaded successfully');
+            if (mounted) {
+              setIsGoogleReady(true);
+              setGoogleMapsStatus('ready');
+            }
           };
 
-          script.onerror = () => {
-            console.warn('Failed to load Google Maps script');
+          script.onerror = (error) => {
+            console.error('❌ Failed to load Google Maps script:', error);
+            setGoogleMapsStatus('error');
           };
 
           document.head.appendChild(script);
         } catch (error) {
-          console.warn("Error loading Google Maps:", error);
+          console.error("❌ Error loading Google Maps:", error);
+          setGoogleMapsStatus('error');
         }
       };
 
@@ -72,6 +88,8 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       if (!isGoogleReady || !inputRef.current) return;
 
       try {
+        console.log('🔧 Setting up Google Places Autocomplete...');
+        
         if (autocompleteRef.current) {
           window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         }
@@ -82,10 +100,13 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           fields: ['formatted_address', 'address_components', 'geometry']
         });
 
+        console.log('✅ Google Places Autocomplete initialized successfully');
+
         const placeChangedListener = autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
           
           if (place && place.formatted_address) {
+            console.log('🏠 Place selected:', place.formatted_address);
             const cleanAddress = place.formatted_address.replace(/,/g, '');
             const normalizedAddress = normalizeAddress(cleanAddress);
             
@@ -104,7 +125,8 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           }
         };
       } catch (error) {
-        console.error('Error initializing Google Places Autocomplete:', error);
+        console.error('❌ Error initializing Google Places Autocomplete:', error);
+        setGoogleMapsStatus('error');
       }
     }, [isGoogleReady, onPlaceSelect, onAddressChange]);
 
@@ -127,28 +149,59 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     };
 
     const getPlaceholder = () => {
-      if (isGoogleReady) {
-        return "Start typing your address...";
+      switch (googleMapsStatus) {
+        case 'loading':
+          return "Loading Google Maps...";
+        case 'ready':
+          return "Start typing your address...";
+        case 'error':
+          return "Enter your address (autocomplete unavailable)";
+        case 'no-key':
+          return "Enter your address";
+        default:
+          return "Enter your address";
       }
-      return "Enter your address";
     };
 
+    const getStatusIndicator = () => {
+      switch (googleMapsStatus) {
+        case 'loading':
+          return '🔄';
+        case 'ready':
+          return '🗺️';
+        case 'error':
+          return '❌';
+        case 'no-key':
+          return '📝';
+        default:
+          return '';
+      }
+    };
+
+    console.log(`AddressAutocomplete status: ${googleMapsStatus}, Google ready: ${isGoogleReady}`);
+
     return (
-      <Input
-        ref={(node) => {
-          inputRef.current = node;
-          if (typeof ref === 'function') {
-            ref(node);
-          } else if (ref) {
-            ref.current = node;
-          }
-        }}
-        className={cn(className)}
-        placeholder={getPlaceholder()}
-        value={inputValue}
-        onChange={handleInputChange}
-        {...props}
-      />
+      <div className="relative">
+        <Input
+          ref={(node) => {
+            inputRef.current = node;
+            if (typeof ref === 'function') {
+              ref(node);
+            } else if (ref) {
+              ref.current = node;
+            }
+          }}
+          className={cn(className)}
+          placeholder={getPlaceholder()}
+          value={inputValue}
+          onChange={handleInputChange}
+          {...props}
+        />
+        {/* Status indicator in the corner */}
+        <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs opacity-50 pointer-events-none">
+          {getStatusIndicator()}
+        </span>
+      </div>
     );
   }
 );
