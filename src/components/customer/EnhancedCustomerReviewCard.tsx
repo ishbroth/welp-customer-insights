@@ -160,12 +160,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Check if review is actually claimed by checking customerId field
   const isActuallyClaimed = !!review.customerId;
 
+  // Determine if business name should be clickable - only if unlocked or has subscription
+  const shouldBusinessNameBeClickable = isUnlocked || hasSubscription;
+
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
     reviewId: review.id,
     reviewCustomerId: review.customerId,
     isActuallyClaimed,
     matchType: review.matchType,
     businessDisplayName,
+    shouldBusinessNameBeClickable,
+    isUnlocked,
+    hasSubscription,
     businessProfile: businessProfile ? 'loaded' : 'not loaded',
     customerProfile: customerProfile ? 'loaded' : 'not loaded',
     finalCustomerAvatar,
@@ -204,14 +210,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           </Avatar>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 
-                className={`font-semibold text-lg ${
-                  isUnlocked ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''
-                }`}
-                onClick={isUnlocked ? handleBusinessNameClick : undefined}
-              >
-                {businessInfo.name}
-              </h3>
+              {shouldBusinessNameBeClickable ? (
+                <h3 
+                  className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline"
+                  onClick={handleBusinessNameClick}
+                >
+                  {businessInfo.name}
+                </h3>
+              ) : (
+                <h3 className="font-semibold text-lg text-gray-900">
+                  {businessInfo.name}
+                </h3>
+              )}
               {businessInfo.verified && <VerifiedBadge size="sm" />}
             </div>
             <p className="text-sm text-gray-500">
