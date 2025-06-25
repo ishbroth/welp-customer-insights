@@ -1,13 +1,13 @@
+
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Edit, Trash2, Lock } from "lucide-react";
-import { formatDistance } from "date-fns";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ResponseDeleteDialog from "@/components/response/ResponseDeleteDialog";
 import { useConversationFlow } from "@/hooks/responses/useConversationFlow";
+import ResponseForm from "./responses/ResponseForm";
+import ResponseList from "./responses/ResponseList";
+import { useResponsePermissions } from "./responses/useResponsePermissions";
 
 interface Response {
   id: string;
@@ -44,7 +44,6 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
-  const [responseText, setResponseText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editResponseId, setEditResponseId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -58,6 +57,13 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     reviewerId: reviewAuthorId
   });
 
+  // Use response permissions hook
+  const { canUserRespond } = useResponsePermissions({
+    hasSubscription,
+    isOneTimeUnlocked,
+    reviewAuthorId
+  });
+
   console.log('CustomerReviewResponse conversation status:', {
     reviewId,
     currentUserId: currentUser?.id,
@@ -69,7 +75,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     lastResponseBy: responses.length > 0 ? responses[responses.length - 1]?.authorId : 'none'
   });
 
-  const handleSubmitResponse = async () => {
+  const handleSubmitResponse = async (responseText: string) => {
     // Check conversation flow first
     if (!canRespond || !isMyTurn) {
       toast({
@@ -104,18 +110,14 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
       return;
     }
 
-    if (!responseText.trim()) {
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       // Use the provided onSubmitResponse if available, otherwise fall back to default
       if (onSubmitResponse) {
         const success = await onSubmitResponse(responseText);
-        if (success) {
-          setResponseText("");
+        if (!success) {
+          throw new Error("Failed to submit response");
         }
       } else {
         const { data, error } = await supabase
@@ -123,7 +125,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
           .insert({
             review_id: reviewId,
             content: responseText,
-            author_id: currentUser.id
+            author_id: currentUser!.id
           })
           .select()
           .single();
@@ -132,8 +134,8 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
 
         const newResponse: Response = {
           id: data.id,
-          authorId: currentUser.id,
-          authorName: currentUser.name || 'User',
+          authorId: currentUser!.id,
+          authorName: currentUser!.name || 'User',
           content: responseText,
           createdAt: new Date().toISOString()
         };
@@ -141,8 +143,6 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
         if (onResponseSubmitted) {
           onResponseSubmitted(newResponse);
         }
-
-        setResponseText("");
 
         toast({
           title: "Response submitted",
@@ -161,33 +161,11 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     }
   };
 
-  // Enhanced permission check for who can respond
-  const canUserRespond = (): boolean => {
-    if (!currentUser) return false;
-    
-    const isCustomerUser = currentUser.type === "customer";
-    const isBusinessUser = currentUser.type === "business";
-    
-    // For customer users: they need subscription or one-time access
-    if (isCustomerUser) {
-      return hasSubscription || isOneTimeUnlocked;
-    }
-    
-    // For business users: they need subscription or one-time access, and cannot respond to their own reviews
-    if (isBusinessUser) {
-      const isReviewAuthor = currentUser.id === reviewAuthorId;
-      if (isReviewAuthor) return false;
-      return hasSubscription || isOneTimeUnlocked;
-    }
-    
-    return false;
-  };
-
-  const handleEditResponse = (responseId: string) => {
+  const handleEditStart = (responseId: string, content: string) => {
     const response = responses.find(r => r.id === responseId);
     if (response && response.authorId === currentUser?.id) {
       setEditResponseId(responseId);
-      setEditContent(response.content);
+      setEditContent(content);
     }
   };
 
@@ -283,100 +261,24 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
 
   return (
     <div className="mt-4">
-      {responses.length > 0 && (
-        <div className="space-y-3 mb-4">
-          <h4 className="font-medium text-gray-900">Responses:</h4>
-          {responses.map((response) => (
-            <div key={response.id} className="bg-gray-50 p-3 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium text-sm">{response.authorName}</span>
-                <span className="text-xs text-gray-500">
-                  {formatDistance(new Date(response.createdAt), new Date(), {
-                    addSuffix: true,
-                  })}
-                </span>
-              </div>
-              
-              {editResponseId === response.id ? (
-                <div>
-                  <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full p-2 text-sm min-h-[80px] mb-2"
-                    maxLength={1500}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={handleSaveEdit}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-gray-700 text-sm whitespace-pre-line">{response.content}</p>
-                  
-                  {/* Show edit/delete buttons for user's own responses */}
-                  {response.authorId === currentUser?.id && editResponseId !== response.id && (
-                    <div className="mt-2 flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-gray-600 hover:bg-gray-100 h-8 px-2 py-1"
-                        onClick={() => handleEditResponse(response.id)}
-                        disabled={!hasSubscription}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        {hasSubscription ? 'Edit' : <Lock className="h-3 w-3" />}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700 h-8 px-2 py-1"
-                        onClick={() => handleDeleteClick(response.id)}
-                        disabled={!hasSubscription}
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        {hasSubscription ? 'Delete' : <Lock className="h-3 w-3" />}
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <ResponseList
+        responses={responses}
+        currentUserId={currentUser?.id}
+        hasSubscription={hasSubscription}
+        editResponseId={editResponseId}
+        editContent={editContent}
+        onEditStart={handleEditStart}
+        onEditSave={handleSaveEdit}
+        onEditCancel={handleCancelEdit}
+        onEditContentChange={setEditContent}
+        onDelete={handleDeleteClick}
+      />
 
-      {shouldShowResponseForm && (
-        <div className="border-t pt-4">
-          <Textarea
-            value={responseText}
-            onChange={(e) => setResponseText(e.target.value)}
-            placeholder="Write your response..."
-            className="w-full mb-3 min-h-[100px]"
-            maxLength={1500}
-          />
-          <div className="flex justify-end">
-            <Button 
-              onClick={handleSubmitResponse}
-              disabled={isSubmitting || !responseText.trim()}
-              className="px-6"
-            >
-              {isSubmitting ? "Submitting..." : "Submit Response"}
-            </Button>
-          </div>
-        </div>
-      )}
+      <ResponseForm
+        onSubmit={handleSubmitResponse}
+        isSubmitting={isSubmitting}
+        canSubmit={shouldShowResponseForm}
+      />
 
       <ResponseDeleteDialog 
         open={showDeleteDialog}
