@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ResponseDeleteDialog from "@/components/response/ResponseDeleteDialog";
-import { useConversationStatus } from "@/hooks/responses/useConversationStatus";
+import { useConversationFlow } from "@/hooks/responses/useConversationFlow";
 
 interface Response {
   id: string;
@@ -51,15 +51,12 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [responseToDelete, setResponseToDelete] = useState<string | null>(null);
 
-  // Create a review object for conversation status
-  const reviewForStatus = {
-    id: reviewId,
-    customerId: customerId,
+  // Use conversation flow to determine if user can respond
+  const { canRespond, isMyTurn } = useConversationFlow({
+    responses,
+    customerId,
     reviewerId: reviewAuthorId
-  } as any;
-
-  // Use conversation status to determine if user can respond
-  const conversationStatus = useConversationStatus(responses, reviewForStatus);
+  });
 
   console.log('CustomerReviewResponse conversation status:', {
     reviewId,
@@ -67,14 +64,14 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     customerId,
     reviewAuthorId,
     responsesCount: responses.length,
-    canRespond: conversationStatus.canRespond,
-    isMyTurn: conversationStatus.isMyTurn,
+    canRespond: canRespond,
+    isMyTurn: isMyTurn,
     lastResponseBy: responses.length > 0 ? responses[responses.length - 1]?.authorId : 'none'
   });
 
   const handleSubmitResponse = async () => {
-    // Check conversation status first
-    if (!conversationStatus.canRespond || !conversationStatus.isMyTurn) {
+    // Check conversation flow first
+    if (!canRespond || !isMyTurn) {
       toast({
         title: "Not your turn",
         description: "Please wait for the other party to respond first.",
@@ -282,7 +279,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   };
 
   // Only show response form if it's the user's turn and they have permission
-  const canRespond = conversationStatus.canRespond && conversationStatus.isMyTurn && canUserRespond() && !hideReplyOption;
+  const shouldShowResponseForm = canRespond && isMyTurn && canUserRespond() && !hideReplyOption;
 
   return (
     <div className="mt-4">
@@ -360,7 +357,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
         </div>
       )}
 
-      {canRespond && (
+      {shouldShowResponseForm && (
         <div className="border-t pt-4">
           <Textarea
             value={responseText}
