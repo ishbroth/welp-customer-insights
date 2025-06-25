@@ -140,7 +140,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       
-      // Always allow the user to type freely
+      // Allow completely free typing - no restrictions on spaces or any characters
       setInputValue(value);
       
       // Call callbacks

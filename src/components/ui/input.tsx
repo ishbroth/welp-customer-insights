@@ -5,14 +5,15 @@ import { cn } from "@/lib/utils"
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, placeholder, ...props }, ref) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Only capitalize first letter for non-address fields
+      // Only capitalize first letter for specific non-address fields and only if it's a single character
       let value = e.target.value;
       const isAddressField = placeholder?.toLowerCase().includes("address") || 
-                            placeholder?.toLowerCase().includes("street");
+                            placeholder?.toLowerCase().includes("street") ||
+                            placeholder?.toLowerCase().includes("start typing");
 
-      if (!isAddressField && value.length > 0) {
-        // Capitalize the first letter for non-address fields
-        e.target.value = value.charAt(0).toUpperCase() + value.slice(1);
+      if (!isAddressField && value.length === 1 && value !== ' ') {
+        // Only capitalize the very first character, and only if it's not a space
+        e.target.value = value.charAt(0).toUpperCase();
       }
       
       onChange?.(e);
