@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +7,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ResponseDeleteDialog from "@/components/response/ResponseDeleteDialog";
+import { useConversationStatus } from "@/hooks/responses/useConversationStatus";
 
 interface Response {
   id: string;
@@ -24,6 +24,7 @@ interface CustomerReviewResponseProps {
   isOneTimeUnlocked: boolean;
   hideReplyOption: boolean;
   reviewAuthorId?: string;
+  customerId?: string;
   onResponseSubmitted?: (response: Response) => void;
   onSubmitResponse?: (content: string) => Promise<boolean>;
   onDeleteResponse?: (responseId: string) => void;
@@ -36,6 +37,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   isOneTimeUnlocked,
   hideReplyOption,
   reviewAuthorId,
+  customerId,
   onResponseSubmitted,
   onSubmitResponse,
   onDeleteResponse,
@@ -49,9 +51,38 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [responseToDelete, setResponseToDelete] = useState<string | null>(null);
 
-  console.log('CustomerReviewResponse rendering review', reviewId, 'with valid responses:', responses);
+  // Create a review object for conversation status
+  const reviewForStatus = {
+    id: reviewId,
+    customerId: customerId,
+    reviewerId: reviewAuthorId
+  } as any;
+
+  // Use conversation status to determine if user can respond
+  const conversationStatus = useConversationStatus(responses, reviewForStatus);
+
+  console.log('CustomerReviewResponse conversation status:', {
+    reviewId,
+    currentUserId: currentUser?.id,
+    customerId,
+    reviewAuthorId,
+    responsesCount: responses.length,
+    canRespond: conversationStatus.canRespond,
+    isMyTurn: conversationStatus.isMyTurn,
+    lastResponseBy: responses.length > 0 ? responses[responses.length - 1]?.authorId : 'none'
+  });
 
   const handleSubmitResponse = async () => {
+    // Check conversation status first
+    if (!conversationStatus.canRespond || !conversationStatus.isMyTurn) {
+      toast({
+        title: "Not your turn",
+        description: "Please wait for the other party to respond first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Enhanced permission check for responses
     if (!canUserRespond()) {
       if (!currentUser) {
@@ -250,7 +281,8 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     }
   };
 
-  const canRespond = canUserRespond() && !hideReplyOption;
+  // Only show response form if it's the user's turn and they have permission
+  const canRespond = conversationStatus.canRespond && conversationStatus.isMyTurn && canUserRespond() && !hideReplyOption;
 
   return (
     <div className="mt-4">

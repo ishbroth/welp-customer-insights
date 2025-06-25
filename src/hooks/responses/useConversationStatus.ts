@@ -20,7 +20,10 @@ export const useConversationStatus = (
 
   // If no responses yet, customer should respond first
   if (sortedResponses.length === 0) {
-    return { canRespond: false, isMyTurn: false }; // Customer hasn't responded yet
+    return { 
+      canRespond: currentUser.id === review.customerId, 
+      isMyTurn: currentUser.id === review.customerId 
+    };
   }
 
   // Get the last response
@@ -28,12 +31,20 @@ export const useConversationStatus = (
   
   // If the last response was from the customer, it's business's turn
   if (lastResponse.authorId === review.customerId) {
-    return { canRespond: true, isMyTurn: true };
+    const isBusinessTurn = currentUser.id === review.reviewerId;
+    return { 
+      canRespond: isBusinessTurn, 
+      isMyTurn: isBusinessTurn 
+    };
   }
   
   // If the last response was from the business, it's customer's turn
-  if (lastResponse.authorId === currentUser.id) {
-    return { canRespond: false, isMyTurn: false };
+  if (lastResponse.authorId === review.reviewerId) {
+    const isCustomerTurn = currentUser.id === review.customerId;
+    return { 
+      canRespond: isCustomerTurn, 
+      isMyTurn: isCustomerTurn 
+    };
   }
 
   return { canRespond: false, isMyTurn: false };
