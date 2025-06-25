@@ -221,10 +221,8 @@ export const useResponseDataService = () => {
           } else {
             // Last resort: check if this is a known user ID from the current user context
             if (currentUser && resp.author_id === currentUser.id) {
-              authorName = currentUser.name || 
-                         (currentUser.first_name && currentUser.last_name 
-                          ? `${currentUser.first_name} ${currentUser.last_name}` 
-                          : currentUser.first_name || currentUser.last_name || 'You');
+              // Use the name property from currentUser, or construct from available data
+              authorName = currentUser.name || 'You';
               console.log(`🔄 Using current user data as fallback: "${authorName}"`);
             } else {
               authorName = 'Unknown User';
