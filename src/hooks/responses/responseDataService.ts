@@ -83,67 +83,129 @@ export const useResponseDataService = () => {
         console.log(`\n🔍 Processing response ${resp.id}`);
         console.log(`📝 Author ID: ${resp.author_id}`);
         console.log(`👤 Profile found:`, profile);
+        console.log(`🎯 Review customerId: ${review.customerId}`);
+        console.log(`🎯 Review reviewerId: ${review.reviewerId}`);
 
-        if (profile) {
-          // If this is a business account responding
-          if (profile.type === 'business') {
-            // First priority: Use business_info business_name
-            const businessName = businessInfoMap.get(resp.author_id);
-            if (businessName && businessName.trim()) {
-              authorName = businessName;
-              console.log(`✅ Using business_info name: "${authorName}"`);
-            }
-            // Fallback to profile name
-            else if (profile.name && profile.name.trim()) {
-              authorName = profile.name;
-              console.log(`✅ Using profile name for business: "${authorName}"`);
-            }
-            // Last resort: construct from first/last name
-            else if (profile.first_name || profile.last_name) {
-              const firstName = profile.first_name || '';
-              const lastName = profile.last_name || '';
-              authorName = `${firstName} ${lastName}`.trim();
-              console.log(`✅ Using constructed name for business: "${authorName}"`);
-            }
-            else {
-              authorName = 'Business User';
-              console.log(`⚠️ Using fallback business name: "${authorName}"`);
-            }
+        // PRIORITY 1: If this response is from the customer that claimed the review
+        if (resp.author_id === review.customerId && review.customerId) {
+          console.log('✅ Response is from the customer who claimed the review');
+          
+          // Use the customer name from the review data (since it was claimed, this should be accurate)
+          if (review.customerName && review.customerName.trim()) {
+            authorName = review.customerName;
+            console.log(`✅ Using review's customerName: "${authorName}"`);
           }
-          // If this is a customer account responding
-          else if (profile.type === 'customer') {
-            // For customers, prioritize first_name + last_name combination
+          // Then try profile data as fallback
+          else if (profile) {
             if (profile.first_name && profile.last_name) {
               authorName = `${profile.first_name} ${profile.last_name}`;
-              console.log(`✅ Using customer first+last name: "${authorName}"`);
+              console.log(`✅ Using profile first+last name: "${authorName}"`);
             } else if (profile.first_name) {
               authorName = profile.first_name;
-              console.log(`✅ Using customer first name only: "${authorName}"`);
+              console.log(`✅ Using profile first name: "${authorName}"`);
             } else if (profile.last_name) {
               authorName = profile.last_name;
-              console.log(`✅ Using customer last name only: "${authorName}"`);
+              console.log(`✅ Using profile last name: "${authorName}"`);
             } else if (profile.name && profile.name.trim()) {
               authorName = profile.name;
-              console.log(`✅ Using customer profile name: "${authorName}"`);
-            } else {
-              authorName = 'Customer';
-              console.log(`⚠️ Using fallback customer name: "${authorName}"`);
+              console.log(`✅ Using profile name field: "${authorName}"`);
             }
           }
-          // Handle other account types
-          else {
+          
+          // Use profile avatar for claimed customer
+          if (profile?.avatar) {
+            authorAvatar = profile.avatar;
+            console.log(`✅ Using customer profile avatar: "${authorAvatar}"`);
+          }
+        }
+        // PRIORITY 2: If this response is from the business who wrote the review
+        else if (resp.author_id === review.reviewerId && review.reviewerId) {
+          console.log('✅ Response is from the business who wrote the review');
+          
+          // First check if we have business info for this business
+          const businessName = businessInfoMap.get(resp.author_id);
+          if (businessName && businessName.trim()) {
+            authorName = businessName;
+            console.log(`✅ Using business_info business_name: "${authorName}"`);
+          }
+          // Then try to use the reviewer name from the review data
+          else if (review.reviewerName && review.reviewerName.trim()) {
+            authorName = review.reviewerName;
+            console.log(`✅ Using review's reviewerName: "${authorName}"`);
+          }
+          // Then try profile data
+          else if (profile) {
             if (profile.name && profile.name.trim()) {
               authorName = profile.name;
-              console.log(`✅ Using profile name for other type: "${authorName}"`);
+              console.log(`✅ Using profile name field: "${authorName}"`);
             } else if (profile.first_name || profile.last_name) {
               const firstName = profile.first_name || '';
               const lastName = profile.last_name || '';
               authorName = `${firstName} ${lastName}`.trim();
-              console.log(`✅ Using constructed name for other type: "${authorName}"`);
+              console.log(`✅ Using profile first+last name: "${authorName}"`);
+            } else {
+              authorName = 'Business';
+              console.log(`✅ Using fallback business name: "${authorName}"`);
+            }
+          } else {
+            authorName = 'Business';
+            console.log(`✅ Using fallback business name (no profile): "${authorName}"`);
+          }
+          
+          // Use profile avatar
+          authorAvatar = profile?.avatar || '';
+          console.log(`🖼️ Business avatar URL: "${authorAvatar}"`);
+        }
+        // PRIORITY 3: Handle other users with profile data
+        else if (profile) {
+          console.log('📝 Processing response from other user');
+          
+          // For business accounts, prioritize business name from business_info
+          if (profile.type === 'business') {
+            const businessName = businessInfoMap.get(resp.author_id);
+            if (businessName && businessName.trim()) {
+              authorName = businessName;
+              console.log(`📝 Using business_info business_name: "${authorName}"`);
+            } else if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+              console.log(`📝 Using profile name field: "${authorName}"`);
+            } else if (profile.first_name || profile.last_name) {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              authorName = `${firstName} ${lastName}`.trim();
+              console.log(`📝 Using profile first+last name: "${authorName}"`);
+            } else {
+              authorName = 'Business';
+              console.log(`📝 Using fallback business name: "${authorName}"`);
+            }
+          }
+          // For customer accounts, prefer the constructed name from first_name + last_name
+          else if (profile.type === 'customer') {
+            if (profile.first_name && profile.last_name) {
+              authorName = `${profile.first_name} ${profile.last_name}`;
+            } else if (profile.first_name) {
+              authorName = profile.first_name;
+            } else if (profile.last_name) {
+              authorName = profile.last_name;
+            } else if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+            } else {
+              authorName = 'Customer';
+            }
+            console.log(`📝 Final name for customer: "${authorName}"`);
+          }
+          // For other account types
+          else {
+            if (profile.name && profile.name.trim()) {
+              authorName = profile.name;
+            } else if (profile.first_name || profile.last_name) {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              authorName = `${firstName} ${lastName}`.trim();
             } else {
               authorName = 'User';
-              console.log(`⚠️ Using generic fallback: "${authorName}"`);
             }
+            console.log(`📝 Final name for other user: "${authorName}"`);
           }
           
           // Use profile avatar
