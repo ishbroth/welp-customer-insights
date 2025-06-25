@@ -64,7 +64,7 @@ const ProfileReviewsContent = ({
   let sortedReviews: any[] = [];
 
   if (isCustomerUser) {
-    // Separate reviews by ACTUAL claim status - check if customer_id matches current user
+    // Separate reviews by ACTUAL claim status from database
     claimedReviews = localReviews.filter(review => {
       const isActuallyClaimed = review.customerId === currentUser?.id;
       console.log('Review claim check:', {
@@ -193,7 +193,7 @@ const ProfileReviewsContent = ({
           {unclaimedReviews.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Reviews Waiting to be Claimed ({unclaimedReviews.length})
+                Potential Review Matches ({unclaimedReviews.length})
               </h3>
               <p className="text-sm text-gray-600 mb-4">
                 These reviews appear to be about you based on matching information. Click "Claim this Review" to link them to your profile.

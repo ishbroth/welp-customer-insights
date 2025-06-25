@@ -153,7 +153,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     phone: displayPhone
   };
 
-  // FIXED: Determine if review is actually claimed based on database status
+  // FIXED: Use the customerId from the review to determine actual claim status
   const isActuallyClaimed = review.customerId ? true : false;
 
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {

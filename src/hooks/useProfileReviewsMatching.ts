@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
@@ -181,7 +180,7 @@ export const useProfileReviewsMatching = () => {
         last_login: new Date().toISOString()
       });
 
-    // Fetch all potential matching reviews
+    // FIXED: Fetch all potential matching reviews WITHOUT setting customer_id
     const { data: allReviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -209,15 +208,30 @@ export const useProfileReviewsMatching = () => {
     const reviewMatches: ReviewMatch[] = [];
 
     for (const review of allReviews || []) {
-      // Skip if review is claimed by someone else
-      if (review.claimed_by && review.claimed_by !== currentUser.id) {
+      // FIXED: Check actual claim status from database
+      const isActuallyClaimed = review.customer_id === currentUser.id;
+      
+      console.log('Review claim analysis:', {
+        reviewId: review.id,
+        dbCustomerId: review.customer_id,
+        currentUserId: currentUser.id,
+        isActuallyClaimed,
+        claimedBy: review.claimed_by
+      });
+
+      // Skip reviews claimed by other users
+      if (review.customer_id && review.customer_id !== currentUser.id) {
+        console.log('Skipping review claimed by another user:', review.id);
         continue;
       }
 
       // If already claimed by current user, mark as claimed
-      if (review.customer_id === currentUser.id || review.claimed_by === currentUser.id) {
+      if (isActuallyClaimed) {
         reviewMatches.push({
-          review,
+          review: {
+            ...review,
+            // IMPORTANT: Don't modify customer_id here, keep original value
+          },
           matchType: 'claimed',
           matchScore: 100,
           matchReasons: ['Already claimed by you'],
@@ -235,7 +249,9 @@ export const useProfileReviewsMatching = () => {
         reviewMatches.push({
           review: {
             ...review,
-            isNewReview: isNew
+            isNewReview: isNew,
+            // IMPORTANT: Keep customer_id as null for unclaimed reviews
+            customer_id: null
           },
           matchType: 'high_quality',
           matchScore: score,
@@ -248,7 +264,9 @@ export const useProfileReviewsMatching = () => {
         reviewMatches.push({
           review: {
             ...review,
-            isNewReview: isNew
+            isNewReview: isNew,
+            // IMPORTANT: Keep customer_id as null for unclaimed reviews
+            customer_id: null
           },
           matchType: 'potential',
           matchScore: score,
@@ -259,6 +277,12 @@ export const useProfileReviewsMatching = () => {
     }
 
     console.log("Review matches found:", reviewMatches.length);
+    console.log("Review matches breakdown:", {
+      claimed: reviewMatches.filter(m => m.matchType === 'claimed').length,
+      highQuality: reviewMatches.filter(m => m.matchType === 'high_quality').length,
+      potential: reviewMatches.filter(m => m.matchType === 'potential').length
+    });
+    
     return reviewMatches;
   };
 
