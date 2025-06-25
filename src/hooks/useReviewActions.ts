@@ -33,8 +33,8 @@ export const useReviewActions = ({
   const isBusinessUser = currentUser?.type === "business";
   const isCustomerUser = currentUser?.type === "customer";
   
-  // Check if this review has been claimed - this is the key check
-  const isReviewClaimed = !!(review.customerId) || review.matchType === 'claimed';
+  // FIXED: Check if this review has been claimed - use actual database field
+  const isReviewClaimed = !!(review.customerId);
 
   console.log('useReviewActions: Review claim status check:', {
     reviewId: review.id,

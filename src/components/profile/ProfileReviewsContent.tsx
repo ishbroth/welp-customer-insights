@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -35,7 +34,13 @@ const ProfileReviewsContent = ({
     console.log("ProfileReviewsContent: Reviews updated", {
       count: customerReviews.length,
       userType: currentUser?.type,
-      userId: currentUser?.id
+      userId: currentUser?.id,
+      reviewsWithClaimStatus: customerReviews.map(r => ({
+        id: r.id,
+        matchType: (r as any).matchType,
+        customerId: r.customerId,
+        claimed: r.customerId === currentUser?.id
+      }))
     });
 
     // Mark new reviews as shown
@@ -59,15 +64,28 @@ const ProfileReviewsContent = ({
   let sortedReviews: any[] = [];
 
   if (isCustomerUser) {
-    // Separate reviews by claim status
+    // Separate reviews by ACTUAL claim status - check if customer_id matches current user
     claimedReviews = localReviews.filter(review => {
-      const reviewData = review as any;
-      return reviewData.matchType === 'claimed' || review.customerId === currentUser?.id;
+      const isActuallyClaimed = review.customerId === currentUser?.id;
+      console.log('Review claim check:', {
+        reviewId: review.id,
+        reviewCustomerId: review.customerId,
+        currentUserId: currentUser?.id,
+        isActuallyClaimed,
+        matchType: (review as any).matchType
+      });
+      return isActuallyClaimed;
     });
 
     unclaimedReviews = localReviews.filter(review => {
-      const reviewData = review as any;
-      return reviewData.matchType !== 'claimed' && review.customerId !== currentUser?.id;
+      const isActuallyClaimed = review.customerId === currentUser?.id;
+      return !isActuallyClaimed;
+    });
+
+    console.log('Review categorization:', {
+      totalReviews: localReviews.length,
+      claimedCount: claimedReviews.length,
+      unclaimedCount: unclaimedReviews.length
     });
 
     // Sort unclaimed reviews by match quality first, then claimed reviews
@@ -178,7 +196,7 @@ const ProfileReviewsContent = ({
                 Reviews Waiting to be Claimed ({unclaimedReviews.length})
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                These reviews appear to be about you. Click "Claim this Review" to link them to your profile.
+                These reviews appear to be about you based on matching information. Click "Claim this Review" to link them to your profile.
               </p>
             </div>
           )}
@@ -194,9 +212,7 @@ const ProfileReviewsContent = ({
         </div>
       )}
 
-      {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review, index) => {
-        const isInUnclaimedSection = isCustomerUser && index < unclaimedReviews.length;
-        
+      {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review, index) => {        
         if (isBusinessUser) {
           return (
             <BusinessReviewCardWrapper

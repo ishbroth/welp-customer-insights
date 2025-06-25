@@ -50,10 +50,10 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [responseToDelete, setResponseToDelete] = useState<string | null>(null);
 
-  // Use conversation flow to determine if user can respond
+  // FIXED: Pass the actual customerId instead of undefined
   const { canRespond, isMyTurn } = useConversationFlow({
     responses,
-    customerId,
+    customerId: customerId || currentUser?.id, // Use current user ID if customerId not provided
     reviewerId: reviewAuthorId
   });
 
@@ -67,7 +67,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
   console.log('CustomerReviewResponse conversation status:', {
     reviewId,
     currentUserId: currentUser?.id,
-    customerId,
+    customerId: customerId || currentUser?.id,
     reviewAuthorId,
     responsesCount: responses.length,
     canRespond: canRespond,

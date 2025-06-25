@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -154,9 +153,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     phone: displayPhone
   };
 
+  // FIXED: Determine if review is actually claimed based on database status
+  const isActuallyClaimed = review.customerId ? true : false;
+
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
     reviewId: review.id,
-    isReviewClaimed,
+    reviewCustomerId: review.customerId,
+    isActuallyClaimed,
     matchType: review.matchType,
     customerProfile: customerProfile ? 'loaded' : 'not loaded',
     businessProfile: businessProfile ? 'loaded' : 'not loaded',
@@ -174,8 +177,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         <ReportReviewButton reviewId={review.id} />
       </div>
 
-      {/* Show match info and claim button for unclaimed reviews */}
-      {!isReviewClaimed && (
+      {/* Show match info and claim button for unclaimed reviews ONLY */}
+      {!isActuallyClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType}
           matchReasons={review.matchReasons}
@@ -184,7 +187,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           isNewReview={review.isNewReview}
           isClaimingReview={isClaimingReview}
           onClaimClick={handleClaimClick}
-          isReviewClaimed={isReviewClaimed}
+          isReviewClaimed={isActuallyClaimed}
         />
       )}
       
@@ -229,7 +232,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
             <div className="flex items-center gap-1">
               <h4 className="font-medium text-sm">{customerInfo.name}</h4>
               {customerInfo.verified && <VerifiedBadge size="xs" />}
-              {isReviewClaimed && (
+              {isActuallyClaimed && (
                 <span className="text-xs text-green-600 font-medium">Claimed</span>
               )}
             </div>
