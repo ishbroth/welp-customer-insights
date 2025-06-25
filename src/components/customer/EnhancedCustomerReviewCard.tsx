@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -136,11 +137,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Get phone number to display
   const displayPhone = review.customer_phone || customerProfile?.phone;
 
+  // FIXED: Use business profile name or business_info name, not reviewer name from review
+  const businessDisplayName = businessProfile?.name || review.reviewerName || 'Business';
+  
   // Business info for left side (larger)
   const businessInfo = {
-    name: review.reviewerName,
+    name: businessDisplayName,
     avatar: finalBusinessAvatar,
-    initials: getInitials(review.reviewerName),
+    initials: getInitials(businessDisplayName),
     verified: isBusinessVerified
   };
 
@@ -153,30 +157,27 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     phone: displayPhone
   };
 
-  // FIXED: Use the customerId from the review to determine actual claim status
-  const isActuallyClaimed = review.customerId ? true : false;
+  // Check if review is actually claimed by checking customerId field
+  const isActuallyClaimed = !!review.customerId;
 
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
     reviewId: review.id,
     reviewCustomerId: review.customerId,
     isActuallyClaimed,
     matchType: review.matchType,
-    customerProfile: customerProfile ? 'loaded' : 'not loaded',
+    businessDisplayName,
     businessProfile: businessProfile ? 'loaded' : 'not loaded',
+    customerProfile: customerProfile ? 'loaded' : 'not loaded',
     finalCustomerAvatar,
     finalBusinessAvatar,
     isCustomerVerified,
     isBusinessVerified,
-    shouldShowClaimButton: shouldShowClaimButton()
+    shouldShowClaimButton: shouldShowClaimButton(),
+    canRespond: canRespond()
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* Report button in lower right corner */}
-      <div className="absolute bottom-4 right-4">
-        <ReportReviewButton reviewId={review.id} />
-      </div>
-
       {/* Show match info and claim button for unclaimed reviews ONLY */}
       {!isActuallyClaimed && (
         <ReviewMatchInfo
@@ -250,13 +251,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
-        canRespond={canRespond()}
+        canRespond={canRespond() && isActuallyClaimed} // Only allow response if claimed
         shouldShowClaimButton={shouldShowClaimButton()}
-        shouldShowRespondButton={shouldShowRespondButton()}
+        shouldShowRespondButton={shouldShowRespondButton() && isActuallyClaimed} // Only show respond button if claimed
         reviewId={review.id}
         customerId={review.customerId}
         reviewerId={review.reviewerId}
-        reviewerName={review.reviewerName}
+        reviewerName={businessDisplayName}
         finalBusinessAvatar={finalBusinessAvatar}
         reactions={reactions}
         responses={responses}
@@ -269,6 +270,12 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onDeleteResponse={handleDeleteResponse}
       />
 
+      {/* Moved report button to right side next to reactions */}
+      <div className="flex justify-between items-center mt-4">
+        <div></div> {/* Empty div to push report button to right */}
+        <ReportReviewButton reviewId={review.id} />
+      </div>
+
       <ClaimReviewDialog 
         open={showClaimDialog}
         onOpenChange={setShowClaimDialog}
@@ -280,7 +287,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           customerZipcode: review.customer_zipcode,
         }}
         businessData={{
-          name: review.reviewerName,
+          name: businessDisplayName,
           avatar: finalBusinessAvatar,
           phone: businessProfile?.phone,
           address: businessProfile?.address,

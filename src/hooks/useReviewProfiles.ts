@@ -3,6 +3,8 @@ import { Review } from "@/types";
 import { useBusinessProfileQuery } from "@/hooks/useBusinessProfileQuery";
 import { useCustomerProfileQuery } from "@/hooks/useCustomerProfileQuery";
 import { useBusinessVerificationQuery } from "@/hooks/useBusinessVerificationQuery";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseReviewProfilesProps {
   review: Review & {
@@ -19,6 +21,29 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
   // Fetch business profile using dedicated hook
   const { data: businessProfile } = useBusinessProfileQuery(review.reviewerId);
 
+  // Also fetch business_info to get the actual business name
+  const { data: businessInfo } = useQuery({
+    queryKey: ['businessInfo', review.reviewerId],
+    queryFn: async () => {
+      console.log('Fetching business_info for reviewerId:', review.reviewerId);
+      
+      const { data, error } = await supabase
+        .from('business_info')
+        .select('business_name')
+        .eq('id', review.reviewerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching business_info:', error);
+        return null;
+      }
+
+      console.log('Business info found:', data);
+      return data;
+    },
+    enabled: !!review.reviewerId
+  });
+
   // Fetch customer profile using dedicated hook
   const { data: customerProfile } = useCustomerProfileQuery(review.customerId);
 
@@ -26,7 +51,7 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
   const { data: businessVerificationStatus } = useBusinessVerificationQuery(review.reviewerId);
 
   // Check if this review has been claimed
-  const isReviewClaimed = !!(review.customerId);
+  const isReviewClaimed = !!review.customerId;
   console.log(`useReviewProfiles: Review ${review.id} claimed status:`, isReviewClaimed, 'Customer ID:', review.customerId);
 
   // Business verification status
@@ -42,18 +67,26 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
     ? customerProfile.avatar 
     : '';
 
+  // Use business_info name if available, otherwise fall back to profile name
+  const enhancedBusinessProfile = businessProfile ? {
+    ...businessProfile,
+    name: businessInfo?.business_name || businessProfile.name
+  } : null;
+
   console.log('useReviewProfiles: Final status for review', review.id, {
     isReviewClaimed,
     customerProfile: customerProfile ? 'found' : 'not found',
     finalCustomerAvatar,
     isCustomerVerified,
     businessProfile: businessProfile ? 'found' : 'not found',
+    businessInfo: businessInfo ? 'found' : 'not found',
+    businessDisplayName: businessInfo?.business_name || businessProfile?.name,
     finalBusinessAvatar,
     isBusinessVerified
   });
 
   return {
-    businessProfile,
+    businessProfile: enhancedBusinessProfile,
     customerProfile,
     isBusinessVerified,
     isCustomerVerified,

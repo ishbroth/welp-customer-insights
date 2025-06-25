@@ -51,6 +51,15 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   onSubmitResponse,
   onDeleteResponse,
 }) => {
+  console.log('EnhancedReviewContent: Rendering with permissions:', {
+    reviewId,
+    customerId,
+    canReact,
+    canRespond,
+    shouldShowRespondButton,
+    shouldShowClaimButton
+  });
+
   if (shouldShowFullReview) {
     return (
       <div>
@@ -75,7 +84,8 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           </div>
         )}
         
-        {shouldShowRespondButton && (
+        {/* Only show response component if user can actually respond (i.e., review is claimed) */}
+        {shouldShowRespondButton && canRespond && (
           <CustomerReviewResponse 
             reviewId={reviewId}
             responses={responses || []}
@@ -91,7 +101,8 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           />
         )}
         
-        {shouldShowClaimButton && (
+        {/* Show claim button for unclaimed reviews */}
+        {shouldShowClaimButton && !customerId && (
           <div className="mt-4 flex justify-end">
             <p className="text-sm text-gray-500">
               To Respond, <button 
@@ -125,7 +136,8 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
         </div>
       </div>
       
-      {shouldShowClaimButton && (
+      {/* Show claim button for unclaimed reviews even when locked */}
+      {shouldShowClaimButton && !customerId && (
         <div className="mt-4 flex justify-end">
           <p className="text-sm text-gray-500">
             To Respond, <button 
