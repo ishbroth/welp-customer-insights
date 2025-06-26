@@ -37,6 +37,7 @@ export interface ReviewData {
   business_id?: string;
   business_profile?: any;
   reviewerName?: string;
+  reviewerAvatar?: string;
   reviewerVerified?: boolean;
 }
 
