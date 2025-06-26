@@ -20,6 +20,30 @@ const SearchBox = ({
 }: SearchBoxProps) => {
   const { formValues, setters, handleSearch } = useSearchForm(onSearch);
 
+  // Handle Google Maps address component extraction
+  const handleAddressComponentsExtracted = (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => {
+    console.log('📍 Address components extracted:', components);
+    
+    // Only update fields that have values from Google Maps
+    if (components.streetAddress) {
+      setters.setAddress(components.streetAddress);
+    }
+    if (components.city) {
+      setters.setCity(components.city);
+    }
+    if (components.state) {
+      setters.setState(components.state);
+    }
+    if (components.zipCode) {
+      setters.setZipCode(components.zipCode);
+    }
+  };
+
   return (
     <div className={className}>
       <form onSubmit={handleSearch} className="space-y-4">
@@ -60,6 +84,7 @@ const SearchBox = ({
             placeholder="Address"
             value={formValues.address}
             onChange={(e) => setters.setAddress(e.target.value)}
+            onAddressComponentsExtracted={handleAddressComponentsExtracted}
             required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.city && !formValues.state && !formValues.zipCode}
           />
 

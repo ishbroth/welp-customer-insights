@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -8,6 +7,12 @@ import { normalizeAddress } from "@/utils/addressNormalization";
 interface AddressAutocompleteProps extends React.ComponentProps<"input"> {
   onPlaceSelect?: (place: google.maps.places.PlaceResult) => void;
   onAddressChange?: (address: string) => void;
+  onAddressComponentsExtracted?: (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => void;
 }
 
 declare global {
@@ -17,7 +22,7 @@ declare global {
 }
 
 const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(
-  ({ className, onPlaceSelect, onAddressChange, onChange, ...props }, ref) => {
+  ({ className, onPlaceSelect, onAddressChange, onAddressComponentsExtracted, onChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const [isGoogleReady, setIsGoogleReady] = useState(false);
@@ -111,6 +116,9 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
             // Extract address components for proper form field population
             let streetNumber = '';
             let route = '';
+            let city = '';
+            let state = '';
+            let zipCode = '';
             
             place.address_components.forEach((component) => {
               const types = component.types;
@@ -119,6 +127,12 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
                 streetNumber = component.long_name;
               } else if (types.includes('route')) {
                 route = component.long_name;
+              } else if (types.includes('locality')) {
+                city = component.long_name;
+              } else if (types.includes('administrative_area_level_1')) {
+                state = component.short_name; // Use short_name for state abbreviation
+              } else if (types.includes('postal_code')) {
+                zipCode = component.long_name;
               }
             });
             
@@ -129,9 +143,21 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
             // Update the input value with just the street address
             setInputValue(normalizedAddress);
             
-            // Call callbacks - pass the street address to onAddressChange and full place to onPlaceSelect
+            // Call callbacks - pass the street address to onAddressChange
             onAddressChange?.(normalizedAddress);
-            onPlaceSelect?.(place); // This will trigger the parent component to populate other fields
+            
+            // Pass extracted components to parent for populating other fields
+            if (onAddressComponentsExtracted) {
+              onAddressComponentsExtracted({
+                streetAddress: normalizedAddress,
+                city,
+                state,
+                zipCode
+              });
+            }
+            
+            // Also pass the full place object for any other processing
+            onPlaceSelect?.(place);
           }
         });
 
@@ -144,9 +170,8 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
         console.error('❌ Error initializing Google Places Autocomplete:', error);
         setGoogleMapsStatus('error');
       }
-    }, [isGoogleReady, onPlaceSelect, onAddressChange]);
+    }, [isGoogleReady, onPlaceSelect, onAddressChange, onAddressComponentsExtracted]);
 
-    // Sync with external value changes
     useEffect(() => {
       if (props.value !== undefined && props.value !== inputValue) {
         setInputValue(props.value as string);

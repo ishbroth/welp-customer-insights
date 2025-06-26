@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
-import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface SearchFieldProps {
   type?: string;
@@ -13,6 +12,12 @@ interface SearchFieldProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
   required: boolean;
+  onAddressComponentsExtracted?: (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => void;
 }
 
 const SearchField = ({
@@ -21,7 +26,8 @@ const SearchField = ({
   value,
   onChange,
   className,
-  required
+  required,
+  onAddressComponentsExtracted
 }: SearchFieldProps) => {
   // Use FirstNameInput for first name fields
   const isFirstNameField = placeholder.toLowerCase().includes("first name");
@@ -32,11 +38,6 @@ const SearchField = ({
   // Use AddressAutocomplete for address fields
   const isAddressField = placeholder.toLowerCase().includes("address") || 
                         placeholder.toLowerCase().includes("street");
-  
-  // Use apartment/suite input for those fields
-  const isApartmentField = placeholder.toLowerCase().includes("apartment") ||
-                          placeholder.toLowerCase().includes("suite") ||
-                          placeholder.toLowerCase().includes("unit");
 
   // Handle phone input change
   const handlePhoneChange = (value: string) => {
@@ -47,9 +48,9 @@ const SearchField = ({
     onChange(syntheticEvent);
   };
 
-  // Handle address autocomplete change with normalization only for search purposes
+  // Handle address autocomplete change - no normalization during typing
   const handleAddressAutocompleteChange = (address: string) => {
-    // Create a synthetic event to maintain consistency - no normalization during typing
+    // Create a synthetic event to maintain consistency
     const syntheticEvent = {
       target: { value: address }
     } as React.ChangeEvent<HTMLInputElement>;
@@ -88,6 +89,7 @@ const SearchField = ({
         value={value}
         onChange={onChange}
         onAddressChange={handleAddressAutocompleteChange}
+        onAddressComponentsExtracted={onAddressComponentsExtracted}
         className={`welp-input ${className || ""}`}
         required={required}
       />
