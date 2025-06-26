@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -107,7 +108,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
           if (place && place.formatted_address && place.address_components) {
             console.log('🏠 Place selected:', place.formatted_address);
             
-            // Extract only street number and route for the street address field
+            // Extract address components for proper form field population
             let streetNumber = '';
             let route = '';
             
@@ -121,16 +122,16 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
               }
             });
             
-            // Create the street address (just street number + route)
+            // Create the street address (just street number + route) for this field
             const streetAddress = `${streetNumber} ${route}`.trim();
             const normalizedAddress = normalizeAddress(streetAddress);
             
             // Update the input value with just the street address
             setInputValue(normalizedAddress);
             
-            // Call callbacks
+            // Call callbacks - pass the street address to onAddressChange and full place to onPlaceSelect
             onAddressChange?.(normalizedAddress);
-            onPlaceSelect?.(place);
+            onPlaceSelect?.(place); // This will trigger the parent component to populate other fields
           }
         });
 
