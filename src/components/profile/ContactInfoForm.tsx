@@ -39,7 +39,14 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
       }
     });
 
-    // Update form fields
+    // Create the street address (just street number + route)
+    const streetAddress = `${streetNumber} ${route}`.trim();
+    if (streetAddress) {
+      const normalizedAddress = normalizeAddress(streetAddress);
+      form.setValue('address', normalizedAddress);
+    }
+
+    // Update other form fields
     if (city) form.setValue('city', city);
     if (state) form.setValue('state', state);
     if (zipCode) form.setValue('zipCode', zipCode);
@@ -72,7 +79,7 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Address</FormLabel>
+            <FormLabel>Street Address</FormLabel>
             <FormControl>
               <AddressAutocomplete 
                 placeholder="Start typing your address..."

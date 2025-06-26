@@ -105,12 +105,28 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
         const placeChangedListener = autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
           
-          if (place && place.formatted_address) {
+          if (place && place.formatted_address && place.address_components) {
             console.log('🏠 Place selected:', place.formatted_address);
-            const cleanAddress = place.formatted_address.replace(/,/g, '');
-            const normalizedAddress = normalizeAddress(cleanAddress);
             
-            // Update the input value in our state
+            // Extract only street number and route for the street address field
+            let streetNumber = '';
+            let route = '';
+            
+            place.address_components.forEach((component) => {
+              const types = component.types;
+              
+              if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+              } else if (types.includes('route')) {
+                route = component.long_name;
+              }
+            });
+            
+            // Create the street address (just street number + route)
+            const streetAddress = `${streetNumber} ${route}`.trim();
+            const normalizedAddress = normalizeAddress(streetAddress);
+            
+            // Update the input value with just the street address
             setInputValue(normalizedAddress);
             
             // Call callbacks

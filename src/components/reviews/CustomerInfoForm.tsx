@@ -73,10 +73,10 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       }
     });
 
-    // Update form fields with full street address (street number + route)
-    const fullStreetAddress = `${streetNumber} ${route}`.trim();
-    if (fullStreetAddress) {
-      const normalizedAddress = normalizeAddress(fullStreetAddress);
+    // Create the street address (just street number + route)
+    const streetAddress = `${streetNumber} ${route}`.trim();
+    if (streetAddress) {
+      const normalizedAddress = normalizeAddress(streetAddress);
       setCustomerAddress(normalizedAddress);
     }
     

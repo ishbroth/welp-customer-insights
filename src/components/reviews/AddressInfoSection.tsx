@@ -31,7 +31,7 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
   return (
     <>
       <div>
-        <label htmlFor="customerAddress" className="block text-sm font-medium mb-1">Address (if service was performed here)</label>
+        <label htmlFor="customerAddress" className="block text-sm font-medium mb-1">Street Address (if service was performed here)</label>
         <AddressAutocomplete
           id="customerAddress"
           value={customerAddress}

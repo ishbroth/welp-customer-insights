@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 interface BusinessAddressSectionProps {
   businessName: string;
@@ -58,14 +59,22 @@ export const BusinessAddressSection = ({
       }
     });
 
-    // Update form fields with full street address (street number + route)
-    const fullStreetAddress = `${streetNumber} ${route}`.trim();
-    if (fullStreetAddress) setBusinessStreet(fullStreetAddress);
+    // Create the street address (just street number + route)
+    const streetAddress = `${streetNumber} ${route}`.trim();
+    if (streetAddress) {
+      const normalizedAddress = normalizeAddress(streetAddress);
+      setBusinessStreet(normalizedAddress);
+    }
     
     // Update other form fields
     if (city) setBusinessCity(city);
     if (state) setBusinessState(state);
     if (zipCode) setBusinessZipCode(zipCode);
+  };
+
+  const handleAddressChange = (address: string) => {
+    const normalizedAddress = normalizeAddress(address);
+    setBusinessStreet(normalizedAddress);
   };
 
   return (
@@ -93,8 +102,11 @@ export const BusinessAddressSection = ({
           id="businessStreet"
           placeholder="Start typing your business address..."
           value={businessStreet}
-          onChange={(e) => setBusinessStreet(e.target.value)}
-          onAddressChange={setBusinessStreet}
+          onChange={(e) => {
+            const normalizedAddress = normalizeAddress(e.target.value);
+            setBusinessStreet(normalizedAddress);
+          }}
+          onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
           className="welp-input"
           required

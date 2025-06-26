@@ -44,7 +44,14 @@ const BusinessAddressFields = ({ formData, onInputChange }: BusinessAddressField
       }
     });
 
-    // Update form fields
+    // Create the street address (just street number + route)
+    const streetAddress = `${streetNumber} ${route}`.trim();
+    if (streetAddress) {
+      const normalizedAddress = normalizeAddress(streetAddress);
+      onInputChange("address", normalizedAddress);
+    }
+
+    // Update other form fields
     if (city) onInputChange("city", city);
     if (state) onInputChange("state", state);
     if (zipCode) onInputChange("zipCode", zipCode);

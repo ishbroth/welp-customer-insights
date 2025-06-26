@@ -8,6 +8,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 // Array of US states for the dropdown
 const US_STATES = [
@@ -65,16 +66,28 @@ export const CustomerAddressSection = ({
       } else if (types.includes('locality')) {
         cityName = component.long_name;
       } else if (types.includes('administrative_area_level_1')) {
-        stateName = component.short_name;
+        stateName = component.long_name; // Use long_name for full state name
       } else if (types.includes('postal_code')) {
         zipCodeValue = component.long_name;
       }
     });
 
-    // Update form fields
+    // Create the street address (just street number + route)
+    const streetAddress = `${streetNumber} ${route}`.trim();
+    if (streetAddress) {
+      const normalizedAddress = normalizeAddress(streetAddress);
+      setStreet(normalizedAddress);
+    }
+
+    // Update other form fields
     if (cityName) setCity(cityName);
     if (stateName) setState(stateName);
     if (zipCodeValue) setZipCode(zipCodeValue);
+  };
+
+  const handleAddressChange = (address: string) => {
+    const normalizedAddress = normalizeAddress(address);
+    setStreet(normalizedAddress);
   };
 
   return (
@@ -85,8 +98,11 @@ export const CustomerAddressSection = ({
           id="customerStreet"
           placeholder="Start typing your address..."
           value={street}
-          onChange={(e) => setStreet(e.target.value)}
-          onAddressChange={setStreet}
+          onChange={(e) => {
+            const normalizedAddress = normalizeAddress(e.target.value);
+            setStreet(normalizedAddress);
+          }}
+          onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
           className="welp-input"
         />
