@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -156,10 +155,10 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       
-      // Allow completely free typing - no restrictions on spaces or any characters
+      // Allow completely free typing - no restrictions whatsoever
       setInputValue(value);
       
-      // Call callbacks
+      // Call callbacks without any modification
       onAddressChange?.(value);
       onChange?.(e);
     };

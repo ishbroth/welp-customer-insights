@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { normalizeAddress } from "@/utils/addressNormalization";
 
 export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) => void) => {
   const navigate = useNavigate();
@@ -34,15 +35,16 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Extract first word of address for search
+    // Extract first word of address for search and normalize only here
     const firstWordOfAddress = address.trim().split(/\s+/)[0];
+    const normalizedAddress = normalizeAddress(firstWordOfAddress);
     
     // Prepare search parameters - ensure all values are strings
     const searchParams = {
       lastName: lastName || "",
       firstName: firstName || "",
       phone: phone || "",
-      address: firstWordOfAddress || "",
+      address: normalizedAddress || "",
       city: city || "",
       state: state || "",
       zipCode: zipCode || "",
