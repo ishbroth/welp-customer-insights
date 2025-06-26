@@ -92,30 +92,48 @@ const CustomerCard = ({
 
   const hasAccess = currentUser && hasFullAccessFunction(customer.id);
 
-  // Enhanced customer info that includes ALL available information from reviews
-  // This information should be visible regardless of auth status
+  // Enhanced customer info collection that shows ALL available information
   const getAllCustomerInfo = () => {
-    const infoSet = new Set<string>();
+    const infoItems: Array<{label: string; value: string}> = [];
     
     // Add profile info if available
-    if (customer.phone) infoSet.add(customer.phone);
-    if (customer.address) infoSet.add(customer.address);
-    if (customer.city) infoSet.add(customer.city);
-    if (customer.state) infoSet.add(customer.state);
-    if (customer.zipCode) infoSet.add(customer.zipCode);
+    if (customer.phone) {
+      infoItems.push({ label: 'Phone', value: customer.phone });
+    }
+    if (customer.address) {
+      infoItems.push({ label: 'Address', value: customer.address });
+    }
+    if (customer.city) {
+      infoItems.push({ label: 'City', value: customer.city });
+    }
+    if (customer.state) {
+      infoItems.push({ label: 'State', value: customer.state });
+    }
+    if (customer.zipCode) {
+      infoItems.push({ label: 'ZIP', value: customer.zipCode });
+    }
     
     // Add info from reviews - this should always be visible
+    const reviewInfo = new Set<string>();
     customer.reviews?.forEach(review => {
-      if (review.customer_phone) infoSet.add(review.customer_phone);
-      if (review.customer_address) infoSet.add(review.customer_address);
-      if (review.customer_city) infoSet.add(review.customer_city);
-      if (review.customer_zipcode) infoSet.add(review.customer_zipcode);
+      if (review.customer_phone && !infoItems.some(item => item.label === 'Phone')) {
+        infoItems.push({ label: 'Phone', value: review.customer_phone });
+      }
+      if (review.customer_address && !infoItems.some(item => item.label === 'Address')) {
+        infoItems.push({ label: 'Address', value: review.customer_address });
+      }
+      if (review.customer_city && !infoItems.some(item => item.label === 'City')) {
+        infoItems.push({ label: 'City', value: review.customer_city });
+      }
+      if (review.customer_zipcode && !infoItems.some(item => item.label === 'ZIP')) {
+        infoItems.push({ label: 'ZIP', value: review.customer_zipcode });
+      }
     });
     
-    return Array.from(infoSet).join(' • ');
+    return infoItems;
   };
 
-  const customerInfoText = getAllCustomerInfo();
+  const customerInfoItems = getAllCustomerInfo();
 
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
@@ -127,11 +145,22 @@ const CustomerCard = ({
           hasReviews={hasReviews}
           averageRating={averageRating}
           reviewCount={customer.reviews?.length || 0}
-          customerInfoText={customerInfoText}
+          customerInfoText="" // We'll show structured info below instead
           hasAccess={!!hasAccess}
           getInitials={getInitials}
           onClick={handleCardClick}
         />
+        
+        {/* Display customer information in a structured way */}
+        {customerInfoItems.length > 0 && (
+          <div className="mt-3 space-y-1">
+            {customerInfoItems.map((item, index) => (
+              <div key={index} className="text-sm text-gray-600">
+                <span className="font-medium">{item.label}:</span> {item.value}
+              </div>
+            ))}
+          </div>
+        )}
         
         <CustomerCardActionsSection
           currentUser={currentUser}
