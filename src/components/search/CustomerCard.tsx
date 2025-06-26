@@ -29,6 +29,11 @@ interface CustomerCardProps {
       content: string;
       date: string;
       reviewerVerified?: boolean;
+      // Additional customer info from reviews - always show regardless of auth status
+      customer_phone?: string;
+      customer_address?: string;
+      customer_city?: string;
+      customer_zipcode?: string;
     }>;
   };
   searchCriteria?: string;
@@ -87,8 +92,30 @@ const CustomerCard = ({
 
   const hasAccess = currentUser && hasFullAccessFunction(customer.id);
 
-  // Format customer info for display
-  const customerInfoText = customerInfo.map(info => info.value).join(' • ');
+  // Enhanced customer info that includes ALL available information from reviews
+  // This information should be visible regardless of auth status
+  const getAllCustomerInfo = () => {
+    const infoSet = new Set<string>();
+    
+    // Add profile info if available
+    if (customer.phone) infoSet.add(customer.phone);
+    if (customer.address) infoSet.add(customer.address);
+    if (customer.city) infoSet.add(customer.city);
+    if (customer.state) infoSet.add(customer.state);
+    if (customer.zipCode) infoSet.add(customer.zipCode);
+    
+    // Add info from reviews - this should always be visible
+    customer.reviews?.forEach(review => {
+      if (review.customer_phone) infoSet.add(review.customer_phone);
+      if (review.customer_address) infoSet.add(review.customer_address);
+      if (review.customer_city) infoSet.add(review.customer_city);
+      if (review.customer_zipcode) infoSet.add(review.customer_zipcode);
+    });
+    
+    return Array.from(infoSet).join(' • ');
+  };
+
+  const customerInfoText = getAllCustomerInfo();
 
   return (
     <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">

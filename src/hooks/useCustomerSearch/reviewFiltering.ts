@@ -4,6 +4,7 @@ import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 interface ScoredReview {
   searchScore: number;
   matchCount: number;
+  completenessScore: number;
   reviewerVerified?: boolean;
   customerVerified?: boolean;
   created_at?: string;
@@ -23,18 +24,36 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => review.searchScore > minScore || review.matchCount > 0)
     .sort((a, b) => {
-      // New priority ranking system:
-      // 1. Reviews by verified business accounts (highest priority)
-      // 2. Reviews claimed by verified customers 
-      // 3. All other reviews
-      // Within each category, sort by date (newest first)
+      // Enhanced priority ranking system:
+      // 1. Match quality (search score and match count) - highest priority
+      // 2. Information completeness - medium priority
+      // 3. Verification status - lower priority
+      // 4. Date - lowest priority
       
       const aBusinessVerified = Boolean(a.reviewerVerified);
       const bBusinessVerified = Boolean(b.reviewerVerified);
       const aCustomerVerified = Boolean(a.customerVerified);
       const bCustomerVerified = Boolean(b.customerVerified);
       
-      // Calculate priority scores
+      // Calculate match quality score (combination of search score and match count)
+      const getMatchQuality = (review: ScoredReview) => {
+        return (review.searchScore * 0.7) + (review.matchCount * 10 * 0.3);
+      };
+      
+      const aMatchQuality = getMatchQuality(a);
+      const bMatchQuality = getMatchQuality(b);
+      
+      // 1. Primary sort: Match quality (search score + match count)
+      if (Math.abs(bMatchQuality - aMatchQuality) > 5) { // Only prioritize if significant difference
+        return bMatchQuality - aMatchQuality;
+      }
+      
+      // 2. Secondary sort: Information completeness
+      if (Math.abs(b.completenessScore - a.completenessScore) > 20) { // Only if significant difference
+        return b.completenessScore - a.completenessScore;
+      }
+      
+      // 3. Tertiary sort: Verification status
       const getPriorityScore = (businessVerified: boolean, customerVerified: boolean) => {
         if (businessVerified) return 3; // Highest priority
         if (customerVerified) return 2; // Medium priority
@@ -44,22 +63,11 @@ export const filterAndSortReviews = (
       const aPriority = getPriorityScore(aBusinessVerified, aCustomerVerified);
       const bPriority = getPriorityScore(bBusinessVerified, bCustomerVerified);
       
-      // First sort by priority level
       if (bPriority !== aPriority) {
         return bPriority - aPriority;
       }
       
-      // Within same priority level, sort by match count first
-      if (b.matchCount !== a.matchCount) {
-        return b.matchCount - a.matchCount;
-      }
-      
-      // Then by search score
-      if (b.searchScore !== a.searchScore) {
-        return b.searchScore - a.searchScore;
-      }
-      
-      // Finally, sort by date (newest first) for reviews with same priority, score and match count
+      // 4. Final sort: Date (newest first) for reviews with similar scores
       if (a.created_at && b.created_at) {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
@@ -72,8 +80,8 @@ export const filterAndSortReviews = (
 };
 
 export const logSearchResults = (reviews: ScoredReview[]): void => {
-  console.log("Review search results:", reviews.length);
-  reviews.forEach(review => {
-    console.log(`Review: ${review.customer_name}, Zip: ${review.customer_zipcode}, Score: ${review.searchScore}, Business Verified: ${review.reviewerVerified || false}, Customer Verified: ${review.customerVerified || false}, Date: ${review.created_at}`);
+  console.log("Enhanced review search results:", reviews.length);
+  reviews.forEach((review, index) => {
+    console.log(`${index + 1}. Review: ${review.customer_name}, Score: ${review.searchScore}, Matches: ${review.matchCount}, Completeness: ${review.completenessScore}%, Business Verified: ${review.reviewerVerified || false}, Customer Verified: ${review.customerVerified || false}, Date: ${review.created_at}`);
   });
 };

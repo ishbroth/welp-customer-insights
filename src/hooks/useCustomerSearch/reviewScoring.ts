@@ -7,6 +7,7 @@ import { ReviewData } from "./types";
 interface ScoredReview extends ReviewData {
   searchScore: number;
   matchCount: number;
+  completenessScore: number;
   detailedMatches: Array<{
     field: string;
     reviewValue: string;
@@ -15,6 +16,26 @@ interface ScoredReview extends ReviewData {
     matchType: 'exact' | 'partial' | 'fuzzy';
   }>;
 }
+
+// Calculate how complete the customer information is
+const calculateCompletenessScore = (review: ReviewData): number => {
+  let completeness = 0;
+  const fields = [
+    review.customer_name,
+    review.customer_phone,
+    review.customer_address,
+    review.customer_city,
+    review.customer_zipcode
+  ];
+  
+  fields.forEach(field => {
+    if (field && field.trim() !== '') {
+      completeness += 20; // Each field worth 20 points for 100% completeness
+    }
+  });
+  
+  return completeness;
+};
 
 export const scoreReview = (
   review: ReviewData,
@@ -40,19 +61,30 @@ export const scoreReview = (
     matchType: 'exact' | 'partial' | 'fuzzy';
   }> = [];
 
+  // Calculate completeness score for this review
+  const completenessScore = calculateCompletenessScore(review);
+
   // Clean phone and zip for comparison
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const cleanZip = zipCode ? zipCode.replace(/\D/g, '') : '';
 
-  // Name matching with fuzzy logic
+  // Enhanced name matching with better fuzzy logic
   if ((firstName || lastName) && review.customer_name) {
     const searchName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
     const customerName = review.customer_name.toLowerCase();
     
-    // Direct similarity
+    // Direct similarity with higher weight for exact matches
     const similarity = calculateStringSimilarity(searchName, customerName);
     if (similarity > REVIEW_SEARCH_CONFIG.SIMILARITY_THRESHOLD) {
-      const points = similarity * REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER;
+      let points = similarity * REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER;
+      
+      // Bonus for very high similarity
+      if (similarity >= 0.95) {
+        points *= 1.5; // 50% bonus for near-exact name matches
+      } else if (similarity >= 0.85) {
+        points *= 1.2; // 20% bonus for very close matches
+      }
+      
       score += points;
       matches++;
       
@@ -65,32 +97,46 @@ export const scoreReview = (
       });
     }
     
-    // Word-by-word matching
+    // Word-by-word matching with position awareness
     const searchWords = searchName.split(/\s+/);
     const nameWords = customerName.split(/\s+/);
     
-    for (const searchWord of searchWords) {
+    for (let i = 0; i < searchWords.length; i++) {
+      const searchWord = searchWords[i];
       if (searchWord.length >= REVIEW_SEARCH_CONFIG.MIN_WORD_LENGTH) {
-        for (const nameWord of nameWords) {
-          if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) {
+        for (let j = 0; j < nameWords.length; j++) {
+          const nameWord = nameWords[j];
+          
+          // Exact word match
+          if (nameWord === searchWord) {
+            score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * 2; // Double points for exact word match
+            matches++;
+          }
+          // Partial word match
+          else if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) {
             score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH;
             matches++;
+          }
+          // Fuzzy word match for similar words
+          else {
+            const wordSimilarity = calculateStringSimilarity(searchWord, nameWord);
+            if (wordSimilarity > 0.8) {
+              score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * wordSimilarity;
+              matches++;
+            }
           }
         }
       }
     }
   }
 
-  // Phone matching - very flexible
+  // Enhanced phone matching with partial number support
   if (cleanPhone && review.customer_phone) {
     const reviewPhone = review.customer_phone.replace(/\D/g, '');
     
-    // Check if phones contain each other or share significant digits
-    if (reviewPhone.includes(cleanPhone) || 
-        cleanPhone.includes(reviewPhone) ||
-        (cleanPhone.length >= 7 && reviewPhone.includes(cleanPhone.slice(-7))) ||
-        (reviewPhone.length >= 7 && cleanPhone.includes(reviewPhone.slice(-7)))) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH;
+    // Exact match gets highest priority
+    if (reviewPhone === cleanPhone) {
+      score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 2;
       matches++;
       
       detailedMatches.push({
@@ -98,17 +144,32 @@ export const scoreReview = (
         reviewValue: review.customer_phone,
         searchValue: phone || '',
         similarity: 1.0,
-        matchType: reviewPhone === cleanPhone ? 'exact' : 'partial'
+        matchType: 'exact'
+      });
+    }
+    // Check if phones contain each other or share significant digits
+    else if (reviewPhone.includes(cleanPhone) || 
+             cleanPhone.includes(reviewPhone) ||
+             (cleanPhone.length >= 7 && reviewPhone.includes(cleanPhone.slice(-7))) ||
+             (reviewPhone.length >= 7 && cleanPhone.includes(reviewPhone.slice(-7)))) {
+      score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH;
+      matches++;
+      
+      detailedMatches.push({
+        field: 'Phone',
+        reviewValue: review.customer_phone,
+        searchValue: phone || '',
+        similarity: 0.8,
+        matchType: 'partial'
       });
     }
   }
 
-  // Address matching with enhanced fuzzy logic
+  // Enhanced address matching with street number awareness
   if (address && review.customer_address) {
-    // Use the new address comparison function
+    // Check for high-confidence address match first
     if (compareAddresses(address, review.customer_address, 0.9)) {
-      const points = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 0.9;
-      score += points;
+      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5;
       matches++;
       
       detailedMatches.push({
@@ -118,9 +179,10 @@ export const scoreReview = (
         similarity: 0.9,
         matchType: 'exact'
       });
-    } else if (compareAddresses(address, review.customer_address, 0.7)) {
-      const points = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 0.7;
-      score += points;
+    } 
+    // Medium confidence match
+    else if (compareAddresses(address, review.customer_address, 0.7)) {
+      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER;
       matches++;
       
       detailedMatches.push({
@@ -132,10 +194,19 @@ export const scoreReview = (
       });
     }
     
-    // Fallback to word-by-word matching for partial matches
+    // Enhanced word-by-word matching for partial addresses
     const addressWords = address.toLowerCase().split(/\s+/);
     const reviewAddressWords = review.customer_address.toLowerCase().split(/\s+/);
     
+    // Check for street number match (first word often a number)
+    const searchNumber = addressWords[0];
+    const reviewNumber = reviewAddressWords[0];
+    if (searchNumber && reviewNumber && !isNaN(Number(searchNumber)) && searchNumber === reviewNumber) {
+      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH * 2; // Street number match is very valuable
+      matches++;
+    }
+    
+    // Check other address components
     for (const word of addressWords) {
       if (word.length >= REVIEW_SEARCH_CONFIG.MIN_WORD_LENGTH) {
         for (const reviewWord of reviewAddressWords) {
@@ -148,13 +219,20 @@ export const scoreReview = (
     }
   }
 
-  // City matching with fuzzy logic
+  // Enhanced city matching with fuzzy logic
   if (city && review.customer_city) {
     const similarity = calculateStringSimilarity(city.toLowerCase(), review.customer_city.toLowerCase());
     if (similarity > REVIEW_SEARCH_CONFIG.CITY_SIMILARITY_THRESHOLD || 
         review.customer_city.toLowerCase().includes(city.toLowerCase()) || 
         city.toLowerCase().includes(review.customer_city.toLowerCase())) {
-      const points = similarity * REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER;
+      
+      let points = similarity * REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER;
+      
+      // Bonus for exact city match
+      if (similarity >= 0.95) {
+        points *= 1.3;
+      }
+      
       score += points;
       matches++;
       
@@ -193,7 +271,7 @@ export const scoreReview = (
     
     // Exact match gets highest priority
     if (reviewZip === cleanZip) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
+      score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5;
       matches++;
       
       detailedMatches.push({
@@ -240,17 +318,16 @@ export const scoreReview = (
   }
 
   // Calculate percentage score based on maximum possible score
-  // Maximum possible score would be if all fields matched perfectly
-  const maxPossibleScore = REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER + 
-                          REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH + 
-                          REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER + 
-                          REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER + 
-                          REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH + 
-                          REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH; // State match uses same score as ZIP
+  const maxPossibleScore = REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER * 1.5 + 
+                          REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 2 + 
+                          REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5 + 
+                          REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER * 1.3 + 
+                          REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5 + 
+                          REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH; // State match
 
   const percentageScore = Math.min(100, Math.round((score / maxPossibleScore) * 100));
 
-  console.log('Review scoring result:', {
+  console.log('Enhanced review scoring result:', {
     reviewId: review.id,
     customerName: review.customer_name,
     searchParams,
@@ -258,6 +335,7 @@ export const scoreReview = (
     rawScore: score,
     maxPossibleScore,
     percentageScore,
+    completenessScore,
     finalMatches: matches,
     detailedMatches
   });
@@ -266,6 +344,7 @@ export const scoreReview = (
     ...review, 
     searchScore: percentageScore, 
     matchCount: matches,
+    completenessScore,
     detailedMatches
   };
 };
