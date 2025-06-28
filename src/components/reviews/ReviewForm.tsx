@@ -82,6 +82,25 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     navigate("/business/reviews");
   };
 
+  // Handle address component extraction from Google Maps
+  const handleAddressComponentsExtracted = (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => {
+    // Only update fields that are currently empty to avoid overwriting user input
+    if (components.city && !customerCity) {
+      setCustomerCity(components.city);
+    }
+    if (components.state && !customerState) {
+      setCustomerState(components.state);
+    }
+    if (components.zipCode && !customerZipCode) {
+      setCustomerZipCode(components.zipCode);
+    }
+  };
+
   return (
     <form onSubmit={onSubmit}>
       <div className="space-y-6">
@@ -103,6 +122,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           setCustomerCity={setCustomerCity}
           setCustomerState={setCustomerState}
           setCustomerZipCode={setCustomerZipCode}
+          onAddressComponentsExtracted={handleAddressComponentsExtracted}
         />
         
         {/* Rating */}

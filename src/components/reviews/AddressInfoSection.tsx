@@ -12,6 +12,12 @@ interface AddressInfoSectionProps {
   setCustomerAddress: (value: string) => void;
   setCustomerApartmentSuite?: (value: string) => void;
   onAddressSelect: (place: google.maps.places.PlaceResult) => void;
+  onAddressComponentsExtracted?: (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => void;
 }
 
 const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
@@ -22,6 +28,7 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
   setCustomerAddress,
   setCustomerApartmentSuite,
   onAddressSelect,
+  onAddressComponentsExtracted,
 }) => {
   const handleAddressChange = (address: string) => {
     const normalizedAddress = normalizeAddress(address);
@@ -41,6 +48,7 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
           }}
           onAddressChange={handleAddressChange}
           onPlaceSelect={onAddressSelect}
+          onAddressComponentsExtracted={onAddressComponentsExtracted}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}
           placeholder="Start typing address..."

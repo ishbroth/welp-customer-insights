@@ -25,6 +25,12 @@ interface CustomerInfoFormProps {
   setCustomerCity: (value: string) => void;
   setCustomerState: (value: string) => void;
   setCustomerZipCode: (value: string) => void;
+  onAddressComponentsExtracted?: (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => void;
 }
 
 const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
@@ -46,6 +52,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   setCustomerCity,
   setCustomerState,
   setCustomerZipCode,
+  onAddressComponentsExtracted,
 }) => {
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
@@ -80,10 +87,20 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       setCustomerAddress(normalizedAddress);
     }
     
-    // Update other form fields
+    // Update other form fields directly
     if (city) setCustomerCity(city);
     if (state) setCustomerState(state);
     if (zipCode) setCustomerZipCode(zipCode);
+
+    // Also call the callback if provided
+    if (onAddressComponentsExtracted) {
+      onAddressComponentsExtracted({
+        streetAddress: streetAddress ? normalizeAddress(streetAddress) : '',
+        city,
+        state,
+        zipCode
+      });
+    }
   };
 
   return (
@@ -114,6 +131,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
         setCustomerAddress={setCustomerAddress}
         setCustomerApartmentSuite={setCustomerApartmentSuite}
         onAddressSelect={handleAddressSelect}
+        onAddressComponentsExtracted={onAddressComponentsExtracted}
       />
       
       <LocationInfoSection
