@@ -1,3 +1,4 @@
+
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import CustomerCard from "./CustomerCard";
@@ -22,6 +23,11 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
     value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
   );
 
+  // Simple hasFullAccess function for now - business users have full access to all customer data
+  const hasFullAccess = (customerId: string) => {
+    return currentUser?.type === "business" || currentUser?.type === "admin";
+  };
+
   // Only show loading if a search has been performed and is currently loading
   if (isLoading && hasSearchParams) {
     return <div className="text-center py-8">Loading...</div>;
@@ -39,6 +45,7 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
               <CustomerCard
                 key={customer.id}
                 customer={customer}
+                hasFullAccess={hasFullAccess}
                 onReviewUpdate={onRefresh}
               />
             ))}
@@ -65,6 +72,7 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
           <CustomerCard
             key={customer.id}
             customer={customer}
+            hasFullAccess={hasFullAccess}
             onReviewUpdate={onRefresh}
           />
         ))}

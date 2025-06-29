@@ -2,18 +2,18 @@
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
-import Registration from "@/pages/Registration";
+import Signup from "@/pages/Signup";
 import Verification from "@/pages/Verification";
-import Profile from "@/pages/Profile";
+import ProfilePage from "@/pages/ProfilePage";
 import ProfileReviews from "@/pages/ProfileReviews";
 import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
 import SearchResults from "@/pages/SearchResults";
 import NewReview from "@/pages/NewReview";
-import OneTimeReview from "@/pages/OneTimeReview";
-import Subscribe from "@/pages/Subscribe";
-import BusinessVerification from "@/pages/BusinessVerification";
-import VerificationRequest from "@/pages/VerificationRequest";
+import OneTimeReviewAccess from "@/pages/OneTimeReviewAccess";
+import Subscription from "@/pages/Subscription";
+import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
+import VerificationResources from "@/pages/VerificationResources";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -21,14 +21,14 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Registration />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/search" element={<SearchResults />} />
       
       {/* Protected Routes */}
       <Route path="/profile" element={
         <ProtectedRoute>
-          <Profile />
+          <ProfilePage />
         </ProtectedRoute>
       } />
       
@@ -56,27 +56,27 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/one-time-review" element={
+      <Route path="/one-time-review-access" element={
         <ProtectedRoute>
-          <OneTimeReview />
+          <OneTimeReviewAccess />
         </ProtectedRoute>
       } />
       
-      <Route path="/subscribe" element={
+      <Route path="/subscription" element={
         <ProtectedRoute>
-          <Subscribe />
+          <Subscription />
         </ProtectedRoute>
       } />
       
-      <Route path="/business-verification" element={
+      <Route path="/business-verification-success" element={
         <ProtectedRoute>
-          <BusinessVerification />
+          <BusinessVerificationSuccess />
         </ProtectedRoute>
       } />
       
-      <Route path="/verification-request" element={
+      <Route path="/verification-resources" element={
         <ProtectedRoute>
-          <VerificationRequest />
+          <VerificationResources />
         </ProtectedRoute>
       } />
     </Routes>
