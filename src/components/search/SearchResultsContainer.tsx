@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Customer } from "@/types/search";
 import { useAuth } from "@/contexts/auth";
-import SearchResultsHeader from "./SearchResultsHeader";
 import SearchResultsList from "./SearchResultsList";
 import EmptySearchResults from "./EmptySearchResults";
 
@@ -24,10 +23,6 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <SearchResultsHeader 
-          resultsCount={0}
-          onClearSearch={() => {}}
-        />
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="animate-pulse">
@@ -45,10 +40,6 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
 
   return (
     <div className="space-y-4">
-      <SearchResultsHeader 
-        resultsCount={customers.length}
-        onClearSearch={() => {}}
-      />
       <SearchResultsList 
         customers={displayedCustomers}
         isLoading={false}

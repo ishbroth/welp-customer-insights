@@ -191,7 +191,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               className="flex-1"
             >
               <MessageCircle className="h-4 w-4 mr-1" />
-              Unlock Review ($2)
+              Unlock Review ($3)
             </Button>
             <Button
               size="sm"
