@@ -91,6 +91,7 @@ const OneTimeReviewAccess = () => {
       }
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
+      // Use window.location.href for immediate redirect
       window.location.href = data.url;
       
     } catch (error) {
@@ -132,6 +133,7 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
+      // Use window.location.href for immediate redirect
       window.location.href = data.url;
       
     } catch (error) {
@@ -216,7 +218,7 @@ const OneTimeReviewAccess = () => {
                         disabled={isProcessing}
                         onClick={handleGuestPayment}
                       >
-                        {isProcessing ? "Processing..." : "Pay $3.00 - Get Instant Access"}
+                        {isProcessing ? "Redirecting to Stripe..." : "Pay $3.00 - Get Instant Access"}
                       </Button>
                     </div>
                   </div>
@@ -267,7 +269,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handleAuthenticatedPayment}
                     >
-                      {isProcessing ? "Processing..." : "Pay $3.00"}
+                      {isProcessing ? "Redirecting to Stripe..." : "Pay $3.00"}
                     </Button>
                   </div>
                 )}
