@@ -27,6 +27,10 @@ const AppRoutes = () => {
       <Route path="/verification" element={<Verification />} />
       <Route path="/search" element={<SearchResults />} />
       
+      {/* One-time review access routes */}
+      <Route path="/one-time-review" element={<OneTimeReviewAccess />} />
+      <Route path="/one-time-review-access" element={<OneTimeReviewAccess />} />
+      
       {/* Protected Routes */}
       <Route path="/profile" element={
         <ProtectedRoute>
