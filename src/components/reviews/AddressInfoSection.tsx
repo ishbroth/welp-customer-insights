@@ -2,7 +2,6 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
-import { normalizeAddress } from "@/utils/addressNormalization";
 import { AddressComponents } from "@/utils/addressExtraction";
 
 interface AddressInfoSectionProps {
@@ -26,14 +25,15 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
   onAddressSelect,
   onAddressComponentsExtracted,
 }) => {
-  const handleAddressChange = (address: string) => {
-    console.log('AddressInfoSection - Address changed:', address);
-    // Don't normalize here - let the user type freely
+  // Handle address autocomplete change - no normalization during typing (same as SearchField)
+  const handleAddressAutocompleteChange = (address: string) => {
+    console.log('🏠 AddressInfoSection - Address changed to:', address);
     setCustomerAddress(address);
   };
 
+  // Handle place selection from Google Maps (same as SearchField)
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    console.log('AddressInfoSection - Place selected:', place);
+    console.log('🏠 AddressInfoSection - Place selected:', place);
     onAddressSelect(place);
   };
 
@@ -45,10 +45,10 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
           id="customerAddress"
           value={customerAddress}
           onChange={(e) => {
-            console.log('AddressInfoSection - Input changed:', e.target.value);
+            console.log('🏠 AddressInfoSection - Input changed:', e.target.value);
             setCustomerAddress(e.target.value);
           }}
-          onAddressChange={handleAddressChange}
+          onAddressChange={handleAddressAutocompleteChange}
           onPlaceSelect={handlePlaceSelect}
           onAddressComponentsExtracted={onAddressComponentsExtracted}
           className="welp-input"
