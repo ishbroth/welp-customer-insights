@@ -50,9 +50,10 @@ export const usePlacesAutocomplete = ({
           console.log('🏠 Extracted components:', components);
           
           // Update the input value with ONLY the street address (not the full formatted address)
+          console.log('🏠 Setting input to street address only:', components.streetAddress);
           setInputValue(components.streetAddress);
           
-          // Call callbacks with the street address only
+          // Call callbacks with the street address only for the address field
           onAddressChange?.(components.streetAddress);
           onAddressComponentsExtracted?.(components);
           onPlaceSelect?.(place);
