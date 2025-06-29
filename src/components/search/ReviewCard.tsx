@@ -187,7 +187,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate(`/one-time-review?reviewId=${review.id}`)}
+              onClick={() => navigate(`/one-time-review-access?reviewId=${review.id}`)}
               className="flex-1"
             >
               <MessageCircle className="h-4 w-4 mr-1" />
@@ -195,7 +195,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </Button>
             <Button
               size="sm"
-              onClick={() => navigate('/subscribe')}
+              onClick={() => navigate('/subscription')}
               className="flex-1"
             >
               Get Full Access
