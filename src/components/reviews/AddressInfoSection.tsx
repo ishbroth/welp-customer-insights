@@ -27,8 +27,14 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
   onAddressComponentsExtracted,
 }) => {
   const handleAddressChange = (address: string) => {
-    const normalizedAddress = normalizeAddress(address);
-    setCustomerAddress(normalizedAddress);
+    console.log('AddressInfoSection - Address changed:', address);
+    // Don't normalize here - let the user type freely
+    setCustomerAddress(address);
+  };
+
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log('AddressInfoSection - Place selected:', place);
+    onAddressSelect(place);
   };
 
   return (
@@ -39,11 +45,11 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
           id="customerAddress"
           value={customerAddress}
           onChange={(e) => {
-            const normalizedAddress = normalizeAddress(e.target.value);
-            setCustomerAddress(normalizedAddress);
+            console.log('AddressInfoSection - Input changed:', e.target.value);
+            setCustomerAddress(e.target.value);
           }}
           onAddressChange={handleAddressChange}
-          onPlaceSelect={onAddressSelect}
+          onPlaceSelect={handlePlaceSelect}
           onAddressComponentsExtracted={onAddressComponentsExtracted}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}

@@ -1,6 +1,7 @@
 
 import React from "react";
 import { normalizeAddress } from "@/utils/addressNormalization";
+import { extractAddressComponents } from "@/utils/addressExtraction";
 import PersonalInfoSection from "./PersonalInfoSection";
 import ContactInfoSection from "./ContactInfoSection";
 import AddressInfoSection from "./AddressInfoSection";
@@ -57,49 +58,51 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
+    console.log('CustomerInfoForm - Place selected:', place);
+    
+    // Extract address components using the utility function
+    const components = extractAddressComponents(place);
+    
+    console.log('CustomerInfoForm - Extracted components:', components);
 
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
-      }
-    });
-
-    // Create the street address (just street number + route)
-    const streetAddress = `${streetNumber} ${route}`.trim();
-    if (streetAddress) {
-      const normalizedAddress = normalizeAddress(streetAddress);
-      setCustomerAddress(normalizedAddress);
+    // Update the street address field with just the street portion
+    if (components.streetAddress) {
+      setCustomerAddress(components.streetAddress);
     }
     
     // Update other form fields directly
-    if (city) setCustomerCity(city);
-    if (state) setCustomerState(state);
-    if (zipCode) setCustomerZipCode(zipCode);
+    if (components.city) setCustomerCity(components.city);
+    if (components.state) setCustomerState(components.state);
+    if (components.zipCode) setCustomerZipCode(components.zipCode);
 
     // Also call the callback if provided
     if (onAddressComponentsExtracted) {
-      onAddressComponentsExtracted({
-        streetAddress: streetAddress ? normalizeAddress(streetAddress) : '',
-        city,
-        state,
-        zipCode
-      });
+      onAddressComponentsExtracted(components);
+    }
+  };
+
+  const handleAddressComponentsExtracted = (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => {
+    console.log('CustomerInfoForm - Components extracted:', components);
+    
+    // Update fields that are currently empty to avoid overwriting user input
+    if (components.city && !customerCity) {
+      setCustomerCity(components.city);
+    }
+    if (components.state && !customerState) {
+      setCustomerState(components.state);
+    }
+    if (components.zipCode && !customerZipCode) {
+      setCustomerZipCode(components.zipCode);
+    }
+    
+    // Also call the parent callback
+    if (onAddressComponentsExtracted) {
+      onAddressComponentsExtracted(components);
     }
   };
 
@@ -131,7 +134,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
         setCustomerAddress={setCustomerAddress}
         setCustomerApartmentSuite={setCustomerApartmentSuite}
         onAddressSelect={handleAddressSelect}
-        onAddressComponentsExtracted={onAddressComponentsExtracted}
+        onAddressComponentsExtracted={handleAddressComponentsExtracted}
       />
       
       <LocationInfoSection

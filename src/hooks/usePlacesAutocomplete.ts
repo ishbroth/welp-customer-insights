@@ -44,8 +44,10 @@ export const usePlacesAutocomplete = ({
         
         if (place && place.formatted_address && place.address_components) {
           console.log('🏠 Place selected:', place.formatted_address);
+          console.log('🏠 Address components:', place.address_components);
           
           const components = extractAddressComponents(place);
+          console.log('🏠 Extracted components:', components);
           
           // Update the input value with just the street address
           setInputValue(components.streetAddress);
