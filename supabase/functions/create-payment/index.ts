@@ -16,7 +16,7 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === "OPTIONS") {   
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -28,54 +28,61 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    // Authenticate user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
-    
-    // Create Supabase client with service role key for secure operations
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    // Get the authenticated user
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
-
-    // Request body contains info like customer ID for one-time access
-    const { customerId, reviewId, amount = 300 } = await req.json(); // Default $3.00
-    logStep("Request data", { customerId, reviewId, amount });
+    // Parse request body
+    const { customerId, reviewId, amount = 300, isGuest = false } = await req.json();
+    logStep("Request data", { customerId, reviewId, amount, isGuest });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Check if a customer already exists in Stripe
-    const customers = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
+    let user = null;
+    let userEmail = "guest@example.com"; // Default for guest users
 
-    // Get or create customer
-    let stripeCustomerId;
-    if (customers.data.length > 0) {
-      stripeCustomerId = customers.data[0].id;
-      logStep("Found existing Stripe customer", { stripeCustomerId });
+    // Handle authentication for non-guest users
+    if (!isGuest) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("No authorization header provided for authenticated user");
+      logStep("Authorization header found for authenticated user");
+      
+      // Create Supabase client with service role key for secure operations
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        { auth: { persistSession: false } }
+      );
+
+      // Get the authenticated user
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (userError) throw new Error(`Authentication error: ${userError.message}`);
+      
+      user = userData.user;
+      if (!user?.email) throw new Error("User not authenticated or email not available");
+      userEmail = user.email;
+      logStep("User authenticated", { userId: user.id, email: user.email });
     } else {
-      const newCustomer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          user_id: user.id
-        }
+      logStep("Processing guest payment");
+    }
+
+    // Check if a customer already exists in Stripe (for non-guest users)
+    let stripeCustomerId;
+    if (!isGuest) {
+      const customers = await stripe.customers.list({
+        email: userEmail,
+        limit: 1,
       });
-      stripeCustomerId = newCustomer.id;
-      logStep("Created new Stripe customer", { stripeCustomerId });
+
+      if (customers.data.length > 0) {
+        stripeCustomerId = customers.data[0].id;
+        logStep("Found existing Stripe customer", { stripeCustomerId });
+      } else {
+        const newCustomer = await stripe.customers.create({
+          email: userEmail,
+          metadata: user ? { user_id: user.id } : {}
+        });
+        stripeCustomerId = newCustomer.id;
+        logStep("Created new Stripe customer", { stripeCustomerId });
+      }
     }
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
@@ -87,11 +94,10 @@ serve(async (req) => {
     successParams.append("success", "true");
     
     const successUrl = `${origin}/one-time-review?${successParams.toString()}`;
-    const cancelUrl = `${origin}/one-time-review?canceled=true`;
+    const cancelUrl = `${origin}/one-time-review?reviewId=${reviewId}&canceled=true`;
     
     // Create a one-time payment checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
+    const sessionConfig: any = {
       line_items: [
         {
           price_data: {
@@ -111,10 +117,25 @@ serve(async (req) => {
       ],
       mode: "payment",
       success_url: successUrl,
-      cancel_url: cancelUrl
-    });
+      cancel_url: cancelUrl,
+      metadata: {
+        reviewId: reviewId || "",
+        customerId: customerId || "",
+        isGuest: isGuest.toString()
+      }
+    };
 
-    logStep("Created payment session", { sessionId: session.id });
+    // Add customer info for non-guest users
+    if (!isGuest && stripeCustomerId) {
+      sessionConfig.customer = stripeCustomerId;
+    } else if (!isGuest) {
+      sessionConfig.customer_email = userEmail;
+    }
+    // For guest users, don't set customer or customer_email - Stripe will handle it
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    logStep("Created payment session", { sessionId: session.id, isGuest });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
