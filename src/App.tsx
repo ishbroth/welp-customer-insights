@@ -7,6 +7,13 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/auth";
 import { useState } from "react";
 import AppRoutes from "@/components/routing/AppRoutes";
+import { useMobilePushNotifications } from "@/hooks/useMobilePushNotifications";
+
+// Component that uses the push notifications hook
+const AppWithPushNotifications = () => {
+  useMobilePushNotifications();
+  return <AppRoutes />;
+};
 
 // App component with proper provider nesting
 const App = () => {
@@ -20,7 +27,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
+            <AppWithPushNotifications />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

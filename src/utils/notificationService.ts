@@ -17,17 +17,45 @@ export const sendNotification = async (params: SendNotificationParams) => {
   try {
     console.log("Sending notification:", params);
 
-    const { data, error } = await supabase.functions.invoke('send-notification', {
-      body: params
-    });
+    // Get user's notification preferences
+    const { data: preferences } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', params.userId)
+      .single();
 
-    if (error) {
-      console.error("Error sending notification:", error);
-      throw error;
+    // Send email notification if enabled
+    if (preferences?.email_notifications) {
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-notification', {
+        body: params
+      });
+
+      if (emailError) {
+        console.error("Error sending email notification:", emailError);
+      } else {
+        console.log("Email notification sent successfully:", emailData);
+      }
     }
 
-    console.log("Notification sent successfully:", data);
-    return data;
+    // Send push notification if enabled and user is on mobile
+    if (preferences?.push_notifications) {
+      const { data: pushData, error: pushError } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          userId: params.userId,
+          title: params.subject,
+          body: params.content,
+          data: params.relatedData
+        }
+      });
+
+      if (pushError) {
+        console.error("Error sending push notification:", pushError);
+      } else {
+        console.log("Push notification sent successfully:", pushData);
+      }
+    }
+
+    return { success: true };
 
   } catch (error) {
     console.error("Failed to send notification:", error);

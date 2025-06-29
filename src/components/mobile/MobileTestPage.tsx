@@ -2,6 +2,7 @@
 import React from 'react';
 import { Capacitor } from '@capacitor/core';
 import CameraTest from './CameraTest';
+import PushNotificationTest from './PushNotificationTest';
 import { Card, CardContent } from '@/components/ui/card';
 
 const MobileTestPage: React.FC = () => {
@@ -23,7 +24,10 @@ const MobileTestPage: React.FC = () => {
         </CardContent>
       </Card>
       
-      <CameraTest />
+      <div className="space-y-6">
+        <CameraTest />
+        <PushNotificationTest />
+      </div>
     </div>
   );
 };
