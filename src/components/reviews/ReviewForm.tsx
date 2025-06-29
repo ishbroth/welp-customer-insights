@@ -6,6 +6,7 @@ import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
 import RatingInput from "@/components/reviews/RatingInput";
 import ReviewTextInput from "@/components/reviews/ReviewTextInput";
 import PhotoUpload from "@/components/reviews/PhotoUpload";
+import { AddressComponents } from "@/utils/addressExtraction";
 
 interface ReviewFormProps {
   isEditing: boolean;
@@ -83,12 +84,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   };
 
   // Handle address component extraction from Google Maps
-  const handleAddressComponentsExtracted = (components: {
-    streetAddress: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  }) => {
+  const handleAddressComponentsExtracted = (components: AddressComponents) => {
     // Only update fields that are currently empty to avoid overwriting user input
     if (components.city && !customerCity) {
       setCustomerCity(components.city);

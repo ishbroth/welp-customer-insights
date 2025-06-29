@@ -3,6 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { normalizeAddress } from "@/utils/addressNormalization";
+import { AddressComponents } from "@/utils/addressExtraction";
 
 interface AddressInfoSectionProps {
   customerAddress: string;
@@ -12,12 +13,7 @@ interface AddressInfoSectionProps {
   setCustomerAddress: (value: string) => void;
   setCustomerApartmentSuite?: (value: string) => void;
   onAddressSelect: (place: google.maps.places.PlaceResult) => void;
-  onAddressComponentsExtracted?: (components: {
-    streetAddress: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  }) => void;
+  onAddressComponentsExtracted?: (components: AddressComponents) => void;
 }
 
 const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({

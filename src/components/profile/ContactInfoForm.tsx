@@ -7,6 +7,7 @@ import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./types";
 import StateSelect from "@/components/search/StateSelect";
 import { normalizeAddress } from "@/utils/addressNormalization";
+import { AddressComponents } from "@/utils/addressExtraction";
 
 interface ContactInfoFormProps {
   form: UseFormReturn<ProfileFormValues>;
@@ -52,6 +53,13 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
     if (zipCode) form.setValue('zipCode', zipCode);
   };
 
+  const handleAddressComponentsExtracted = (components: AddressComponents) => {
+    // Update other form fields
+    if (components.city) form.setValue('city', components.city);
+    if (components.state) form.setValue('state', components.state);
+    if (components.zipCode) form.setValue('zipCode', components.zipCode);
+  };
+
   const handleAddressChange = (address: string) => {
     // Normalize the address when it changes
     const normalizedAddress = normalizeAddress(address);
@@ -90,6 +98,7 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
                 }}
                 onAddressChange={handleAddressChange}
                 onPlaceSelect={handleAddressSelect}
+                onAddressComponentsExtracted={handleAddressComponentsExtracted}
               />
             </FormControl>
             <FormMessage />
