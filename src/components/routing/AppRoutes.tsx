@@ -11,6 +11,7 @@ import BusinessProfile from "@/pages/BusinessProfile";
 import SearchResults from "@/pages/SearchResults";
 import NewReview from "@/pages/NewReview";
 import ReviewSuccess from "@/pages/ReviewSuccess";
+import BusinessReviews from "@/pages/BusinessReviews";
 import OneTimeReviewAccess from "@/pages/OneTimeReviewAccess";
 import Subscription from "@/pages/Subscription";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
@@ -36,6 +37,18 @@ const AppRoutes = () => {
       <Route path="/profile-reviews" element={
         <ProtectedRoute>
           <ProfileReviews />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/profile/reviews" element={
+        <ProtectedRoute>
+          <ProfileReviews />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/profile/business-reviews" element={
+        <ProtectedRoute>
+          <BusinessReviews />
         </ProtectedRoute>
       } />
       
