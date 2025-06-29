@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const OneTimeReviewAccess = () => {
   const [searchParams] = useSearchParams();
   const reviewId = searchParams.get("reviewId");
-  const success = searchParams.get("success");
+  const success = searchParams.get("success");  
   const canceled = searchParams.get("canceled");
   
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ const OneTimeReviewAccess = () => {
   const { currentUser } = useAuth();
 
   useEffect(() => {
+    console.log("OneTimeReviewAccess: Component mounted", { reviewId, success, canceled });
+    
     if (!reviewId) {
       navigate("/search");
       return;
@@ -33,14 +35,13 @@ const OneTimeReviewAccess = () => {
         title: "Payment Successful",
         description: "You now have access to this review and can respond once.",
       });
-      // Navigate back to search results or show the unlocked review
       navigate(-1);
     }
     
     // Handle canceled payment
     if (canceled) {
       toast({
-        title: "Payment Canceled",
+        title: "Payment Canceled", 
         description: "Your payment was canceled. You can try again when you're ready.",
         variant: "destructive"
       });
@@ -68,19 +69,20 @@ const OneTimeReviewAccess = () => {
   };
 
   const handleGuestPayment = async () => {
+    console.log("OneTimeReviewAccess: Starting guest payment for reviewId:", reviewId);
     setIsProcessing(true);
     
     try {
-      // Call the create-payment edge function for guest users
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           reviewId,
-          amount: 300, // $3.00 for one-time access
+          amount: 300,
           isGuest: true
         }
       });
       
       if (error) {
+        console.error("OneTimeReviewAccess: Guest payment error:", error);
         throw new Error(error.message);
       }
       
@@ -88,12 +90,11 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Redirect to Stripe checkout
+      console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       window.location.href = data.url;
-      console.log("OneTimeReviewAccess - Guest payment: Redirecting to Stripe checkout");
       
     } catch (error) {
-      console.error("Guest payment error:", error);
+      console.error("OneTimeReviewAccess: Payment error:", error);
       toast({
         title: "Payment Error",
         description: "An error occurred while processing your payment. Please try again.",
@@ -132,10 +133,9 @@ const OneTimeReviewAccess = () => {
       }
       
       window.location.href = data.url;
-      console.log("OneTimeReviewAccess - Authenticated payment: Redirecting to Stripe checkout");
       
     } catch (error) {
-      console.error("Payment error:", error);
+      console.error("OneTimeReviewAccess: Authenticated payment error:", error);
       toast({
         title: "Payment Error",
         description: "An error occurred while processing your payment. Please try again.",
@@ -145,168 +145,184 @@ const OneTimeReviewAccess = () => {
     }
   };
 
+  if (!reviewId) {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">No Review Selected</h1>
+            <p className="text-gray-600 mb-6">Please select a review to access.</p>
+            <Button onClick={() => navigate("/search")} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Go to Search
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
-      <main className="flex-grow">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-md mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold">
-                  <div className="flex items-center">
-                    <Lock className="w-6 h-6 mr-2 text-welp-primary" />
-                    Unlock Review Response
-                  </div>
-                </CardTitle>
-                <CardDescription>
-                  Respond to business feedback with a one-time payment
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {/* Guest Payment Option - Highlighted for non-logged users */}
-                  {!currentUser && (
-                    <div className="p-4 bg-welp-primary/5 rounded-lg border border-welp-primary relative">
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-welp-primary text-white px-4 py-1 rounded-full text-xs font-bold">
-                        QUICK ACCESS
+      <main className="flex-grow py-8">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <Card className="shadow-lg border-0">
+            <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+              <CardTitle className="text-3xl font-bold flex items-center justify-center">
+                <Lock className="w-8 h-8 mr-3" />
+                Unlock Review Access
+              </CardTitle>
+              <CardDescription className="text-blue-100 text-lg">
+                Get instant access to respond to this review
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="p-8">
+              <div className="space-y-8">
+                {/* Guest Payment Option - Always show for non-logged users */}
+                {!currentUser && (
+                  <div className="relative">
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                      🚀 QUICK ACCESS
+                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl border-2 border-green-200">
+                      <h3 className="font-bold text-xl mb-4 text-green-800">Pay $3 - No Account Needed</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div className="space-y-3">
+                          <div className="flex items-center text-green-700">
+                            <span className="text-green-500 mr-3 text-lg">✓</span>
+                            <span>Instant access to this review</span>
+                          </div>
+                          <div className="flex items-center text-green-700">
+                            <span className="text-green-500 mr-3 text-lg">✓</span>
+                            <span>Respond once to this review</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center text-green-700">
+                            <span className="text-green-500 mr-3 text-lg">✓</span>
+                            <span>No registration required</span>
+                          </div>
+                          <div className="flex items-center text-green-700">
+                            <span className="text-green-500 mr-3 text-lg">✓</span>
+                            <span>Secure payment via Stripe</span>
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="font-medium mb-2 text-welp-primary">Pay $3 - No Account Required</h3>
-                      <ul className="space-y-2 mb-4">
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">✓</span>
-                          Respond once to this specific review
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">✓</span>
-                          No registration needed
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">✓</span>
-                          Secure payment via Stripe
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-red-500 mr-2">✗</span>
-                          <span className="text-gray-500">
-                            One-time access only (create account for more features)
-                          </span>
-                        </li>
-                      </ul>
                       <Button 
-                        className="w-full welp-button"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-4 font-bold rounded-lg shadow-lg"
                         disabled={isProcessing}
                         onClick={handleGuestPayment}
                       >
-                        {isProcessing ? "Processing..." : "Pay $3 - No Account Needed"}
+                        {isProcessing ? "Processing..." : "Pay $3.00 - Get Instant Access"}
                       </Button>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* For logged-in users - show account benefits */}
-                  {currentUser && (
-                    <div className="p-4 bg-welp-primary/5 rounded-lg border border-welp-primary relative">
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-welp-primary text-white px-4 py-1 rounded-full text-xs font-bold">
-                        RECOMMENDED
+                {/* For logged-in users - show subscription option */}
+                {currentUser && (
+                  <div className="relative">
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                      ⭐ RECOMMENDED
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-blue-200">
+                      <h3 className="font-bold text-xl mb-4 text-blue-800">Unlimited Access Subscription</h3>
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center text-blue-700">
+                          <span className="text-blue-500 mr-3 text-lg">✓</span>
+                          <span>Access to ALL reviews about your business</span>
+                        </div>
+                        <div className="flex items-center text-blue-700">
+                          <span className="text-blue-500 mr-3 text-lg">✓</span>
+                          <span>Unlimited responses to all reviews</span>
+                        </div>
+                        <div className="flex items-center text-blue-700">
+                          <span className="text-blue-500 mr-3 text-lg">✓</span>
+                          <span>Priority customer support</span>
+                        </div>
                       </div>
-                      <h3 className="font-medium mb-2 text-welp-primary">Get unlimited access with a subscription:</h3>
-                      <ul className="space-y-2 mb-4">
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">✓</span>
-                          Unlimited access to all reviews about you
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">✓</span>
-                          Respond to all reviews without additional fees
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-green-500 mr-2">✓</span>
-                          Unlimited responses to business replies
-                        </li>
-                      </ul>
                       <Button 
-                        className="w-full welp-button"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-4 font-bold rounded-lg shadow-lg"
                         onClick={handleSubscription}
                       >
                         Subscribe for $11.99/month
                       </Button>
                     </div>
-                  )}
-                  
-                  {/* One-time access for logged-in users */}
-                  {currentUser && (
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <h3 className="font-medium mb-2">Or pay once for this review:</h3>
-                      <div className="flex justify-between items-center p-4 border-t border-b mb-4">
-                        <span className="text-lg font-medium">One-time access</span>
-                        <span className="text-2xl font-bold">$3.00</span>
-                      </div>
-                      <Button 
-                        className="w-full"
-                        variant="outline"
-                        disabled={isProcessing}
-                        onClick={handleAuthenticatedPayment}
-                      >
-                        {isProcessing ? "Processing..." : "Pay $3.00"}
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Account creation options for non-logged users */}
-                  {!currentUser && (
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-4">
-                          Want more features? Create an account for subscriptions and credits:
-                        </p>
-                      </div>
-                      
-                      <Button 
-                        className="w-full"
-                        variant="outline"
-                        onClick={handleLogin}
-                      >
-                        Log In to Existing Account
-                      </Button>
-                      
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-gray-500">Or create new account</span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <Button 
-                          variant="outline"
-                          onClick={() => handleSignup('business')}
-                          className="flex items-center justify-center"
-                        >
-                          <Building2 className="w-4 h-4 mr-2" />
-                          Business Owner
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => handleSignup('customer')}
-                          className="flex items-center justify-center"
-                        >
-                          <User className="w-4 h-4 mr-2" />
-                          Customer
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="text-center pt-2">
-                    <p className="text-xs text-gray-400">
-                      🔒 Payments secured by Stripe
-                    </p>
                   </div>
+                )}
+                
+                {/* One-time access for logged-in users */}
+                {currentUser && (
+                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 className="font-semibold text-lg mb-4 text-gray-800">Or pay once for this review:</h3>
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg mb-4">
+                      <span className="text-lg font-medium text-gray-700">One-time access</span>
+                      <span className="text-2xl font-bold text-gray-900">$3.00</span>
+                    </div>
+                    <Button 
+                      className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg"
+                      disabled={isProcessing}
+                      onClick={handleAuthenticatedPayment}
+                    >
+                      {isProcessing ? "Processing..." : "Pay $3.00"}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Account creation options for non-logged users */}
+                {!currentUser && (
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <div className="flex items-center mb-4">
+                        <div className="flex-1 border-t border-gray-300"></div>
+                        <span className="px-4 text-gray-500 text-sm font-medium">Want more features?</span>
+                        <div className="flex-1 border-t border-gray-300"></div>
+                      </div>
+                      <p className="text-gray-600 mb-6">
+                        Create an account for subscriptions, unlimited access, and more features
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      className="w-full bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-lg"
+                      onClick={handleLogin}
+                    >
+                      Log In to Existing Account
+                    </Button>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleSignup('business')}
+                        className="flex items-center justify-center py-3 border-2 hover:bg-gray-50"
+                      >
+                        <Building2 className="w-5 h-5 mr-2" />
+                        Business Owner
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleSignup('customer')}
+                        className="flex items-center justify-center py-3 border-2 hover:bg-gray-50"
+                      >
+                        <User className="w-5 h-5 mr-2" />
+                        Customer
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-center pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-500 flex items-center justify-center">
+                    <Lock className="w-4 h-4 mr-2" />
+                    Payments secured by Stripe
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
       <Footer />
