@@ -1,4 +1,3 @@
-
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import CustomerCard from "./CustomerCard";

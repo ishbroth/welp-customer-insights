@@ -1,31 +1,69 @@
 
-import React, { useState } from "react";
-import StarRating from "@/components/StarRating";
-import { formatDistance } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Calendar } from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { Review } from "@/types";
-import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+import { Star, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface ReviewCardProps {
-  review: Review;
+  review: {
+    id: string;
+    reviewerId: string;
+    reviewerName: string;
+    reviewerAvatar?: string;
+    reviewerVerified?: boolean;
+    rating: number;
+    content: string;
+    date: string;
+    customerId?: string;
+    customerName: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
   hasSubscription: boolean;
   isOneTimeUnlocked: boolean;
-  onResponseSubmitted?: (response: any) => void;
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
   review,
   hasSubscription,
   isOneTimeUnlocked,
-  onResponseSubmitted,
 }) => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [showResponses, setShowResponses] = useState(false);
-  const [responses, setResponses] = useState<any[]>([]);
+
+  const isUnlocked = hasSubscription || isOneTimeUnlocked;
+  const canViewFullContent = isUnlocked;
+
+  const handleBusinessNameClick = () => {
+    if (!canViewFullContent) return;
+    
+    // Navigate to business profile
+    navigate(`/business-profile/${review.reviewerId}`, {
+      state: { 
+        readOnly: true,
+        showRespondButton: currentUser?.type === 'customer',
+        reviewId: review.id
+      }
+    });
+  };
+
+  const handleCustomerNameClick = () => {
+    if (!review.customerId || !canViewFullContent) return;
+    
+    // Navigate to customer profile
+    navigate(`/customer-profile/${review.customerId}`, {
+      state: { 
+        readOnly: true,
+        showWriteReviewButton: currentUser?.type === 'business'
+      }
+    });
+  };
 
   const getInitials = (name: string) => {
     if (name) {
@@ -35,99 +73,137 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     return "U";
   };
 
-  const handleToggleResponses = () => {
-    setShowResponses(!showResponses);
-  };
-
-  // For search results, always show customer on left, business on right
-  const customerInfo = {
-    name: review.customerName,
-    avatar: review.customerAvatar,
-    initials: getInitials(review.customerName)
-  };
-
-  const businessInfo = {
-    name: review.reviewerName,
-    avatar: review.reviewerAvatar,
-    initials: getInitials(review.reviewerName),
-    verified: review.reviewerVerified
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
-      {/* Header with customer on left, business on right */}
-      <div className="flex items-start justify-between mb-4">
-        {/* Customer info - left side (larger) */}
-        <div className="flex items-center space-x-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-            <AvatarFallback className="bg-blue-100 text-blue-800">
-              {customerInfo.initials}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-semibold text-lg">{customerInfo.name}</h3>
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          {/* Business info - left side */}
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+              <AvatarFallback className="bg-blue-100 text-blue-800">
+                {getInitials(review.reviewerName)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-1">
+                {canViewFullContent ? (
+                  <h4 
+                    className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                    onClick={handleBusinessNameClick}
+                  >
+                    {review.reviewerName}
+                  </h4>
+                ) : (
+                  <h4 className="font-medium text-gray-400">
+                    {review.reviewerName}
+                  </h4>
+                )}
+                {review.reviewerVerified && <VerifiedBadge size="xs" />}
+              </div>
+              <p className="text-sm text-gray-500">Business</p>
+            </div>
+          </div>
+
+          {/* Customer info - right side */}
+          <div className="text-right">
+            <div className="flex items-center gap-1 justify-end">
+              {review.customerId && canViewFullContent ? (
+                <h4 
+                  className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={handleCustomerNameClick}
+                >
+                  {review.customerName}
+                </h4>
+              ) : (
+                <h4 className="font-medium">
+                  {review.customerName}
+                </h4>
+              )}
+            </div>
             <p className="text-sm text-gray-500">Customer</p>
           </div>
         </div>
 
-        {/* Business info - right side (smaller) */}
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
-            <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-              {businessInfo.initials}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="flex items-center gap-1">
-              <h4 className="font-medium text-sm">{businessInfo.name}</h4>
-              {businessInfo.verified && <VerifiedBadge size="xs" />}
+        {/* Rating and Date */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${
+                    i < review.rating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                />
+              ))}
             </div>
-            <p className="text-xs text-gray-500">Business</p>
+            <span className="text-sm text-gray-600">
+              {review.rating}/5
+            </span>
           </div>
+          <span className="text-sm text-gray-500">
+            {formatDate(review.date)}
+          </span>
         </div>
-      </div>
 
-      {/* Rating and date */}
-      <div className="flex items-center mb-2">
-        <StarRating rating={review.rating} />
-        <span className="ml-2 text-sm text-gray-500">
-          {formatDistance(new Date(review.date), new Date(), {
-            addSuffix: true,
-          })}
-        </span>
-      </div>
-
-      {/* Review content */}
-      <p className="text-gray-700 mb-4">{review.content}</p>
-
-      {/* Customer address info */}
-      {(review.address || review.city || review.zipCode) && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">
-            <strong>Customer Address:</strong> {[review.address, review.city, review.zipCode].filter(Boolean).join(', ')}
-          </p>
+        {/* Review Content */}
+        <div className="mb-4">
+          {canViewFullContent ? (
+            <p className="text-gray-700 leading-relaxed">{review.content}</p>
+          ) : (
+            <div className="relative">
+              <p className="text-gray-400 leading-relaxed blur-sm select-none">
+                {review.content.substring(0, 100)}...
+              </p>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white"></div>
+            </div>
+          )}
         </div>
-      )}
-      
-      {showResponses && (
-        <CustomerReviewResponse 
-          reviewId={review.id}
-          responses={responses}
-          hasSubscription={hasSubscription}
-          isOneTimeUnlocked={isOneTimeUnlocked}
-          hideReplyOption={false}
-          reviewAuthorId={review.reviewerId}
-          onResponseSubmitted={(response) => {
-            setResponses(prev => [...prev, response]);
-            if (onResponseSubmitted) {
-              onResponseSubmitted(response);
-            }
-          }}
-        />
-      )}
-    </div>
+
+        {/* Address (if available and unlocked) */}
+        {canViewFullContent && (review.address || review.city) && (
+          <div className="text-sm text-gray-600 mb-4">
+            <strong>Service Address:</strong>{' '}
+            {[review.address, review.city, review.state].filter(Boolean).join(', ')}
+            {review.zipCode && ` ${review.zipCode}`}
+          </div>
+        )}
+
+        {/* Action buttons for locked content */}
+        {!canViewFullContent && (
+          <div className="flex gap-2 pt-2 border-t">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/one-time-review?reviewId=${review.id}`)}
+              className="flex-1"
+            >
+              <MessageCircle className="h-4 w-4 mr-1" />
+              Unlock Review ($2)
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => navigate('/subscribe')}
+              className="flex-1"
+            >
+              Get Full Access
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

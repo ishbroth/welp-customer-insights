@@ -1,187 +1,161 @@
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
-import CustomerCardActionsSection from "./CustomerCardActionsSection";
-import { useCustomerCardData } from "@/hooks/useCustomerCardData";
-import CustomerCardMainHeader from "./CustomerCardMainHeader";
-import CustomerCardReviewItem from "./CustomerCardReviewItem";
+import { Customer } from "@/types/search";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Phone, Star, User } from "lucide-react";
+import ReviewsList from "./ReviewsList";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface CustomerCardProps {
-  customer: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    avatar?: string;
-    verified?: boolean;
-    reviews?: Array<{
-      id: string;
-      reviewerId: string;
-      reviewerName: string;
-      reviewerAvatar?: string;
-      rating: number;
-      content: string;
-      date: string;
-      reviewerVerified?: boolean;
-      // Additional customer info from reviews - always show regardless of auth status
-      customer_phone?: string;
-      customer_address?: string;
-      customer_city?: string;
-      customer_zipcode?: string;
-    }>;
-  };
-  searchCriteria?: string;
-  isReviewCustomer?: boolean;
+  customer: Customer;
+  hasFullAccess: (customerId: string) => boolean;
   onReviewUpdate?: () => void;
 }
 
-const CustomerCard = ({ 
-  customer, 
-  searchCriteria, 
-  isReviewCustomer = false, 
-  onReviewUpdate 
-}: CustomerCardProps) => {
-  const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
+const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardProps) => {
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const navigate = useNavigate();
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
 
-  const {
-    customerInfo,
-    averageRating,
-    hasReviews,
-    customerName,
-    isVerified,
-    sortedReviews
-  } = useCustomerCardData(customer);
-  
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
-  
-  // Create a function that checks full access for a given customer ID
-  const hasFullAccessFunction = (customerId: string): boolean => {
-    return isSubscribed || hasOneTimeAccess(customerId);
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'U';
   };
 
-  const handleViewProfile = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isBusinessUser && hasFullAccessFunction(customer.id)) {
-      navigate(`/customer/${customer.id}`);
-    }
-  };
+  const displayedReviews = showAllReviews ? customer.reviews || [] : (customer.reviews || []).slice(0, 2);
+  const hasMoreReviews = (customer.reviews || []).length > 2;
 
-  const handleCardClick = () => {
-    // Only allow expansion if user is logged in
-    if (!currentUser) {
-      return;
-    }
-    setIsExpanded(!isExpanded);
-  };
-
-  const hasAccess = currentUser && hasFullAccessFunction(customer.id);
-
-  // Enhanced customer info collection that shows ALL available information
-  const getAllCustomerInfo = () => {
-    const infoItems: Array<{label: string; value: string}> = [];
-    
-    // Add profile info if available
-    if (customer.phone) {
-      infoItems.push({ label: 'Phone', value: customer.phone });
-    }
-    if (customer.address) {
-      infoItems.push({ label: 'Address', value: customer.address });
-    }
-    if (customer.city) {
-      infoItems.push({ label: 'City', value: customer.city });
-    }
-    if (customer.state) {
-      infoItems.push({ label: 'State', value: customer.state });
-    }
-    if (customer.zipCode) {
-      infoItems.push({ label: 'ZIP', value: customer.zipCode });
-    }
-    
-    // Add info from reviews - this should always be visible
-    const reviewInfo = new Set<string>();
-    customer.reviews?.forEach(review => {
-      if (review.customer_phone && !infoItems.some(item => item.label === 'Phone')) {
-        infoItems.push({ label: 'Phone', value: review.customer_phone });
-      }
-      if (review.customer_address && !infoItems.some(item => item.label === 'Address')) {
-        infoItems.push({ label: 'Address', value: review.customer_address });
-      }
-      if (review.customer_city && !infoItems.some(item => item.label === 'City')) {
-        infoItems.push({ label: 'City', value: review.customer_city });
-      }
-      if (review.customer_zipcode && !infoItems.some(item => item.label === 'ZIP')) {
-        infoItems.push({ label: 'ZIP', value: review.customer_zipcode });
+  const handleViewProfile = () => {
+    // Navigate to read-only customer profile
+    navigate(`/customer-profile/${customer.id}`, {
+      state: { 
+        customer,
+        readOnly: true,
+        showWriteReviewButton: true
       }
     });
-    
-    return infoItems;
   };
 
-  const customerInfoItems = getAllCustomerInfo();
+  const handleWriteReview = () => {
+    // Navigate to new review form with customer info pre-filled
+    const params = new URLSearchParams({
+      firstName: customer.firstName || '',
+      lastName: customer.lastName || '',
+      phone: customer.phone || '',
+      address: customer.address || '',
+      city: customer.city || '',
+      state: customer.state || '',
+      zipCode: customer.zipCode || ''
+    });
+    
+    navigate(`/new-review?${params.toString()}`);
+  };
 
   return (
-    <Card className="mb-4 hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="p-4">
-        <CustomerCardMainHeader
-          customerName={customerName}
-          customerAvatar={customer.avatar}
-          isVerified={isVerified}
-          hasReviews={hasReviews}
-          averageRating={averageRating}
-          reviewCount={customer.reviews?.length || 0}
-          customerInfoText="" // We'll show structured info below instead
-          hasAccess={!!hasAccess}
-          getInitials={getInitials}
-          onClick={handleCardClick}
-        />
-        
-        {/* Display customer information in a structured way */}
-        {customerInfoItems.length > 0 && (
-          <div className="mt-3 space-y-1">
-            {customerInfoItems.map((item, index) => (
-              <div key={index} className="text-sm text-gray-600">
-                <span className="font-medium">{item.label}:</span> {item.value}
+    <Card className="w-full">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={customer.avatar} alt={`${customer.firstName} ${customer.lastName}`} />
+              <AvatarFallback className="bg-blue-100 text-blue-800">
+                {getInitials(customer.firstName, customer.lastName)}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 
+                  className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={handleViewProfile}
+                >
+                  {customer.firstName} {customer.lastName}
+                </h3>
+                {customer.verified && <VerifiedBadge size="sm" />}
               </div>
-            ))}
+              
+              <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                {customer.phone && (
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    <span>{customer.phone}</span>
+                  </div>
+                )}
+                
+                {(customer.address || customer.city || customer.state) && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <span>
+                      {[customer.address, customer.city, customer.state].filter(Boolean).join(', ')}
+                      {customer.zipCode && ` ${customer.zipCode}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-        
-        <CustomerCardActionsSection
-          currentUser={currentUser}
-          hasAccess={hasFullAccessFunction(customer.id)}
-          isExpanded={isExpanded}
-          onActionClick={(e) => e.stopPropagation()}
-          onExpandClick={handleCardClick}
-        />
-        
-        {/* Expanded content showing individual reviews */}
-        {isExpanded && currentUser && (
-          <div className="mt-4 space-y-4">
-            {sortedReviews.map((review) => (
-              <CustomerCardReviewItem
-                key={review.id}
-                review={review}
-                customerName={customerName}
-                customerAvatar={customer.avatar}
-                getInitials={getInitials}
-              />
-            ))}
+
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Star className="h-3 w-3" />
+              {customer.reviews?.length || 0} reviews
+            </Badge>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewProfile}
+                className="flex items-center gap-1"
+              >
+                <User className="h-3 w-3" />
+                View Profile
+              </Button>
+              
+              <Button
+                size="sm"
+                onClick={handleWriteReview}
+              >
+                Write Review
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        {customer.reviews && customer.reviews.length > 0 ? (
+          <div>
+            <ReviewsList
+              reviews={displayedReviews}
+              hasFullAccess={hasFullAccess}
+              customerData={customer}
+              onReviewUpdate={onReviewUpdate}
+            />
+            
+            {hasMoreReviews && !showAllReviews && (
+              <div className="text-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAllReviews(true)}
+                >
+                  Show {(customer.reviews?.length || 0) - 2} more reviews
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-gray-500">
+            <div className="mb-2">
+              <User className="h-8 w-8 mx-auto text-gray-400" />
+            </div>
+            <p className="text-sm">No reviews yet</p>
+            <p className="text-xs text-gray-400 mb-3">Be the first to review this customer</p>
+            <Button size="sm" onClick={handleWriteReview}>
+              Write First Review
+            </Button>
           </div>
         )}
       </CardContent>
