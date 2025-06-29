@@ -10,6 +10,7 @@ import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
 import SearchResults from "@/pages/SearchResults";
 import NewReview from "@/pages/NewReview";
+import ReviewSuccess from "@/pages/ReviewSuccess";
 import OneTimeReviewAccess from "@/pages/OneTimeReviewAccess";
 import Subscription from "@/pages/Subscription";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
@@ -50,9 +51,15 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/new-review" element={
+      <Route path="/review/new" element={
         <ProtectedRoute>
           <NewReview />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/review/success" element={
+        <ProtectedRoute>
+          <ReviewSuccess />
         </ProtectedRoute>
       } />
       
