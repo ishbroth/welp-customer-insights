@@ -26,11 +26,24 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     
     const { isGoogleReady, googleMapsStatus } = useGoogleMapsInit();
     
+    // Handle place selection from Google Maps - this will update inputValue to street address only
+    const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+      console.log('🏠 AddressAutocomplete - Place selected, components will be extracted');
+      onPlaceSelect?.(place);
+    };
+
+    // Handle address change from Google Maps - this receives the street address only
+    const handleAddressChange = (address: string) => {
+      console.log('🏠 AddressAutocomplete - Address changed to:', address);
+      // Don't modify the address here, just pass it through
+      onAddressChange?.(address);
+    };
+    
     usePlacesAutocomplete({
       isGoogleReady,
       inputRef,
-      onPlaceSelect,
-      onAddressChange,
+      onPlaceSelect: handlePlaceSelect,
+      onAddressChange: handleAddressChange,
       onAddressComponentsExtracted,
       setInputValue
     });
