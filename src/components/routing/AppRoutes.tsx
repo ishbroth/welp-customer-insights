@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -41,6 +40,7 @@ import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
 import BusinessOwnerRoute from "./BusinessOwnerRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
+import MobileTestPage from "@/components/mobile/MobileTestPage";
 
 const AppRoutes = () => {
   return (
@@ -91,6 +91,9 @@ const AppRoutes = () => {
 
       {/* 404 route */}
       <Route path="*" element={<NotFound />} />
+
+      {/* Add this route to your existing routes in the Routes component: */}
+      <Route path="/mobile-test" element={<MobileTestPage />} />
     </Routes>
   );
 };
