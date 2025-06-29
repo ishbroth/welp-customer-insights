@@ -6,8 +6,7 @@ import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./types";
 import StateSelect from "@/components/search/StateSelect";
-import { normalizeAddress } from "@/utils/addressNormalization";
-import { AddressComponents } from "@/utils/addressExtraction";
+import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
 
 interface ContactInfoFormProps {
   form: UseFormReturn<ProfileFormValues>;
@@ -17,53 +16,42 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
+    console.log('🏠 ContactInfoForm - Place selected:', place);
+    
+    // Extract address components using the utility function
+    const components = extractAddressComponents(place);
+    
+    console.log('🏠 ContactInfoForm - Extracted components:', components);
 
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
-      }
-    });
-
-    // Create the street address (just street number + route)
-    const streetAddress = `${streetNumber} ${route}`.trim();
-    if (streetAddress) {
-      const normalizedAddress = normalizeAddress(streetAddress);
-      form.setValue('address', normalizedAddress);
+    // Update the street address field with just the street portion
+    if (components.streetAddress) {
+      form.setValue('address', components.streetAddress);
     }
-
-    // Update other form fields
-    if (city) form.setValue('city', city);
-    if (state) form.setValue('state', state);
-    if (zipCode) form.setValue('zipCode', zipCode);
-  };
-
-  const handleAddressComponentsExtracted = (components: AddressComponents) => {
-    // Update other form fields
+    
+    // Update other form fields directly
     if (components.city) form.setValue('city', components.city);
     if (components.state) form.setValue('state', components.state);
     if (components.zipCode) form.setValue('zipCode', components.zipCode);
   };
 
+  const handleAddressComponentsExtracted = (components: AddressComponents) => {
+    console.log('🏠 ContactInfoForm - Components extracted:', components);
+    
+    // Update fields that are currently empty to avoid overwriting user input
+    if (components.city && !form.getValues('city')) {
+      form.setValue('city', components.city);
+    }
+    if (components.state && !form.getValues('state')) {
+      form.setValue('state', components.state);
+    }
+    if (components.zipCode && !form.getValues('zipCode')) {
+      form.setValue('zipCode', components.zipCode);
+    }
+  };
+
   const handleAddressChange = (address: string) => {
-    // Normalize the address when it changes
-    const normalizedAddress = normalizeAddress(address);
-    form.setValue('address', normalizedAddress);
+    console.log('🏠 ContactInfoForm - Address changed to:', address);
+    form.setValue('address', address);
   };
 
   return (
@@ -93,8 +81,8 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
                 placeholder="Start typing your address..."
                 value={field.value || ""}
                 onChange={(e) => {
-                  const normalizedAddress = normalizeAddress(e.target.value);
-                  field.onChange(normalizedAddress);
+                  console.log('🏠 ContactInfoForm - Input changed:', e.target.value);
+                  field.onChange(e.target.value);
                 }}
                 onAddressChange={handleAddressChange}
                 onPlaceSelect={handleAddressSelect}

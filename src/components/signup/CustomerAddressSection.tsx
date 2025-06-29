@@ -8,7 +8,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { normalizeAddress } from "@/utils/addressNormalization";
+import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
 
 // Array of US states for the dropdown
 const US_STATES = [
@@ -49,45 +49,42 @@ export const CustomerAddressSection = ({
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let cityName = '';
-    let stateName = '';
-    let zipCodeValue = '';
+    console.log('🏠 CustomerAddressSection - Place selected:', place);
+    
+    // Extract address components using the utility function
+    const components = extractAddressComponents(place);
+    
+    console.log('🏠 CustomerAddressSection - Extracted components:', components);
 
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        cityName = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        stateName = component.long_name; // Use long_name for full state name
-      } else if (types.includes('postal_code')) {
-        zipCodeValue = component.long_name;
-      }
-    });
-
-    // Create the street address (just street number + route)
-    const streetAddress = `${streetNumber} ${route}`.trim();
-    if (streetAddress) {
-      const normalizedAddress = normalizeAddress(streetAddress);
-      setStreet(normalizedAddress);
+    // Update the street address field with just the street portion
+    if (components.streetAddress) {
+      setStreet(components.streetAddress);
     }
+    
+    // Update other form fields directly
+    if (components.city) setCity(components.city);
+    if (components.state) setState(components.state);
+    if (components.zipCode) setZipCode(components.zipCode);
+  };
 
-    // Update other form fields
-    if (cityName) setCity(cityName);
-    if (stateName) setState(stateName);
-    if (zipCodeValue) setZipCode(zipCodeValue);
+  const handleAddressComponentsExtracted = (components: AddressComponents) => {
+    console.log('🏠 CustomerAddressSection - Components extracted:', components);
+    
+    // Update fields that are currently empty to avoid overwriting user input
+    if (components.city && !city) {
+      setCity(components.city);
+    }
+    if (components.state && !state) {
+      setState(components.state);
+    }
+    if (components.zipCode && !zipCode) {
+      setZipCode(components.zipCode);
+    }
   };
 
   const handleAddressChange = (address: string) => {
-    const normalizedAddress = normalizeAddress(address);
-    setStreet(normalizedAddress);
+    console.log('🏠 CustomerAddressSection - Address changed to:', address);
+    setStreet(address);
   };
 
   return (
@@ -99,11 +96,12 @@ export const CustomerAddressSection = ({
           placeholder="Start typing your address..."
           value={street}
           onChange={(e) => {
-            const normalizedAddress = normalizeAddress(e.target.value);
-            setStreet(normalizedAddress);
+            console.log('🏠 CustomerAddressSection - Input changed:', e.target.value);
+            setStreet(e.target.value);
           }}
           onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
+          onAddressComponentsExtracted={handleAddressComponentsExtracted}
           className="welp-input"
         />
       </div>

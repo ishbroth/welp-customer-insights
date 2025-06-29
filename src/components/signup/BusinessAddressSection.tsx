@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
-import { normalizeAddress } from "@/utils/addressNormalization";
+import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
 
 interface BusinessAddressSectionProps {
   businessName: string;
@@ -36,45 +36,42 @@ export const BusinessAddressSection = ({
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
+    console.log('🏠 BusinessAddressSection - Place selected:', place);
+    
+    // Extract address components using the utility function
+    const components = extractAddressComponents(place);
+    
+    console.log('🏠 BusinessAddressSection - Extracted components:', components);
 
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
-      }
-    });
-
-    // Create the street address (just street number + route)
-    const streetAddress = `${streetNumber} ${route}`.trim();
-    if (streetAddress) {
-      const normalizedAddress = normalizeAddress(streetAddress);
-      setBusinessStreet(normalizedAddress);
+    // Update the street address field with just the street portion
+    if (components.streetAddress) {
+      setBusinessStreet(components.streetAddress);
     }
     
-    // Update other form fields
-    if (city) setBusinessCity(city);
-    if (state) setBusinessState(state);
-    if (zipCode) setBusinessZipCode(zipCode);
+    // Update other form fields directly
+    if (components.city) setBusinessCity(components.city);
+    if (components.state) setBusinessState(components.state);
+    if (components.zipCode) setBusinessZipCode(components.zipCode);
+  };
+
+  const handleAddressComponentsExtracted = (components: AddressComponents) => {
+    console.log('🏠 BusinessAddressSection - Components extracted:', components);
+    
+    // Update fields that are currently empty to avoid overwriting user input
+    if (components.city && !businessCity) {
+      setBusinessCity(components.city);
+    }
+    if (components.state && !businessState) {
+      setBusinessState(components.state);
+    }
+    if (components.zipCode && !businessZipCode) {
+      setBusinessZipCode(components.zipCode);
+    }
   };
 
   const handleAddressChange = (address: string) => {
-    const normalizedAddress = normalizeAddress(address);
-    setBusinessStreet(normalizedAddress);
+    console.log('🏠 BusinessAddressSection - Address changed to:', address);
+    setBusinessStreet(address);
   };
 
   return (
@@ -103,11 +100,12 @@ export const BusinessAddressSection = ({
           placeholder="Start typing your business address..."
           value={businessStreet}
           onChange={(e) => {
-            const normalizedAddress = normalizeAddress(e.target.value);
-            setBusinessStreet(normalizedAddress);
+            console.log('🏠 BusinessAddressSection - Input changed:', e.target.value);
+            setBusinessStreet(e.target.value);
           }}
           onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
+          onAddressComponentsExtracted={handleAddressComponentsExtracted}
           className="welp-input"
           required
         />
