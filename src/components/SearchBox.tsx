@@ -27,19 +27,25 @@ const SearchBox = ({
     state: string;
     zipCode: string;
   }) => {
-    console.log('📍 Address components extracted:', components);
+    console.log('📍 SearchBox - Address components extracted:', components);
     
-    // Only update fields that have values from Google Maps
+    // Always update the address field with the street address portion
     if (components.streetAddress) {
+      console.log('📍 SearchBox - Setting address to:', components.streetAddress);
       setters.setAddress(components.streetAddress);
     }
+    
+    // Update other fields with the extracted components
     if (components.city) {
+      console.log('📍 SearchBox - Setting city to:', components.city);
       setters.setCity(components.city);
     }
     if (components.state) {
+      console.log('📍 SearchBox - Setting state to:', components.state);
       setters.setState(components.state);
     }
     if (components.zipCode) {
+      console.log('📍 SearchBox - Setting zipCode to:', components.zipCode);
       setters.setZipCode(components.zipCode);
     }
   };

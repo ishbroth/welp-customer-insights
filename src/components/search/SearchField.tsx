@@ -50,11 +50,19 @@ const SearchField = ({
 
   // Handle address autocomplete change - no normalization during typing
   const handleAddressAutocompleteChange = (address: string) => {
+    console.log('🔍 SearchField - Address changed to:', address);
     // Create a synthetic event to maintain consistency
     const syntheticEvent = {
       target: { value: address }
     } as React.ChangeEvent<HTMLInputElement>;
     onChange(syntheticEvent);
+  };
+
+  // Handle place selection from Google Maps
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log('🔍 SearchField - Place selected:', place);
+    // The AddressAutocomplete component will handle the component extraction
+    // and call onAddressComponentsExtracted
   };
   
   if (isFirstNameField) {
@@ -89,6 +97,7 @@ const SearchField = ({
         value={value}
         onChange={onChange}
         onAddressChange={handleAddressAutocompleteChange}
+        onPlaceSelect={handlePlaceSelect}
         onAddressComponentsExtracted={onAddressComponentsExtracted}
         className={`welp-input ${className || ""}`}
         required={required}
