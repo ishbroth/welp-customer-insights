@@ -42,11 +42,14 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       }
     };
 
-    // Handle address component extraction - this populates other fields
+    // Handle address component extraction - CRITICAL for populating other fields
     const handleAddressComponentsExtracted = (components: AddressComponents) => {
-      console.log('🏠 AddressAutocomplete - Components extracted, forwarding to parent:', components);
+      console.log('🏠 AddressAutocomplete - Components extracted, MUST forward to parent:', components);
       if (onAddressComponentsExtracted) {
+        console.log('🏠 AddressAutocomplete - FORWARDING components to parent');
         onAddressComponentsExtracted(components);
+      } else {
+        console.log('❌ AddressAutocomplete - onAddressComponentsExtracted callback is MISSING!');
       }
     };
     

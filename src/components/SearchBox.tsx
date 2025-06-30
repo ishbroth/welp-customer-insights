@@ -29,17 +29,17 @@ const SearchBox = ({
   }) => {
     console.log('📍 SearchBox - Address components extracted:', components);
     
-    // ALWAYS update all fields when Google Maps provides them
-    console.log('📍 SearchBox - Setting address to:', components.streetAddress);
+    // FORCE update all fields when Google Maps provides them
+    console.log('📍 SearchBox - FORCING address update to:', components.streetAddress);
     setters.setAddress(components.streetAddress);
     
-    console.log('📍 SearchBox - Setting city to:', components.city);
+    console.log('📍 SearchBox - FORCING city update to:', components.city);
     setters.setCity(components.city);
     
-    console.log('📍 SearchBox - Setting state to:', components.state);
+    console.log('📍 SearchBox - FORCING state update to:', components.state);
     setters.setState(components.state);
     
-    console.log('📍 SearchBox - Setting zipCode to:', components.zipCode);
+    console.log('📍 SearchBox - FORCING zipCode update to:', components.zipCode);
     setters.setZipCode(components.zipCode);
   };
 
@@ -82,7 +82,10 @@ const SearchBox = ({
           <SearchField
             placeholder="Address"
             value={formValues.address}
-            onChange={(e) => setters.setAddress(e.target.value)}
+            onChange={(e) => {
+              console.log('📍 SearchBox - Manual address change:', e.target.value);
+              setters.setAddress(e.target.value);
+            }}
             onAddressComponentsExtracted={handleAddressComponentsExtracted}
             required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.city && !formValues.state && !formValues.zipCode}
           />
@@ -90,19 +93,28 @@ const SearchBox = ({
           <SearchField
             placeholder="City"
             value={formValues.city}
-            onChange={(e) => setters.setCity(e.target.value)}
+            onChange={(e) => {
+              console.log('📍 SearchBox - Manual city change:', e.target.value);
+              setters.setCity(e.target.value);
+            }}
             required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.address && !formValues.state && !formValues.zipCode}
           />
 
           <StateSelect 
             value={formValues.state} 
-            onValueChange={setters.setState} 
+            onValueChange={(value) => {
+              console.log('📍 SearchBox - Manual state change:', value);
+              setters.setState(value);
+            }} 
           />
 
           <SearchField
             placeholder="ZIP Code"
             value={formValues.zipCode}
-            onChange={(e) => setters.setZipCode(e.target.value)}
+            onChange={(e) => {
+              console.log('📍 SearchBox - Manual zip change:', e.target.value);
+              setters.setZipCode(e.target.value);
+            }}
             required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.address && !formValues.city && !formValues.state}
           />
         </div>

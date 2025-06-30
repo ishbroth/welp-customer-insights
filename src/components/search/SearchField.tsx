@@ -63,16 +63,19 @@ const SearchField = ({
     console.log('🔍 SearchField - Place selected:', place);
   };
 
-  // Handle address components extraction
+  // Handle address components extraction - CRITICAL CALLBACK
   const handleAddressComponentsExtracted = (components: {
     streetAddress: string;
     city: string;
     state: string;
     zipCode: string;
   }) => {
-    console.log('🔍 SearchField - Components extracted, forwarding to parent:', components);
+    console.log('🔍 SearchField - Components extracted, MUST forward to parent:', components);
     if (onAddressComponentsExtracted) {
+      console.log('🔍 SearchField - FORWARDING components to parent');
       onAddressComponentsExtracted(components);
+    } else {
+      console.log('❌ SearchField - onAddressComponentsExtracted callback is MISSING!');
     }
   };
   
