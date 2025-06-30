@@ -35,17 +35,17 @@ const SearchBox = ({
       setters.setAddress(components.streetAddress);
     }
     
-    // Update other fields with the extracted components only if they're currently empty
-    // This prevents overwriting user input in other fields
-    if (components.city && !formValues.city) {
+    // Always update city, state, and zip when they're provided from Google Maps
+    // This ensures the form gets populated every time a suggestion is selected
+    if (components.city) {
       console.log('📍 SearchBox - Setting city to:', components.city);
       setters.setCity(components.city);
     }
-    if (components.state && !formValues.state) {
+    if (components.state) {
       console.log('📍 SearchBox - Setting state to:', components.state);
       setters.setState(components.state);
     }
-    if (components.zipCode && !formValues.zipCode) {
+    if (components.zipCode) {
       console.log('📍 SearchBox - Setting zipCode to:', components.zipCode);
       setters.setZipCode(components.zipCode);
     }

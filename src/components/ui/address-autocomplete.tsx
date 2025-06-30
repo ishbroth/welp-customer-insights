@@ -37,13 +37,19 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       console.log('🏠 AddressAutocomplete - Address changed to:', address);
       onAddressChange?.(address);
     };
+
+    // Handle address component extraction - this is the key callback for populating other fields
+    const handleAddressComponentsExtracted = (components: AddressComponents) => {
+      console.log('🏠 AddressAutocomplete - Components extracted, calling parent callback:', components);
+      onAddressComponentsExtracted?.(components);
+    };
     
     usePlacesAutocomplete({
       isGoogleReady,
       inputRef,
       onPlaceSelect: handlePlaceSelect,
       onAddressChange: handleAddressChange,
-      onAddressComponentsExtracted,
+      onAddressComponentsExtracted: handleAddressComponentsExtracted,
       setInputValue
     });
 

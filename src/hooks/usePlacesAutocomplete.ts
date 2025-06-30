@@ -55,7 +55,11 @@ export const usePlacesAutocomplete = ({
           
           // Call callbacks - address change gets street address only, components get all parts
           onAddressChange?.(components.streetAddress);
+          
+          // CRITICAL: Always call the components extracted callback to populate other fields
+          console.log('🏠 Calling onAddressComponentsExtracted with:', components);
           onAddressComponentsExtracted?.(components);
+          
           onPlaceSelect?.(place);
         }
       });
