@@ -43,6 +43,18 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
   const handleWriteReview = () => {
     // Check if user is logged in
     if (!currentUser) {
+      // Store customer data for post-login redirect
+      const customerData = {
+        firstName: customer.firstName || '',
+        lastName: customer.lastName || '',
+        phone: customer.phone || '',
+        address: customer.address || '',
+        city: customer.city || '',
+        state: customer.state || '',
+        zipCode: customer.zipCode || ''
+      };
+      
+      sessionStorage.setItem('pendingReviewData', JSON.stringify(customerData));
       navigate('/login');
       return;
     }

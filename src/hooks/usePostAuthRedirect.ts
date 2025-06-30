@@ -9,7 +9,25 @@ export const usePostAuthRedirect = () => {
 
   useEffect(() => {
     if (currentUser) {
-      // Check if there's pending review access data
+      // Check if there's pending review data first (higher priority)
+      const pendingReviewData = sessionStorage.getItem('pendingReviewData');
+      if (pendingReviewData) {
+        try {
+          const customerData = JSON.parse(pendingReviewData);
+          sessionStorage.removeItem('pendingReviewData');
+          
+          // Only redirect to review form if user is a business
+          if (currentUser.type === 'business') {
+            const params = new URLSearchParams(customerData);
+            navigate(`/review/new?${params.toString()}`);
+            return;
+          }
+        } catch (error) {
+          console.error("Error parsing pending review data:", error);
+        }
+      }
+      
+      // Check if there's pending review access data (secondary priority)
       const pendingData = sessionStorage.getItem('pendingReviewAccess');
       
       if (pendingData) {

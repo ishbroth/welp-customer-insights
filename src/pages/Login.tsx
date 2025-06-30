@@ -110,7 +110,25 @@ const Login = () => {
           title: "Logged In",
           description: "Welcome back to Welp.",
         });
-        // Redirect to the returnTo URL or default to profile
+        
+        // Check if there's pending review data from the customer search
+        const pendingReviewData = sessionStorage.getItem('pendingReviewData');
+        if (pendingReviewData) {
+          try {
+            const customerData = JSON.parse(pendingReviewData);
+            sessionStorage.removeItem('pendingReviewData');
+            
+            // Redirect to review form with customer data pre-filled
+            const params = new URLSearchParams(customerData);
+            navigate(`/review/new?${params.toString()}`);
+            return;
+          } catch (error) {
+            console.error("Error parsing pending review data:", error);
+            // Fallback to default redirect
+          }
+        }
+        
+        // Default redirect to the returnTo URL or profile
         navigate(returnTo);
       } else {
         // Check if user needs password setup
