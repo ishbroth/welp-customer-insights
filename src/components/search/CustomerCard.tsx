@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Phone, Star, User } from "lucide-react";
 import ReviewsList from "./ReviewsList";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useAuth } from "@/contexts/auth";
 
 interface CustomerCardProps {
   customer: Customer;
@@ -19,6 +20,7 @@ interface CustomerCardProps {
 const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardProps) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'U';
@@ -33,12 +35,25 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
       state: { 
         customer,
         readOnly: true,
-        showWriteReviewButton: true
+        showWriteReviewButton: currentUser?.type === 'business'
       }
     });
   };
 
   const handleWriteReview = () => {
+    // Check if user is logged in
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    // Check if user is a business (only businesses can write reviews about customers)
+    if (currentUser.type !== 'business') {
+      // Customer users shouldn't see this button, but if they somehow click it, redirect to home
+      navigate('/');
+      return;
+    }
+
     // Navigate to new review form with customer info pre-filled
     const params = new URLSearchParams({
       firstName: customer.firstName || '',
@@ -50,8 +65,11 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
       zipCode: customer.zipCode || ''
     });
     
-    navigate(`/new-review?${params.toString()}`);
+    navigate(`/review/new?${params.toString()}`);
   };
+
+  // Only show write review button for business users or non-logged users
+  const showWriteReviewButton = !currentUser || currentUser.type === 'business';
 
   return (
     <Card className="w-full">
@@ -114,12 +132,14 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
                 View Profile
               </Button>
               
-              <Button
-                size="sm"
-                onClick={handleWriteReview}
-              >
-                Write Review
-              </Button>
+              {showWriteReviewButton && (
+                <Button
+                  size="sm"
+                  onClick={handleWriteReview}
+                >
+                  Write Review
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -153,9 +173,11 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             </div>
             <p className="text-sm">No reviews yet</p>
             <p className="text-xs text-gray-400 mb-3">Be the first to review this customer</p>
-            <Button size="sm" onClick={handleWriteReview}>
-              Write First Review
-            </Button>
+            {showWriteReviewButton && (
+              <Button size="sm" onClick={handleWriteReview}>
+                Write First Review
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
