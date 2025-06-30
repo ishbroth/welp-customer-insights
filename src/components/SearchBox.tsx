@@ -29,26 +29,18 @@ const SearchBox = ({
   }) => {
     console.log('📍 SearchBox - Address components extracted:', components);
     
-    // Always update the address field with the street address portion only
-    if (components.streetAddress) {
-      console.log('📍 SearchBox - Setting address to:', components.streetAddress);
-      setters.setAddress(components.streetAddress);
-    }
+    // ALWAYS update all fields when Google Maps provides them
+    console.log('📍 SearchBox - Setting address to:', components.streetAddress);
+    setters.setAddress(components.streetAddress);
     
-    // Always update city, state, and zip when they're provided from Google Maps
-    // This ensures the form gets populated every time a suggestion is selected
-    if (components.city) {
-      console.log('📍 SearchBox - Setting city to:', components.city);
-      setters.setCity(components.city);
-    }
-    if (components.state) {
-      console.log('📍 SearchBox - Setting state to:', components.state);
-      setters.setState(components.state);
-    }
-    if (components.zipCode) {
-      console.log('📍 SearchBox - Setting zipCode to:', components.zipCode);
-      setters.setZipCode(components.zipCode);
-    }
+    console.log('📍 SearchBox - Setting city to:', components.city);
+    setters.setCity(components.city);
+    
+    console.log('📍 SearchBox - Setting state to:', components.state);
+    setters.setState(components.state);
+    
+    console.log('📍 SearchBox - Setting zipCode to:', components.zipCode);
+    setters.setZipCode(components.zipCode);
   };
 
   return (

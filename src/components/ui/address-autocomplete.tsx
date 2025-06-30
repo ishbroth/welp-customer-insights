@@ -26,22 +26,28 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     
     const { isGoogleReady, googleMapsStatus } = useGoogleMapsInit();
     
-    // Handle place selection from Google Maps - this will update inputValue to street address only
+    // Handle place selection from Google Maps
     const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-      console.log('🏠 AddressAutocomplete - Place selected, components will be extracted');
-      onPlaceSelect?.(place);
+      console.log('🏠 AddressAutocomplete - Place selected');
+      if (onPlaceSelect) {
+        onPlaceSelect(place);
+      }
     };
 
-    // Handle address change from Google Maps - this receives the street address only
+    // Handle address change from Google Maps - receives the street address only
     const handleAddressChange = (address: string) => {
       console.log('🏠 AddressAutocomplete - Address changed to:', address);
-      onAddressChange?.(address);
+      if (onAddressChange) {
+        onAddressChange(address);
+      }
     };
 
-    // Handle address component extraction - this is the key callback for populating other fields
+    // Handle address component extraction - this populates other fields
     const handleAddressComponentsExtracted = (components: AddressComponents) => {
-      console.log('🏠 AddressAutocomplete - Components extracted, calling parent callback:', components);
-      onAddressComponentsExtracted?.(components);
+      console.log('🏠 AddressAutocomplete - Components extracted, forwarding to parent:', components);
+      if (onAddressComponentsExtracted) {
+        onAddressComponentsExtracted(components);
+      }
     };
     
     usePlacesAutocomplete({
@@ -65,9 +71,13 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       // Allow unrestricted typing for manual entry
       setInputValue(value);
       
-      // Call callbacks without any modification for manual typing
-      onAddressChange?.(value);
-      onChange?.(e);
+      // Call callbacks for manual typing
+      if (onAddressChange) {
+        onAddressChange(value);
+      }
+      if (onChange) {
+        onChange(e);
+      }
     };
 
     console.log(`AddressAutocomplete status: ${googleMapsStatus}, Google ready: ${isGoogleReady}`);

@@ -53,14 +53,28 @@ export const usePlacesAutocomplete = ({
           console.log('🏠 Setting input to street address only:', components.streetAddress);
           setInputValue(components.streetAddress);
           
-          // Call callbacks - address change gets street address only, components get all parts
-          onAddressChange?.(components.streetAddress);
+          // Call address change callback with street address only
+          if (onAddressChange) {
+            console.log('🏠 Calling onAddressChange with:', components.streetAddress);
+            onAddressChange(components.streetAddress);
+          }
           
           // CRITICAL: Always call the components extracted callback to populate other fields
-          console.log('🏠 Calling onAddressComponentsExtracted with:', components);
-          onAddressComponentsExtracted?.(components);
+          if (onAddressComponentsExtracted) {
+            console.log('🏠 Calling onAddressComponentsExtracted with:', components);
+            onAddressComponentsExtracted(components);
+          }
           
-          onPlaceSelect?.(place);
+          // Call place select callback
+          if (onPlaceSelect) {
+            console.log('🏠 Calling onPlaceSelect');
+            onPlaceSelect(place);
+          }
+        } else {
+          console.log('🏠 Place selected but missing required data:', { 
+            hasAddress: !!place?.formatted_address, 
+            hasComponents: !!place?.address_components 
+          });
         }
       });
 

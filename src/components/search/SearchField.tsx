@@ -61,8 +61,19 @@ const SearchField = ({
   // Handle place selection from Google Maps
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     console.log('🔍 SearchField - Place selected:', place);
-    // The AddressAutocomplete component will handle the component extraction
-    // and call onAddressComponentsExtracted
+  };
+
+  // Handle address components extraction
+  const handleAddressComponentsExtracted = (components: {
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  }) => {
+    console.log('🔍 SearchField - Components extracted, forwarding to parent:', components);
+    if (onAddressComponentsExtracted) {
+      onAddressComponentsExtracted(components);
+    }
   };
   
   if (isFirstNameField) {
@@ -98,7 +109,7 @@ const SearchField = ({
         onChange={onChange}
         onAddressChange={handleAddressAutocompleteChange}
         onPlaceSelect={handlePlaceSelect}
-        onAddressComponentsExtracted={onAddressComponentsExtracted}
+        onAddressComponentsExtracted={handleAddressComponentsExtracted}
         className={`welp-input ${className || ""}`}
         required={required}
       />
