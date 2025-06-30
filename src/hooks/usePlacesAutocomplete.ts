@@ -53,7 +53,7 @@ export const usePlacesAutocomplete = ({
           console.log('🏠 Setting input to street address only:', components.streetAddress);
           setInputValue(components.streetAddress);
           
-          // Call callbacks with the street address only for the address field
+          // Call callbacks - address change gets street address only, components get all parts
           onAddressChange?.(components.streetAddress);
           onAddressComponentsExtracted?.(components);
           onPlaceSelect?.(place);

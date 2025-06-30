@@ -29,22 +29,23 @@ const SearchBox = ({
   }) => {
     console.log('📍 SearchBox - Address components extracted:', components);
     
-    // Always update the address field with the street address portion
+    // Always update the address field with the street address portion only
     if (components.streetAddress) {
       console.log('📍 SearchBox - Setting address to:', components.streetAddress);
       setters.setAddress(components.streetAddress);
     }
     
-    // Update other fields with the extracted components
-    if (components.city) {
+    // Update other fields with the extracted components only if they're currently empty
+    // This prevents overwriting user input in other fields
+    if (components.city && !formValues.city) {
       console.log('📍 SearchBox - Setting city to:', components.city);
       setters.setCity(components.city);
     }
-    if (components.state) {
+    if (components.state && !formValues.state) {
       console.log('📍 SearchBox - Setting state to:', components.state);
       setters.setState(components.state);
     }
-    if (components.zipCode) {
+    if (components.zipCode && !formValues.zipCode) {
       console.log('📍 SearchBox - Setting zipCode to:', components.zipCode);
       setters.setZipCode(components.zipCode);
     }

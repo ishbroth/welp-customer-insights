@@ -37,10 +37,9 @@ export const extractAddressComponents = (place: google.maps.places.PlaceResult):
   
   // Create the street address (just street number + route) for this field
   const streetAddress = `${streetNumber} ${route}`.trim();
-  const normalizedAddress = normalizeAddress(streetAddress);
   
   return {
-    streetAddress: normalizedAddress,
+    streetAddress: normalizeAddress(streetAddress),
     city,
     state,
     zipCode

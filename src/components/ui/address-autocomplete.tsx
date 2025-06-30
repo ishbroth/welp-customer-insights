@@ -35,7 +35,6 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     // Handle address change from Google Maps - this receives the street address only
     const handleAddressChange = (address: string) => {
       console.log('🏠 AddressAutocomplete - Address changed to:', address);
-      // Don't modify the address here, just pass it through
       onAddressChange?.(address);
     };
     
@@ -57,10 +56,10 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       
-      // Allow completely unrestricted typing - no modifications at all
+      // Allow unrestricted typing for manual entry
       setInputValue(value);
       
-      // Call callbacks without any modification
+      // Call callbacks without any modification for manual typing
       onAddressChange?.(value);
       onChange?.(e);
     };
