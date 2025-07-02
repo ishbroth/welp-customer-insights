@@ -10,7 +10,7 @@ const BusinessReviewsEmptyState = () => {
       <p className="text-gray-500 mb-4">
         You haven't written any customer reviews yet.
       </p>
-      <Link to="/new-review">
+      <Link to="/review/new">
         <Button className="bg-[#ea384c] hover:bg-[#d63384] text-white">
           Write Your First Review
         </Button>
