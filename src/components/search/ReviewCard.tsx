@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReviewCardProps {
   review: {
@@ -20,6 +22,10 @@ interface ReviewCardProps {
     date: string;
     customerId?: string;
     customerName: string;
+    customer_phone?: string;
+    customer_address?: string;
+    customer_city?: string;
+    customer_zipcode?: string;
     address?: string;
     city?: string;
     state?: string;
@@ -39,6 +45,28 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   const isUnlocked = hasSubscription || isOneTimeUnlocked;
   const canViewFullContent = isUnlocked;
+
+  // Fetch customer profile if review is claimed (has customerId)
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerProfile', review.customerId],
+    queryFn: async () => {
+      if (!review.customerId) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode')
+        .eq('id', review.customerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching customer profile:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!review.customerId && canViewFullContent
+  });
 
   const handleBusinessNameClick = () => {
     if (!canViewFullContent) return;
@@ -82,6 +110,41 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     });
   };
 
+  // Determine customer info to display
+  const getCustomerDisplayInfo = () => {
+    if (review.customerId && customerProfile) {
+      // Review is claimed - use customer profile info
+      const customerName = customerProfile.first_name && customerProfile.last_name 
+        ? `${customerProfile.first_name} ${customerProfile.last_name}`
+        : customerProfile.name || review.customerName;
+      
+      return {
+        name: customerName,
+        avatar: customerProfile.avatar || '',
+        phone: customerProfile.phone || '',
+        address: customerProfile.address || '',
+        city: customerProfile.city || '',
+        state: customerProfile.state || '',
+        zipcode: customerProfile.zipcode || '',
+        isClaimed: true
+      };
+    } else {
+      // Review is not claimed - use review data
+      return {
+        name: review.customerName,
+        avatar: '',
+        phone: review.customer_phone || '',
+        address: review.customer_address || review.address || '',
+        city: review.customer_city || review.city || '',
+        state: review.state || '',
+        zipcode: review.customer_zipcode || review.zipCode || '',
+        isClaimed: false
+      };
+    }
+  };
+
+  const customerInfo = getCustomerDisplayInfo();
+
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -117,20 +180,50 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           {/* Customer info - right side */}
           <div className="text-right">
             <div className="flex items-center gap-1 justify-end">
-              {review.customerId && canViewFullContent ? (
-                <h4 
-                  className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                  onClick={handleCustomerNameClick}
-                >
-                  {review.customerName}
-                </h4>
-              ) : (
-                <h4 className="font-medium">
-                  {review.customerName}
-                </h4>
-              )}
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                  {getInitials(customerInfo.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                {customerInfo.isClaimed && canViewFullContent ? (
+                  <h4 
+                    className="font-medium cursor-pointer hover:text-blue-600 transition-colors text-sm"
+                    onClick={handleCustomerNameClick}
+                  >
+                    {customerInfo.name}
+                  </h4>
+                ) : (
+                  <h4 className="font-medium text-sm">
+                    {customerInfo.name}
+                  </h4>
+                )}
+                <p className="text-xs text-gray-500">Customer</p>
+                {customerInfo.isClaimed && (
+                  <span className="text-xs text-green-600 font-medium">Claimed</span>
+                )}
+              </div>
             </div>
-            <p className="text-sm text-gray-500">Customer</p>
+            
+            {/* Show customer contact info if available and unlocked */}
+            {canViewFullContent && (
+              <div className="mt-2 text-xs text-gray-600 space-y-1">
+                {customerInfo.phone && (
+                  <div>📞 {customerInfo.phone}</div>
+                )}
+                {customerInfo.address && (
+                  <div>📍 {customerInfo.address}</div>
+                )}
+                {(customerInfo.city || customerInfo.zipcode) && (
+                  <div>
+                    {[customerInfo.city, customerInfo.state, customerInfo.zipcode]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -171,15 +264,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </div>
           )}
         </div>
-
-        {/* Address (if available and unlocked) */}
-        {canViewFullContent && (review.address || review.city) && (
-          <div className="text-sm text-gray-600 mb-4">
-            <strong>Service Address:</strong>{' '}
-            {[review.address, review.city, review.state].filter(Boolean).join(', ')}
-            {review.zipCode && ` ${review.zipCode}`}
-          </div>
-        )}
 
         {/* Action buttons for locked content */}
         {!canViewFullContent && (
