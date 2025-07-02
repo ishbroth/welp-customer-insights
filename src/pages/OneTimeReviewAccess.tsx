@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -149,27 +150,26 @@ const OneTimeReviewAccess = () => {
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       
-      // Try multiple redirect methods to ensure it works
+      // Improved redirect logic with better error handling
       try {
-        // First try: Direct assignment
-        window.location.href = data.url;
-        
-        // Fallback: If the above doesn't work within 1 second, try window.open
-        setTimeout(() => {
-          if (window.location.href.includes('one-time-review')) {
-            console.log("OneTimeReviewAccess: Direct redirect failed, trying window.open");
-            window.open(data.url, '_self');
-          }
-        }, 1000);
-        
+        // First attempt: Direct window location assignment
+        window.location.assign(data.url);
       } catch (redirectError) {
-        console.error("OneTimeReviewAccess: Redirect error:", redirectError);
-        // Final fallback: Open in new tab
-        window.open(data.url, '_blank');
-        toast({
-          title: "Redirecting to Payment",
-          description: "If the payment page didn't open automatically, please check for a popup blocker.",
-        });
+        console.error("OneTimeReviewAccess: Direct redirect failed:", redirectError);
+        
+        // Fallback: Try window.open in same tab
+        try {
+          window.open(data.url, '_self');
+        } catch (openError) {
+          console.error("OneTimeReviewAccess: window.open failed:", openError);
+          
+          // Final fallback: Open in new tab and show user message
+          window.open(data.url, '_blank');
+          toast({
+            title: "Payment Page Opened",
+            description: "The payment page has opened in a new tab. Please complete your payment there.",
+          });
+        }
       }
       
     } catch (error) {
@@ -213,22 +213,21 @@ const OneTimeReviewAccess = () => {
       
       // Use the same improved redirect method
       try {
-        window.location.href = data.url;
-        
-        setTimeout(() => {
-          if (window.location.href.includes('one-time-review')) {
-            console.log("OneTimeReviewAccess: Direct redirect failed, trying window.open");
-            window.open(data.url, '_self');
-          }
-        }, 1000);
-        
+        window.location.assign(data.url);
       } catch (redirectError) {
-        console.error("OneTimeReviewAccess: Redirect error:", redirectError);
-        window.open(data.url, '_blank');
-        toast({
-          title: "Redirecting to Payment",
-          description: "If the payment page didn't open automatically, please check for a popup blocker.",
-        });
+        console.error("OneTimeReviewAccess: Direct redirect failed:", redirectError);
+        
+        try {
+          window.open(data.url, '_self');
+        } catch (openError) {
+          console.error("OneTimeReviewAccess: window.open failed:", openError);
+          
+          window.open(data.url, '_blank');
+          toast({
+            title: "Payment Page Opened",
+            description: "The payment page has opened in a new tab. Please complete your payment there.",
+          });
+        }
       }
       
     } catch (error) {
