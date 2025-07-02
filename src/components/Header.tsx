@@ -73,7 +73,7 @@ const Header = () => {
               {/* Only show Post Review for business owners */}
               {isBusinessOwner && (
                 <Link 
-                  to="/new-review" 
+                  to="/review/new" 
                   className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
                 >
                   <Edit className="mr-1 h-4 w-4" /> Post Review
@@ -135,7 +135,7 @@ const Header = () => {
               {/* Only show Post Review for business owners on mobile too */}
               {isBusinessOwner && (
                 <Link
-                  to="/new-review"
+                  to="/review/new"
                   className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
                   onClick={toggleMenu}
                 >
