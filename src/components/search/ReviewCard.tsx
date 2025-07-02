@@ -50,7 +50,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
-      if (!review.customerId) return null;
+      if (!review.customerId) {
+        console.log("ReviewCard: No customerId provided, skipping fetch");
+        return null;
+      }
+      
+      console.log("ReviewCard: Fetching customer profile for customerId:", review.customerId);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -59,10 +64,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching customer profile:", error);
+        console.error("ReviewCard: Error fetching customer profile:", error);
         return null;
       }
       
+      console.log("ReviewCard: Customer profile fetched:", data);
       return data;
     },
     enabled: !!review.customerId && canViewFullContent
@@ -112,12 +118,17 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   // Determine customer info to display
   const getCustomerDisplayInfo = () => {
+    console.log("ReviewCard: Getting customer display info for review:", review.id);
+    console.log("ReviewCard: customerId:", review.customerId);
+    console.log("ReviewCard: customerProfile:", customerProfile);
+    
     if (review.customerId && customerProfile) {
       // Review is claimed - use customer profile info
       const customerName = customerProfile.first_name && customerProfile.last_name 
         ? `${customerProfile.first_name} ${customerProfile.last_name}`
         : customerProfile.name || review.customerName;
       
+      console.log("ReviewCard: Using claimed customer profile info");
       return {
         name: customerName,
         avatar: customerProfile.avatar || '',
@@ -130,6 +141,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       };
     } else {
       // Review is not claimed - use review data
+      console.log("ReviewCard: Using unclaimed review data");
       return {
         name: review.customerName,
         avatar: '',
@@ -144,6 +156,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   const customerInfo = getCustomerDisplayInfo();
+
+  console.log("ReviewCard: Final customer info:", customerInfo);
 
   return (
     <Card className="mb-4">
@@ -186,7 +200,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                   {getInitials(customerInfo.name)}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="ml-2">
                 {customerInfo.isClaimed && canViewFullContent ? (
                   <h4 
                     className="font-medium cursor-pointer hover:text-blue-600 transition-colors text-sm"
