@@ -150,8 +150,23 @@ const OneTimeReviewAccess = () => {
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       
-      // Simple redirect to Stripe
-      window.location.href = data.url;
+      // Use a more reliable redirect method
+      try {
+        // First try opening in same window
+        window.location.replace(data.url);
+      } catch (redirectError) {
+        console.error("Primary redirect failed, trying fallback:", redirectError);
+        // Fallback: open in new window
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) {
+          throw new Error("Unable to open payment page. Please check your browser's popup blocker settings.");
+        }
+        setIsProcessing(false);
+        toast({
+          title: "Payment Page Opened",
+          description: "The payment page has opened in a new tab. Complete your payment there and return to this page.",
+        });
+      }
       
     } catch (error) {
       console.error("OneTimeReviewAccess: Payment error:", error);
@@ -192,8 +207,21 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Simple redirect to Stripe
-      window.location.href = data.url;
+      // Use the same reliable redirect method
+      try {
+        window.location.replace(data.url);
+      } catch (redirectError) {
+        console.error("Primary redirect failed, trying fallback:", redirectError);
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) {
+          throw new Error("Unable to open payment page. Please check your browser's popup blocker settings.");
+        }
+        setIsProcessing(false);
+        toast({
+          title: "Payment Page Opened",
+          description: "The payment page has opened in a new tab. Complete your payment there and return to this page.",
+        });
+      }
       
     } catch (error) {
       console.error("OneTimeReviewAccess: Authenticated payment error:", error);
@@ -277,7 +305,7 @@ const OneTimeReviewAccess = () => {
                         disabled={isProcessing}
                         onClick={handleGuestPayment}
                       >
-                        {isProcessing ? "Processing..." : "Pay $3.00 - Get Instant Access"}
+                        {isProcessing ? "Redirecting to Payment..." : "Pay $3.00 - Get Instant Access"}
                       </Button>
                     </div>
                   </div>
@@ -328,7 +356,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handleAuthenticatedPayment}
                     >
-                      {isProcessing ? "Processing..." : "Pay $3.00"}
+                      {isProcessing ? "Redirecting to Payment..." : "Pay $3.00"}
                     </Button>
                   </div>
                 )}
