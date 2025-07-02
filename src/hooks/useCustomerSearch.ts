@@ -69,6 +69,7 @@ export const useCustomerSearch = () => {
         business_id: review.business_id,
         business_profile: review.business_profile,
         reviewerName: review.reviewerName,
+        reviewerAvatar: review.reviewerAvatar,
         reviewerVerified: review.reviewerVerified
       }));
       
