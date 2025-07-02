@@ -21,9 +21,8 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
         <ReviewCard
           key={`review-${review.id || index}`}
           review={review}
-          hasFullAccess={hasFullAccess}
-          customerData={customerData}
-          onReviewUpdate={onReviewUpdate}
+          hasSubscription={hasFullAccess(customerData.id)}
+          isOneTimeUnlocked={false} // For now, we'll set this to false - this would need proper implementation
         />
       ))}
     </div>
