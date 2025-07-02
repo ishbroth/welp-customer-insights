@@ -39,7 +39,13 @@ export const usePlacesAutocomplete = ({
   // Stable place change handler that doesn't change on every render
   const handlePlaceChanged = useCallback(() => {
     console.log('🏠 handlePlaceChanged - STARTING');
-    const place = autocompleteRef.current?.getPlace();
+    
+    if (!autocompleteRef.current) {
+      console.log('❌ No autocomplete instance available');
+      return;
+    }
+    
+    const place = autocompleteRef.current.getPlace();
     
     console.log('🏠 handlePlaceChanged - Place object:', {
       hasPlace: !!place,
@@ -118,7 +124,7 @@ export const usePlacesAutocomplete = ({
     }
 
     // Check if Google Maps and Places are properly loaded
-    if (!window.google || !window.google.maps || !window.google.maps.places || !window.google.maps.places.Autocomplete) {
+    if (!window.google?.maps?.places?.Autocomplete) {
       console.log('⏳ Google Places not ready yet, will retry...');
       return;
     }
@@ -129,13 +135,21 @@ export const usePlacesAutocomplete = ({
       // Clean up existing instance and listener
       if (listenerRef.current) {
         console.log('🔧 Cleaning up existing listener');
-        window.google.maps.event.removeListener(listenerRef.current);
+        try {
+          window.google.maps.event.removeListener(listenerRef.current);
+        } catch (e) {
+          console.log('🔧 Error cleaning up listener:', e);
+        }
         listenerRef.current = null;
       }
       
       if (autocompleteRef.current) {
         console.log('🔧 Cleaning up existing autocomplete instance');
-        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        try {
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        } catch (e) {
+          console.log('🔧 Error cleaning up autocomplete:', e);
+        }
         autocompleteRef.current = null;
       }
 
@@ -162,7 +176,11 @@ export const usePlacesAutocomplete = ({
     return () => {
       console.log('🔧 Cleanup function called');
       if (listenerRef.current) {
-        window.google.maps.event.removeListener(listenerRef.current);
+        try {
+          window.google.maps.event.removeListener(listenerRef.current);
+        } catch (e) {
+          console.log('🔧 Error in cleanup:', e);
+        }
         listenerRef.current = null;
       }
     };

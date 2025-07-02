@@ -10,6 +10,7 @@ export const useGoogleMapsInit = () => {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
     
     const initializeGoogle = async () => {
       try {
@@ -20,7 +21,9 @@ export const useGoogleMapsInit = () => {
         
         if (error || !data?.secret) {
           console.log("❌ Google Maps API key not available, using regular input");
-          setGoogleMapsStatus('no-key');
+          if (mounted) {
+            setGoogleMapsStatus('no-key');
+          }
           return;
         }
 
@@ -46,7 +49,7 @@ export const useGoogleMapsInit = () => {
         (window as any).initGoogleMaps = () => {
           console.log('✅ Google Maps script loaded and callback fired');
           
-          // Double-check that places library is available
+          // Double-check that places library is available with timeout
           const checkPlacesReady = () => {
             if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
               console.log('✅ Google Places library confirmed ready');
@@ -56,7 +59,9 @@ export const useGoogleMapsInit = () => {
               }
             } else {
               console.log('⏳ Google Places library not ready yet, checking again...');
-              setTimeout(checkPlacesReady, 100);
+              if (mounted) {
+                timeoutId = setTimeout(checkPlacesReady, 100);
+              }
             }
           };
           
@@ -83,6 +88,9 @@ export const useGoogleMapsInit = () => {
     
     return () => {
       mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       // Clean up the global callback
       if ((window as any).initGoogleMaps) {
         delete (window as any).initGoogleMaps;

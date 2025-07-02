@@ -43,7 +43,7 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
           <div className="space-y-3">
             {customers.map(customer => (
               <CustomerCard
-                key={customer.id}
+                key={`customer-${customer.id}`}
                 customer={customer}
                 hasFullAccess={hasFullAccess}
                 onReviewUpdate={onRefresh}
@@ -70,7 +70,7 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
       <div className="space-y-3">
         {customers.map(customer => (
           <CustomerCard
-            key={customer.id}
+            key={`search-customer-${customer.id}`}
             customer={customer}
             hasFullAccess={hasFullAccess}
             onReviewUpdate={onRefresh}
