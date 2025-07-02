@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -16,6 +15,7 @@ const OneTimeReviewAccess = () => {
   const success = searchParams.get("success");  
   const canceled = searchParams.get("canceled");
   const guestToken = searchParams.get("token");
+  const sessionId = searchParams.get("session_id"); // Add session_id parameter
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -23,16 +23,16 @@ const OneTimeReviewAccess = () => {
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    console.log("OneTimeReviewAccess: Component mounted", { reviewId, success, canceled, guestToken });
+    console.log("OneTimeReviewAccess: Component mounted", { reviewId, success, canceled, guestToken, sessionId });
     
     if (!reviewId) {
       navigate("/search");
       return;
     }
     
-    // Handle successful guest payment with token
-    if (success === "true" && guestToken) {
-      handleGuestPaymentSuccess(guestToken, reviewId);
+    // Handle successful guest payment with token and session ID
+    if (success === "true" && guestToken && sessionId) {
+      handleGuestPaymentSuccess(guestToken, reviewId, sessionId);
       return;
     }
     
@@ -53,20 +53,20 @@ const OneTimeReviewAccess = () => {
         variant: "destructive"
       });
     }
-  }, [success, canceled, reviewId, guestToken, navigate, toast]);
+  }, [success, canceled, reviewId, guestToken, sessionId, navigate, toast]);
 
-  const handleGuestPaymentSuccess = async (token: string, reviewId: string) => {
-    console.log("Handling guest payment success", { token: "present", reviewId });
+  const handleGuestPaymentSuccess = async (token: string, reviewId: string, sessionId: string) => {
+    console.log("Handling guest payment success", { token: "present", reviewId, sessionId });
     
     try {
       // Store token in sessionStorage for guest access
       sessionStorage.setItem(`guest_token_${reviewId}`, token);
       sessionStorage.setItem(`guest_token_expires_${reviewId}`, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
       
-      // Create guest access record via edge function
+      // Create guest access record via edge function with session ID
       const { data, error } = await supabase.functions.invoke("handle-guest-access", {
         body: {
-          sessionId: searchParams.get("session_id") || "unknown",
+          sessionId: sessionId,
           accessToken: token,
           reviewId: reviewId
         }
@@ -89,8 +89,8 @@ const OneTimeReviewAccess = () => {
         description: "You now have 24-hour access to this review. You can view and respond to it.",
       });
 
-      // Redirect to the review with the guest token
-      navigate(`/review/${reviewId}?guest_token=${token}`);
+      // Create a simple review viewing page with guest access
+      navigate(`/review-view/${reviewId}?guest_token=${token}`);
       
     } catch (error) {
       console.error("Error handling guest payment success:", error);
@@ -150,27 +150,8 @@ const OneTimeReviewAccess = () => {
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       
-      // Improved redirect logic with better error handling
-      try {
-        // First attempt: Direct window location assignment
-        window.location.assign(data.url);
-      } catch (redirectError) {
-        console.error("OneTimeReviewAccess: Direct redirect failed:", redirectError);
-        
-        // Fallback: Try window.open in same tab
-        try {
-          window.open(data.url, '_self');
-        } catch (openError) {
-          console.error("OneTimeReviewAccess: window.open failed:", openError);
-          
-          // Final fallback: Open in new tab and show user message
-          window.open(data.url, '_blank');
-          toast({
-            title: "Payment Page Opened",
-            description: "The payment page has opened in a new tab. Please complete your payment there.",
-          });
-        }
-      }
+      // Simple redirect to Stripe
+      window.location.href = data.url;
       
     } catch (error) {
       console.error("OneTimeReviewAccess: Payment error:", error);
@@ -211,24 +192,8 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Use the same improved redirect method
-      try {
-        window.location.assign(data.url);
-      } catch (redirectError) {
-        console.error("OneTimeReviewAccess: Direct redirect failed:", redirectError);
-        
-        try {
-          window.open(data.url, '_self');
-        } catch (openError) {
-          console.error("OneTimeReviewAccess: window.open failed:", openError);
-          
-          window.open(data.url, '_blank');
-          toast({
-            title: "Payment Page Opened",
-            description: "The payment page has opened in a new tab. Please complete your payment there.",
-          });
-        }
-      }
+      // Simple redirect to Stripe
+      window.location.href = data.url;
       
     } catch (error) {
       console.error("OneTimeReviewAccess: Authenticated payment error:", error);

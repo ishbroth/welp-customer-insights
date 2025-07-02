@@ -13,6 +13,7 @@ import NewReview from "@/pages/NewReview";
 import ReviewSuccess from "@/pages/ReviewSuccess";
 import BusinessReviews from "@/pages/BusinessReviews";
 import OneTimeReviewAccess from "@/pages/OneTimeReviewAccess";
+import ReviewView from "@/pages/ReviewView";
 import Subscription from "@/pages/Subscription";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
 import VerificationResources from "@/pages/VerificationResources";
@@ -27,9 +28,10 @@ const AppRoutes = () => {
       <Route path="/verification" element={<Verification />} />
       <Route path="/search" element={<SearchResults />} />
       
-      {/* One-time review access routes */}
+      {/* One-time review access routes - UNPROTECTED for guest access */}
       <Route path="/one-time-review" element={<OneTimeReviewAccess />} />
       <Route path="/one-time-review-access" element={<OneTimeReviewAccess />} />
+      <Route path="/review-view/:reviewId" element={<ReviewView />} />
       
       {/* Protected Routes */}
       <Route path="/profile" element={
@@ -77,12 +79,6 @@ const AppRoutes = () => {
       <Route path="/review/success" element={
         <ProtectedRoute>
           <ReviewSuccess />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/one-time-review-access" element={
-        <ProtectedRoute>
-          <OneTimeReviewAccess />
         </ProtectedRoute>
       } />
       

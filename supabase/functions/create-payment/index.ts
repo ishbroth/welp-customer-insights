@@ -114,15 +114,17 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
     
-    // Prepare success URL with parameters to identify what was purchased
+    // Prepare success URL with parameters to identify what was purchased - FIXED URLS
     const successParams = new URLSearchParams();
     if (customerId) successParams.append("customerId", customerId);
     if (reviewId) successParams.append("reviewId", reviewId);
     successParams.append("success", "true");
     if (accessToken) successParams.append("token", accessToken);
+    // Add session_id parameter placeholder - Stripe will replace this
+    successParams.append("session_id", "{CHECKOUT_SESSION_ID}");
     
-    const successUrl = `${origin}/one-time-review?${successParams.toString()}`;
-    const cancelUrl = `${origin}/one-time-review?reviewId=${reviewId}&canceled=true`;
+    const successUrl = `${origin}/one-time-review-access?${successParams.toString()}`;
+    const cancelUrl = `${origin}/one-time-review-access?reviewId=${reviewId}&canceled=true`;
     
     logStep("URLs prepared", { successUrl, cancelUrl });
     
