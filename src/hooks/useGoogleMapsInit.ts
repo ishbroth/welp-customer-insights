@@ -26,8 +26,9 @@ export const useGoogleMapsInit = () => {
 
         console.log('✅ Google Maps API key retrieved successfully');
 
-        if (window.google && window.google.maps && window.google.maps.places) {
-          console.log('✅ Google Maps already loaded');
+        // Check if already loaded and ready
+        if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
+          console.log('✅ Google Maps already loaded and ready');
           if (mounted) {
             setIsGoogleReady(true);
             setGoogleMapsStatus('ready');
@@ -37,27 +38,44 @@ export const useGoogleMapsInit = () => {
 
         console.log('🔄 Loading Google Maps script...');
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places&loading=async`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places&loading=async&callback=initGoogleMaps`;
         script.async = true;
         script.defer = true;
         
-        script.onload = () => {
-          console.log('✅ Google Maps script loaded successfully');
-          if (mounted) {
-            setIsGoogleReady(true);
-            setGoogleMapsStatus('ready');
-          }
+        // Create a global callback that will be called when Google Maps is ready
+        (window as any).initGoogleMaps = () => {
+          console.log('✅ Google Maps script loaded and callback fired');
+          
+          // Double-check that places library is available
+          const checkPlacesReady = () => {
+            if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
+              console.log('✅ Google Places library confirmed ready');
+              if (mounted) {
+                setIsGoogleReady(true);
+                setGoogleMapsStatus('ready');
+              }
+            } else {
+              console.log('⏳ Google Places library not ready yet, checking again...');
+              setTimeout(checkPlacesReady, 100);
+            }
+          };
+          
+          checkPlacesReady();
         };
 
         script.onerror = (error) => {
           console.error('❌ Failed to load Google Maps script:', error);
-          setGoogleMapsStatus('error');
+          if (mounted) {
+            setGoogleMapsStatus('error');
+          }
         };
 
         document.head.appendChild(script);
       } catch (error) {
         console.error("❌ Error loading Google Maps:", error);
-        setGoogleMapsStatus('error');
+        if (mounted) {
+          setGoogleMapsStatus('error');
+        }
       }
     };
 
@@ -65,6 +83,10 @@ export const useGoogleMapsInit = () => {
     
     return () => {
       mounted = false;
+      // Clean up the global callback
+      if ((window as any).initGoogleMaps) {
+        delete (window as any).initGoogleMaps;
+      }
     };
   }, []);
 
