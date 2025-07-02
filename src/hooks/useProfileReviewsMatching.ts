@@ -181,7 +181,7 @@ export const useProfileReviewsMatching = () => {
         last_login: new Date().toISOString()
       });
 
-    // FIXED: Fetch all potential matching reviews WITHOUT setting customer_id AND exclude soft-deleted reviews
+    // FIXED: Fetch all potential matching reviews AND exclude soft-deleted reviews
     const { data: allReviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -210,7 +210,7 @@ export const useProfileReviewsMatching = () => {
     const reviewMatches: ReviewMatch[] = [];
 
     for (const review of allReviews || []) {
-      // FIXED: Check actual claim status from database
+      // FIXED: Use actual database customer_id to determine claim status
       const isActuallyClaimed = review.customer_id === currentUser.id;
       
       console.log('Review claim analysis:', {
@@ -227,12 +227,12 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // If already claimed by current user, mark as claimed
+      // FIXED: Only mark as 'claimed' if actually claimed in database
       if (isActuallyClaimed) {
         reviewMatches.push({
           review: {
             ...review,
-            // IMPORTANT: Don't modify customer_id here, keep original value
+            customerId: review.customer_id, // Ensure customerId is set for claimed reviews
           },
           matchType: 'claimed',
           matchScore: 100,
@@ -252,8 +252,7 @@ export const useProfileReviewsMatching = () => {
           review: {
             ...review,
             isNewReview: isNew,
-            // IMPORTANT: Keep customer_id as null for unclaimed reviews
-            customer_id: null
+            customerId: null // Explicitly set to null for unclaimed reviews
           },
           matchType: 'high_quality',
           matchScore: score,
@@ -267,8 +266,7 @@ export const useProfileReviewsMatching = () => {
           review: {
             ...review,
             isNewReview: isNew,
-            // IMPORTANT: Keep customer_id as null for unclaimed reviews
-            customer_id: null
+            customerId: null // Explicitly set to null for unclaimed reviews
           },
           matchType: 'potential',
           matchScore: score,

@@ -51,6 +51,7 @@ const ProfileReviews = () => {
               customerReviews={customerReviews}
               isLoading={isLoading}
               hasSubscription={isSubscribed}
+              onRefresh={fetchCustomerReviews}
             />
           </div>
         </main>

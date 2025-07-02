@@ -77,8 +77,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Enhanced claim confirm handler that calls the success callback
   const handleClaimConfirm = async () => {
     try {
-      await originalHandleClaimConfirm();
-      if (onClaimSuccess) {
+      const success = await originalHandleClaimConfirm();
+      if (success && onClaimSuccess) {
         onClaimSuccess();
       }
     } catch (error) {
@@ -157,8 +157,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     phone: displayPhone
   };
 
-  // Check if review is actually claimed by checking customerId field
-  const isActuallyClaimed = !!review.customerId;
+  // FIXED: Check if review is actually claimed using database customer_id
+  const isActuallyClaimed = review.customerId === review.reviewerId ? false : !!review.customerId;
 
   // Determine if business name should be clickable - only if unlocked or has subscription
   const shouldBusinessNameBeClickable = isUnlocked || hasSubscription;

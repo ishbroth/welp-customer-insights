@@ -13,13 +13,15 @@ export const useReviewClaimDialog = () => {
   const handleClaimConfirm = async (reviewId: string) => {
     const success = await claimReview(reviewId);
     if (success) {
-      // Force a page refresh to show updated data
-      window.location.reload();
+      setShowClaimDialog(false);
+      // Return success so parent components can handle state updates
+      return true;
     }
+    return false;
   };
 
   const handleClaimCancel = () => {
-    // Dialog will close automatically
+    setShowClaimDialog(false);
   };
 
   return {

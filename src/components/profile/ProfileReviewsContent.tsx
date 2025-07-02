@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -14,12 +15,14 @@ interface ProfileReviewsContentProps {
   customerReviews: Review[];
   isLoading: boolean;
   hasSubscription: boolean;
+  onRefresh?: () => void; // Add refresh callback
 }
 
 const ProfileReviewsContent = ({ 
   customerReviews, 
   isLoading, 
-  hasSubscription 
+  hasSubscription,
+  onRefresh
 }: ProfileReviewsContentProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [localReviews, setLocalReviews] = useState(customerReviews);
@@ -64,7 +67,7 @@ const ProfileReviewsContent = ({
   let sortedReviews: any[] = [];
 
   if (isCustomerUser) {
-    // Separate reviews by ACTUAL claim status from database
+    // FIXED: Use actual database customer_id for claim status detection
     claimedReviews = localReviews.filter(review => {
       const isActuallyClaimed = review.customerId === currentUser?.id;
       console.log('Review claim check:', {
@@ -159,10 +162,12 @@ const ProfileReviewsContent = ({
     console.log('Delete review:', reviewId);
   };
 
-  // Handle successful claim - refresh the page to show updated status
+  // FIXED: Handle successful claim with proper data refresh
   const handleClaimSuccess = () => {
-    // Force a page refresh to reload the reviews with updated claim status
-    window.location.reload();
+    console.log('Review claimed successfully, refreshing data...');
+    if (onRefresh) {
+      onRefresh(); // Call the refresh function passed from parent
+    }
   };
 
   if (isLoading) {
