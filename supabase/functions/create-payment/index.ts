@@ -14,6 +14,13 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-PAYMENT] ${step}${detailsStr}`);
 };
 
+// Generate secure random token for guest access
+const generateAccessToken = () => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {   
@@ -40,6 +47,13 @@ serve(async (req) => {
 
     let user = null;
     let userEmail = "guest@example.com"; // Default for guest users
+    let accessToken = null;
+
+    // Generate access token for guest users
+    if (isGuest) {
+      accessToken = generateAccessToken();
+      logStep("Generated access token for guest", { tokenLength: accessToken.length });
+    }
 
     // Handle authentication for non-guest users
     if (!isGuest) {
@@ -105,6 +119,7 @@ serve(async (req) => {
     if (customerId) successParams.append("customerId", customerId);
     if (reviewId) successParams.append("reviewId", reviewId);
     successParams.append("success", "true");
+    if (accessToken) successParams.append("token", accessToken);
     
     const successUrl = `${origin}/one-time-review?${successParams.toString()}`;
     const cancelUrl = `${origin}/one-time-review?reviewId=${reviewId}&canceled=true`;
@@ -136,7 +151,8 @@ serve(async (req) => {
       metadata: {
         reviewId: reviewId || "",
         customerId: customerId || "",
-        isGuest: isGuest.toString()
+        isGuest: isGuest.toString(),
+        accessToken: accessToken || ""
       }
     };
 
@@ -152,7 +168,7 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    logStep("Created payment session", { sessionId: session.id, url: session.url, isGuest });
+    logStep("Created payment session", { sessionId: session.id, url: session.url, isGuest, accessToken: accessToken ? "present" : "none" });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -185,6 +185,41 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_access: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          review_id: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          review_id: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          review_id?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_access_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string

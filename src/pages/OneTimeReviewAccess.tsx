@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -15,6 +14,7 @@ const OneTimeReviewAccess = () => {
   const reviewId = searchParams.get("reviewId");
   const success = searchParams.get("success");  
   const canceled = searchParams.get("canceled");
+  const guestToken = searchParams.get("token");
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,15 +22,21 @@ const OneTimeReviewAccess = () => {
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    console.log("OneTimeReviewAccess: Component mounted", { reviewId, success, canceled });
+    console.log("OneTimeReviewAccess: Component mounted", { reviewId, success, canceled, guestToken });
     
     if (!reviewId) {
       navigate("/search");
       return;
     }
     
-    // Handle success payment return from Stripe
-    if (success === "true") {
+    // Handle successful guest payment with token
+    if (success === "true" && guestToken) {
+      handleGuestPaymentSuccess(guestToken, reviewId);
+      return;
+    }
+    
+    // Handle success payment return from Stripe for authenticated users
+    if (success === "true" && !guestToken) {
       toast({
         title: "Payment Successful",
         description: "You now have access to this review and can respond once.",
@@ -46,7 +52,54 @@ const OneTimeReviewAccess = () => {
         variant: "destructive"
       });
     }
-  }, [success, canceled, reviewId, navigate, toast]);
+  }, [success, canceled, reviewId, guestToken, navigate, toast]);
+
+  const handleGuestPaymentSuccess = async (token: string, reviewId: string) => {
+    console.log("Handling guest payment success", { token: "present", reviewId });
+    
+    try {
+      // Store token in sessionStorage for guest access
+      sessionStorage.setItem(`guest_token_${reviewId}`, token);
+      sessionStorage.setItem(`guest_token_expires_${reviewId}`, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+      
+      // Create guest access record via edge function
+      const { data, error } = await supabase.functions.invoke("handle-guest-access", {
+        body: {
+          sessionId: searchParams.get("session_id") || "unknown",
+          accessToken: token,
+          reviewId: reviewId
+        }
+      });
+
+      if (error) {
+        console.error("Error creating guest access:", error);
+        toast({
+          title: "Access Error",
+          description: "There was an issue setting up your access. Please contact support.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log("Guest access created successfully", data);
+      
+      toast({
+        title: "Payment Successful!",
+        description: "You now have 24-hour access to this review. You can view and respond to it.",
+      });
+
+      // Redirect to the review with the guest token
+      navigate(`/review/${reviewId}?guest_token=${token}`);
+      
+    } catch (error) {
+      console.error("Error handling guest payment success:", error);
+      toast({
+        title: "Access Error",
+        description: "There was an issue setting up your access. Please contact support.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleLogin = () => {
     navigate("/login");
