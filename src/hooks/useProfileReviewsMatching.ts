@@ -210,15 +210,15 @@ export const useProfileReviewsMatching = () => {
     const reviewMatches: ReviewMatch[] = [];
 
     for (const review of allReviews || []) {
-      // FIXED: Use actual database customer_id to determine claim status
+      // FIXED: Use ONLY the database customer_id to determine if review is actually claimed
       const isActuallyClaimed = review.customer_id === currentUser.id;
       
-      console.log('Review claim analysis:', {
+      console.log('CLAIM STATUS CHECK:', {
         reviewId: review.id,
         dbCustomerId: review.customer_id,
         currentUserId: currentUser.id,
         isActuallyClaimed,
-        claimedBy: review.claimed_by
+        customerName: review.customer_name
       });
 
       // Skip reviews claimed by other users
@@ -227,7 +227,7 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // FIXED: Only mark as 'claimed' if actually claimed in database
+      // FIXED: If review is actually claimed, mark as 'claimed'
       if (isActuallyClaimed) {
         reviewMatches.push({
           review: {
@@ -242,8 +242,16 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // Calculate match score for unclaimed reviews
+      // FIXED: Only calculate match scores for UNCLAIMED reviews
       const { score, reasons, detailedMatches } = calculateMatchScore(review, userProfile);
+
+      console.log('MATCH CALCULATION:', {
+        reviewId: review.id,
+        customerName: review.customer_name,
+        matchScore: score,
+        reasons,
+        isActuallyClaimed
+      });
 
       if (score >= 40) {
         // High quality match (name + phone, or name + address)
@@ -276,8 +284,8 @@ export const useProfileReviewsMatching = () => {
       }
     }
 
-    console.log("Review matches found:", reviewMatches.length);
-    console.log("Review matches breakdown:", {
+    console.log("FINAL REVIEW MATCHES:", {
+      total: reviewMatches.length,
       claimed: reviewMatches.filter(m => m.matchType === 'claimed').length,
       highQuality: reviewMatches.filter(m => m.matchType === 'high_quality').length,
       potential: reviewMatches.filter(m => m.matchType === 'potential').length

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -42,7 +41,7 @@ const ProfileReviewsContent = ({
         id: r.id,
         matchType: (r as any).matchType,
         customerId: r.customerId,
-        claimed: r.customerId === currentUser?.id
+        actuallyClaimedInDB: r.customerId === currentUser?.id
       }))
     });
 
@@ -67,10 +66,10 @@ const ProfileReviewsContent = ({
   let sortedReviews: any[] = [];
 
   if (isCustomerUser) {
-    // FIXED: Use actual database customer_id for claim status detection
+    // FIXED: Use ONLY database customer_id for actual claim status
     claimedReviews = localReviews.filter(review => {
       const isActuallyClaimed = review.customerId === currentUser?.id;
-      console.log('Review claim check:', {
+      console.log('CLAIMED FILTER CHECK:', {
         reviewId: review.id,
         reviewCustomerId: review.customerId,
         currentUserId: currentUser?.id,
@@ -85,10 +84,12 @@ const ProfileReviewsContent = ({
       return !isActuallyClaimed;
     });
 
-    console.log('Review categorization:', {
+    console.log('REVIEW CATEGORIZATION FINAL:', {
       totalReviews: localReviews.length,
       claimedCount: claimedReviews.length,
-      unclaimedCount: unclaimedReviews.length
+      unclaimedCount: unclaimedReviews.length,
+      claimedIds: claimedReviews.map(r => r.id),
+      unclaimedIds: unclaimedReviews.map(r => r.id)
     });
 
     // Sort unclaimed reviews by match quality first, then claimed reviews
@@ -113,8 +114,8 @@ const ProfileReviewsContent = ({
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
-    // Show unclaimed first, then claimed
-    sortedReviews = [...sortedUnclaimed, ...sortedClaimed];
+    // FIXED: Show claimed reviews first, then potential matches
+    sortedReviews = [...sortedClaimed, ...sortedUnclaimed];
   } else {
     // For business users, use original sorting
     sortedReviews = [...localReviews].sort((a, b) => {
@@ -162,7 +163,7 @@ const ProfileReviewsContent = ({
     console.log('Delete review:', reviewId);
   };
 
-  // FIXED: Handle successful claim with proper data refresh
+  // Handle successful claim with proper data refresh
   const handleClaimSuccess = () => {
     console.log('Review claimed successfully, refreshing data...');
     if (onRefresh) {
@@ -194,24 +195,27 @@ const ProfileReviewsContent = ({
       {/* Show section headers for customer users */}
       {isCustomerUser && (
         <div className="space-y-6">
-          {/* Unclaimed Reviews Section */}
-          {unclaimedReviews.length > 0 && (
+          {/* Claimed Reviews Section */}
+          {claimedReviews.length > 0 && (
             <div>
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                Your Claimed Reviews ({claimedReviews.length})
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Reviews that you have claimed and linked to your profile.
+              </p>
+            </div>
+          )}
+          
+          {/* Potential Matches Section */}
+          {unclaimedReviews.length > 0 && (
+            <div className={claimedReviews.length > 0 ? "mt-8" : ""}>
               <h3 className="text-lg font-semibold mb-4 text-gray-800">
                 Potential Review Matches ({unclaimedReviews.length})
               </h3>
               <p className="text-sm text-gray-600 mb-4">
                 These reviews appear to be about you based on matching information. Click "Claim this Review" to link them to your profile.
               </p>
-            </div>
-          )}
-          
-          {/* Claimed Reviews Section */}
-          {claimedReviews.length > 0 && unclaimedReviews.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                Your Claimed Reviews ({claimedReviews.length})
-              </h3>
             </div>
           )}
         </div>
