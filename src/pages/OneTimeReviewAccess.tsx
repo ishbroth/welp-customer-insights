@@ -128,13 +128,21 @@ const OneTimeReviewAccess = () => {
     
     try {
       console.log("OneTimeReviewAccess: Calling create-payment function...");
-      const { data, error } = await supabase.functions.invoke("create-payment", {
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Request timeout - please try again")), 30000);
+      });
+      
+      const functionPromise = supabase.functions.invoke("create-payment", {
         body: {
           reviewId,
           amount: 300,
           isGuest: true
         }
       });
+      
+      const { data, error } = await Promise.race([functionPromise, timeoutPromise]) as any;
       
       console.log("OneTimeReviewAccess: Function response:", { data, error });
       
@@ -150,29 +158,26 @@ const OneTimeReviewAccess = () => {
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       
-      // Use a more reliable redirect method
-      try {
-        // First try opening in same window
-        window.location.replace(data.url);
-      } catch (redirectError) {
-        console.error("Primary redirect failed, trying fallback:", redirectError);
-        // Fallback: open in new window
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) {
-          throw new Error("Unable to open payment page. Please check your browser's popup blocker settings.");
-        }
-        setIsProcessing(false);
-        toast({
-          title: "Payment Page Opened",
-          description: "The payment page has opened in a new tab. Complete your payment there and return to this page.",
-        });
-      }
+      // Simple redirect to Stripe
+      window.location.href = data.url;
       
     } catch (error) {
       console.error("OneTimeReviewAccess: Payment error:", error);
+      
+      let errorMessage = "An error occurred while processing your payment. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("timeout")) {
+          errorMessage = "The request timed out. Please check your internet connection and try again.";
+        } else if (error.message.includes("Network")) {
+          errorMessage = "Network error. Please check your internet connection and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Payment Error",
-        description: error instanceof Error ? error.message : "An error occurred while processing your payment. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
       setIsProcessing(false);
@@ -192,12 +197,19 @@ const OneTimeReviewAccess = () => {
     setIsProcessing(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke("create-payment", {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Request timeout - please try again")), 30000);
+      });
+      
+      const functionPromise = supabase.functions.invoke("create-payment", {
         body: {
           reviewId,
           amount: 300
         }
       });
+      
+      const { data, error } = await Promise.race([functionPromise, timeoutPromise]) as any;
       
       if (error) {
         throw new Error(error.message);
@@ -207,27 +219,26 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Use the same reliable redirect method
-      try {
-        window.location.replace(data.url);
-      } catch (redirectError) {
-        console.error("Primary redirect failed, trying fallback:", redirectError);
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) {
-          throw new Error("Unable to open payment page. Please check your browser's popup blocker settings.");
-        }
-        setIsProcessing(false);
-        toast({
-          title: "Payment Page Opened",
-          description: "The payment page has opened in a new tab. Complete your payment there and return to this page.",
-        });
-      }
+      // Simple redirect to Stripe
+      window.location.href = data.url;
       
     } catch (error) {
       console.error("OneTimeReviewAccess: Authenticated payment error:", error);
+      
+      let errorMessage = "An error occurred while processing your payment. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("timeout")) {
+          errorMessage = "The request timed out. Please check your internet connection and try again.";
+        } else if (error.message.includes("Network")) {
+          errorMessage = "Network error. Please check your internet connection and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Payment Error",
-        description: "An error occurred while processing your payment. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
       setIsProcessing(false);

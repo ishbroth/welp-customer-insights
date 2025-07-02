@@ -55,44 +55,48 @@ serve(async (req) => {
       logStep("Generated access token for guest", { tokenLength: accessToken.length });
     }
 
-    // Handle authentication for non-guest users
+    // Handle authentication for non-guest users (only if authorization header is present)
     if (!isGuest) {
       const authHeader = req.headers.get("Authorization");
-      if (!authHeader) {
-        logStep("ERROR: No authorization header for authenticated user");
-        throw new Error("No authorization header provided for authenticated user");
-      }
-      logStep("Authorization header found for authenticated user");
-      
-      // Create Supabase client with service role key for secure operations
-      const supabaseClient = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-        { auth: { persistSession: false } }
-      );
+      if (authHeader) {
+        logStep("Authorization header found for authenticated user");
+        
+        // Create Supabase client with service role key for secure operations
+        const supabaseClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+          { auth: { persistSession: false } }
+        );
 
-      // Get the authenticated user
-      const token = authHeader.replace("Bearer ", "");
-      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-      if (userError) {
-        logStep("ERROR: Authentication failed", { error: userError.message });
-        throw new Error(`Authentication error: ${userError.message}`);
+        // Get the authenticated user
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+        if (userError) {
+          logStep("ERROR: Authentication failed", { error: userError.message });
+          throw new Error(`Authentication error: ${userError.message}`);
+        }
+        
+        user = userData.user;
+        if (!user?.email) {
+          logStep("ERROR: User not authenticated or email not available");
+          throw new Error("User not authenticated or email not available");
+        }
+        userEmail = user.email;
+        logStep("User authenticated", { userId: user.id, email: user.email });
+      } else {
+        logStep("No authorization header - treating as guest user");
+        // No auth header, treat as guest
+        isGuest = true;
+        accessToken = generateAccessToken();
+        logStep("Generated access token for guest (no auth)", { tokenLength: accessToken.length });
       }
-      
-      user = userData.user;
-      if (!user?.email) {
-        logStep("ERROR: User not authenticated or email not available");
-        throw new Error("User not authenticated or email not available");
-      }
-      userEmail = user.email;
-      logStep("User authenticated", { userId: user.id, email: user.email });
     } else {
       logStep("Processing guest payment");
     }
 
     // For guest users, don't create or look up a Stripe customer
     let stripeCustomerId;
-    if (!isGuest) {
+    if (!isGuest && user) {
       // Check if a customer already exists in Stripe (for non-guest users)
       const customers = await stripe.customers.list({
         email: userEmail,
@@ -114,7 +118,7 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
     
-    // Prepare success URL with parameters to identify what was purchased - FIXED URLS
+    // Prepare success URL with parameters to identify what was purchased
     const successParams = new URLSearchParams();
     if (customerId) successParams.append("customerId", customerId);
     if (reviewId) successParams.append("reviewId", reviewId);
@@ -153,15 +157,15 @@ serve(async (req) => {
       metadata: {
         reviewId: reviewId || "",
         customerId: customerId || "",
-        isGuest: isGuest.toString(),
+        isGuest: (isGuest || !user).toString(),
         accessToken: accessToken || ""
       }
     };
 
     // Add customer info for non-guest users
-    if (!isGuest && stripeCustomerId) {
+    if (!isGuest && stripeCustomerId && user) {
       sessionConfig.customer = stripeCustomerId;
-    } else if (!isGuest) {
+    } else if (!isGuest && user) {
       sessionConfig.customer_email = userEmail;
     }
     // For guest users, don't set customer or customer_email - Stripe will handle it
@@ -170,7 +174,7 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    logStep("Created payment session", { sessionId: session.id, url: session.url, isGuest, accessToken: accessToken ? "present" : "none" });
+    logStep("Created payment session", { sessionId: session.id, url: session.url, isGuest: isGuest || !user, accessToken: accessToken ? "present" : "none" });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
