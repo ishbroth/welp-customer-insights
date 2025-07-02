@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useGoogleMapsInit } from "@/hooks/useGoogleMapsInit";
@@ -26,32 +26,34 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     
     const { isGoogleReady, googleMapsStatus } = useGoogleMapsInit();
     
-    // Handle place selection from Google Maps
-    const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    // Memoize the callback handlers to prevent useEffect recreation in usePlacesAutocomplete
+    const handlePlaceSelect = useCallback((place: google.maps.places.PlaceResult) => {
       console.log('🏠 AddressAutocomplete - Place selected');
       if (onPlaceSelect) {
         onPlaceSelect(place);
       }
-    };
+    }, [onPlaceSelect]);
 
-    // Handle address change from Google Maps - receives the street address only
-    const handleAddressChange = (address: string) => {
+    const handleAddressChange = useCallback((address: string) => {
       console.log('🏠 AddressAutocomplete - Address changed to:', address);
       if (onAddressChange) {
         onAddressChange(address);
       }
-    };
+    }, [onAddressChange]);
 
-    // Handle address component extraction - CRITICAL for populating other fields
-    const handleAddressComponentsExtracted = (components: AddressComponents) => {
-      console.log('🏠 AddressAutocomplete - Components extracted, MUST forward to parent:', components);
+    const handleAddressComponentsExtracted = useCallback((components: AddressComponents) => {
+      console.log('🏠 AddressAutocomplete - Components extracted, FORWARDING to parent:', components);
       if (onAddressComponentsExtracted) {
-        console.log('🏠 AddressAutocomplete - FORWARDING components to parent');
+        console.log('🏠 AddressAutocomplete - Successfully forwarding components to parent');
         onAddressComponentsExtracted(components);
       } else {
-        console.log('❌ AddressAutocomplete - onAddressComponentsExtracted callback is MISSING!');
+        console.log('❌ CRITICAL: AddressAutocomplete - onAddressComponentsExtracted callback is MISSING!');
       }
-    };
+    }, [onAddressComponentsExtracted]);
+
+    const handleSetInputValue = useCallback((value: string) => {
+      setInputValue(value);
+    }, []);
     
     usePlacesAutocomplete({
       isGoogleReady,
@@ -59,7 +61,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       onPlaceSelect: handlePlaceSelect,
       onAddressChange: handleAddressChange,
       onAddressComponentsExtracted: handleAddressComponentsExtracted,
-      setInputValue
+      setInputValue: handleSetInputValue
     });
 
     useEffect(() => {

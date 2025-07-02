@@ -2,7 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
-import { normalizeAddress } from "@/utils/addressNormalization";
+import { AddressComponents } from "@/utils/addressExtraction";
 
 interface FormData {
   address: string;
@@ -19,47 +19,22 @@ interface BusinessAddressFieldsProps {
 
 const BusinessAddressFields = ({ formData, onInputChange }: BusinessAddressFieldsProps) => {
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
-    if (!place.address_components) return;
-
-    // Extract address components
-    let streetNumber = '';
-    let route = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
-
-    place.address_components.forEach((component) => {
-      const types = component.types;
-      
-      if (types.includes('street_number')) {
-        streetNumber = component.long_name;
-      } else if (types.includes('route')) {
-        route = component.long_name;
-      } else if (types.includes('locality')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
-      }
-    });
-
-    // Create the street address (just street number + route)
-    const streetAddress = `${streetNumber} ${route}`.trim();
-    if (streetAddress) {
-      const normalizedAddress = normalizeAddress(streetAddress);
-      onInputChange("address", normalizedAddress);
-    }
-
-    // Update other form fields
-    if (city) onInputChange("city", city);
-    if (state) onInputChange("state", state);
-    if (zipCode) onInputChange("zipCode", zipCode);
+    console.log('🏠 BusinessAddressFields - Place selected:', place);
   };
 
   const handleAddressChange = (address: string) => {
-    const normalizedAddress = normalizeAddress(address);
-    onInputChange("address", normalizedAddress);
+    console.log('🏠 BusinessAddressFields - Address changed to:', address);
+    onInputChange("address", address);
+  };
+
+  // CRITICAL: Handle address components extraction to populate other fields
+  const handleAddressComponentsExtracted = (components: AddressComponents) => {
+    console.log('🏠 BusinessAddressFields - Components extracted:', components);
+    
+    // Update other form fields with extracted components
+    if (components.city) onInputChange("city", components.city);
+    if (components.state) onInputChange("state", components.state);
+    if (components.zipCode) onInputChange("zipCode", components.zipCode);
   };
 
   return (
@@ -69,12 +44,10 @@ const BusinessAddressFields = ({ formData, onInputChange }: BusinessAddressField
         <AddressAutocomplete
           id="address"
           value={formData.address}
-          onChange={(e) => {
-            const normalizedAddress = normalizeAddress(e.target.value);
-            onInputChange("address", normalizedAddress);
-          }}
+          onChange={(e) => onInputChange("address", e.target.value)}
           onAddressChange={handleAddressChange}
           onPlaceSelect={handleAddressSelect}
+          onAddressComponentsExtracted={handleAddressComponentsExtracted}
         />
       </div>
 
