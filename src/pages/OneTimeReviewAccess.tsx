@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -73,6 +72,7 @@ const OneTimeReviewAccess = () => {
     setIsProcessing(true);
     
     try {
+      console.log("OneTimeReviewAccess: Calling create-payment function...");
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           reviewId,
@@ -81,13 +81,16 @@ const OneTimeReviewAccess = () => {
         }
       });
       
+      console.log("OneTimeReviewAccess: Function response:", { data, error });
+      
       if (error) {
         console.error("OneTimeReviewAccess: Guest payment error:", error);
-        throw new Error(error.message);
+        throw new Error(error.message || "Payment function returned an error");
       }
       
       if (!data?.url) {
-        throw new Error("No checkout URL returned");
+        console.error("OneTimeReviewAccess: No checkout URL returned", { data });
+        throw new Error("No checkout URL returned from payment function");
       }
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
@@ -98,7 +101,7 @@ const OneTimeReviewAccess = () => {
       console.error("OneTimeReviewAccess: Payment error:", error);
       toast({
         title: "Payment Error",
-        description: "An error occurred while processing your payment. Please try again.",
+        description: error instanceof Error ? error.message : "An error occurred while processing your payment. Please try again.",
         variant: "destructive"
       });
       setIsProcessing(false);
@@ -218,7 +221,7 @@ const OneTimeReviewAccess = () => {
                         disabled={isProcessing}
                         onClick={handleGuestPayment}
                       >
-                        {isProcessing ? "Redirecting to Stripe..." : "Pay $3.00 - Get Instant Access"}
+                        {isProcessing ? "Processing..." : "Pay $3.00 - Get Instant Access"}
                       </Button>
                     </div>
                   </div>
@@ -269,7 +272,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handleAuthenticatedPayment}
                     >
-                      {isProcessing ? "Redirecting to Stripe..." : "Pay $3.00"}
+                      {isProcessing ? "Processing..." : "Pay $3.00"}
                     </Button>
                   </div>
                 )}

@@ -25,7 +25,10 @@ serve(async (req) => {
     
     // Get Stripe key from environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("ERROR: STRIPE_SECRET_KEY is not set");
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
     logStep("Stripe key verified");
 
     // Parse request body
@@ -41,7 +44,10 @@ serve(async (req) => {
     // Handle authentication for non-guest users
     if (!isGuest) {
       const authHeader = req.headers.get("Authorization");
-      if (!authHeader) throw new Error("No authorization header provided for authenticated user");
+      if (!authHeader) {
+        logStep("ERROR: No authorization header for authenticated user");
+        throw new Error("No authorization header provided for authenticated user");
+      }
       logStep("Authorization header found for authenticated user");
       
       // Create Supabase client with service role key for secure operations
@@ -54,19 +60,26 @@ serve(async (req) => {
       // Get the authenticated user
       const token = authHeader.replace("Bearer ", "");
       const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-      if (userError) throw new Error(`Authentication error: ${userError.message}`);
+      if (userError) {
+        logStep("ERROR: Authentication failed", { error: userError.message });
+        throw new Error(`Authentication error: ${userError.message}`);
+      }
       
       user = userData.user;
-      if (!user?.email) throw new Error("User not authenticated or email not available");
+      if (!user?.email) {
+        logStep("ERROR: User not authenticated or email not available");
+        throw new Error("User not authenticated or email not available");
+      }
       userEmail = user.email;
       logStep("User authenticated", { userId: user.id, email: user.email });
     } else {
       logStep("Processing guest payment");
     }
 
-    // Check if a customer already exists in Stripe (for non-guest users)
+    // For guest users, don't create or look up a Stripe customer
     let stripeCustomerId;
     if (!isGuest) {
+      // Check if a customer already exists in Stripe (for non-guest users)
       const customers = await stripe.customers.list({
         email: userEmail,
         limit: 1,
@@ -95,6 +108,8 @@ serve(async (req) => {
     
     const successUrl = `${origin}/one-time-review?${successParams.toString()}`;
     const cancelUrl = `${origin}/one-time-review?reviewId=${reviewId}&canceled=true`;
+    
+    logStep("URLs prepared", { successUrl, cancelUrl });
     
     // Create a one-time payment checkout session
     const sessionConfig: any = {
@@ -133,9 +148,11 @@ serve(async (req) => {
     }
     // For guest users, don't set customer or customer_email - Stripe will handle it
 
+    logStep("Creating checkout session", { sessionConfig: { ...sessionConfig, line_items: "..." } });
+
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    logStep("Created payment session", { sessionId: session.id, isGuest });
+    logStep("Created payment session", { sessionId: session.id, url: session.url, isGuest });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -143,7 +160,7 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[CREATE-PAYMENT] Error: ${errorMessage}`);
+    logStep("ERROR in create-payment", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
     
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
