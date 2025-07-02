@@ -17,9 +17,10 @@ export const formatReviewData = (review: any) => {
     business_id: review.business_id,
     customer_id: review.customer_id,
     business_profile: businessProfile,
-    reviewerName: businessProfile?.name || "Anonymous Business",
+    reviewerName: businessProfile?.business_name || businessProfile?.name || "Anonymous Business",
+    reviewerAvatar: businessProfile?.avatar || "", // Include avatar from profile
     reviewerVerified: false, // This will be set in the search function
-    customerVerified: customerProfile?.verified || false, // Add customer verification status
+    customerVerified: customerProfile?.verified || false,
     searchScore: 0,
     matchCount: 0
   };

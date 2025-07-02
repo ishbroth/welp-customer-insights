@@ -55,10 +55,10 @@ export const searchReviews = async (searchParams: SearchParams) => {
   let customerProfilesMap = new Map();
   
   if (businessIds.length > 0) {
-    // Fetch business profiles - try multiple approaches to get the business name
+    // Fetch business profiles - get complete profile data including avatar
     const { data: businessProfiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, avatar, type, state')
+      .select('id, name, avatar, type, state, verified')
       .in('id', businessIds);
 
     if (profileError) {
@@ -68,11 +68,11 @@ export const searchReviews = async (searchParams: SearchParams) => {
       console.log("Raw business profiles data:", businessProfiles);
       businessProfiles?.forEach(profile => {
         businessProfilesMap.set(profile.id, profile);
-        console.log(`Profile mapping: ${profile.id} -> ${profile.name} (State: ${profile.state}, Type: ${profile.type})`);
+        console.log(`Profile mapping: ${profile.id} -> ${profile.name} (State: ${profile.state}, Type: ${profile.type}, Avatar: ${profile.avatar ? 'Yes' : 'No'})`);
       });
     }
 
-    // Also fetch from business_info table to get business names
+    // Fetch from business_info table to get business names and verification status
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
       .select('id, verified, business_name')
@@ -88,39 +88,42 @@ export const searchReviews = async (searchParams: SearchParams) => {
         businessVerificationMap.set(business.id, isVerified);
         console.log(`VERIFICATION MAPPING: Business ID ${business.id} -> verified: ${isVerified} (raw value: ${business.verified})`);
         
-        // If no profile found but we have business_info, create a profile entry
-        if (!businessProfilesMap.has(business.id) && business.business_name) {
+        // Enhance existing profile with business_info data
+        if (businessProfilesMap.has(business.id)) {
+          const existingProfile = businessProfilesMap.get(business.id);
+          existingProfile.business_name = business.business_name;
+          existingProfile.verified = isVerified;
+          businessProfilesMap.set(business.id, existingProfile);
+          console.log(`Enhanced profile: ${business.id} -> ${business.business_name}, verified: ${isVerified}`);
+        } else if (business.business_name) {
+          // Create profile entry from business_info if no profile exists
           businessProfilesMap.set(business.id, {
             id: business.id,
             name: business.business_name,
+            business_name: business.business_name,
             avatar: null,
             type: 'business',
-            state: null
+            state: null,
+            verified: isVerified
           });
-          console.log(`Created profile from business_info: ${business.id} -> ${business.business_name}`);
-        } else if (businessProfilesMap.has(business.id)) {
-          // Update existing profile with business name if it doesn't have a name
-          const existingProfile = businessProfilesMap.get(business.id);
-          if (!existingProfile.name && business.business_name) {
-            existingProfile.name = business.business_name;
-            businessProfilesMap.set(business.id, existingProfile);
-            console.log(`Updated profile name from business_info: ${business.id} -> ${business.business_name}`);
-          }
+          console.log(`Created profile from business_info: ${business.id} -> ${business.business_name}, verified: ${isVerified}`);
         }
       });
     }
 
-    // Fallback: For any business IDs that still don't have profiles, create minimal ones
+    // Final check - ensure all business IDs have profiles
     businessIds.forEach(businessId => {
       if (!businessProfilesMap.has(businessId)) {
         console.log(`Creating fallback profile for business ID: ${businessId}`);
         businessProfilesMap.set(businessId, {
           id: businessId,
-          name: "Business", // Generic fallback name
+          name: "Business",
           avatar: null,
           type: 'business',
-          state: null
+          state: null,
+          verified: false
         });
+        businessVerificationMap.set(businessId, false);
       }
     });
   }
@@ -166,14 +169,20 @@ export const searchReviews = async (searchParams: SearchParams) => {
     
     const formattedReview = formatReviewData(reviewWithProfile);
     
-    // CRITICAL FIX: Ensure verification status is properly set
-    const verificationStatus = businessVerificationMap.get(review.business_id);
-    console.log(`VERIFICATION DEBUG: Business ID ${review.business_id}, Raw verification from map: ${verificationStatus}, Type: ${typeof verificationStatus}`);
+    // Set verification status properly - use the enhanced profile data
+    const verificationStatus = businessProfile?.verified || businessVerificationMap.get(review.business_id) || false;
+    console.log(`VERIFICATION DEBUG: Business ID ${review.business_id}, Profile verified: ${businessProfile?.verified}, Map verified: ${businessVerificationMap.get(review.business_id)}, Final: ${verificationStatus}`);
     
-    // Explicitly set the verification status - ensure it's a boolean
-    formattedReview.reviewerVerified = verificationStatus === true;
+    formattedReview.reviewerVerified = verificationStatus;
     
-    console.log(`FINAL VERIFICATION CHECK: Business ID ${review.business_id}, Final reviewerVerified: ${formattedReview.reviewerVerified}, Business Name: ${formattedReview.reviewerName}`);
+    // Use business_name from business_info if available, otherwise use profile name
+    if (businessProfile?.business_name) {
+      formattedReview.reviewerName = businessProfile.business_name;
+    } else if (businessProfile?.name) {
+      formattedReview.reviewerName = businessProfile.name;
+    }
+    
+    console.log(`FINAL REVIEW CHECK: Business ID ${review.business_id}, Final reviewerVerified: ${formattedReview.reviewerVerified}, Business Name: ${formattedReview.reviewerName}, Avatar: ${businessProfile?.avatar ? 'Yes' : 'No'}`);
     
     // Pass the business profile state directly to scoring for state matching
     const scoredReview = scoreReview(formattedReview, { 
@@ -200,9 +209,9 @@ export const searchReviews = async (searchParams: SearchParams) => {
   logSearchResults(filteredReviews);
   
   console.log("=== REVIEW SEARCH COMPLETE ===");
-  console.log("Final filtered reviews with verification status:");
+  console.log("Final filtered reviews with verification status and business info:");
   filteredReviews.forEach(review => {
-    console.log(`Review ID: ${review.id}, Business: ${review.reviewerName}, Verified: ${review.reviewerVerified}`);
+    console.log(`Review ID: ${review.id}, Business: ${review.reviewerName}, Verified: ${review.reviewerVerified}, Avatar: ${review.reviewerAvatar ? 'Yes' : 'No'}`);
   });
   
   return filteredReviews;
