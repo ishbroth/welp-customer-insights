@@ -20,8 +20,23 @@ export const usePlacesAutocomplete = ({
   setInputValue
 }: UsePlacesAutocompleteProps) => {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const listenerRef = useRef<google.maps.MapsEventListener | null>(null);
 
-  // Memoize the place change handler to prevent useEffect from recreating
+  // Create stable callback refs to avoid useEffect recreation
+  const onPlaceSelectRef = useRef(onPlaceSelect);
+  const onAddressChangeRef = useRef(onAddressChange);
+  const onAddressComponentsExtractedRef = useRef(onAddressComponentsExtracted);
+  const setInputValueRef = useRef(setInputValue);
+
+  // Update refs when props change
+  useEffect(() => {
+    onPlaceSelectRef.current = onPlaceSelect;
+    onAddressChangeRef.current = onAddressChange;
+    onAddressComponentsExtractedRef.current = onAddressComponentsExtracted;
+    setInputValueRef.current = setInputValue;
+  });
+
+  // Stable place change handler that doesn't change on every render
   const handlePlaceChanged = useCallback(() => {
     console.log('🏠 handlePlaceChanged - STARTING');
     const place = autocompleteRef.current?.getPlace();
@@ -44,35 +59,32 @@ export const usePlacesAutocomplete = ({
         
         // CRITICAL: Set the input value to ONLY the street address
         console.log('🏠 SETTING input to street address ONLY:', components.streetAddress);
-        console.log('🏠 About to call setInputValue with:', components.streetAddress);
-        setInputValue(components.streetAddress);
-        console.log('🏠 setInputValue called successfully');
+        if (setInputValueRef.current) {
+          setInputValueRef.current(components.streetAddress);
+          console.log('🏠 setInputValue called successfully');
+        }
         
         // Call address change callback with street address ONLY
-        if (onAddressChange) {
+        if (onAddressChangeRef.current) {
           console.log('🏠 CALLING onAddressChange with street address:', components.streetAddress);
-          onAddressChange(components.streetAddress);
+          onAddressChangeRef.current(components.streetAddress);
           console.log('🏠 onAddressChange called successfully');
-        } else {
-          console.log('⚠️ onAddressChange callback is MISSING');
         }
         
         // CRITICAL: Extract and populate other address fields
-        if (onAddressComponentsExtracted) {
+        if (onAddressComponentsExtractedRef.current) {
           console.log('🏠 CALLING onAddressComponentsExtracted with all components:', components);
-          onAddressComponentsExtracted(components);
+          onAddressComponentsExtractedRef.current(components);
           console.log('🏠 onAddressComponentsExtracted called successfully');
         } else {
           console.log('❌ CRITICAL: onAddressComponentsExtracted callback is MISSING!');
         }
         
         // Call place select callback
-        if (onPlaceSelect) {
+        if (onPlaceSelectRef.current) {
           console.log('🏠 CALLING onPlaceSelect');
-          onPlaceSelect(place);
+          onPlaceSelectRef.current(place);
           console.log('🏠 onPlaceSelect called successfully');
-        } else {
-          console.log('⚠️ onPlaceSelect callback is MISSING');
         }
         
         console.log('🏠 handlePlaceChanged - COMPLETED SUCCESSFULLY');
@@ -81,9 +93,11 @@ export const usePlacesAutocomplete = ({
         // Fallback: at least set the input value to something reasonable
         const fallbackAddress = place.formatted_address?.split(',')[0] || '';
         console.log('🏠 Using fallback address:', fallbackAddress);
-        setInputValue(fallbackAddress);
-        if (onAddressChange) {
-          onAddressChange(fallbackAddress);
+        if (setInputValueRef.current) {
+          setInputValueRef.current(fallbackAddress);
+        }
+        if (onAddressChangeRef.current) {
+          onAddressChangeRef.current(fallbackAddress);
         }
       }
     } else {
@@ -93,26 +107,32 @@ export const usePlacesAutocomplete = ({
         hasComponents: !!place?.address_components 
       });
     }
-  }, [onPlaceSelect, onAddressChange, onAddressComponentsExtracted, setInputValue]);
+  }, []); // Empty dependency array - this callback never changes
 
-  // Memoize the initialization function to prevent constant recreation
-  const initializeAutocomplete = useCallback(() => {
-    if (!inputRef.current) {
-      console.log('❌ initializeAutocomplete - No input ref');
+  useEffect(() => {
+    console.log('🔧 usePlacesAutocomplete useEffect triggered, isGoogleReady:', isGoogleReady);
+    
+    if (!isGoogleReady || !inputRef.current) {
+      console.log('🔧 Google not ready or no input ref, skipping initialization');
       return;
     }
 
+    // Check if Google Maps and Places are properly loaded
+    if (!window.google || !window.google.maps || !window.google.maps.places || !window.google.maps.places.Autocomplete) {
+      console.log('⏳ Google Places not ready yet, will retry...');
+      return;
+    }
+    
     try {
       console.log('🔧 Setting up Google Places Autocomplete...');
       
-      // Check if Google Maps and Places are properly loaded
-      if (!window.google || !window.google.maps || !window.google.maps.places || !window.google.maps.places.Autocomplete) {
-        console.log('⏳ Google Places not ready yet, retrying in 100ms...');
-        setTimeout(initializeAutocomplete, 100);
-        return;
+      // Clean up existing instance and listener
+      if (listenerRef.current) {
+        console.log('🔧 Cleaning up existing listener');
+        window.google.maps.event.removeListener(listenerRef.current);
+        listenerRef.current = null;
       }
       
-      // Clean up existing instance
       if (autocompleteRef.current) {
         console.log('🔧 Cleaning up existing autocomplete instance');
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
@@ -131,33 +151,22 @@ export const usePlacesAutocomplete = ({
 
       // Add the place changed listener
       console.log('🔧 Adding place_changed listener');
-      const listener = autocompleteRef.current.addListener('place_changed', handlePlaceChanged);
+      listenerRef.current = autocompleteRef.current.addListener('place_changed', handlePlaceChanged);
       console.log('✅ place_changed listener added successfully');
 
-      return () => {
-        console.log('🔧 Cleanup function called');
-        if (listener) {
-          window.google.maps.event.removeListener(listener);
-        }
-      };
     } catch (error) {
       console.error('❌ Error initializing Google Places Autocomplete:', error);
-      // Retry after a short delay
-      setTimeout(initializeAutocomplete, 200);
-    }
-  }, [handlePlaceChanged]);
-
-  useEffect(() => {
-    console.log('🔧 usePlacesAutocomplete useEffect triggered, isGoogleReady:', isGoogleReady);
-    if (!isGoogleReady) {
-      console.log('🔧 Google not ready, skipping initialization');
-      return;
     }
 
-    console.log('🔧 Calling initializeAutocomplete');
-    const cleanup = initializeAutocomplete();
-    return cleanup;
-  }, [isGoogleReady, initializeAutocomplete]);
+    // Cleanup function
+    return () => {
+      console.log('🔧 Cleanup function called');
+      if (listenerRef.current) {
+        window.google.maps.event.removeListener(listenerRef.current);
+        listenerRef.current = null;
+      }
+    };
+  }, [isGoogleReady, handlePlaceChanged]); // Only depend on isGoogleReady and the stable handlePlaceChanged
 
   return { autocompleteRef };
 };
