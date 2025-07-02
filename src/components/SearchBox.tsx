@@ -1,4 +1,3 @@
-
 import React from "react";
 import SearchField from "@/components/search/SearchField";
 import StateSelect from "@/components/search/StateSelect";
@@ -53,7 +52,7 @@ const SearchBox = ({
         )}
         
         <p className="text-center text-lg font-semibold text-gray-700 mb-4">
-          Search for Customer Reviews with any piece information.
+          Search for Customer Reviews with any piece of information.
         </p>
         
         <div className="space-y-3">
