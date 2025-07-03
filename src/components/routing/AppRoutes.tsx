@@ -15,6 +15,15 @@ import BusinessReviews from "@/pages/BusinessReviews";
 import Subscription from "@/pages/Subscription";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
 import VerificationResources from "@/pages/VerificationResources";
+import About from "@/pages/About";
+import HowItWorks from "@/pages/HowItWorks";
+import FAQ from "@/pages/FAQ";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import SuccessStories from "@/pages/SuccessStories";
+import CustomerBenefits from "@/pages/CustomerBenefits";
+import CustomerStories from "@/pages/CustomerStories";
+import CustomerVerification from "@/pages/CustomerVerification";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -25,6 +34,17 @@ const AppRoutes = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/search" element={<SearchResults />} />
+      
+      {/* Public pages */}
+      <Route path="/about" element={<About />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/success-stories" element={<SuccessStories />} />
+      <Route path="/customer-benefits" element={<CustomerBenefits />} />
+      <Route path="/customer-stories" element={<CustomerStories />} />
+      <Route path="/customer-verification" element={<CustomerVerification />} />
       
       {/* Protected Routes */}
       <Route path="/profile" element={
