@@ -1,4 +1,5 @@
 
+
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -15,6 +16,7 @@ import ReviewSuccess from "@/pages/ReviewSuccess";
 import BusinessReviews from "@/pages/BusinessReviews";
 import Subscription from "@/pages/Subscription";
 import BillingPage from "@/pages/BillingPage";
+import NotificationsPage from "@/pages/NotificationsPage";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
 import VerificationResources from "@/pages/VerificationResources";
 import About from "@/pages/About";
@@ -82,6 +84,13 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      {/* Notifications page */}
+      <Route path="/notifications" element={
+        <ProtectedRoute>
+          <NotificationsPage />
+        </ProtectedRoute>
+      } />
+      
       {/* Legacy route redirects */}
       <Route path="/profile-reviews" element={
         <ProtectedRoute>
@@ -144,3 +153,4 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
