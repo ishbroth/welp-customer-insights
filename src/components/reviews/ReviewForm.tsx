@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -80,7 +79,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const navigate = useNavigate();
 
   const handleCancel = () => {
-    navigate("/business/reviews");
+    navigate("/profile/business-reviews");
   };
 
   // Handle address component extraction from Google Maps
