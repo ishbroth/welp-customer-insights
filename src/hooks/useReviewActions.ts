@@ -1,5 +1,5 @@
-
 import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import { useReviewReactions } from "@/hooks/useReviewReactions";
 import { useReviewClaimDialog } from "@/hooks/useReviewClaimDialog";
@@ -26,6 +26,7 @@ export const useReviewActions = ({
   onReactionToggle,
 }: UseReviewActionsProps) => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   // User type and permission checks
   const isReviewAuthor = currentUser?.id === review.reviewerId;
@@ -59,6 +60,16 @@ export const useReviewActions = ({
   });
 
   const handlePurchaseClick = () => {
+    if (!currentUser) {
+      // Store the review ID and access type for post-login redirect
+      sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
+        reviewId: review.id,
+        accessType: 'one-time'
+      }));
+      navigate('/login');
+      return;
+    }
+
     // For customer users who haven't claimed the review, show claim dialog first
     if (isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed) {
       claimDialogHook.setShowClaimDialog(true);

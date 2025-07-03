@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -159,6 +158,36 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   console.log("ReviewCard: Final customer info:", customerInfo);
 
+  const handleOneTimeAccess = () => {
+    if (!currentUser) {
+      // Store the review ID and access type for post-login redirect
+      sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
+        reviewId: review.id,
+        accessType: 'one-time'
+      }));
+      navigate('/login');
+      return;
+    }
+    
+    // User is logged in, redirect to one-time payment
+    navigate(`/subscription?reviewId=${review.id}&type=one-time`);
+  };
+
+  const handleSubscriptionAccess = () => {
+    if (!currentUser) {
+      // Store the review ID and access type for post-login redirect
+      sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
+        reviewId: review.id,
+        accessType: 'subscription'
+      }));
+      navigate('/login');
+      return;
+    }
+    
+    // User is logged in, redirect to subscription
+    navigate('/subscription');
+  };
+
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -285,7 +314,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate(`/one-time-review-access?reviewId=${review.id}`)}
+              onClick={handleOneTimeAccess}
               className="flex-1"
             >
               <MessageCircle className="h-4 w-4 mr-1" />
@@ -293,10 +322,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </Button>
             <Button
               size="sm"
-              onClick={() => navigate('/subscription')}
+              onClick={handleSubscriptionAccess}
               className="flex-1"
             >
-              Get Full Access
+              Subscribe for Unlimited Access
             </Button>
           </div>
         )}

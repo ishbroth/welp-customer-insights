@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Eye, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -106,6 +105,36 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
 
   const handlePurchaseClick = () => {
     onPurchase(review.id);
+  };
+
+  const handleOneTimeAccess = () => {
+    if (!currentUser) {
+      // Store the review ID and access type for post-login redirect
+      sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
+        reviewId: review.id,
+        accessType: 'one-time'
+      }));
+      navigate('/login');
+      return;
+    }
+    
+    // User is logged in, proceed with one-time purchase
+    onPurchase(review.id);
+  };
+
+  const handleSubscriptionAccess = () => {
+    if (!currentUser) {
+      // Store the review ID and access type for post-login redirect
+      sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
+        reviewId: review.id,
+        accessType: 'subscription'
+      }));
+      navigate('/login');
+      return;
+    }
+    
+    // User is logged in, redirect to subscription
+    navigate('/subscription');
   };
 
   const getBusinessInitials = () => {
@@ -259,16 +288,22 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
         <div>
           <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center text-gray-600">
-                <Lock className="h-4 w-4 mr-2" />
-                <span>Unlock full review for $3</span>
-              </div>
+            <div className="flex gap-2">
               <Button 
-                onClick={handlePurchaseClick}
+                onClick={handleOneTimeAccess}
                 size="sm"
+                variant="outline"
+                className="flex-1"
               >
-                Purchase
+                <Lock className="h-4 w-4 mr-2" />
+                Unlock Review ($3)
+              </Button>
+              <Button 
+                onClick={handleSubscriptionAccess}
+                size="sm"
+                className="flex-1"
+              >
+                Subscribe for Unlimited Access
               </Button>
             </div>
           </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -110,6 +110,47 @@ const Login = () => {
           title: "Logged In",
           description: "Welcome back to Welp.",
         });
+        
+        // Check for pending review access first (highest priority)
+        const pendingReviewAccess = sessionStorage.getItem('pendingReviewAccess');
+        if (pendingReviewAccess) {
+          try {
+            const { reviewId, accessType } = JSON.parse(pendingReviewAccess);
+            sessionStorage.removeItem('pendingReviewAccess');
+            
+            if (accessType === 'one-time') {
+              // Redirect to one-time payment
+              const { data, error } = await supabase.functions.invoke("create-payment", {
+                body: {
+                  reviewId,
+                  amount: 300,
+                  isGuest: false
+                }
+              });
+              
+              if (error) {
+                toast({
+                  title: "Payment Error",
+                  description: "Could not create payment session. Please try again.",
+                  variant: "destructive"
+                });
+                navigate(`/subscription?reviewId=${reviewId}&type=one-time`);
+                return;
+              }
+              
+              if (data?.url) {
+                window.location.href = data.url;
+                return;
+              }
+            } else {
+              // Redirect to subscription page
+              navigate('/subscription');
+              return;
+            }
+          } catch (error) {
+            console.error("Error handling pending review access:", error);
+          }
+        }
         
         // Check if there's pending review data from the customer search
         const pendingReviewData = sessionStorage.getItem('pendingReviewData');
