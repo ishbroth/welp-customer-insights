@@ -51,14 +51,15 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   onSubmitResponse,
   onDeleteResponse,
 }) => {
-  console.log('EnhancedReviewContent: Rendering with permissions:', {
+  console.log('EnhancedReviewContent: RENDERING WITH PERMISSIONS:', {
     reviewId,
     customerId,
     canReact,
     canRespond,
     shouldShowRespondButton,
     shouldShowClaimButton,
-    actuallyShowResponseComponent: shouldShowRespondButton && canRespond
+    will_show_response_component: shouldShowRespondButton && canRespond,
+    will_show_claim_button: shouldShowClaimButton
   });
 
   if (shouldShowFullReview) {
@@ -85,7 +86,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           </div>
         )}
         
-        {/* FIXED: Only show response component if ALL conditions are met */}
+        {/* CRITICAL: Only show response component if ALL conditions are met */}
         {shouldShowRespondButton && canRespond && (
           <CustomerReviewResponse 
             reviewId={reviewId}
@@ -102,7 +103,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           />
         )}
         
-        {/* Show claim button for unclaimed reviews - only show when user should claim */}
+        {/* CRITICAL: Show claim button for unclaimed reviews - only show when user should claim */}
         {shouldShowClaimButton && (
           <div className="mt-4 flex justify-end">
             <p className="text-sm text-gray-500">
@@ -137,7 +138,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
         </div>
       </div>
       
-      {/* Show claim button for unclaimed reviews even when locked */}
+      {/* CRITICAL: Show claim button for unclaimed reviews even when locked */}
       {shouldShowClaimButton && (
         <div className="mt-4 flex justify-end">
           <p className="text-sm text-gray-500">
