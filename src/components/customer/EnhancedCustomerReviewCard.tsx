@@ -48,14 +48,17 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { currentUser } = useAuth();
   
   // CRITICAL: Use ONLY the database customerId to determine if review is claimed
+  // Do NOT use matchType or any other field
   const isReviewActuallyClaimed = !!review.customerId;
 
-  console.log('🎯 EnhancedCustomerReviewCard: RENDER START', {
+  console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
-    customerId: review.customerId,
-    isReviewActuallyClaimed,
+    database_customerId: review.customerId,
     matchType: review.matchType,
-    matchScore: review.matchScore
+    matchScore: review.matchScore,
+    isReviewActuallyClaimed,
+    currentUserId: currentUser?.id,
+    isCustomerBeingReviewed: review.customerId === currentUser?.id
   });
 
   const {
@@ -83,10 +86,11 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     onReactionToggle,
   });
 
-  console.log('🎯 Card Data:', {
+  console.log('🎯 Business Profile Debug:', {
     businessProfile: businessProfile ? 'found' : 'not found',
     businessName: businessProfile?.name,
     businessVerified: businessProfile?.verified,
+    reviewerVerified: review.reviewerVerified,
     finalBusinessAvatar: finalBusinessAvatar ? 'present' : 'missing'
   });
 
@@ -102,7 +106,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
-  // CRITICAL: Use the permission system with the correct claim status
+  // CRITICAL: Use the permission system with the ACTUAL claim status from database
   const {
     canReact,
     canRespond,
@@ -114,7 +118,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: isReviewActuallyClaimed,
+    isReviewClaimed: isReviewActuallyClaimed, // Use ACTUAL claim status
     hasSubscription,
     isUnlocked,
   });
@@ -145,11 +149,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const businessDisplayName = businessInfo.name;
 
   console.log('🎯 Final Render Decisions:', {
+    reviewId: review.id,
     isReviewActuallyClaimed,
     shouldShowClaimButton: shouldShowClaimButton(),
     shouldShowRespondButton: shouldShowRespondButton(),
     businessVerified: businessInfo.verified,
-    businessName: businessDisplayName
+    businessName: businessDisplayName,
+    matchType: review.matchType
   });
 
   return (

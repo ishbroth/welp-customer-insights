@@ -40,7 +40,7 @@ export const useProfileReviewsMatching = () => {
         last_login: new Date().toISOString()
       });
 
-    // Fetch all reviews with business profile data
+    // CRITICAL: Fetch all reviews and check their ACTUAL claim status from database
     const { data: allReviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -68,12 +68,14 @@ export const useProfileReviewsMatching = () => {
 
     console.log("=== RAW REVIEWS FROM DATABASE ===");
     allReviews?.forEach(review => {
-      console.log(`Review ID: ${review.id}`, {
+      console.log(`🔍 REVIEW DEBUG: ${review.id}`, {
         customer_name: review.customer_name,
-        customer_id_from_db: review.customer_id,
+        database_customer_id: review.customer_id,
+        current_user_id: currentUser.id,
+        is_actually_claimed_by_current_user: review.customer_id === currentUser.id,
+        is_claimed_by_someone_else: review.customer_id && review.customer_id !== currentUser.id,
         business_id: review.business_id,
-        claimed_at: review.claimed_at,
-        is_actually_claimed: !!review.customer_id
+        claimed_at: review.claimed_at
       });
     });
 
@@ -83,20 +85,22 @@ export const useProfileReviewsMatching = () => {
     const reviewMatches: any[] = [];
 
     for (const review of allReviews || []) {
-      // CRITICAL: Check if review is ACTUALLY claimed by current user in database
-      const isActuallyClaimed = review.customer_id === currentUser.id;
+      // CRITICAL: Determine the ACTUAL claim status from database
+      const isActuallyClaimedByCurrentUser = review.customer_id === currentUser.id;
+      const isClaimedBySomeoneElse = review.customer_id && review.customer_id !== currentUser.id;
       
       console.log('=== PROCESSING REVIEW ===', {
         reviewId: review.id,
         customer_name: review.customer_name,
-        originalDbCustomerId: review.customer_id,
-        currentUserId: currentUser.id,
-        isActuallyClaimed,
-        claimed_at: review.claimed_at
+        database_customer_id: review.customer_id,
+        current_user_id: currentUser.id,
+        isActuallyClaimedByCurrentUser,
+        isClaimedBySomeoneElse,
+        shouldSkip: isClaimedBySomeoneElse
       });
 
       // Skip reviews claimed by other users
-      if (review.customer_id && review.customer_id !== currentUser.id) {
+      if (isClaimedBySomeoneElse) {
         console.log('❌ SKIPPING: Review claimed by another user:', review.id);
         continue;
       }
@@ -105,21 +109,21 @@ export const useProfileReviewsMatching = () => {
       const businessProfile = businessProfilesMap.get(review.business_id);
       const isVerified = businessVerificationMap.get(review.business_id) || false;
 
-      console.log('🏢 BUSINESS DATA:', {
+      console.log('🏢 BUSINESS VERIFICATION DEBUG:', {
         businessId: review.business_id,
         profileFound: !!businessProfile,
         businessName: businessProfile?.name,
-        isVerified,
-        verificationFromMap: businessVerificationMap.get(review.business_id)
+        verificationFromMap: businessVerificationMap.get(review.business_id),
+        finalVerificationStatus: isVerified
       });
 
       // If review is actually claimed by this user, mark as 'claimed'
-      if (isActuallyClaimed) {
+      if (isActuallyClaimedByCurrentUser) {
         console.log('✅ CLAIMED: Review is actually claimed by current user:', review.id);
         reviewMatches.push({
           review: {
             ...review,
-            customerId: review.customer_id, // Keep the actual customer_id
+            customerId: review.customer_id, // Keep the actual customer_id from database
             business_profile: businessProfile,
             reviewerVerified: isVerified,
             reviewerName: businessProfile?.name || 'Business',
@@ -151,19 +155,20 @@ export const useProfileReviewsMatching = () => {
         const isNew = new Date(review.created_at) > new Date(lastLoginTime);
         const matchType = score >= 70 ? 'high_quality' : 'potential';
         
-        console.log('✨ MATCH FOUND:', {
+        console.log('✨ UNCLAIMED MATCH FOUND:', {
           reviewId: review.id,
           matchType,
           score,
           isNew,
-          isActuallyClaimed: false
+          isActuallyClaimedByCurrentUser: false,
+          finalCustomerId: null // CRITICAL: Must be null for unclaimed
         });
         
         reviewMatches.push({
           review: {
             ...review,
             isNewReview: isNew,
-            customerId: null, // CRITICAL: Explicitly set to null for unclaimed reviews
+            customerId: null, // CRITICAL: Must be null for unclaimed reviews
             business_profile: businessProfile,
             reviewerVerified: isVerified,
             reviewerName: businessProfile?.name || 'Business',
@@ -187,15 +192,17 @@ export const useProfileReviewsMatching = () => {
       potential: reviewMatches.filter(m => m.matchType === 'potential').length
     });
     
-    // Log each match for debugging
+    // Log each match with critical fields for debugging
     reviewMatches.forEach(match => {
-      console.log(`📋 MATCH SUMMARY: ${match.review.id}`, {
+      console.log(`📋 FINAL MATCH: ${match.review.id}`, {
         matchType: match.matchType,
         score: match.matchScore,
         isClaimed: match.isClaimed,
         customerId: match.review.customerId,
         businessName: match.review.reviewerName,
-        businessVerified: match.review.reviewerVerified
+        businessVerified: match.review.reviewerVerified,
+        shouldShowClaimButton: match.matchType !== 'claimed',
+        shouldShowResponses: match.matchType === 'claimed'
       });
     });
     
