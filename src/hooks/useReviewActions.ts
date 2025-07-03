@@ -35,7 +35,7 @@ export const useReviewActions = ({
   const isBusinessUser = currentUser?.type === "business";
   const isCustomerUser = currentUser?.type === "customer";
   
-  // FIXED: Check if this review has been claimed - simply check if customerId exists
+  // FIXED: Proper check if this review has been claimed - simply check if customerId exists
   const isReviewClaimed = !!review.customerId;
 
   console.log('useReviewActions: Review claim status check:', {

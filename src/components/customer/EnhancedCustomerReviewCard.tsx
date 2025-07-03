@@ -52,7 +52,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
-  // Use the new customer info system
+  // Use the enhanced customer info system
   const customerInfo = useCustomerInfo({
     customer_name: review.customerName,
     customer_phone: review.customer_phone,
@@ -151,9 +151,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   };
 
   const handleCustomerClick = () => {
-    if (!customerInfo.isClaimed || !isUnlocked && !hasSubscription) return;
+    // Only allow navigation for claimed reviews or high confidence matches
+    if (!customerInfo.isClaimed && customerInfo.matchConfidence !== 'high') return;
     
-    navigate(`/customer-profile/${review.customerId}`, {
+    const targetId = customerInfo.isClaimed ? review.customerId : customerInfo.potentialMatchId;
+    if (!targetId) return;
+
+    navigate(`/customer-profile/${targetId}`, {
       state: { 
         readOnly: true,
         showWriteReviewButton: currentUser?.type === 'business'
@@ -173,7 +177,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Determine if business name should be clickable - only if unlocked or has subscription
   const shouldBusinessNameBeClickable = isUnlocked || hasSubscription;
 
-  console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
+  console.log('EnhancedCustomerReviewCard: Rendering review card with enhanced data:', {
     reviewId: review.id,
     customerInfo,
     businessDisplayName,
@@ -233,10 +237,10 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           </div>
         </div>
 
-        {/* Customer info - right side (smaller) using new component */}
+        {/* Customer info - right side (smaller) using enhanced component */}
         <CustomerInfoDisplay
           customerInfo={customerInfo}
-          onCustomerClick={customerInfo.isClaimed && (isUnlocked || hasSubscription) ? handleCustomerClick : undefined}
+          onCustomerClick={handleCustomerClick}
           size="small"
           showContactInfo={true}
         />
