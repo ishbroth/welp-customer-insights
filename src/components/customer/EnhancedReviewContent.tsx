@@ -51,15 +51,17 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   onSubmitResponse,
   onDeleteResponse,
 }) => {
-  console.log('EnhancedReviewContent: RENDERING WITH PERMISSIONS:', {
+  // CRITICAL: Log what we're about to render
+  console.log('EnhancedReviewContent: RENDERING DECISIONS:', {
     reviewId,
     customerId,
-    canReact,
-    canRespond,
-    shouldShowRespondButton,
+    shouldShowFullReview,
     shouldShowClaimButton,
-    will_show_response_component: shouldShowRespondButton && canRespond,
-    will_show_claim_button: shouldShowClaimButton
+    shouldShowRespondButton,
+    canRespond,
+    willShowClaimButton: shouldShowClaimButton,
+    willShowResponseComponent: shouldShowRespondButton,
+    isReviewClaimed: !!customerId
   });
 
   if (shouldShowFullReview) {
@@ -86,8 +88,8 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           </div>
         )}
         
-        {/* CRITICAL: Only show response component if ALL conditions are met */}
-        {shouldShowRespondButton && canRespond && (
+        {/* CRITICAL: Only show response component if review is claimed AND user is the one who claimed it */}
+        {shouldShowRespondButton && (
           <CustomerReviewResponse 
             reviewId={reviewId}
             responses={responses || []}
@@ -103,7 +105,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           />
         )}
         
-        {/* CRITICAL: Show claim button for unclaimed reviews - only show when user should claim */}
+        {/* CRITICAL: Show claim button for unclaimed reviews */}
         {shouldShowClaimButton && (
           <div className="mt-4 flex justify-end">
             <p className="text-sm text-gray-500">

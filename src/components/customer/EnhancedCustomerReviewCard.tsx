@@ -50,36 +50,27 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
-  // CRITICAL: Log the raw review data first
-  console.log('EnhancedCustomerReviewCard: RAW REVIEW DATA:', {
+  // CRITICAL: Use ONLY the database customerId to determine if review is claimed
+  const isReviewActuallyClaimed = !!review.customerId;
+  
+  console.log('EnhancedCustomerReviewCard: CORE CLAIM STATUS CHECK:', {
     reviewId: review.id,
-    customerId_from_review: review.customerId,
-    customerId_exists: !!review.customerId,
+    review_customerId: review.customerId,
+    isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
-    matchType: review.matchType,
-    hasSubscription,
-    isUnlocked
+    userType: currentUser?.type
   });
 
-  // Use enhanced customer info system with proper claim status
+  // Use enhanced customer info system for display purposes only
   const customerInfo = useCustomerInfo({
     customer_name: review.customerName,
     customer_phone: review.customer_phone,
     customer_address: review.customer_address,
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
-    customerId: review.customerId, // This is the source of truth for claim status
+    customerId: review.customerId,
     matchScore: review.matchScore,
     matchType: review.matchType
-  });
-
-  // CRITICAL: Log the processed customer info
-  console.log('EnhancedCustomerReviewCard: PROCESSED CUSTOMER INFO:', {
-    reviewId: review.id,
-    customerInfo_isClaimed: customerInfo.isClaimed,
-    customerInfo_name: customerInfo.name,
-    customerInfo_matchType: customerInfo.matchType,
-    raw_customerId: review.customerId
   });
 
   const {
@@ -119,22 +110,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
-  // CRITICAL: Log the user permission context
-  console.log('EnhancedCustomerReviewCard: USER PERMISSION CONTEXT:', {
+  console.log('EnhancedCustomerReviewCard: USER CONTEXT FOR PERMISSIONS:', {
     reviewId: review.id,
+    currentUserId: currentUser?.id,
     isReviewAuthor,
     isCustomerBeingReviewed,
     isBusinessUser,
     isCustomerUser,
-    actualClaimStatus_from_DB: !!review.customerId,
-    customerInfo_claimStatus: customerInfo.isClaimed,
-    currentUser_id: currentUser?.id,
+    isReviewActuallyClaimed,
     review_customerId: review.customerId
   });
 
-  // FIXED: Use ONLY the database claim status - ignore customerInfo processing
-  const actuallyClaimedInDB = !!review.customerId;
-  
+  // CRITICAL: Use the permission system with the correct claim status
   const {
     canReact,
     canRespond,
@@ -146,25 +133,24 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: actuallyClaimedInDB, // Use ONLY database status
+    isReviewClaimed: isReviewActuallyClaimed, // Use ONLY database status
     hasSubscription,
     isUnlocked,
   });
 
-  // CRITICAL: Log the final permission decisions
-  console.log('EnhancedCustomerReviewCard: FINAL PERMISSION DECISIONS:', {
+  console.log('EnhancedCustomerReviewCard: FINAL RENDER DECISIONS:', {
     reviewId: review.id,
-    actuallyClaimedInDB,
+    isReviewActuallyClaimed,
+    shouldShowClaimButton: shouldShowClaimButton(),
+    shouldShowRespondButton: shouldShowRespondButton(),
     canReact: canReact(),
     canRespond: canRespond(),
     shouldShowFullReview: shouldShowFullReview(),
-    shouldShowClaimButton: shouldShowClaimButton(),
-    shouldShowRespondButton: shouldShowRespondButton(),
-    will_show_response_field: shouldShowRespondButton() && canRespond(),
-    will_show_claim_button: shouldShowClaimButton() && !actuallyClaimedInDB
+    willRenderClaimButton: shouldShowClaimButton() && !isReviewActuallyClaimed,
+    willRenderResponseField: shouldShowRespondButton() && isReviewActuallyClaimed
   });
 
-  // Use the customer response management hook to handle responses properly
+  // Use the customer response management hook
   const {
     responses,
     handleSubmitResponse,
@@ -197,8 +183,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   };
 
   const handleCustomerClick = () => {
-    // FIXED: Only allow navigation for actually claimed reviews
-    if (!actuallyClaimedInDB) return;
+    // Only allow navigation for actually claimed reviews
+    if (!isReviewActuallyClaimed) return;
     
     navigate(`/customer-profile/${review.customerId}`, {
       state: { 
@@ -232,24 +218,24 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     showResponseField: canRespond() && customerInfo.isClaimed
   });
 
-  // CRITICAL: Override customerInfo for display to ensure correct claim status
+  // Force display customer info to use actual claim status
   const displayCustomerInfo = {
     ...customerInfo,
-    isClaimed: actuallyClaimedInDB // Force to use database status
+    isClaimed: isReviewActuallyClaimed // Force to use database status
   };
 
   console.log('EnhancedCustomerReviewCard: DISPLAY DECISION:', {
     reviewId: review.id,
-    will_show_match_info: !actuallyClaimedInDB,
-    will_show_claim_in_match_info: !actuallyClaimedInDB,
-    actuallyClaimedInDB,
+    will_show_match_info: !isReviewActuallyClaimed,
+    will_show_claim_in_match_info: !isReviewActuallyClaimed,
+    actuallyClaimedInDB: isReviewActuallyClaimed,
     displayCustomerInfo_isClaimed: displayCustomerInfo.isClaimed
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* FIXED: Show match info and claim button for unclaimed reviews ONLY */}
-      {!actuallyClaimedInDB && (
+      {/* Show match info and claim button for unclaimed reviews ONLY */}
+      {!isReviewActuallyClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType}
           matchReasons={review.matchReasons}
@@ -258,7 +244,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           isNewReview={review.isNewReview}
           isClaimingReview={isClaimingReview}
           onClaimClick={handleClaimClick}
-          isReviewClaimed={actuallyClaimedInDB}
+          isReviewClaimed={isReviewActuallyClaimed}
         />
       )}
       

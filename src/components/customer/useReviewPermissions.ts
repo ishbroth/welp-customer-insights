@@ -90,11 +90,13 @@ export const useReviewPermissions = ({
 
   const shouldShowRespondButton = () => {
     // CRITICAL: Show respond button ONLY if user can actually respond
-    // This means ALL conditions in canRespond() must be true
-    const shouldShowRespondResult = canRespond();
+    // This means the review must be claimed AND user must be the one who claimed it
+    const shouldShowRespondResult = isReviewClaimed && isCustomerBeingReviewed && (hasSubscription || isUnlocked);
     console.log('useReviewPermissions: shouldShowRespondButton CALCULATION:', {
-      result: shouldShowRespondResult,
-      same_as_canRespond: shouldShowRespondResult
+      isReviewClaimed,
+      isCustomerBeingReviewed,
+      hasAccess: hasSubscription || isUnlocked,
+      result: shouldShowRespondResult
     });
     return shouldShowRespondResult;
   };
