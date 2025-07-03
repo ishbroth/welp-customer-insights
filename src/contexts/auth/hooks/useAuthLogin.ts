@@ -18,7 +18,8 @@ export const useAuthLogin = () => {
   // List of permanent accounts that bypass email verification
   const permanentAccountEmails = [
     'iw@thepaintedpainter.com',
-    'isaac.wiley99@gmail.com'
+    'isaac.wiley99@gmail.com',
+    'contact@thepaintedpainter.com' // Added missing permanent account
   ];
 
   // Check if user needs phone verification
@@ -60,6 +61,8 @@ export const useAuthLogin = () => {
   // Login function using Supabase (email/password only)
   const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
+      console.log("🔐 Attempting login for:", email);
+      
       // First attempt a regular login
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
@@ -68,11 +71,11 @@ export const useAuthLogin = () => {
 
       // If login failed due to unconfirmed email, handle it separately
       if (error && error.message === "Email not confirmed") {
-        console.log("Email not confirmed, attempting to confirm and login");
+        console.log("📧 Email not confirmed, attempting to confirm and login");
         
         // For permanent accounts, bypass email confirmation
         if (permanentAccountEmails.includes(email.toLowerCase())) {
-          console.log("Permanent account detected, bypassing email confirmation");
+          console.log("⭐ Permanent account detected, bypassing email confirmation");
           
           try {
             // Try to confirm the email directly for permanent accounts
@@ -87,9 +90,11 @@ export const useAuthLogin = () => {
             });
             
             if (confirmedError) {
-              console.error("Login error after email confirmation:", confirmedError);
+              console.error("❌ Login error after email confirmation:", confirmedError);
               return { success: false, error: confirmedError.message };
             }
+            
+            console.log("✅ Login successful for permanent account");
             
             // Check phone verification status
             const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
@@ -104,7 +109,7 @@ export const useAuthLogin = () => {
             
             return { success: true };
           } catch (confirmError) {
-            console.error("Error confirming email:", confirmError);
+            console.error("❌ Error confirming email:", confirmError);
             return { success: false, error: "Unable to verify account. Please contact support." };
           }
         } else {
@@ -122,7 +127,7 @@ export const useAuthLogin = () => {
             });
             
             if (confirmedError) {
-              console.error("Login error after email confirmation:", confirmedError);
+              console.error("❌ Login error after email confirmation:", confirmedError);
               return { success: false, error: confirmedError.message };
             }
             
@@ -139,7 +144,7 @@ export const useAuthLogin = () => {
             
             return { success: true };
           } catch (confirmError) {
-            console.error("Error confirming email:", confirmError);
+            console.error("❌ Error confirming email:", confirmError);
             return { success: false, error: "Unable to verify account. Please contact support." };
           }
         }
@@ -147,7 +152,7 @@ export const useAuthLogin = () => {
       
       // Check if this is a "user not found" error, which might indicate incomplete registration
       if (error && error.message === "Invalid login credentials") {
-        console.log("Invalid login credentials - checking if user exists but needs password setup");
+        console.log("🔍 Invalid login credentials - checking if user exists but needs password setup");
         
         // Check if a user exists with this email but might need password setup
         try {
@@ -158,7 +163,7 @@ export const useAuthLogin = () => {
             .single();
           
           if (profile && !profileError) {
-            console.log("User profile found but login failed - likely needs password setup");
+            console.log("👤 User profile found but login failed - likely needs password setup");
             return { 
               success: false, 
               needsPasswordSetup: true,
@@ -167,14 +172,16 @@ export const useAuthLogin = () => {
             };
           }
         } catch (profileCheckError) {
-          console.error("Error checking profile for incomplete registration:", profileCheckError);
+          console.error("❌ Error checking profile for incomplete registration:", profileCheckError);
         }
       }
       
       if (error) {
-        console.error("Login error:", error);
+        console.error("❌ Login error:", error);
         return { success: false, error: error.message };
       }
+
+      console.log("✅ Login successful");
 
       // Check phone verification status for successful login
       const phoneCheck = await checkPhoneVerificationStatus(data.user.id);
@@ -190,7 +197,7 @@ export const useAuthLogin = () => {
       // Session and user will be set by the auth state listener
       return { success: true };
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
       return { success: false, error: "An unexpected error occurred" };
     }
   };

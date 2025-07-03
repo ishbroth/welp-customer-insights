@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Session } from "@supabase/supabase-js";
 import { User } from "@/types";
@@ -24,13 +25,14 @@ export const useAuthState = () => {
   // List of permanent accounts with subscription access
   const permanentAccountEmails = [
     'iw@thepaintedpainter.com',
-    'isaac.wiley99@gmail.com'
+    'isaac.wiley99@gmail.com',
+    'contact@thepaintedpainter.com' // Added missing permanent account
   ];
 
   // Initialize user data - profile and one-time access resources
   const initUserData = async (userId: string, forceRefresh: boolean = false) => {
     try {
-      console.log("Initializing user data for:", userId, "forceRefresh:", forceRefresh);
+      console.log("🔄 Initializing user data for:", userId, "forceRefresh:", forceRefresh);
       
       // Use Promise.race with a timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -47,25 +49,25 @@ export const useAuthState = () => {
         timeoutPromise
       ]) as [any, string[]];
       
-      console.log("Fetched user profile:", userProfile);
+      console.log("👤 Fetched user profile:", userProfile);
       
       if (userProfile) {
         setCurrentUser(userProfile);
-        console.log("Set current user:", userProfile);
+        console.log("✅ Set current user:", userProfile);
         
         // Check if this is one of the permanent accounts with subscription
         if (permanentAccountEmails.includes(userProfile.email)) {
           setIsSubscribed(true);
-          console.log("Permanent account detected, setting subscription to true");
+          console.log("⭐ Permanent account detected, setting subscription to true");
         }
       } else {
-        console.error("No user profile found for userId:", userId);
+        console.error("❌ No user profile found for userId:", userId);
         setCurrentUser(null);
       }
       
       setOneTimeAccessResources(accessResources);
     } catch (error) {
-      console.error("Error initializing user data:", error);
+      console.error("❌ Error initializing user data:", error);
       // Don't block login on profile fetch errors
       setCurrentUser(null);
     } finally {
@@ -97,7 +99,7 @@ export const useAuthState = () => {
       // Check if this is a permanent account and set subscription accordingly
       if (permanentAccountEmails.includes(mockUser.email)) {
         setIsSubscribed(true);
-        console.log("Mock permanent account detected, setting subscription to true");
+        console.log("⭐ Mock permanent account detected, setting subscription to true");
       }
       
       setLoading(false);
@@ -109,7 +111,7 @@ export const useAuthState = () => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth state change event:", event, "session user id:", session?.user?.id);
+        console.log("🔐 Auth state change event:", event, "session user id:", session?.user?.id);
         setSession(session);
         
         if (session?.user) {
@@ -118,7 +120,7 @@ export const useAuthState = () => {
             initUserData(session.user.id, true);
           }, 0);
         } else {
-          console.log("No session, clearing user data");
+          console.log("❌ No session, clearing user data");
           setCurrentUser(null);
           setIsSubscribed(false);
           setLoading(false);
@@ -128,7 +130,7 @@ export const useAuthState = () => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session?.user?.id);
+      console.log("🔍 Initial session check:", session?.user?.id);
       setSession(session);
       if (session?.user) {
         // Don't await this to prevent blocking initial load
@@ -156,7 +158,7 @@ export const useAuthState = () => {
       // Skip subscription check for permanent accounts
       if (permanentAccountEmails.includes(currentUser.email)) {
         setIsSubscribed(true);
-        console.log("Permanent account detected, skipping Stripe subscription check");
+        console.log("⭐ Permanent account detected, skipping Stripe subscription check");
         return;
       }
       
@@ -165,14 +167,14 @@ export const useAuthState = () => {
         const { data, error } = await supabase.functions.invoke("check-subscription");
         
         if (error) {
-          console.error("Error checking subscription with Stripe:", error);
+          console.error("❌ Error checking subscription with Stripe:", error);
           return;
         }
         
         setIsSubscribed(data?.subscribed || false);
-        console.log("Subscription status updated from Stripe:", data?.subscribed);
+        console.log("💳 Subscription status updated from Stripe:", data?.subscribed);
       } catch (error) {
-        console.error("Error in checkUserSubscription:", error);
+        console.error("❌ Error in checkUserSubscription:", error);
       }
     };
 
