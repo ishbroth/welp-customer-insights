@@ -162,7 +162,7 @@ serve(async (req) => {
       }
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:5173";
+    const origin = req.headers.get("origin") || "https://01e840ab-04ff-4c6c-b5f8-91237d529da9.lovableproject.com";
     
     // Prepare success URL with parameters to identify what was purchased
     const successParams = new URLSearchParams();
@@ -176,7 +176,7 @@ serve(async (req) => {
     const successUrl = `${origin}/one-time-review-access?${successParams.toString()}`;
     const cancelUrl = `${origin}/one-time-review-access?reviewId=${reviewId}&canceled=true`;
     
-    logStep("URLs prepared", { successUrl, cancelUrl });
+    logStep("URLs prepared", { successUrl, cancelUrl, origin });
     
     // Create a one-time payment checkout session
     const sessionConfig = {
@@ -216,7 +216,7 @@ serve(async (req) => {
     }
     // For guest users, don't set customer or customer_email - Stripe will handle it
 
-    logStep("Creating checkout session", { hasCustomer: !!stripeCustomerId, isGuest });
+    logStep("Creating checkout session", { hasCustomer: !!stripeCustomerId, isGuest, sessionConfig });
 
     let session;
     try {

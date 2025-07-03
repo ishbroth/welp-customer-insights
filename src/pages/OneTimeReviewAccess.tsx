@@ -151,7 +151,7 @@ const OneTimeReviewAccess = () => {
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       
-      // Redirect to Stripe checkout
+      // Force redirect to Stripe checkout - don't use window.open
       window.location.href = data.url;
       
     } catch (error) {
@@ -199,7 +199,7 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Redirect to Stripe checkout
+      // Force redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
