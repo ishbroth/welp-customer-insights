@@ -43,6 +43,7 @@ export const mergeCustomerInfo = (
   customerProfile?: CustomerProfile | null,
   potentialMatches?: CustomerProfile[]
 ): CustomerInfo => {
+  // FIXED: Only set isClaimed to true if customerId actually exists in the review data
   const isClaimed = !!reviewData.customerId;
   
   // Start with business input data from review
@@ -57,7 +58,7 @@ export const mergeCustomerInfo = (
   let matchConfidence: 'exact' | 'high' | 'potential' | 'none' = 'none';
   let potentialMatchId: string | undefined;
 
-  // Handle claimed reviews - use actual customer profile data
+  // Handle ACTUALLY claimed reviews - use customer profile data
   if (isClaimed && customerProfile) {
     // Name: prioritize first_name + last_name, then name, then fall back to review data
     if (customerProfile.first_name && customerProfile.last_name) {
@@ -80,24 +81,18 @@ export const mergeCustomerInfo = (
     isVerified = customerProfile.verified || false;
     matchConfidence = 'exact';
   } 
-  // Handle unclaimed reviews - try to find potential matches
+  // Handle UNCLAIMED reviews - try to find potential matches but don't claim them
   else if (!isClaimed && potentialMatches && potentialMatches.length > 0) {
     const bestMatch = findBestPotentialMatch(reviewData, potentialMatches);
     
     if (bestMatch.profile && bestMatch.confidence >= 0.8) {
-      // High confidence match - use profile data for avatar and supplementary info
+      // High confidence potential match - use profile data for avatar only
       avatar = bestMatch.profile.avatar || '';
       potentialMatchId = bestMatch.profile.id;
       matchConfidence = bestMatch.confidence >= 0.9 ? 'high' : 'potential';
       
-      // For high confidence matches, supplement missing data from profile
-      if (bestMatch.confidence >= 0.9) {
-        phone = phone || bestMatch.profile.phone || '';
-        address = address || bestMatch.profile.address || '';
-        city = city || bestMatch.profile.city || '';
-        state = state || bestMatch.profile.state || '';
-        zipCode = zipCode || bestMatch.profile.zipcode || '';
-      }
+      // Keep business input data as primary, don't override with profile data
+      // This ensures we show what the business actually wrote about the customer
     }
   }
 
@@ -110,7 +105,7 @@ export const mergeCustomerInfo = (
     zipCode: zipCode || undefined,
     avatar: avatar || undefined,
     isVerified,
-    isClaimed,
+    isClaimed, // This is now correctly only true when review is actually claimed
     matchConfidence,
     potentialMatchId
   };

@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -35,7 +34,7 @@ export const useReviewActions = ({
   const isBusinessUser = currentUser?.type === "business";
   const isCustomerUser = currentUser?.type === "customer";
   
-  // FIXED: Proper check if this review has been claimed - simply check if customerId exists
+  // FIXED: Only check if review has been claimed using database field
   const isReviewClaimed = !!review.customerId;
 
   console.log('useReviewActions: Review claim status check:', {
@@ -43,7 +42,8 @@ export const useReviewActions = ({
     customerId: review.customerId,
     matchType: review.matchType,
     isReviewClaimed,
-    currentUserId: currentUser?.id
+    currentUserId: currentUser?.id,
+    customerBeingReviewed: isCustomerBeingReviewed
   });
 
   // Use smaller hooks for specific functionality
@@ -71,8 +71,9 @@ export const useReviewActions = ({
       return;
     }
 
-    // For customer users who haven't claimed the review, show claim dialog first
-    if (isCustomerUser && isCustomerBeingReviewed && !isReviewClaimed) {
+    // FIXED: For customer users who haven't claimed the review, show claim dialog first
+    // Check if current user might be the subject of this unclaimed review
+    if (isCustomerUser && !isReviewClaimed) {
       claimDialogHook.setShowClaimDialog(true);
     } else {
       onPurchase(review.id);

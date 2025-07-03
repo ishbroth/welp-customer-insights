@@ -14,7 +14,7 @@ interface ProfileReviewsContentProps {
   customerReviews: Review[];
   isLoading: boolean;
   hasSubscription: boolean;
-  onRefresh?: () => void; // Add refresh callback
+  onRefresh?: () => void;
 }
 
 const ProfileReviewsContent = ({ 
@@ -41,7 +41,7 @@ const ProfileReviewsContent = ({
         id: r.id,
         matchType: (r as any).matchType,
         customerId: r.customerId,
-        actuallyClaimedInDB: r.customerId === currentUser?.id
+        actuallyClaimedInDB: !!r.customerId // FIXED: Only true if customerId exists
       }))
     });
 
@@ -68,7 +68,7 @@ const ProfileReviewsContent = ({
   if (isCustomerUser) {
     // FIXED: Use ONLY database customer_id for actual claim status
     claimedReviews = localReviews.filter(review => {
-      const isActuallyClaimed = review.customerId === currentUser?.id;
+      const isActuallyClaimed = !!review.customerId; // Only check database field
       console.log('CLAIMED FILTER CHECK:', {
         reviewId: review.id,
         reviewCustomerId: review.customerId,
@@ -80,7 +80,7 @@ const ProfileReviewsContent = ({
     });
 
     unclaimedReviews = localReviews.filter(review => {
-      const isActuallyClaimed = review.customerId === currentUser?.id;
+      const isActuallyClaimed = !!review.customerId; // Only check database field
       return !isActuallyClaimed;
     });
 
@@ -114,7 +114,7 @@ const ProfileReviewsContent = ({
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
-    // FIXED: Show claimed reviews first, then potential matches
+    // Show claimed reviews first, then potential matches
     sortedReviews = [...sortedClaimed, ...sortedUnclaimed];
   } else {
     // For business users, use original sorting
@@ -192,7 +192,7 @@ const ProfileReviewsContent = ({
 
   return (
     <div className="space-y-6">
-      {/* Show section headers for customer users */}
+      {/* FIXED: Show section headers for customer users with correct descriptions */}
       {isCustomerUser && (
         <div className="space-y-6">
           {/* Claimed Reviews Section */}

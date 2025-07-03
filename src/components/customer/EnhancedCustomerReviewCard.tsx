@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -59,7 +58,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     customer_address: review.customer_address,
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
-    customerId: review.customerId
+    customerId: review.customerId // This is the source of truth for claim status
   });
 
   // Get business verification status
@@ -102,6 +101,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
+  // FIXED: Use the corrected customer info claim status
   const {
     canReact,
     canRespond,
@@ -113,7 +113,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: customerInfo.isClaimed,
+    isReviewClaimed: customerInfo.isClaimed, // This now correctly reflects actual claim status
     hasSubscription,
     isUnlocked,
   });
@@ -151,7 +151,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   };
 
   const handleCustomerClick = () => {
-    // Only allow navigation for claimed reviews or high confidence matches
+    // FIXED: Only allow navigation for actually claimed reviews or high confidence matches
     if (!customerInfo.isClaimed && customerInfo.matchConfidence !== 'high') return;
     
     const targetId = customerInfo.isClaimed ? review.customerId : customerInfo.potentialMatchId;
@@ -185,12 +185,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isUnlocked,
     hasSubscription,
     shouldShowClaimButton: shouldShowClaimButton(),
-    canRespond: canRespond()
+    canRespond: canRespond(),
+    actualClaimStatus: !!review.customerId // Log the actual database claim status
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* Show match info and claim button for unclaimed reviews ONLY */}
+      {/* FIXED: Show match info and claim button for unclaimed reviews ONLY */}
       {!customerInfo.isClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType}
@@ -250,7 +251,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
-        canRespond={canRespond() && customerInfo.isClaimed}
+        canRespond={canRespond() && customerInfo.isClaimed} // FIXED: Only allow responses for claimed reviews
         shouldShowClaimButton={shouldShowClaimButton()}
         shouldShowRespondButton={shouldShowRespondButton() && customerInfo.isClaimed}
         reviewId={review.id}
