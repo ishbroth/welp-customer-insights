@@ -181,7 +181,7 @@ export const useProfileReviewsMatching = () => {
         last_login: new Date().toISOString()
       });
 
-    // FIXED: Fetch all potential matching reviews AND exclude soft-deleted reviews
+    // CRITICAL DEBUG: Fetch all reviews and log their original state
     const { data: allReviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -207,18 +207,31 @@ export const useProfileReviewsMatching = () => {
       return [];
     }
 
+    console.log("=== RAW REVIEWS FROM DATABASE ===");
+    allReviews?.forEach(review => {
+      console.log(`Review ID: ${review.id}`, {
+        customer_name: review.customer_name,
+        customer_id_from_db: review.customer_id,
+        claimed_at: review.claimed_at,
+        claimed_by: review.claimed_by,
+        business_id: review.business_id
+      });
+    });
+
     const reviewMatches: ReviewMatch[] = [];
 
     for (const review of allReviews || []) {
-      // FIXED: Use ONLY the database customer_id to determine if review is actually claimed
+      // CRITICAL: Check the ORIGINAL database state
       const isActuallyClaimed = review.customer_id === currentUser.id;
       
-      console.log('CLAIM STATUS CHECK:', {
+      console.log('=== PROCESSING REVIEW ===', {
         reviewId: review.id,
-        dbCustomerId: review.customer_id,
+        originalDbCustomerId: review.customer_id,
         currentUserId: currentUser.id,
         isActuallyClaimed,
-        customerName: review.customer_name
+        customerName: review.customer_name,
+        claimedAt: review.claimed_at,
+        claimedBy: review.claimed_by
       });
 
       // Skip reviews claimed by other users
@@ -227,12 +240,13 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // FIXED: If review is actually claimed, mark as 'claimed'
+      // If review is actually claimed by this user, mark as 'claimed'
       if (isActuallyClaimed) {
+        console.log('Review is ACTUALLY CLAIMED by current user:', review.id);
         reviewMatches.push({
           review: {
             ...review,
-            customerId: review.customer_id, // Ensure customerId is set for claimed reviews
+            customerId: review.customer_id, // Keep the database value
           },
           matchType: 'claimed',
           matchScore: 100,
@@ -242,15 +256,17 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // FIXED: Only calculate match scores for UNCLAIMED reviews
+      // CRITICAL: Only calculate match scores for UNCLAIMED reviews
+      console.log('Calculating match score for UNCLAIMED review:', review.id);
       const { score, reasons, detailedMatches } = calculateMatchScore(review, userProfile);
 
-      console.log('MATCH CALCULATION:', {
+      console.log('MATCH CALCULATION RESULT:', {
         reviewId: review.id,
         customerName: review.customer_name,
         matchScore: score,
         reasons,
-        isActuallyClaimed
+        originalCustomerId: review.customer_id,
+        willSetCustomerIdToNull: true
       });
 
       if (score >= 40) {
@@ -260,7 +276,7 @@ export const useProfileReviewsMatching = () => {
           review: {
             ...review,
             isNewReview: isNew,
-            customerId: null // Explicitly set to null for unclaimed reviews
+            customerId: null // CRITICAL: Explicitly set to null for unclaimed reviews
           },
           matchType: 'high_quality',
           matchScore: score,
@@ -274,7 +290,7 @@ export const useProfileReviewsMatching = () => {
           review: {
             ...review,
             isNewReview: isNew,
-            customerId: null // Explicitly set to null for unclaimed reviews
+            customerId: null // CRITICAL: Explicitly set to null for unclaimed reviews
           },
           matchType: 'potential',
           matchScore: score,
@@ -284,11 +300,18 @@ export const useProfileReviewsMatching = () => {
       }
     }
 
-    console.log("FINAL REVIEW MATCHES:", {
+    console.log("=== FINAL REVIEW MATCHES ===", {
       total: reviewMatches.length,
       claimed: reviewMatches.filter(m => m.matchType === 'claimed').length,
       highQuality: reviewMatches.filter(m => m.matchType === 'high_quality').length,
-      potential: reviewMatches.filter(m => m.matchType === 'potential').length
+      potential: reviewMatches.filter(m => m.matchType === 'potential').length,
+      detailedBreakdown: reviewMatches.map(m => ({
+        id: m.review.id,
+        matchType: m.matchType,
+        matchScore: m.matchScore,
+        originalDbCustomerId: m.review.customer_id,
+        finalCustomerId: m.review.customerId
+      }))
     });
     
     return reviewMatches;
