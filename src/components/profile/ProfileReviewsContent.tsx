@@ -40,8 +40,10 @@ const ProfileReviewsContent = ({
       reviewsWithClaimStatus: customerReviews.map(r => ({
         id: r.id,
         matchType: (r as any).matchType,
+        matchScore: (r as any).matchScore,
         customerId: r.customerId,
-        actuallyClaimedInDB: !!r.customerId // FIXED: Only true if customerId exists
+        actuallyClaimedInDB: !!r.customerId,
+        hasMatchData: !!(r as any).matchType || !!(r as any).matchScore
       }))
     });
 
@@ -74,13 +76,24 @@ const ProfileReviewsContent = ({
         reviewCustomerId: review.customerId,
         currentUserId: currentUser?.id,
         isActuallyClaimed,
-        matchType: (review as any).matchType
+        matchType: (review as any).matchType,
+        matchScore: (review as any).matchScore
       });
       return isActuallyClaimed;
     });
 
     unclaimedReviews = localReviews.filter(review => {
       const isActuallyClaimed = !!review.customerId; // Only check database field
+      const hasMatchData = !!(review as any).matchType || !!(review as any).matchScore;
+      console.log('UNCLAIMED FILTER CHECK:', {
+        reviewId: review.id,
+        reviewCustomerId: review.customerId,
+        isActuallyClaimed,
+        hasMatchData,
+        matchType: (review as any).matchType,
+        matchScore: (review as any).matchScore,
+        willBeIncluded: !isActuallyClaimed
+      });
       return !isActuallyClaimed;
     });
 
@@ -89,7 +102,8 @@ const ProfileReviewsContent = ({
       claimedCount: claimedReviews.length,
       unclaimedCount: unclaimedReviews.length,
       claimedIds: claimedReviews.map(r => r.id),
-      unclaimedIds: unclaimedReviews.map(r => r.id)
+      unclaimedIds: unclaimedReviews.map(r => r.id),
+      unclaimedWithMatchData: unclaimedReviews.filter(r => !!(r as any).matchType || !!(r as any).matchScore).length
     });
 
     // Sort unclaimed reviews by match quality first, then claimed reviews
@@ -189,6 +203,19 @@ const ProfileReviewsContent = ({
   if (sortedReviews.length === 0) {
     return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
+
+  console.log('ProfileReviewsContent: FINAL RENDER DATA:', {
+    totalReviews: sortedReviews.length,
+    claimedCount: claimedReviews.length,
+    unclaimedCount: unclaimedReviews.length,
+    currentPageReviews: sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map(r => ({
+      id: r.id,
+      customerId: r.customerId,
+      isClaimed: !!r.customerId,
+      matchType: (r as any).matchType,
+      matchScore: (r as any).matchScore
+    }))
+  });
 
   return (
     <div className="space-y-6">
