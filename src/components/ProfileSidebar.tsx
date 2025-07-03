@@ -121,9 +121,9 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
               )}
               
               <Link 
-                to="/subscription" 
+                to="/profile/billing" 
                 className={`flex items-center px-2 py-2 text-sm rounded-md hover:bg-gray-100 ${
-                  location.pathname === "/subscription" 
+                  location.pathname === "/profile/billing" 
                   ? "bg-gray-100 text-primary" 
                   : "text-gray-700"
                 }`}

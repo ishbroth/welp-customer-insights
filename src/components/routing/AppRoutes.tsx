@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -13,6 +14,7 @@ import NewReview from "@/pages/NewReview";
 import ReviewSuccess from "@/pages/ReviewSuccess";
 import BusinessReviews from "@/pages/BusinessReviews";
 import Subscription from "@/pages/Subscription";
+import BillingPage from "@/pages/BillingPage";
 import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
 import VerificationResources from "@/pages/VerificationResources";
 import About from "@/pages/About";
@@ -70,6 +72,13 @@ const AppRoutes = () => {
       <Route path="/profile/business-reviews" element={
         <ProtectedRoute>
           <BusinessReviews />
+        </ProtectedRoute>
+      } />
+      
+      {/* Billing page with transaction history, payment methods, credits */}
+      <Route path="/profile/billing" element={
+        <ProtectedRoute>
+          <BillingPage />
         </ProtectedRoute>
       } />
       
