@@ -34,18 +34,19 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
   onClaimClick,
   isReviewClaimed,
 }) => {
-  // Don't show the match info section if the review is claimed (using actual database status)
+  // CRITICAL: Don't show the match info section if the review is actually claimed
   if (isReviewClaimed) {
-    console.log('ReviewMatchInfo: Not showing because review is claimed');
+    console.log('🎯 ReviewMatchInfo: Not showing because review is claimed');
     return null;
   }
 
-  console.log('ReviewMatchInfo: Rendering match info:', {
+  console.log('🎯 ReviewMatchInfo: Rendering match info:', {
     matchType,
     matchScore,
     matchReasons,
     isNewReview,
-    isClaimingReview
+    isClaimingReview,
+    isReviewClaimed
   });
 
   return (

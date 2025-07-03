@@ -23,21 +23,22 @@ export const useReviewPermissions = ({
   
   const hasAccess = hasSubscription || isUnlocked;
 
-  console.log('useReviewPermissions: ENTRY PARAMETERS:', {
+  console.log('🔐 useReviewPermissions: ENTRY PARAMETERS:', {
     isCustomerUser,
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
     isReviewClaimed,
     hasSubscription,
-    isUnlocked
+    isUnlocked,
+    hasAccess
   });
 
   return useMemo(() => {
-    // Can react: only if review is claimed AND user has access
+    // CRITICAL: Can react ONLY if review is ACTUALLY claimed AND user has access
     const canReact = () => {
       const result = isReviewClaimed && hasAccess;
-      console.log('useReviewPermissions: canReact CALCULATION:', {
+      console.log('🔐 canReact CALCULATION:', {
         isReviewClaimed,
         hasAccess,
         result
@@ -45,7 +46,7 @@ export const useReviewPermissions = ({
       return result;
     };
 
-    // Can respond: ONLY if review is claimed, user is customer being reviewed, AND has access
+    // CRITICAL: Can respond ONLY if review is ACTUALLY claimed, user is customer being reviewed, AND has access
     const canRespond = () => {
       const condition1_isReviewClaimed = isReviewClaimed;
       const condition2_isCustomerBeingReviewed = isCustomerBeingReviewed;
@@ -53,17 +54,11 @@ export const useReviewPermissions = ({
       
       const result = condition1_isReviewClaimed && condition2_isCustomerBeingReviewed && condition3_hasAccess;
       
-      console.log('useReviewPermissions: canRespond CALCULATION:', {
+      console.log('🔐 canRespond CALCULATION:', {
         condition1_isReviewClaimed,
         condition2_isCustomerBeingReviewed,
         condition3_hasAccess,
-        all_conditions_met: result,
-        breakdown: {
-          isReviewClaimed,
-          isCustomerBeingReviewed,
-          hasSubscription,
-          isUnlocked
-        }
+        all_conditions_met: result
       });
       
       return result;
@@ -72,31 +67,45 @@ export const useReviewPermissions = ({
     // Should show full review: if has access OR review is claimed by current user
     const shouldShowFullReview = () => {
       const result = hasAccess || (isCustomerUser && isReviewClaimed && isCustomerBeingReviewed);
-      console.log('useReviewPermissions: shouldShowFullReview =', result);
+      console.log('🔐 shouldShowFullReview =', result);
       return result;
     };
 
-    // Should show claim button: for customers on unclaimed reviews
+    // CRITICAL: Should show claim button ONLY for customers on UNCLAIMED reviews
     const shouldShowClaimButton = () => {
       const result = isCustomerUser && !isReviewClaimed && !isReviewAuthor;
-      console.log('useReviewPermissions: shouldShowClaimButton =', result);
+      console.log('🔐 shouldShowClaimButton =', result, {
+        isCustomerUser,
+        isReviewClaimed_NOT: !isReviewClaimed,
+        isReviewAuthor_NOT: !isReviewAuthor
+      });
       return result;
     };
 
-    // Should show respond button: ONLY for claimed reviews where customer can respond
+    // CRITICAL: Should show respond button ONLY for CLAIMED reviews where customer can respond
     const shouldShowRespondButton = () => {
       const result = canRespond();
-      console.log('useReviewPermissions: shouldShowRespondButton =', result);
+      console.log('🔐 shouldShowRespondButton =', result);
       return result;
     };
 
-    return {
+    const permissions = {
       canReact,
       canRespond,
       shouldShowFullReview,
       shouldShowClaimButton,
       shouldShowRespondButton
     };
+
+    console.log('🔐 FINAL PERMISSIONS:', {
+      canReact: canReact(),
+      canRespond: canRespond(),
+      shouldShowFullReview: shouldShowFullReview(),
+      shouldShowClaimButton: shouldShowClaimButton(),
+      shouldShowRespondButton: shouldShowRespondButton()
+    });
+
+    return permissions;
   }, [
     isCustomerUser,
     isBusinessUser,

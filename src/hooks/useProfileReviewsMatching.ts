@@ -3,14 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useReviewMatching } from "./useReviewMatching";
 import { useBusinessProfileFetching } from "./useBusinessProfileFetching";
 
-interface ReviewMatchData {
-  customer_name?: string;
-  customer_phone?: string;
-  customer_address?: string;
-  customer_city?: string;
-  customer_zipcode?: string;
-}
-
 export const useProfileReviewsMatching = () => {
   const { checkReviewMatch } = useReviewMatching();
   const { fetchBusinessProfiles } = useBusinessProfileFetching();
@@ -18,6 +10,7 @@ export const useProfileReviewsMatching = () => {
   const categorizeReviews = async (currentUser: any) => {
     console.log("=== CATEGORIZING REVIEWS FOR USER ===");
     console.log("User ID:", currentUser.id);
+    console.log("User name:", currentUser.name);
 
     // Get user's current profile data
     const { data: userProfile } = await supabase
@@ -78,7 +71,9 @@ export const useProfileReviewsMatching = () => {
       console.log(`Review ID: ${review.id}`, {
         customer_name: review.customer_name,
         customer_id_from_db: review.customer_id,
-        business_id: review.business_id
+        business_id: review.business_id,
+        claimed_at: review.claimed_at,
+        is_actually_claimed: !!review.customer_id
       });
     });
 
@@ -88,20 +83,21 @@ export const useProfileReviewsMatching = () => {
     const reviewMatches: any[] = [];
 
     for (const review of allReviews || []) {
-      // Check if review is claimed by current user
+      // CRITICAL: Check if review is ACTUALLY claimed by current user in database
       const isActuallyClaimed = review.customer_id === currentUser.id;
       
       console.log('=== PROCESSING REVIEW ===', {
         reviewId: review.id,
+        customer_name: review.customer_name,
         originalDbCustomerId: review.customer_id,
         currentUserId: currentUser.id,
         isActuallyClaimed,
-        customerName: review.customer_name
+        claimed_at: review.claimed_at
       });
 
       // Skip reviews claimed by other users
       if (review.customer_id && review.customer_id !== currentUser.id) {
-        console.log('Skipping review claimed by another user:', review.id);
+        console.log('❌ SKIPPING: Review claimed by another user:', review.id);
         continue;
       }
 
@@ -109,68 +105,78 @@ export const useProfileReviewsMatching = () => {
       const businessProfile = businessProfilesMap.get(review.business_id);
       const isVerified = businessVerificationMap.get(review.business_id) || false;
 
+      console.log('🏢 BUSINESS DATA:', {
+        businessId: review.business_id,
+        profileFound: !!businessProfile,
+        businessName: businessProfile?.name,
+        isVerified,
+        verificationFromMap: businessVerificationMap.get(review.business_id)
+      });
+
       // If review is actually claimed by this user, mark as 'claimed'
       if (isActuallyClaimed) {
-        console.log('Review is ACTUALLY CLAIMED by current user:', review.id);
+        console.log('✅ CLAIMED: Review is actually claimed by current user:', review.id);
         reviewMatches.push({
           review: {
             ...review,
-            customerId: review.customer_id,
+            customerId: review.customer_id, // Keep the actual customer_id
             business_profile: businessProfile,
-            reviewerVerified: isVerified
+            reviewerVerified: isVerified,
+            reviewerName: businessProfile?.name || 'Business',
+            reviewerAvatar: businessProfile?.avatar || ''
           },
           matchType: 'claimed',
           matchScore: 100,
           matchReasons: ['Already claimed by you'],
-          detailedMatches: []
+          detailedMatches: [],
+          isClaimed: true
         });
         continue;
       }
 
-      // Only calculate match scores for UNCLAIMED reviews
-      console.log('Calculating match score for UNCLAIMED review:', review.id);
+      // For UNCLAIMED reviews, calculate match scores
+      console.log('🔍 MATCHING: Calculating match score for unclaimed review:', review.id);
       const { score, reasons, detailedMatches } = checkReviewMatch(review, userProfile);
 
-      console.log('MATCH CALCULATION RESULT:', {
+      console.log('📊 MATCH RESULT:', {
         reviewId: review.id,
         customerName: review.customer_name,
         matchScore: score,
         reasons,
-        originalCustomerId: review.customer_id
+        willBeIncluded: score >= 40
       });
 
       if (score >= 40) {
-        // High quality match
+        // High quality match - but NOT claimed
         const isNew = new Date(review.created_at) > new Date(lastLoginTime);
+        const matchType = score >= 70 ? 'high_quality' : 'potential';
+        
+        console.log('✨ MATCH FOUND:', {
+          reviewId: review.id,
+          matchType,
+          score,
+          isNew,
+          isActuallyClaimed: false
+        });
+        
         reviewMatches.push({
           review: {
             ...review,
             isNewReview: isNew,
-            customerId: null, // Explicitly set to null for unclaimed reviews
+            customerId: null, // CRITICAL: Explicitly set to null for unclaimed reviews
             business_profile: businessProfile,
-            reviewerVerified: isVerified
+            reviewerVerified: isVerified,
+            reviewerName: businessProfile?.name || 'Business',
+            reviewerAvatar: businessProfile?.avatar || ''
           },
-          matchType: 'high_quality',
+          matchType,
           matchScore: score,
           matchReasons: reasons,
-          detailedMatches
+          detailedMatches,
+          isClaimed: false // CRITICAL: Explicitly set to false
         });
-      } else if (score >= 15) {
-        // Potential match
-        const isNew = new Date(review.created_at) > new Date(lastLoginTime);
-        reviewMatches.push({
-          review: {
-            ...review,
-            isNewReview: isNew,
-            customerId: null, // Explicitly set to null for unclaimed reviews
-            business_profile: businessProfile,
-            reviewerVerified: isVerified
-          },
-          matchType: 'potential',
-          matchScore: score,
-          matchReasons: reasons,
-          detailedMatches
-        });
+      } else {
+        console.log('❌ NO MATCH: Score too low:', score, 'for review:', review.id);
       }
     }
 
@@ -179,6 +185,18 @@ export const useProfileReviewsMatching = () => {
       claimed: reviewMatches.filter(m => m.matchType === 'claimed').length,
       highQuality: reviewMatches.filter(m => m.matchType === 'high_quality').length,
       potential: reviewMatches.filter(m => m.matchType === 'potential').length
+    });
+    
+    // Log each match for debugging
+    reviewMatches.forEach(match => {
+      console.log(`📋 MATCH SUMMARY: ${match.review.id}`, {
+        matchType: match.matchType,
+        score: match.matchScore,
+        isClaimed: match.isClaimed,
+        customerId: match.review.customerId,
+        businessName: match.review.reviewerName,
+        businessVerified: match.review.reviewerVerified
+      });
     });
     
     return reviewMatches;

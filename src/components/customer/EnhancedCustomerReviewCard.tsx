@@ -50,6 +50,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // CRITICAL: Use ONLY the database customerId to determine if review is claimed
   const isReviewActuallyClaimed = !!review.customerId;
 
+  console.log('🎯 EnhancedCustomerReviewCard: RENDER START', {
+    reviewId: review.id,
+    customerId: review.customerId,
+    isReviewActuallyClaimed,
+    matchType: review.matchType,
+    matchScore: review.matchScore
+  });
+
   const {
     showClaimDialog,
     setShowClaimDialog,
@@ -73,6 +81,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     hasSubscription,
     onPurchase,
     onReactionToggle,
+  });
+
+  console.log('🎯 Card Data:', {
+    businessProfile: businessProfile ? 'found' : 'not found',
+    businessName: businessProfile?.name,
+    businessVerified: businessProfile?.verified,
+    finalBusinessAvatar: finalBusinessAvatar ? 'present' : 'missing'
   });
 
   // Enhanced claim confirm handler that calls the success callback
@@ -104,10 +119,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isUnlocked,
   });
 
-  // Force showing claim button for unclaimed reviews when user is customer
-  const forceShowClaimButton = isCustomerUser && !isReviewActuallyClaimed && !isReviewAuthor;
-  const actualShouldShowClaimButton = forceShowClaimButton || shouldShowClaimButton();
-
   // Use the customer response management hook
   const {
     responses,
@@ -133,9 +144,17 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   const businessDisplayName = businessInfo.name;
 
+  console.log('🎯 Final Render Decisions:', {
+    isReviewActuallyClaimed,
+    shouldShowClaimButton: shouldShowClaimButton(),
+    shouldShowRespondButton: shouldShowRespondButton(),
+    businessVerified: businessInfo.verified,
+    businessName: businessDisplayName
+  });
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* CRITICAL: Always show match info for unclaimed reviews */}
+      {/* CRITICAL: Show match info ONLY for unclaimed reviews */}
       {!isReviewActuallyClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType || 'potential'}
@@ -163,7 +182,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
         canRespond={canRespond()}
-        shouldShowClaimButton={actualShouldShowClaimButton}
+        shouldShowClaimButton={shouldShowClaimButton()}
         shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
         customerId={review.customerId}
