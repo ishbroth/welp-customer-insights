@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -6,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import CustomerInfoDisplay from "@/components/review/CustomerInfoDisplay";
+import { useCustomerInfo } from "@/hooks/useCustomerInfo";
 
 interface ReviewCardProps {
   review: {
@@ -45,32 +46,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const isUnlocked = hasSubscription || isOneTimeUnlocked;
   const canViewFullContent = isUnlocked;
 
-  // Fetch customer profile if review is claimed (has customerId)
-  const { data: customerProfile } = useQuery({
-    queryKey: ['customerProfile', review.customerId],
-    queryFn: async () => {
-      if (!review.customerId) {
-        console.log("ReviewCard: No customerId provided, skipping fetch");
-        return null;
-      }
-      
-      console.log("ReviewCard: Fetching customer profile for customerId:", review.customerId);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode')
-        .eq('id', review.customerId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("ReviewCard: Error fetching customer profile:", error);
-        return null;
-      }
-      
-      console.log("ReviewCard: Customer profile fetched:", data);
-      return data;
-    },
-    enabled: !!review.customerId && canViewFullContent
+  // Use the new customer info system
+  const customerInfo = useCustomerInfo({
+    customer_name: review.customerName,
+    customer_phone: review.customer_phone,
+    customer_address: review.customer_address || review.address,
+    customer_city: review.customer_city || review.city,
+    customer_zipcode: review.customer_zipcode || review.zipCode,
+    customerId: review.customerId
   });
 
   const handleBusinessNameClick = () => {
@@ -87,7 +70,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   const handleCustomerNameClick = () => {
-    if (!review.customerId || !canViewFullContent) return;
+    if (!customerInfo.isClaimed || !canViewFullContent) return;
     
     // Navigate to customer profile
     navigate(`/customer-profile/${review.customerId}`, {
@@ -114,49 +97,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       day: 'numeric'
     });
   };
-
-  // Determine customer info to display
-  const getCustomerDisplayInfo = () => {
-    console.log("ReviewCard: Getting customer display info for review:", review.id);
-    console.log("ReviewCard: customerId:", review.customerId);
-    console.log("ReviewCard: customerProfile:", customerProfile);
-    
-    if (review.customerId && customerProfile) {
-      // Review is claimed - use customer profile info
-      const customerName = customerProfile.first_name && customerProfile.last_name 
-        ? `${customerProfile.first_name} ${customerProfile.last_name}`
-        : customerProfile.name || review.customerName;
-      
-      console.log("ReviewCard: Using claimed customer profile info");
-      return {
-        name: customerName,
-        avatar: customerProfile.avatar || '',
-        phone: customerProfile.phone || '',
-        address: customerProfile.address || '',
-        city: customerProfile.city || '',
-        state: customerProfile.state || '',
-        zipcode: customerProfile.zipcode || '',
-        isClaimed: true
-      };
-    } else {
-      // Review is not claimed - use review data
-      console.log("ReviewCard: Using unclaimed review data");
-      return {
-        name: review.customerName,
-        avatar: '',
-        phone: review.customer_phone || '',
-        address: review.customer_address || review.address || '',
-        city: review.customer_city || review.city || '',
-        state: review.state || '',
-        zipcode: review.customer_zipcode || review.zipCode || '',
-        isClaimed: false
-      };
-    }
-  };
-
-  const customerInfo = getCustomerDisplayInfo();
-
-  console.log("ReviewCard: Final customer info:", customerInfo);
 
   const handleOneTimeAccess = () => {
     if (!currentUser) {
@@ -187,6 +127,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     // User is logged in, redirect to subscription
     navigate('/subscription');
   };
+
+  console.log('ReviewCard: Customer info:', {
+    reviewId: review.id,
+    customerInfo
+  });
 
   return (
     <Card className="mb-4">
@@ -220,53 +165,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </div>
           </div>
 
-          {/* Customer info - right side */}
+          {/* Customer info - right side using new component */}
           <div className="text-right">
-            <div className="flex items-center gap-1 justify-end">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {getInitials(customerInfo.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="ml-2">
-                {customerInfo.isClaimed && canViewFullContent ? (
-                  <h4 
-                    className="font-medium cursor-pointer hover:text-blue-600 transition-colors text-sm"
-                    onClick={handleCustomerNameClick}
-                  >
-                    {customerInfo.name}
-                  </h4>
-                ) : (
-                  <h4 className="font-medium text-sm">
-                    {customerInfo.name}
-                  </h4>
-                )}
-                <p className="text-xs text-gray-500">Customer</p>
-                {customerInfo.isClaimed && (
-                  <span className="text-xs text-green-600 font-medium">Claimed</span>
-                )}
-              </div>
-            </div>
-            
-            {/* Show customer contact info if available and unlocked */}
-            {canViewFullContent && (
-              <div className="mt-2 text-xs text-gray-600 space-y-1">
-                {customerInfo.phone && (
-                  <div>📞 {customerInfo.phone}</div>
-                )}
-                {customerInfo.address && (
-                  <div>📍 {customerInfo.address}</div>
-                )}
-                {(customerInfo.city || customerInfo.zipcode) && (
-                  <div>
-                    {[customerInfo.city, customerInfo.state, customerInfo.zipcode]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </div>
-                )}
-              </div>
-            )}
+            <CustomerInfoDisplay
+              customerInfo={customerInfo}
+              onCustomerClick={customerInfo.isClaimed && canViewFullContent ? handleCustomerNameClick : undefined}
+              size="small"
+              showContactInfo={canViewFullContent}
+            />
           </div>
         </div>
 

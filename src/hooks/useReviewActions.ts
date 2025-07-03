@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -34,8 +35,8 @@ export const useReviewActions = ({
   const isBusinessUser = currentUser?.type === "business";
   const isCustomerUser = currentUser?.type === "customer";
   
-  // FIXED: Check if this review has been claimed - use the actual customerId field from database
-  const isReviewClaimed = review.customerId ? true : false;
+  // FIXED: Check if this review has been claimed - simply check if customerId exists
+  const isReviewClaimed = !!review.customerId;
 
   console.log('useReviewActions: Review claim status check:', {
     reviewId: review.id,

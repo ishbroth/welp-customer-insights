@@ -10,6 +10,11 @@ import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import CustomerInfoDisplay from "@/components/review/CustomerInfoDisplay";
+import { useCustomerInfo } from "@/hooks/useCustomerInfo";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 
 interface DetailedMatch {
   field: string;
@@ -44,21 +49,32 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   onReactionToggle,
   onClaimSuccess,
 }) => {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  
+  // Use the new customer info system
+  const customerInfo = useCustomerInfo({
+    customer_name: review.customerName,
+    customer_phone: review.customer_phone,
+    customer_address: review.customer_address,
+    customer_city: review.customer_city,
+    customer_zipcode: review.customer_zipcode,
+    customerId: review.customerId
+  });
+
+  // Get business verification status
+  const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
+
   const {
     showClaimDialog,
     setShowClaimDialog,
     reactions,
     businessProfile,
-    customerProfile,
     isReviewAuthor,
     isCustomerBeingReviewed,
     isBusinessUser,
     isCustomerUser,
-    isBusinessVerified,
-    isCustomerVerified,
     finalBusinessAvatar,
-    finalCustomerAvatar,
-    isReviewClaimed,
     isClaimingReview,
     handlePurchaseClick,
     handleClaimClick,
@@ -97,7 +113,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed,
+    isReviewClaimed: customerInfo.isClaimed,
     hasSubscription,
     isUnlocked,
   });
@@ -134,50 +150,36 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     });
   };
 
-  // Get phone number to display
-  const displayPhone = review.customer_phone || customerProfile?.phone;
+  const handleCustomerClick = () => {
+    if (!customerInfo.isClaimed || !isUnlocked && !hasSubscription) return;
+    
+    navigate(`/customer-profile/${review.customerId}`, {
+      state: { 
+        readOnly: true,
+        showWriteReviewButton: currentUser?.type === 'business'
+      }
+    });
+  };
 
-  // FIXED: Use business profile name or business_info name, not reviewer name from review
-  const businessDisplayName = businessProfile?.name || review.reviewerName || 'Business';
-  
   // Business info for left side (larger)
+  const businessDisplayName = businessProfile?.name || review.reviewerName || 'Business';
   const businessInfo = {
     name: businessDisplayName,
     avatar: finalBusinessAvatar,
     initials: getInitials(businessDisplayName),
-    verified: isBusinessVerified
+    verified: businessIsVerified
   };
-
-  // Customer info for right side (smaller)
-  const customerInfo = {
-    name: review.customerName,
-    avatar: finalCustomerAvatar,
-    initials: getInitials(review.customerName),
-    verified: isCustomerVerified,
-    phone: displayPhone
-  };
-
-  // FIXED: Check if review is actually claimed using database customer_id
-  const isActuallyClaimed = review.customerId === review.reviewerId ? false : !!review.customerId;
 
   // Determine if business name should be clickable - only if unlocked or has subscription
   const shouldBusinessNameBeClickable = isUnlocked || hasSubscription;
 
   console.log('EnhancedCustomerReviewCard: Rendering review card with data:', {
     reviewId: review.id,
-    reviewCustomerId: review.customerId,
-    isActuallyClaimed,
-    matchType: review.matchType,
+    customerInfo,
     businessDisplayName,
     shouldBusinessNameBeClickable,
     isUnlocked,
     hasSubscription,
-    businessProfile: businessProfile ? 'loaded' : 'not loaded',
-    customerProfile: customerProfile ? 'loaded' : 'not loaded',
-    finalCustomerAvatar,
-    finalBusinessAvatar,
-    isCustomerVerified,
-    isBusinessVerified,
     shouldShowClaimButton: shouldShowClaimButton(),
     canRespond: canRespond()
   });
@@ -185,7 +187,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
       {/* Show match info and claim button for unclaimed reviews ONLY */}
-      {!isActuallyClaimed && (
+      {!customerInfo.isClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType}
           matchReasons={review.matchReasons}
@@ -194,7 +196,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           isNewReview={review.isNewReview}
           isClaimingReview={isClaimingReview}
           onClaimClick={handleClaimClick}
-          isReviewClaimed={isActuallyClaimed}
+          isReviewClaimed={customerInfo.isClaimed}
         />
       )}
       
@@ -231,39 +233,22 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           </div>
         </div>
 
-        {/* Customer info - right side (smaller) */}
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-            <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-              {customerInfo.initials}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="flex items-center gap-1">
-              <h4 className="font-medium text-sm">{customerInfo.name}</h4>
-              {customerInfo.verified && <VerifiedBadge size="xs" />}
-              {isActuallyClaimed && (
-                <span className="text-xs text-green-600 font-medium">Claimed</span>
-              )}
-            </div>
-            <p className="text-xs text-gray-500">Customer</p>
-            {customerInfo.phone && (
-              <p className="text-xs text-gray-600">
-                {customerInfo.phone}
-              </p>
-            )}
-          </div>
-        </div>
+        {/* Customer info - right side (smaller) using new component */}
+        <CustomerInfoDisplay
+          customerInfo={customerInfo}
+          onCustomerClick={customerInfo.isClaimed && (isUnlocked || hasSubscription) ? handleCustomerClick : undefined}
+          size="small"
+          showContactInfo={true}
+        />
       </div>
 
       <EnhancedReviewContent
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
-        canRespond={canRespond() && isActuallyClaimed} // Only allow response if claimed
+        canRespond={canRespond() && customerInfo.isClaimed}
         shouldShowClaimButton={shouldShowClaimButton()}
-        shouldShowRespondButton={shouldShowRespondButton() && isActuallyClaimed} // Only show respond button if claimed
+        shouldShowRespondButton={shouldShowRespondButton() && customerInfo.isClaimed}
         reviewId={review.id}
         customerId={review.customerId}
         reviewerId={review.reviewerId}
@@ -282,7 +267,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
       {/* Moved report button to right side next to reactions */}
       <div className="flex justify-between items-center mt-4">
-        <div></div> {/* Empty div to push report button to right */}
+        <div></div>
         <ReportReviewButton reviewId={review.id} />
       </div>
 

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Eye, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import CustomerInfoDisplay from "@/components/review/CustomerInfoDisplay";
+import { useCustomerInfo } from "@/hooks/useCustomerInfo";
 
 interface CustomerReviewCardProps {
   review: Review & {
@@ -44,8 +47,15 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
-  // Check if this review has been claimed
-  const isReviewClaimed = !!(review.customerId);
+  // Use the new customer info system
+  const customerInfo = useCustomerInfo({
+    customer_name: review.customerName,
+    customer_phone: review.customer_phone,
+    customer_address: review.customer_address,
+    customer_city: review.customer_city,
+    customer_zipcode: review.customer_zipcode,
+    customerId: review.customerId
+  });
 
   // Fetch business profile for avatar
   const { data: businessProfile } = useQuery({
@@ -72,36 +82,6 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
 
   // Fetch verification status for the business
   const { isVerified: businessIsVerified } = useVerifiedStatus(review.reviewerId);
-
-  // Fetch verification status for the customer (if review is claimed)
-  const { isVerified: customerIsVerified } = useVerifiedStatus(
-    isReviewClaimed ? review.customerId : undefined
-  );
-
-  // Fetch customer profile for avatar if review is claimed
-  const { data: customerProfile } = useQuery({
-    queryKey: ['customerProfile', review.customerId],
-    queryFn: async () => {
-      if (!review.customerId) return null;
-      
-      console.log(`CustomerReviewCard: Fetching customer profile for claimed review. Customer ID: ${review.customerId}`);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, avatar, first_name, last_name, name')
-        .eq('id', review.customerId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("CustomerReviewCard: Error fetching customer profile:", error);
-        return null;
-      }
-
-      console.log(`CustomerReviewCard: Customer profile found:`, data);
-      return data;
-    },
-    enabled: isReviewClaimed
-  });
 
   const handlePurchaseClick = () => {
     onPurchase(review.id);
@@ -145,14 +125,6 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     return "B";
   };
 
-  const getCustomerInitials = () => {
-    if (review.customerName) {
-      const names = review.customerName.split(' ');
-      return names.map(name => name[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "C";
-  };
-
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
     console.log('Handling reaction toggle:', reactionType, 'for review:', reviewId);
     toggleReaction(reactionType as keyof typeof reactions);
@@ -171,26 +143,29 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     }
   };
 
+  const handleCustomerClick = () => {
+    if (!customerInfo.isClaimed || !isUnlocked && !hasSubscription) return;
+    
+    navigate(`/customer-profile/${review.customerId}`, {
+      state: { 
+        readOnly: true,
+        showWriteReviewButton: currentUser?.type === 'business'
+      }
+    });
+  };
+
   // Check if current user is the business who wrote this review
   const isReviewAuthor = currentUser?.id === review.reviewerId;
 
   // Get the final avatar URLs - prioritize businessProfile data
   const finalBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || '';
-  
-  // Show customer avatar only if review is claimed and we have avatar data
-  const finalCustomerAvatar = isReviewClaimed && customerProfile?.avatar 
-    ? customerProfile.avatar 
-    : '';
 
   console.log('CustomerReviewCard: Avatar and verification info:', {
     reviewId: review.id,
     businessAvatar: finalBusinessAvatar,
-    customerAvatar: finalCustomerAvatar,
     reviewerName: review.reviewerName,
-    customerName: review.customerName,
     businessIsVerified,
-    customerIsVerified,
-    isReviewClaimed
+    customerInfo
   });
 
   return (
@@ -227,26 +202,16 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
           </div>
         </div>
         
-        {/* Customer Avatar - show on the right */}
-        {review.customerName && (
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">About:</span>
-            <Avatar className="h-8 w-8">
-              {isReviewClaimed && finalCustomerAvatar ? (
-                <AvatarImage src={finalCustomerAvatar} alt={review.customerName} />
-              ) : (
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {getCustomerInitials()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">{review.customerName}</span>
-              {/* Show verified badge next to customer name if claimed and verified */}
-              {isReviewClaimed && customerIsVerified && <VerifiedBadge size="sm" />}
-            </div>
-          </div>
-        )}
+        {/* Customer info on the right using new component */}
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">About:</span>
+          <CustomerInfoDisplay
+            customerInfo={customerInfo}
+            onCustomerClick={customerInfo.isClaimed && (isUnlocked || hasSubscription) ? handleCustomerClick : undefined}
+            size="small"
+            showContactInfo={false}
+          />
+        </div>
       </div>
 
       {isUnlocked ? (
@@ -281,7 +246,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
             hideReplyOption={false}
             onResponseSubmitted={handleResponseSubmitted}
-            reviewAuthorId={review.reviewerId} // Pass the review author ID
+            reviewAuthorId={review.reviewerId}
           />
         </div>
       ) : (
