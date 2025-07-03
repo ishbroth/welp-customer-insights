@@ -162,6 +162,31 @@ export const useProfileReviewsMatching = () => {
 
     console.log("User profile:", userProfile);
 
+    // CRITICAL DEBUG: First check if there are any reviews that match this user's info but are NOT claimed
+    console.log("=== CHECKING FOR UNCLAIMED REVIEWS MATCHING USER INFO ===");
+    const { data: potentialMatches, error: potentialError } = await supabase
+      .from('reviews')
+      .select('id, customer_name, customer_phone, customer_address, customer_city, customer_zipcode, customer_id, business_id, claimed_at, claimed_by')
+      .is('customer_id', null) // Only unclaimed reviews
+      .is('deleted_at', null);
+
+    if (potentialMatches && potentialMatches.length > 0) {
+      console.log("FOUND UNCLAIMED REVIEWS:", potentialMatches.length);
+      potentialMatches.forEach(review => {
+        console.log(`Unclaimed Review ${review.id}:`, {
+          customer_name: review.customer_name,
+          customer_phone: review.customer_phone,
+          customer_address: review.customer_address,
+          customer_city: review.customer_city,
+          customer_zipcode: review.customer_zipcode,
+          customer_id: review.customer_id,
+          business_id: review.business_id
+        });
+      });
+    } else {
+      console.log("NO UNCLAIMED REVIEWS FOUND IN DATABASE");
+    }
+
     // Get user's last login to identify new reviews
     const { data: lastSession } = await supabase
       .from('user_sessions')
@@ -217,6 +242,23 @@ export const useProfileReviewsMatching = () => {
         business_id: review.business_id
       });
     });
+
+    // CRITICAL DEBUG: Check if any reviews were automatically claimed during this session
+    console.log("=== CHECKING FOR AUTO-CLAIMED REVIEWS ===");
+    const autoClaimedReviews = allReviews?.filter(review => 
+      review.customer_id === currentUser.id && 
+      review.claimed_by === currentUser.id &&
+      new Date(review.claimed_at || 0) > new Date(Date.now() - 60000) // Claimed in last minute
+    );
+
+    if (autoClaimedReviews && autoClaimedReviews.length > 0) {
+      console.log("FOUND AUTO-CLAIMED REVIEWS:", autoClaimedReviews.map(r => ({
+        id: r.id,
+        customer_name: r.customer_name,
+        claimed_at: r.claimed_at,
+        claimed_by: r.claimed_by
+      })));
+    }
 
     const reviewMatches: ReviewMatch[] = [];
 
