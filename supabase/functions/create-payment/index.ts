@@ -28,22 +28,47 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
+    logStep("Function started", { method: req.method, url: req.url });
     
     // Get Stripe key from environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       logStep("ERROR: STRIPE_SECRET_KEY is not set");
-      throw new Error("STRIPE_SECRET_KEY is not set");
+      return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY is not configured" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
     }
     logStep("Stripe key verified");
 
     // Parse request body
-    const { customerId, reviewId, amount = 300, isGuest = false } = await req.json();
-    logStep("Request data", { customerId, reviewId, amount, isGuest });
+    let requestData;
+    try {
+      requestData = await req.json();
+      logStep("Request body parsed", requestData);
+    } catch (e) {
+      logStep("ERROR: Failed to parse request body", { error: e.message });
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    const { customerId, reviewId, amount = 300, isGuest = false } = requestData;
+    logStep("Request data extracted", { customerId, reviewId, amount, isGuest });
 
     // Initialize Stripe
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    let stripe;
+    try {
+      stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+      logStep("Stripe initialized");
+    } catch (e) {
+      logStep("ERROR: Failed to initialize Stripe", { error: e.message });
+      return new Response(JSON.stringify({ error: "Failed to initialize Stripe" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
     let user = null;
     let userEmail = "guest@example.com"; // Default for guest users
@@ -61,32 +86,45 @@ serve(async (req) => {
       if (authHeader) {
         logStep("Authorization header found for authenticated user");
         
-        // Create Supabase client with service role key for secure operations
-        const supabaseClient = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-          { auth: { persistSession: false } }
-        );
+        try {
+          // Create Supabase client with service role key for secure operations
+          const supabaseClient = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+            { auth: { persistSession: false } }
+          );
 
-        // Get the authenticated user
-        const token = authHeader.replace("Bearer ", "");
-        const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-        if (userError) {
-          logStep("ERROR: Authentication failed", { error: userError.message });
-          throw new Error(`Authentication error: ${userError.message}`);
+          // Get the authenticated user
+          const token = authHeader.replace("Bearer ", "");
+          const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+          if (userError) {
+            logStep("ERROR: Authentication failed", { error: userError.message });
+            return new Response(JSON.stringify({ error: `Authentication error: ${userError.message}` }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 401,
+            });
+          }
+          
+          user = userData.user;
+          if (!user?.email) {
+            logStep("ERROR: User not authenticated or email not available");
+            return new Response(JSON.stringify({ error: "User not authenticated or email not available" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 401,
+            });
+          }
+          userEmail = user.email;
+          logStep("User authenticated", { userId: user.id, email: user.email });
+        } catch (e) {
+          logStep("ERROR: Exception during authentication", { error: e.message });
+          return new Response(JSON.stringify({ error: "Authentication failed" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 401,
+          });
         }
-        
-        user = userData.user;
-        if (!user?.email) {
-          logStep("ERROR: User not authenticated or email not available");
-          throw new Error("User not authenticated or email not available");
-        }
-        userEmail = user.email;
-        logStep("User authenticated", { userId: user.id, email: user.email });
       } else {
         logStep("No authorization header - treating as guest user");
         // No auth header, treat as guest
-        isGuest = true;
         accessToken = generateAccessToken();
         logStep("Generated access token for guest (no auth)", { tokenLength: accessToken.length });
       }
@@ -97,22 +135,30 @@ serve(async (req) => {
     // For guest users, don't create or look up a Stripe customer
     let stripeCustomerId;
     if (!isGuest && user) {
-      // Check if a customer already exists in Stripe (for non-guest users)
-      const customers = await stripe.customers.list({
-        email: userEmail,
-        limit: 1,
-      });
-
-      if (customers.data.length > 0) {
-        stripeCustomerId = customers.data[0].id;
-        logStep("Found existing Stripe customer", { stripeCustomerId });
-      } else {
-        const newCustomer = await stripe.customers.create({
+      try {
+        // Check if a customer already exists in Stripe (for non-guest users)
+        const customers = await stripe.customers.list({
           email: userEmail,
-          metadata: user ? { user_id: user.id } : {}
+          limit: 1,
         });
-        stripeCustomerId = newCustomer.id;
-        logStep("Created new Stripe customer", { stripeCustomerId });
+
+        if (customers.data.length > 0) {
+          stripeCustomerId = customers.data[0].id;
+          logStep("Found existing Stripe customer", { stripeCustomerId });
+        } else {
+          const newCustomer = await stripe.customers.create({
+            email: userEmail,
+            metadata: user ? { user_id: user.id } : {}
+          });
+          stripeCustomerId = newCustomer.id;
+          logStep("Created new Stripe customer", { stripeCustomerId });
+        }
+      } catch (e) {
+        logStep("ERROR: Stripe customer operation failed", { error: e.message });
+        return new Response(JSON.stringify({ error: "Failed to handle Stripe customer" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        });
       }
     }
 
@@ -133,7 +179,7 @@ serve(async (req) => {
     logStep("URLs prepared", { successUrl, cancelUrl });
     
     // Create a one-time payment checkout session
-    const sessionConfig: any = {
+    const sessionConfig = {
       line_items: [
         {
           price_data: {
@@ -151,7 +197,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: "payment",
+      mode: "payment" as const,
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
@@ -164,17 +210,35 @@ serve(async (req) => {
 
     // Add customer info for non-guest users
     if (!isGuest && stripeCustomerId && user) {
-      sessionConfig.customer = stripeCustomerId;
+      (sessionConfig as any).customer = stripeCustomerId;
     } else if (!isGuest && user) {
-      sessionConfig.customer_email = userEmail;
+      (sessionConfig as any).customer_email = userEmail;
     }
     // For guest users, don't set customer or customer_email - Stripe will handle it
 
-    logStep("Creating checkout session", { sessionConfig: { ...sessionConfig, line_items: "..." } });
+    logStep("Creating checkout session", { hasCustomer: !!stripeCustomerId, isGuest });
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionConfig);
+      logStep("Created payment session", { sessionId: session.id, hasUrl: !!session.url });
+    } catch (e) {
+      logStep("ERROR: Failed to create Stripe session", { error: e.message, stack: e.stack });
+      return new Response(JSON.stringify({ error: `Failed to create checkout session: ${e.message}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
-    logStep("Created payment session", { sessionId: session.id, url: session.url, isGuest: isGuest || !user, accessToken: accessToken ? "present" : "none" });
+    if (!session.url) {
+      logStep("ERROR: No URL returned from Stripe session");
+      return new Response(JSON.stringify({ error: "No checkout URL returned from Stripe" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+
+    logStep("Returning successful response", { url: session.url });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

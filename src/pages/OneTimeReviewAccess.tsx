@@ -15,7 +15,7 @@ const OneTimeReviewAccess = () => {
   const success = searchParams.get("success");  
   const canceled = searchParams.get("canceled");
   const guestToken = searchParams.get("token");
-  const sessionId = searchParams.get("session_id"); // Add session_id parameter
+  const sessionId = searchParams.get("session_id");
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -129,20 +129,13 @@ const OneTimeReviewAccess = () => {
     try {
       console.log("OneTimeReviewAccess: Calling create-payment function...");
       
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Request timeout - please try again")), 30000);
-      });
-      
-      const functionPromise = supabase.functions.invoke("create-payment", {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           reviewId,
           amount: 300,
           isGuest: true
         }
       });
-      
-      const { data, error } = await Promise.race([functionPromise, timeoutPromise]) as any;
       
       console.log("OneTimeReviewAccess: Function response:", { data, error });
       
@@ -158,7 +151,7 @@ const OneTimeReviewAccess = () => {
       
       console.log("OneTimeReviewAccess: Redirecting to Stripe checkout:", data.url);
       
-      // Simple redirect to Stripe
+      // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
@@ -166,13 +159,7 @@ const OneTimeReviewAccess = () => {
       
       let errorMessage = "An error occurred while processing your payment. Please try again.";
       if (error instanceof Error) {
-        if (error.message.includes("timeout")) {
-          errorMessage = "The request timed out. Please check your internet connection and try again.";
-        } else if (error.message.includes("Network")) {
-          errorMessage = "Network error. Please check your internet connection and try again.";
-        } else {
-          errorMessage = error.message;
-        }
+        errorMessage = error.message;
       }
       
       toast({
@@ -197,19 +184,12 @@ const OneTimeReviewAccess = () => {
     setIsProcessing(true);
     
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Request timeout - please try again")), 30000);
-      });
-      
-      const functionPromise = supabase.functions.invoke("create-payment", {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           reviewId,
           amount: 300
         }
       });
-      
-      const { data, error } = await Promise.race([functionPromise, timeoutPromise]) as any;
       
       if (error) {
         throw new Error(error.message);
@@ -219,7 +199,7 @@ const OneTimeReviewAccess = () => {
         throw new Error("No checkout URL returned");
       }
       
-      // Simple redirect to Stripe
+      // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
@@ -227,13 +207,7 @@ const OneTimeReviewAccess = () => {
       
       let errorMessage = "An error occurred while processing your payment. Please try again.";
       if (error instanceof Error) {
-        if (error.message.includes("timeout")) {
-          errorMessage = "The request timed out. Please check your internet connection and try again.";
-        } else if (error.message.includes("Network")) {
-          errorMessage = "Network error. Please check your internet connection and try again.";
-        } else {
-          errorMessage = error.message;
-        }
+        errorMessage = error.message;
       }
       
       toast({
@@ -316,7 +290,7 @@ const OneTimeReviewAccess = () => {
                         disabled={isProcessing}
                         onClick={handleGuestPayment}
                       >
-                        {isProcessing ? "Redirecting to Payment..." : "Pay $3.00 - Get Instant Access"}
+                        {isProcessing ? "Processing..." : "Pay $3.00 - Get Instant Access"}
                       </Button>
                     </div>
                   </div>
@@ -367,7 +341,7 @@ const OneTimeReviewAccess = () => {
                       disabled={isProcessing}
                       onClick={handleAuthenticatedPayment}
                     >
-                      {isProcessing ? "Redirecting to Payment..." : "Pay $3.00"}
+                      {isProcessing ? "Processing..." : "Pay $3.00"}
                     </Button>
                   </div>
                 )}
