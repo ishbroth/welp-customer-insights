@@ -25,9 +25,9 @@ interface ReviewMatchInfoProps {
 }
 
 const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
-  matchType,
-  matchReasons,
-  matchScore,
+  matchType = 'potential',
+  matchReasons = [],
+  matchScore = 0,
   detailedMatches,
   isNewReview,
   isClaimingReview,
@@ -35,7 +35,18 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
   isReviewClaimed,
 }) => {
   // Don't show the match info section if the review is claimed (using actual database status)
-  if (!matchType || isReviewClaimed) return null;
+  if (isReviewClaimed) {
+    console.log('ReviewMatchInfo: Not showing because review is claimed');
+    return null;
+  }
+
+  console.log('ReviewMatchInfo: Rendering match info:', {
+    matchType,
+    matchScore,
+    matchReasons,
+    isNewReview,
+    isClaimingReview
+  });
 
   return (
     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -44,6 +55,11 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
           <Badge variant={matchType === 'high_quality' ? 'default' : 'secondary'}>
             {matchType === 'high_quality' ? 'High Match' : 'Potential Match'}
           </Badge>
+          {matchScore > 0 && (
+            <Badge variant="outline">
+              {matchScore}% Match
+            </Badge>
+          )}
           {isNewReview && (
             <Badge variant="destructive" className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -67,7 +83,7 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
         />
       ) : (
         <div className="text-sm text-blue-700">
-          {matchScore && (
+          {matchScore > 0 && (
             <div className="mb-2">
               <strong>Match score:</strong> {matchScore}%
             </div>
@@ -75,9 +91,11 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
           <div>
             <strong>Match reasons:</strong>
             <ul className="list-disc list-inside mt-1 ml-2">
-              {matchReasons?.map((reason, index) => (
+              {matchReasons.length > 0 ? matchReasons.map((reason, index) => (
                 <li key={index}>{reason}</li>
-              ))}
+              )) : (
+                <li>This review appears to be about you</li>
+              )}
             </ul>
           </div>
         </div>

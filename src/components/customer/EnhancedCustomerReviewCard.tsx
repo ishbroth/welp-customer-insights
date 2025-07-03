@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -58,7 +59,10 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     review_customerId: review.customerId,
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
-    userType: currentUser?.type
+    userType: currentUser?.type,
+    matchType: review.matchType,
+    matchScore: review.matchScore,
+    matchReasons: review.matchReasons
   });
 
   // Use enhanced customer info system for display purposes only
@@ -138,16 +142,23 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isUnlocked,
   });
 
+  // Force showing claim button for unclaimed reviews when user is customer
+  const forceShowClaimButton = isCustomerUser && !isReviewActuallyClaimed && !isReviewAuthor;
+  const actualShouldShowClaimButton = forceShowClaimButton || shouldShowClaimButton();
+
   console.log('EnhancedCustomerReviewCard: FINAL RENDER DECISIONS:', {
     reviewId: review.id,
     isReviewActuallyClaimed,
     shouldShowClaimButton: shouldShowClaimButton(),
+    forceShowClaimButton,
+    actualShouldShowClaimButton,
     shouldShowRespondButton: shouldShowRespondButton(),
     canReact: canReact(),
     canRespond: canRespond(),
     shouldShowFullReview: shouldShowFullReview(),
-    willRenderClaimButton: shouldShowClaimButton() && !isReviewActuallyClaimed,
-    willRenderResponseField: shouldShowRespondButton() && isReviewActuallyClaimed
+    willRenderMatchInfo: !isReviewActuallyClaimed,
+    matchType: review.matchType,
+    matchScore: review.matchScore
   });
 
   // Use the customer response management hook
@@ -227,19 +238,22 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   console.log('EnhancedCustomerReviewCard: DISPLAY DECISION:', {
     reviewId: review.id,
     will_show_match_info: !isReviewActuallyClaimed,
-    will_show_claim_in_match_info: !isReviewActuallyClaimed,
+    will_show_claim_in_match_info: actualShouldShowClaimButton,
     actuallyClaimedInDB: isReviewActuallyClaimed,
-    displayCustomerInfo_isClaimed: displayCustomerInfo.isClaimed
+    displayCustomerInfo_isClaimed: displayCustomerInfo.isClaimed,
+    matchType: review.matchType,
+    matchScore: review.matchScore,
+    hasMatchData: !!(review.matchType || review.matchScore)
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* Show match info and claim button for unclaimed reviews ONLY */}
+      {/* CRITICAL: Always show match info for unclaimed reviews, regardless of other conditions */}
       {!isReviewActuallyClaimed && (
         <ReviewMatchInfo
-          matchType={review.matchType}
-          matchReasons={review.matchReasons}
-          matchScore={review.matchScore}
+          matchType={review.matchType || 'potential'}
+          matchReasons={review.matchReasons || ['Potential match found']}
+          matchScore={review.matchScore || 0}
           detailedMatches={review.detailedMatches}
           isNewReview={review.isNewReview}
           isClaimingReview={isClaimingReview}
@@ -295,7 +309,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
         canRespond={canRespond()}
-        shouldShowClaimButton={shouldShowClaimButton()}
+        shouldShowClaimButton={actualShouldShowClaimButton}
         shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
         customerId={review.customerId}
