@@ -1,14 +1,26 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { Badge } from "@/components/ui/badge";
-import { CustomerInfo } from "@/utils/customerInfoMerger";
+import ReviewMatchQualityScore from "@/components/customer/ReviewMatchQualityScore";
+
+interface CustomerInfo {
+  name: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  zipCode?: string;
+  avatar?: string;
+  isClaimed: boolean;
+  matchConfidence?: 'high' | 'medium' | 'low';
+  matchScore?: number;
+  matchType?: 'high_quality' | 'potential' | 'claimed';
+  potentialMatchId?: string;
+}
 
 interface CustomerInfoDisplayProps {
   customerInfo: CustomerInfo;
   onCustomerClick?: () => void;
-  size?: 'small' | 'medium';
+  size?: 'small' | 'medium' | 'large';
   showContactInfo?: boolean;
 }
 
@@ -16,85 +28,95 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
   customerInfo,
   onCustomerClick,
   size = 'medium',
-  showContactInfo = true
+  showContactInfo = false
 }) => {
   const getInitials = (name: string) => {
-    const names = name.split(' ');
-    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "C";
   };
 
-  const formatAddress = () => {
-    const parts = [];
-    if (customerInfo.address) parts.push(customerInfo.address);
-    if (customerInfo.city) parts.push(customerInfo.city);
-    if (customerInfo.state) parts.push(customerInfo.state);
-    if (customerInfo.zipCode) parts.push(customerInfo.zipCode);
-    return parts.join(', ');
-  };
-
-  const getMatchConfidenceBadge = () => {
-    if (customerInfo.isClaimed) return null;
-    
-    switch (customerInfo.matchConfidence) {
-      case 'high':
-        return <Badge variant="secondary" className="text-xs">Likely Match</Badge>;
-      case 'potential':
-        return <Badge variant="outline" className="text-xs">Possible Match</Badge>;
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'small':
+        return {
+          avatar: 'h-8 w-8',
+          name: 'text-sm font-medium',
+          details: 'text-xs text-gray-500'
+        };
+      case 'large':
+        return {
+          avatar: 'h-12 w-12',
+          name: 'text-lg font-semibold',
+          details: 'text-sm text-gray-600'
+        };
       default:
-        return null;
+        return {
+          avatar: 'h-10 w-10',
+          name: 'text-base font-medium',
+          details: 'text-sm text-gray-500'
+        };
     }
   };
 
-  const avatarSize = size === 'small' ? 'h-8 w-8' : 'h-10 w-10';
-  const nameSize = size === 'small' ? 'text-sm' : 'font-semibold';
-  const detailSize = size === 'small' ? 'text-xs' : 'text-sm';
-
-  // Only allow clicking if claimed or high confidence match
-  const isClickable = customerInfo.isClaimed || customerInfo.matchConfidence === 'high';
-  const clickHandler = isClickable ? onCustomerClick : undefined;
+  const sizeClasses = getSizeClasses();
+  const isClickable = onCustomerClick && (customerInfo.isClaimed || customerInfo.matchConfidence === 'high');
 
   return (
     <div className="flex items-center space-x-2">
-      <Avatar 
-        className={`${avatarSize} ${clickHandler ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-        onClick={clickHandler}
-      >
-        {customerInfo.avatar ? (
+      <Avatar className={sizeClasses.avatar}>
+        {customerInfo.isClaimed && customerInfo.avatar ? (
           <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-        ) : (
-          <AvatarFallback className="bg-gray-100 text-gray-600">
-            {getInitials(customerInfo.name)}
-          </AvatarFallback>
-        )}
+        ) : null}
+        <AvatarFallback className="bg-gray-100 text-gray-600">
+          {getInitials(customerInfo.name)}
+        </AvatarFallback>
       </Avatar>
-      <div>
-        <div className="flex items-center gap-1 flex-wrap">
-          <h4 
-            className={`${nameSize} ${clickHandler ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
-            onClick={clickHandler}
-          >
-            {customerInfo.name}
-          </h4>
-          {customerInfo.isVerified && <VerifiedBadge size={size === 'small' ? 'xs' : 'sm'} />}
-          {customerInfo.isClaimed ? (
-            <span className={`${detailSize} text-green-600 font-medium`}>Claimed</span>
+      
+      <div className="text-right">
+        <div className="flex items-center gap-1 justify-end">
+          {isClickable ? (
+            <h4 
+              className={`${sizeClasses.name} cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline`}
+              onClick={onCustomerClick}
+            >
+              {customerInfo.name}
+            </h4>
           ) : (
-            <span className={`${detailSize} text-gray-500`}>Unclaimed</span>
+            <h4 className={sizeClasses.name}>
+              {customerInfo.name}
+            </h4>
           )}
-          {getMatchConfidenceBadge()}
         </div>
-        <p className={`${detailSize} text-gray-500`}>Customer</p>
+        
+        {/* Show match quality score for unclaimed reviews */}
+        {!customerInfo.isClaimed && customerInfo.matchScore && customerInfo.matchType && (
+          <div className="flex justify-end mb-1">
+            <ReviewMatchQualityScore 
+              matchScore={customerInfo.matchScore}
+              matchType={customerInfo.matchType}
+            />
+          </div>
+        )}
         
         {showContactInfo && (
-          <div className={`${detailSize} text-gray-600 space-y-1 mt-1`}>
-            {customerInfo.phone && (
-              <div>📞 {customerInfo.phone}</div>
-            )}
-            {formatAddress() && (
-              <div>📍 {formatAddress()}</div>
+          <div className={sizeClasses.details}>
+            {customerInfo.isClaimed ? (
+              <>
+                {customerInfo.phone && <p>{customerInfo.phone}</p>}
+                {customerInfo.address && (
+                  <p>{[customerInfo.address, customerInfo.city, customerInfo.zipCode].filter(Boolean).join(', ')}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-gray-400">Contact info available after claiming</p>
             )}
           </div>
         )}
+        
+        <p className={sizeClasses.details}>Customer</p>
       </div>
     </div>
   );

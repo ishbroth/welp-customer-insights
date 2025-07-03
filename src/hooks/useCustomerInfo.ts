@@ -1,28 +1,61 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { 
-  mergeCustomerInfo, 
-  fetchCustomerProfile, 
-  findPotentialCustomerMatches,
-  CustomerInfo, 
-  ReviewCustomerData 
-} from "@/utils/customerInfoMerger";
+import { useMemo } from "react";
 
-export const useCustomerInfo = (reviewData: ReviewCustomerData): CustomerInfo => {
-  // Fetch claimed customer profile if review is claimed
-  const { data: customerProfile } = useQuery({
-    queryKey: ['customerProfile', reviewData.customerId],
-    queryFn: () => fetchCustomerProfile(reviewData.customerId),
-    enabled: !!reviewData.customerId
-  });
+interface CustomerInfoParams {
+  customer_name?: string;
+  customer_phone?: string;
+  customer_address?: string;
+  customer_city?: string;
+  customer_zipcode?: string;
+  customerId?: string;
+  matchScore?: number;
+  matchType?: 'high_quality' | 'potential' | 'claimed';
+}
 
-  // Fetch potential matches for unclaimed reviews
-  const { data: potentialMatches } = useQuery({
-    queryKey: ['potentialCustomerMatches', reviewData.customer_name, reviewData.customer_phone],
-    queryFn: () => findPotentialCustomerMatches(reviewData),
-    enabled: !reviewData.customerId && (!!reviewData.customer_name || !!reviewData.customer_phone),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
+export const useCustomerInfo = (params: CustomerInfoParams) => {
+  return useMemo(() => {
+    const {
+      customer_name = '',
+      customer_phone = '',
+      customer_address = '',
+      customer_city = '',
+      customer_zipcode = '',
+      customerId,
+      matchScore = 0,
+      matchType = 'potential'
+    } = params;
 
-  return mergeCustomerInfo(reviewData, customerProfile, potentialMatches);
+    // FIXED: Only consider review claimed if customerId exists in database
+    const isClaimed = !!customerId;
+    
+    // For unclaimed reviews, determine match confidence based on score
+    let matchConfidence: 'high' | 'medium' | 'low' = 'low';
+    if (matchScore >= 85) {
+      matchConfidence = 'high';
+    } else if (matchScore >= 70) {
+      matchConfidence = 'medium';
+    }
+
+    console.log('useCustomerInfo: Processing customer info:', {
+      customer_name,
+      customerId,
+      isClaimed,
+      matchScore,
+      matchType,
+      matchConfidence
+    });
+
+    return {
+      name: customer_name || 'Unknown Customer',
+      phone: customer_phone,
+      address: customer_address,
+      city: customer_city,
+      zipCode: customer_zipcode,
+      isClaimed,
+      matchConfidence,
+      matchScore,
+      matchType: isClaimed ? 'claimed' : matchType,
+      potentialMatchId: customerId // For navigation purposes
+    };
+  }, [params]);
 };

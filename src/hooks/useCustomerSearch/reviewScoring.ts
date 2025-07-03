@@ -317,15 +317,45 @@ export const scoreReview = (
     }
   }
 
-  // Calculate percentage score based on maximum possible score
-  const maxPossibleScore = REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER * 1.5 + 
-                          REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 2 + 
-                          REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5 + 
-                          REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER * 1.3 + 
-                          REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5 + 
-                          REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH; // State match
+  // Calculate percentage score based on fields available in the review
+  // Dynamic scoring that accounts for missing data in reviews
+  let maxPossibleScore = 0;
+  let fieldsWithData = 0;
 
-  const percentageScore = Math.min(100, Math.round((score / maxPossibleScore) * 100));
+  // Check which fields have data and calculate max possible accordingly
+  if (review.customer_name) {
+    maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER * 1.5;
+    fieldsWithData++;
+  }
+  if (review.customer_phone) {
+    maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 2;
+    fieldsWithData++;
+  }
+  if (review.customer_address) {
+    maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5;
+    fieldsWithData++;
+  }
+  if (review.customer_city) {
+    maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER * 1.3;
+    fieldsWithData++;
+  }
+  if (review.customer_zipcode) {
+    maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5;
+    fieldsWithData++;
+  }
+
+  // Calculate percentage score and adjust for completeness
+  let percentageScore = 0;
+  if (maxPossibleScore > 0) {
+    percentageScore = Math.round((score / maxPossibleScore) * 100);
+    
+    // Penalize reviews with missing critical information
+    const completenessMultiplier = Math.min(1, fieldsWithData / 3); // Expect at least name, phone/address, city/zip
+    percentageScore = Math.round(percentageScore * completenessMultiplier);
+  }
+
+  // Cap at 100%
+  percentageScore = Math.min(100, percentageScore);
 
   console.log('Enhanced review scoring result:', {
     reviewId: review.id,
@@ -336,6 +366,7 @@ export const scoreReview = (
     maxPossibleScore,
     percentageScore,
     completenessScore,
+    fieldsWithData,
     finalMatches: matches,
     detailedMatches
   });

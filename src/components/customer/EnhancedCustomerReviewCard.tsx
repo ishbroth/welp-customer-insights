@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -51,14 +52,16 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
-  // Use the enhanced customer info system
+  // FIXED: Use enhanced customer info system with proper claim status
   const customerInfo = useCustomerInfo({
     customer_name: review.customerName,
     customer_phone: review.customer_phone,
     customer_address: review.customer_address,
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
-    customerId: review.customerId // This is the source of truth for claim status
+    customerId: review.customerId, // This is the source of truth for claim status
+    matchScore: review.matchScore,
+    matchType: review.matchType
   });
 
   // Get business verification status
@@ -151,13 +154,10 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   };
 
   const handleCustomerClick = () => {
-    // FIXED: Only allow navigation for actually claimed reviews or high confidence matches
-    if (!customerInfo.isClaimed && customerInfo.matchConfidence !== 'high') return;
+    // FIXED: Only allow navigation for actually claimed reviews
+    if (!customerInfo.isClaimed) return;
     
-    const targetId = customerInfo.isClaimed ? review.customerId : customerInfo.potentialMatchId;
-    if (!targetId) return;
-
-    navigate(`/customer-profile/${targetId}`, {
+    navigate(`/customer-profile/${review.customerId}`, {
       state: { 
         readOnly: true,
         showWriteReviewButton: currentUser?.type === 'business'
@@ -241,7 +241,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         {/* Customer info - right side (smaller) using enhanced component */}
         <CustomerInfoDisplay
           customerInfo={customerInfo}
-          onCustomerClick={handleCustomerClick}
+          onCustomerClick={customerInfo.isClaimed ? handleCustomerClick : undefined}
           size="small"
           showContactInfo={true}
         />
