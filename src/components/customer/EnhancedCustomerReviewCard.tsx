@@ -48,7 +48,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { currentUser } = useAuth();
   
   // CRITICAL: Use ONLY the database customerId to determine if review is claimed
-  // Do NOT use matchType or any other field
+  // NEVER use matchType, matchScore, or any other derived field
   const isReviewActuallyClaimed = !!review.customerId;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
@@ -58,7 +58,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     matchScore: review.matchScore,
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
-    isCustomerBeingReviewed: review.customerId === currentUser?.id
+    isCustomerBeingReviewed: review.customerId === currentUser?.id,
+    IMPORTANT_NOTE: 'isReviewActuallyClaimed is ONLY based on database customerId field'
   });
 
   const {
@@ -91,7 +92,12 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     businessName: businessProfile?.name,
     businessVerified: businessProfile?.verified,
     reviewerVerified: review.reviewerVerified,
-    finalBusinessAvatar: finalBusinessAvatar ? 'present' : 'missing'
+    finalBusinessAvatar: finalBusinessAvatar ? 'present' : 'missing',
+    CRITICAL_VERIFICATION_CHECK: {
+      fromBusinessProfile: businessProfile?.verified,
+      fromReviewData: review.reviewerVerified,
+      finalVerificationStatus: review.reviewerVerified || businessProfile?.verified
+    }
   });
 
   // Enhanced claim confirm handler that calls the success callback
@@ -118,7 +124,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: isReviewActuallyClaimed, // Use ACTUAL claim status
+    isReviewClaimed: isReviewActuallyClaimed, // Use ACTUAL claim status from database
     hasSubscription,
     isUnlocked,
   });
@@ -146,16 +152,28 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     currentUser
   );
 
-  const businessDisplayName = businessInfo.name;
+  // CRITICAL: Use review.reviewerVerified (from matching logic) as the authoritative verification status
+  const finalBusinessVerified = review.reviewerVerified || businessProfile?.verified || false;
+  const enhancedBusinessInfo = {
+    ...businessInfo,
+    verified: finalBusinessVerified
+  };
+
+  const businessDisplayName = enhancedBusinessInfo.name;
 
   console.log('🎯 Final Render Decisions:', {
     reviewId: review.id,
     isReviewActuallyClaimed,
     shouldShowClaimButton: shouldShowClaimButton(),
     shouldShowRespondButton: shouldShowRespondButton(),
-    businessVerified: businessInfo.verified,
+    businessVerified: finalBusinessVerified,
     businessName: businessDisplayName,
-    matchType: review.matchType
+    matchType: review.matchType,
+    CRITICAL_VERIFICATION_FLOW: {
+      reviewerVerified: review.reviewerVerified,
+      businessProfileVerified: businessProfile?.verified,
+      finalBusinessVerified
+    }
   });
 
   return (
@@ -175,7 +193,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
       )}
       
       <CustomerReviewCardHeader
-        businessInfo={businessInfo}
+        businessInfo={enhancedBusinessInfo}
         customerInfo={customerInfo}
         reviewDate={review.date}
         shouldBusinessNameBeClickable={isUnlocked || hasSubscription}

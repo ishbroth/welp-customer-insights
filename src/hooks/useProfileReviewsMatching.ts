@@ -85,7 +85,7 @@ export const useProfileReviewsMatching = () => {
     const reviewMatches: any[] = [];
 
     for (const review of allReviews || []) {
-      // CRITICAL: Determine the ACTUAL claim status from database
+      // CRITICAL: Determine the ACTUAL claim status ONLY from database customer_id field
       const isActuallyClaimedByCurrentUser = review.customer_id === currentUser.id;
       const isClaimedBySomeoneElse = review.customer_id && review.customer_id !== currentUser.id;
       
@@ -114,10 +114,11 @@ export const useProfileReviewsMatching = () => {
         profileFound: !!businessProfile,
         businessName: businessProfile?.name,
         verificationFromMap: businessVerificationMap.get(review.business_id),
-        finalVerificationStatus: isVerified
+        finalVerificationStatus: isVerified,
+        businessProfileVerified: businessProfile?.verified
       });
 
-      // If review is actually claimed by this user, mark as 'claimed'
+      // CRITICAL FIX: If review is actually claimed by this user, mark as 'claimed'
       if (isActuallyClaimedByCurrentUser) {
         console.log('✅ CLAIMED: Review is actually claimed by current user:', review.id);
         reviewMatches.push({
@@ -138,7 +139,7 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // For UNCLAIMED reviews, calculate match scores
+      // CRITICAL FIX: For UNCLAIMED reviews, NEVER auto-claim them regardless of match score
       console.log('🔍 MATCHING: Calculating match score for unclaimed review:', review.id);
       const { score, reasons, detailedMatches } = checkReviewMatch(review, userProfile);
 
@@ -147,11 +148,12 @@ export const useProfileReviewsMatching = () => {
         customerName: review.customer_name,
         matchScore: score,
         reasons,
-        willBeIncluded: score >= 40
+        willBeIncluded: score >= 40,
+        IMPORTANT_actuallyClaimedStatus: false // This is ALWAYS false for unclaimed reviews
       });
 
       if (score >= 40) {
-        // High quality match - but NOT claimed
+        // High quality match - but NOT claimed and NEVER auto-claim
         const isNew = new Date(review.created_at) > new Date(lastLoginTime);
         const matchType = score >= 70 ? 'high_quality' : 'potential';
         
@@ -161,7 +163,8 @@ export const useProfileReviewsMatching = () => {
           score,
           isNew,
           isActuallyClaimedByCurrentUser: false,
-          finalCustomerId: null // CRITICAL: Must be null for unclaimed
+          finalCustomerId: null, // CRITICAL: Must be null for unclaimed
+          businessVerified: isVerified
         });
         
         reviewMatches.push({
