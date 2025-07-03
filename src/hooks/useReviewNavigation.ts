@@ -13,7 +13,7 @@ export const useReviewNavigation = ({ reviewerId, isUnlocked }: UseReviewNavigat
 
   const handleBusinessNameClick = () => {
     if (isSubscribed || isUnlocked) {
-      navigate(`/business/${reviewerId}`);
+      navigate(`/business-profile/${reviewerId}`);
     }
   };
 

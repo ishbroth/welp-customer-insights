@@ -90,7 +90,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 Edit Profile
               </Link>
               
-              {/* Show reviews link for both business and customer users */}
+              {/* Business users - show reviews they've written about customers */}
               {isBusinessAccount && (
                 <Link 
                   to="/profile/business-reviews" 
@@ -105,7 +105,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 </Link>
               )}
               
-              {/* Customer reviews link - shows reviews written about the customer */}
+              {/* Customer users - show reviews written about them by businesses */}
               {isCustomerAccount && (
                 <Link 
                   to="/profile/reviews" 
@@ -116,7 +116,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                   }`}
                 >
                   <FileText className="mr-3 h-5 w-5 text-gray-500" />
-                  My Reviews
+                  Reviews About Me
                 </Link>
               )}
               

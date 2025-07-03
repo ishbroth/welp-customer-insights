@@ -1,10 +1,10 @@
-
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import Verification from "@/pages/Verification";
 import ProfilePage from "@/pages/ProfilePage";
+import ProfileEdit from "@/pages/ProfileEdit";
 import ProfileReviews from "@/pages/ProfileReviews";
 import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
@@ -46,31 +46,41 @@ const AppRoutes = () => {
       <Route path="/customer-stories" element={<CustomerStories />} />
       <Route path="/customer-verification" element={<CustomerVerification />} />
       
-      {/* Protected Routes */}
+      {/* Protected Profile Routes */}
       <Route path="/profile" element={
         <ProtectedRoute>
           <ProfilePage />
         </ProtectedRoute>
       } />
       
-      <Route path="/profile-reviews" element={
+      <Route path="/profile/edit" element={
         <ProtectedRoute>
-          <ProfileReviews />
+          <ProfileEdit />
         </ProtectedRoute>
       } />
       
+      {/* Customer Reviews - works for both business and customer users */}
       <Route path="/profile/reviews" element={
         <ProtectedRoute>
           <ProfileReviews />
         </ProtectedRoute>
       } />
       
+      {/* Business Reviews - for business users writing reviews about customers */}
       <Route path="/profile/business-reviews" element={
         <ProtectedRoute>
           <BusinessReviews />
         </ProtectedRoute>
       } />
       
+      {/* Legacy route redirects */}
+      <Route path="/profile-reviews" element={
+        <ProtectedRoute>
+          <ProfileReviews />
+        </ProtectedRoute>
+      } />
+      
+      {/* Profile viewing routes */}
       <Route path="/customer-profile/:customerId" element={
         <ProtectedRoute>
           <CustomerProfile />
@@ -83,6 +93,14 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      {/* Alternative business profile route */}
+      <Route path="/business/:businessId" element={
+        <ProtectedRoute>
+          <BusinessProfile />
+        </ProtectedRoute>
+      } />
+      
+      {/* Other protected routes */}
       <Route path="/review/new" element={
         <ProtectedRoute>
           <NewReview />
