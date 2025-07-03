@@ -22,9 +22,40 @@ export const useReviewClaiming = () => {
     setIsClaimingReview(true);
 
     try {
-      console.log('Claiming review:', reviewId, 'for user:', currentUser.id);
+      console.log('Attempting to claim review:', reviewId, 'for user:', currentUser.id);
       
-      // Update the review to link it to the current user
+      // CRITICAL: First check if review is already claimed by someone else
+      const { data: existingReview, error: checkError } = await supabase
+        .from('reviews')
+        .select('id, customer_id, customer_name')
+        .eq('id', reviewId)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking review status:', checkError);
+        throw checkError;
+      }
+
+      if (existingReview.customer_id && existingReview.customer_id !== currentUser.id) {
+        console.error('Review already claimed by another user:', existingReview.customer_id);
+        toast({
+          title: "Review already claimed",
+          description: "This review has already been claimed by another user.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (existingReview.customer_id === currentUser.id) {
+        console.log('Review already claimed by current user');
+        toast({
+          title: "Already claimed",
+          description: "You have already claimed this review.",
+        });
+        return true;
+      }
+
+      // Attempt to claim the review with additional safety check
       const { error: updateError } = await supabase
         .from('reviews')
         .update({
@@ -32,10 +63,28 @@ export const useReviewClaiming = () => {
           claimed_at: new Date().toISOString(),
           claimed_by: currentUser.id
         })
-        .eq('id', reviewId);
+        .eq('id', reviewId)
+        .is('customer_id', null); // Only update if still unclaimed
 
       if (updateError) {
-        console.error('Error updating review:', updateError);
+        console.error('Error claiming review:', updateError);
+        
+        // Check if it's a concurrent claim attempt
+        const { data: recheck } = await supabase
+          .from('reviews')
+          .select('customer_id')
+          .eq('id', reviewId)
+          .single();
+
+        if (recheck?.customer_id && recheck.customer_id !== currentUser.id) {
+          toast({
+            title: "Review already claimed",
+            description: "This review was just claimed by another user.",
+            variant: "destructive"
+          });
+          return false;
+        }
+        
         throw updateError;
       }
 

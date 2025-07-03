@@ -139,7 +139,7 @@ export const useProfileReviewsMatching = () => {
         continue;
       }
 
-      // CRITICAL FIX: For UNCLAIMED reviews, NEVER auto-claim them regardless of match score
+      // CRITICAL FIX: For UNCLAIMED reviews, calculate match score but NEVER auto-claim
       console.log('🔍 MATCHING: Calculating match score for unclaimed review:', review.id);
       const { score, reasons, detailedMatches } = checkReviewMatch(review, userProfile);
 
@@ -149,11 +149,11 @@ export const useProfileReviewsMatching = () => {
         matchScore: score,
         reasons,
         willBeIncluded: score >= 40,
-        IMPORTANT_actuallyClaimedStatus: false // This is ALWAYS false for unclaimed reviews
+        IMPORTANT_never_auto_claim: 'This review will remain unclaimed regardless of match score'
       });
 
       if (score >= 40) {
-        // High quality match - but NOT claimed and NEVER auto-claim
+        // High quality match - but NEVER auto-claim, always leave unclaimed
         const isNew = new Date(review.created_at) > new Date(lastLoginTime);
         const matchType = score >= 70 ? 'high_quality' : 'potential';
         
@@ -162,16 +162,16 @@ export const useProfileReviewsMatching = () => {
           matchType,
           score,
           isNew,
-          isActuallyClaimedByCurrentUser: false,
-          finalCustomerId: null, // CRITICAL: Must be null for unclaimed
-          businessVerified: isVerified
+          CRITICAL_customerId_must_be_null: null,
+          businessVerified: isVerified,
+          requiresManualClaim: true
         });
         
         reviewMatches.push({
           review: {
             ...review,
             isNewReview: isNew,
-            customerId: null, // CRITICAL: Must be null for unclaimed reviews
+            customerId: null, // CRITICAL: Always null for unclaimed reviews
             business_profile: businessProfile,
             reviewerVerified: isVerified,
             reviewerName: businessProfile?.name || 'Business',
@@ -181,7 +181,7 @@ export const useProfileReviewsMatching = () => {
           matchScore: score,
           matchReasons: reasons,
           detailedMatches,
-          isClaimed: false // CRITICAL: Explicitly set to false
+          isClaimed: false // CRITICAL: Explicitly false for unclaimed
         });
       } else {
         console.log('❌ NO MATCH: Score too low:', score, 'for review:', review.id);
@@ -192,7 +192,8 @@ export const useProfileReviewsMatching = () => {
       total: reviewMatches.length,
       claimed: reviewMatches.filter(m => m.matchType === 'claimed').length,
       highQuality: reviewMatches.filter(m => m.matchType === 'high_quality').length,
-      potential: reviewMatches.filter(m => m.matchType === 'potential').length
+      potential: reviewMatches.filter(m => m.matchType === 'potential').length,
+      CRITICAL_NOTE: 'NO reviews are auto-claimed - all unclaimed reviews require manual claim button'
     });
     
     // Log each match with critical fields for debugging
@@ -205,7 +206,8 @@ export const useProfileReviewsMatching = () => {
         businessName: match.review.reviewerName,
         businessVerified: match.review.reviewerVerified,
         shouldShowClaimButton: match.matchType !== 'claimed',
-        shouldShowResponses: match.matchType === 'claimed'
+        shouldShowResponses: match.matchType === 'claimed',
+        CRITICAL_auto_claim_disabled: match.matchType !== 'claimed' ? 'User must manually claim' : 'Already claimed'
       });
     });
     
