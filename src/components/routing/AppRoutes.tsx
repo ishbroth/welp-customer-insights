@@ -118,8 +118,14 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      {/* Other protected routes */}
+      {/* Review routes - both /review/new and /new-review for compatibility */}
       <Route path="/review/new" element={
+        <ProtectedRoute>
+          <NewReview />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/new-review" element={
         <ProtectedRoute>
           <NewReview />
         </ProtectedRoute>
@@ -153,4 +159,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-
