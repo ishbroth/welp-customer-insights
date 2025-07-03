@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -43,7 +44,8 @@ export const useReviewActions = ({
     matchType: review.matchType,
     isReviewClaimed,
     currentUserId: currentUser?.id,
-    customerBeingReviewed: isCustomerBeingReviewed
+    isCustomerBeingReviewed,
+    isReviewAuthor
   });
 
   // Use smaller hooks for specific functionality
@@ -74,8 +76,10 @@ export const useReviewActions = ({
     // FIXED: For customer users who haven't claimed the review, show claim dialog first
     // Check if current user might be the subject of this unclaimed review
     if (isCustomerUser && !isReviewClaimed) {
+      console.log('useReviewActions: Customer user trying to purchase unclaimed review, showing claim dialog');
       claimDialogHook.setShowClaimDialog(true);
     } else {
+      console.log('useReviewActions: Proceeding with regular purchase');
       onPurchase(review.id);
     }
   };

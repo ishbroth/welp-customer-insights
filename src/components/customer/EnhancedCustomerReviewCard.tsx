@@ -63,11 +63,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     matchType: review.matchType
   });
 
-  console.log('EnhancedCustomerReviewCard: Customer info processed:', {
+  console.log('EnhancedCustomerReviewCard: Starting with review data:', {
     reviewId: review.id,
     customerId: review.customerId,
+    currentUserId: currentUser?.id,
     customerInfo,
-    isActuallyClaimed: !!review.customerId
+    isActuallyClaimed: !!review.customerId,
+    hasSubscription,
+    isUnlocked
   });
 
   const {
@@ -107,7 +110,17 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
-  // FIXED: Use the corrected customer info claim status
+  console.log('EnhancedCustomerReviewCard: User permission context:', {
+    reviewId: review.id,
+    isReviewAuthor,
+    isCustomerBeingReviewed,
+    isBusinessUser,
+    isCustomerUser,
+    actualClaimStatus: !!review.customerId,
+    customerInfoClaimStatus: customerInfo.isClaimed
+  });
+
+  // FIXED: Use the corrected customer info claim status and proper permission logic
   const {
     canReact,
     canRespond,
@@ -119,7 +132,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: customerInfo.isClaimed, // This now correctly reflects actual claim status
+    isReviewClaimed: customerInfo.isClaimed, // Use the processed claim status
     hasSubscription,
     isUnlocked,
   });
@@ -180,17 +193,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Determine if business name should be clickable - only if unlocked or has subscription
   const shouldBusinessNameBeClickable = isUnlocked || hasSubscription;
 
-  console.log('EnhancedCustomerReviewCard: Final render state:', {
+  console.log('EnhancedCustomerReviewCard: Final permission decisions:', {
     reviewId: review.id,
-    customerInfo,
-    businessDisplayName,
-    shouldBusinessNameBeClickable,
-    isUnlocked,
-    hasSubscription,
-    shouldShowClaimButton: shouldShowClaimButton(),
+    canReact: canReact(),
     canRespond: canRespond(),
+    shouldShowFullReview: shouldShowFullReview(),
+    shouldShowClaimButton: shouldShowClaimButton(),
     shouldShowRespondButton: shouldShowRespondButton(),
     actualClaimStatus: !!review.customerId,
+    customerInfoClaimStatus: customerInfo.isClaimed,
     showResponseField: canRespond() && customerInfo.isClaimed
   });
 
@@ -256,9 +267,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
-        canRespond={canRespond() && customerInfo.isClaimed} // FIXED: Only allow responses for claimed reviews
+        canRespond={canRespond()}
         shouldShowClaimButton={shouldShowClaimButton()}
-        shouldShowRespondButton={shouldShowRespondButton() && customerInfo.isClaimed} // FIXED: Only show respond button for claimed reviews
+        shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
         customerId={review.customerId}
         reviewerId={review.reviewerId}

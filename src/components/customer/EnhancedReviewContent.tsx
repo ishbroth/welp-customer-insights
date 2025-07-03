@@ -57,7 +57,8 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
     canReact,
     canRespond,
     shouldShowRespondButton,
-    shouldShowClaimButton
+    shouldShowClaimButton,
+    actuallyShowResponseComponent: shouldShowRespondButton && canRespond
   });
 
   if (shouldShowFullReview) {
@@ -84,7 +85,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           </div>
         )}
         
-        {/* Only show response component if user can actually respond (i.e., review is claimed) */}
+        {/* FIXED: Only show response component if ALL conditions are met */}
         {shouldShowRespondButton && canRespond && (
           <CustomerReviewResponse 
             reviewId={reviewId}
@@ -101,15 +102,15 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           />
         )}
         
-        {/* Show claim button for unclaimed reviews */}
-        {shouldShowClaimButton && !customerId && (
+        {/* Show claim button for unclaimed reviews - only show when user should claim */}
+        {shouldShowClaimButton && (
           <div className="mt-4 flex justify-end">
             <p className="text-sm text-gray-500">
-              To Respond, <button 
+              To respond to this review, <button 
                 onClick={onClaimClick}
                 className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
               >
-                Claim this Review
+                claim this review
               </button>!
             </p>
           </div>
@@ -137,14 +138,14 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
       </div>
       
       {/* Show claim button for unclaimed reviews even when locked */}
-      {shouldShowClaimButton && !customerId && (
+      {shouldShowClaimButton && (
         <div className="mt-4 flex justify-end">
           <p className="text-sm text-gray-500">
-            To Respond, <button 
+            To respond to this review, <button 
               onClick={onClaimClick}
               className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
             >
-              Claim this Review
+              claim this review
             </button>!
           </p>
         </div>
