@@ -1,4 +1,6 @@
 
+import { useMemo } from 'react';
+
 interface UseReviewPermissionsProps {
   isCustomerUser: boolean;
   isBusinessUser: boolean;
@@ -16,9 +18,11 @@ export const useReviewPermissions = ({
   isReviewAuthor,
   isReviewClaimed,
   hasSubscription,
-  isUnlocked,
+  isUnlocked
 }: UseReviewPermissionsProps) => {
   
+  const hasAccess = hasSubscription || isUnlocked;
+
   console.log('useReviewPermissions: ENTRY PARAMETERS:', {
     isCustomerUser,
     isBusinessUser,
@@ -29,93 +33,78 @@ export const useReviewPermissions = ({
     isUnlocked
   });
 
-  const canReact = () => {
-    // Can react if review is claimed and user has access
-    const canReactResult = isReviewClaimed && (hasSubscription || isUnlocked);
-    console.log('useReviewPermissions: canReact CALCULATION:', {
-      isReviewClaimed,
-      hasAccess: hasSubscription || isUnlocked,
-      result: canReactResult
-    });
-    return canReactResult;
-  };
-
-  const canRespond = () => {
-    // CRITICAL: Can respond ONLY if ALL THREE conditions are met:
-    // 1. Review is claimed (has customerId in database)
-    // 2. Current user is the customer being reviewed (claimed the review)
-    // 3. User has access (subscription or unlock)
-    const canRespondResult = isReviewClaimed && isCustomerBeingReviewed && (hasSubscription || isUnlocked);
-    console.log('useReviewPermissions: canRespond CALCULATION:', {
-      condition1_isReviewClaimed: isReviewClaimed,
-      condition2_isCustomerBeingReviewed: isCustomerBeingReviewed, 
-      condition3_hasAccess: hasSubscription || isUnlocked,
-      all_conditions_met: canRespondResult,
-      breakdown: {
+  return useMemo(() => {
+    // Can react: only if review is claimed AND user has access
+    const canReact = () => {
+      const result = isReviewClaimed && hasAccess;
+      console.log('useReviewPermissions: canReact CALCULATION:', {
         isReviewClaimed,
-        isCustomerBeingReviewed,
-        hasSubscription,
-        isUnlocked
-      }
-    });
-    return canRespondResult;
-  };
+        hasAccess,
+        result
+      });
+      return result;
+    };
 
-  const shouldShowFullReview = () => {
-    // Show full review if user has access OR if user is the review author
-    const shouldShowResult = (hasSubscription || isUnlocked) || isReviewAuthor;
-    console.log('useReviewPermissions: shouldShowFullReview =', shouldShowResult);
-    return shouldShowResult;
-  };
+    // Can respond: ONLY if review is claimed, user is customer being reviewed, AND has access
+    const canRespond = () => {
+      const condition1_isReviewClaimed = isReviewClaimed;
+      const condition2_isCustomerBeingReviewed = isCustomerBeingReviewed;
+      const condition3_hasAccess = hasAccess;
+      
+      const result = condition1_isReviewClaimed && condition2_isCustomerBeingReviewed && condition3_hasAccess;
+      
+      console.log('useReviewPermissions: canRespond CALCULATION:', {
+        condition1_isReviewClaimed,
+        condition2_isCustomerBeingReviewed,
+        condition3_hasAccess,
+        all_conditions_met: result,
+        breakdown: {
+          isReviewClaimed,
+          isCustomerBeingReviewed,
+          hasSubscription,
+          isUnlocked
+        }
+      });
+      
+      return result;
+    };
 
-  const shouldShowClaimButton = () => {
-    // CRITICAL: Show claim button ONLY if:
-    // 1. User is a customer
-    // 2. Review is NOT claimed yet
-    // 3. User is not the review author (business)
-    const shouldShowClaimResult = isCustomerUser && !isReviewClaimed && !isReviewAuthor;
-    console.log('useReviewPermissions: shouldShowClaimButton CALCULATION:', {
-      condition1_isCustomerUser: isCustomerUser,
-      condition2_reviewNotClaimed: !isReviewClaimed,
-      condition3_notReviewAuthor: !isReviewAuthor,
-      all_conditions_met: shouldShowClaimResult,
-      breakdown: {
-        isCustomerUser,
-        isReviewClaimed,
-        isReviewAuthor
-      }
-    });
-    return shouldShowClaimResult;
-  };
+    // Should show full review: if has access OR review is claimed by current user
+    const shouldShowFullReview = () => {
+      const result = hasAccess || (isCustomerUser && isReviewClaimed && isCustomerBeingReviewed);
+      console.log('useReviewPermissions: shouldShowFullReview =', result);
+      return result;
+    };
 
-  const shouldShowRespondButton = () => {
-    // CRITICAL: Show respond button ONLY if user can actually respond
-    // This means the review must be claimed AND user must be the one who claimed it
-    const shouldShowRespondResult = isReviewClaimed && isCustomerBeingReviewed && (hasSubscription || isUnlocked);
-    console.log('useReviewPermissions: shouldShowRespondButton CALCULATION:', {
-      isReviewClaimed,
-      isCustomerBeingReviewed,
-      hasAccess: hasSubscription || isUnlocked,
-      result: shouldShowRespondResult
-    });
-    return shouldShowRespondResult;
-  };
+    // Should show claim button: for customers on unclaimed reviews
+    const shouldShowClaimButton = () => {
+      const result = isCustomerUser && !isReviewClaimed && !isReviewAuthor;
+      console.log('useReviewPermissions: shouldShowClaimButton =', result);
+      return result;
+    };
 
-  const finalResults = {
-    canReact: canReact(),
-    canRespond: canRespond(),
-    shouldShowFullReview: shouldShowFullReview(),
-    shouldShowClaimButton: shouldShowClaimButton(),
-    shouldShowRespondButton: shouldShowRespondButton(),
-  };
+    // Should show respond button: ONLY for claimed reviews where customer can respond
+    const shouldShowRespondButton = () => {
+      const result = canRespond();
+      console.log('useReviewPermissions: shouldShowRespondButton =', result);
+      return result;
+    };
 
-  console.log('useReviewPermissions: FINAL RESULTS:', finalResults);
-
-  return {
-    canReact,
-    canRespond,
-    shouldShowFullReview,
-    shouldShowClaimButton,
-    shouldShowRespondButton,
-  };
+    return {
+      canReact,
+      canRespond,
+      shouldShowFullReview,
+      shouldShowClaimButton,
+      shouldShowRespondButton
+    };
+  }, [
+    isCustomerUser,
+    isBusinessUser,
+    isCustomerBeingReviewed,
+    isReviewAuthor,
+    isReviewClaimed,
+    hasSubscription,
+    isUnlocked,
+    hasAccess
+  ]);
 };
