@@ -1,0 +1,70 @@
+
+import { useState, useEffect } from "react";
+
+export const useProfileReviewsData = (customerReviews: any[], currentUser: any) => {
+  const [localReviews, setLocalReviews] = useState(customerReviews);
+  
+  const isCustomerUser = currentUser?.type === "customer";
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+
+  // Update local reviews when customerReviews prop changes
+  useEffect(() => {
+    setLocalReviews(customerReviews);
+  }, [customerReviews]);
+
+  let claimedReviews: any[] = [];
+  let unclaimedReviews: any[] = [];
+  let sortedReviews: any[] = [];
+
+  if (isCustomerUser) {
+    // FIXED: Use ONLY database customer_id for actual claim status
+    claimedReviews = localReviews.filter(review => !!review.customerId);
+    unclaimedReviews = localReviews.filter(review => !review.customerId);
+
+    // Sort unclaimed reviews by match quality first, then claimed reviews
+    const sortedUnclaimed = unclaimedReviews.sort((a, b) => {
+      const aData = a as any;
+      const bData = b as any;
+      
+      // New reviews first
+      if (aData.isNewReview && !bData.isNewReview) return -1;
+      if (!aData.isNewReview && bData.isNewReview) return 1;
+      
+      // Then by match quality
+      if (aData.matchType === 'high_quality' && bData.matchType === 'potential') return -1;
+      if (aData.matchType === 'potential' && bData.matchType === 'high_quality') return 1;
+      
+      // Finally by match score, then date
+      if (aData.matchScore !== bData.matchScore) return (bData.matchScore || 0) - (aData.matchScore || 0);
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    const sortedClaimed = claimedReviews.sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    // Show claimed reviews first, then potential matches
+    sortedReviews = [...sortedClaimed, ...sortedUnclaimed];
+  } else {
+    // For business users, use original sorting
+    sortedReviews = [...localReviews].sort((a, b) => {
+      const aData = a as any;
+      const bData = b as any;
+      
+      // New reviews first
+      if (aData.isNewReview && !bData.isNewReview) return -1;
+      if (!aData.isNewReview && bData.isNewReview) return 1;
+      
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }
+
+  return {
+    localReviews,
+    claimedReviews,
+    unclaimedReviews,
+    sortedReviews,
+    isCustomerUser,
+    isBusinessUser
+  };
+};
