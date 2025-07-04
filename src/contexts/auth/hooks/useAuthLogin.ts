@@ -15,13 +15,6 @@ interface LoginResult {
  * Hook for handling login-related functionality
  */
 export const useAuthLogin = () => {
-  // List of permanent accounts that bypass email verification
-  const permanentAccountEmails = [
-    'iw@thepaintedpainter.com',
-    'isaac.wiley99@gmail.com',
-    'contact@thepaintedpainter.com' // Added missing permanent account
-  ];
-
   // Check if user needs phone verification
   const checkPhoneVerificationStatus = async (userId: string) => {
     try {
@@ -73,80 +66,38 @@ export const useAuthLogin = () => {
       if (error && error.message === "Email not confirmed") {
         console.log("📧 Email not confirmed, attempting to confirm and login");
         
-        // For permanent accounts, bypass email confirmation
-        if (permanentAccountEmails.includes(email.toLowerCase())) {
-          console.log("⭐ Permanent account detected, bypassing email confirmation");
+        try {
+          // Try to confirm the email directly
+          await supabase.functions.invoke('confirm-email', {
+            body: { email }
+          });
           
-          try {
-            // Try to confirm the email directly for permanent accounts
-            await supabase.functions.invoke('confirm-email', {
-              body: { email }
-            });
-            
-            // Try login again
-            const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
-              email: email,
-              password: password,
-            });
-            
-            if (confirmedError) {
-              console.error("❌ Login error after email confirmation:", confirmedError);
-              return { success: false, error: confirmedError.message };
-            }
-            
-            console.log("✅ Login successful for permanent account");
-            
-            // Check phone verification status
-            const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
-            if (phoneCheck.needsPhoneVerification) {
-              return { 
-                success: true, 
-                needsPhoneVerification: true,
-                phone: phoneCheck.phone,
-                verificationData: phoneCheck.verificationData
-              };
-            }
-            
-            return { success: true };
-          } catch (confirmError) {
-            console.error("❌ Error confirming email:", confirmError);
-            return { success: false, error: "Unable to verify account. Please contact support." };
+          // Try login again
+          const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
+          
+          if (confirmedError) {
+            console.error("❌ Login error after email confirmation:", confirmedError);
+            return { success: false, error: confirmedError.message };
           }
-        } else {
-          // For regular accounts, use the standard confirmation process
-          try {
-            // Try to confirm the email directly
-            await supabase.functions.invoke('confirm-email', {
-              body: { email }
-            });
-            
-            // Try login again
-            const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
-              email: email,
-              password: password,
-            });
-            
-            if (confirmedError) {
-              console.error("❌ Login error after email confirmation:", confirmedError);
-              return { success: false, error: confirmedError.message };
-            }
-            
-            // Check phone verification status
-            const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
-            if (phoneCheck.needsPhoneVerification) {
-              return { 
-                success: true, 
-                needsPhoneVerification: true,
-                phone: phoneCheck.phone,
-                verificationData: phoneCheck.verificationData
-              };
-            }
-            
-            return { success: true };
-          } catch (confirmError) {
-            console.error("❌ Error confirming email:", confirmError);
-            return { success: false, error: "Unable to verify account. Please contact support." };
+          
+          // Check phone verification status
+          const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
+          if (phoneCheck.needsPhoneVerification) {
+            return { 
+              success: true, 
+              needsPhoneVerification: true,
+              phone: phoneCheck.phone,
+              verificationData: phoneCheck.verificationData
+            };
           }
+          
+          return { success: true };
+        } catch (confirmError) {
+          console.error("❌ Error confirming email:", confirmError);
+          return { success: false, error: "Unable to verify account. Please contact support." };
         }
       }
       

@@ -22,13 +22,6 @@ export const useAuthState = () => {
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [oneTimeAccessResources, setOneTimeAccessResources] = useState<string[]>([]);
 
-  // List of permanent accounts with subscription access
-  const permanentAccountEmails = [
-    'iw@thepaintedpainter.com',
-    'isaac.wiley99@gmail.com',
-    'contact@thepaintedpainter.com' // Added missing permanent account
-  ];
-
   // Initialize user data - profile and one-time access resources
   const initUserData = async (userId: string, forceRefresh: boolean = false) => {
     try {
@@ -54,12 +47,6 @@ export const useAuthState = () => {
       if (userProfile) {
         setCurrentUser(userProfile);
         console.log("✅ Set current user:", userProfile);
-        
-        // Check if this is one of the permanent accounts with subscription
-        if (permanentAccountEmails.includes(userProfile.email)) {
-          setIsSubscribed(true);
-          console.log("⭐ Permanent account detected, setting subscription to true");
-        }
       } else {
         console.error("❌ No user profile found for userId:", userId);
         setCurrentUser(null);
@@ -95,13 +82,6 @@ export const useAuthState = () => {
       }
       
       setCurrentUser(mockUser);
-      
-      // Check if this is a permanent account and set subscription accordingly
-      if (permanentAccountEmails.includes(mockUser.email)) {
-        setIsSubscribed(true);
-        console.log("⭐ Mock permanent account detected, setting subscription to true");
-      }
-      
       setLoading(false);
       // Clean up mock user after setting it
       delete window.__CURRENT_USER__;
@@ -147,7 +127,7 @@ export const useAuthState = () => {
     };
   }, []);
 
-  // Fetch subscription status from Stripe when user changes (skip for permanent accounts)
+  // Fetch subscription status from Stripe when user changes
   useEffect(() => {
     const checkUserSubscription = async () => {
       if (!currentUser) {
@@ -155,15 +135,8 @@ export const useAuthState = () => {
         return;
       }
       
-      // Skip subscription check for permanent accounts
-      if (permanentAccountEmails.includes(currentUser.email)) {
-        setIsSubscribed(true);
-        console.log("⭐ Permanent account detected, skipping Stripe subscription check");
-        return;
-      }
-      
       try {
-        // Call our edge function to check subscription status for regular users
+        // Call our edge function to check subscription status
         const { data, error } = await supabase.functions.invoke("check-subscription");
         
         if (error) {
