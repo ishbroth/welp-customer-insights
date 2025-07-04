@@ -1,14 +1,15 @@
 
-import { useState, useEffect } from "react";
-import { Session } from "@supabase/supabase-js";
-import { User } from "@/types";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserProfile, loadOneTimeAccessResources, refreshUserProfile } from "./authUtils";
+import { useAuthStateManagement } from "./hooks/useAuthStateManagement";
+import { useUserInitialization } from "./hooks/useUserInitialization";
+import { useSubscriptionStatus } from "./hooks/useSubscriptionStatus";
+import { useGuestAccessUtils } from "./hooks/useGuestAccessUtils";
 
 // Define the global window object with our custom property
 declare global {
   interface Window {
-    __CURRENT_USER__?: User;
+    __CURRENT_USER__?: any;
   }
 }
 
@@ -16,56 +17,43 @@ declare global {
  * Hook for managing authentication state
  */
 export const useAuthState = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
-  const [oneTimeAccessResources, setOneTimeAccessResources] = useState<string[]>([]);
+  const {
+    currentUser,
+    setCurrentUser,
+    session,
+    setSession,
+    loading,
+    setLoading,
+    isSubscribed,
+    setIsSubscribed,
+    oneTimeAccessResources,
+    setOneTimeAccessResources
+  } = useAuthStateManagement();
 
-  // Initialize user data - profile and one-time access resources
-  const initUserData = async (userId: string, forceRefresh: boolean = false) => {
+  const { initUserData } = useUserInitialization();
+  const guestAccessUtils = useGuestAccessUtils();
+
+  // Use subscription status hook
+  useSubscriptionStatus(currentUser, setIsSubscribed);
+
+  // Enhanced initialization function
+  const enhancedInitUserData = async (userId: string, forceRefresh: boolean = false) => {
     try {
-      console.log("🔄 Initializing user data for:", userId, "forceRefresh:", forceRefresh);
-      
-      // Use Promise.race with a timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
-      );
-      
-      const dataPromise = Promise.all([
-        refreshUserProfile(userId),
-        loadOneTimeAccessResources(userId)
-      ]);
-      
-      const [userProfile, accessResources] = await Promise.race([
-        dataPromise,
-        timeoutPromise
-      ]) as [any, string[]];
-      
-      console.log("👤 Fetched user profile:", userProfile);
+      const { userProfile, accessResources } = await initUserData(userId, forceRefresh);
       
       if (userProfile) {
         setCurrentUser(userProfile);
-        console.log("✅ Set current user:", userProfile);
       } else {
-        console.error("❌ No user profile found for userId:", userId);
         setCurrentUser(null);
       }
       
       setOneTimeAccessResources(accessResources);
     } catch (error) {
-      console.error("❌ Error initializing user data:", error);
-      // Don't block login on profile fetch errors
+      console.error("❌ Error in enhanced init user data:", error);
       setCurrentUser(null);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Enhanced setCurrentUser function that also persists to database
-  const enhancedSetCurrentUser = (user: User | null) => {
-    console.log("Enhanced setCurrentUser called with:", user);
-    setCurrentUser(user);
   };
 
   // Set up auth state listener on mount
@@ -97,7 +85,7 @@ export const useAuthState = () => {
         if (session?.user) {
           // Don't await this to prevent blocking the auth state change
           setTimeout(() => {
-            initUserData(session.user.id, true);
+            enhancedInitUserData(session.user.id, true);
           }, 0);
         } else {
           console.log("❌ No session, clearing user data");
@@ -115,7 +103,7 @@ export const useAuthState = () => {
       if (session?.user) {
         // Don't await this to prevent blocking initial load
         setTimeout(() => {
-          initUserData(session.user.id, true);
+          enhancedInitUserData(session.user.id, true);
         }, 0);
       } else {
         setLoading(false);
@@ -127,75 +115,16 @@ export const useAuthState = () => {
     };
   }, []);
 
-  // Fetch subscription status from Stripe when user changes
-  useEffect(() => {
-    const checkUserSubscription = async () => {
-      if (!currentUser) {
-        setIsSubscribed(false);
-        return;
-      }
-      
-      try {
-        // Call our edge function to check subscription status
-        const { data, error } = await supabase.functions.invoke("check-subscription");
-        
-        if (error) {
-          console.error("❌ Error checking subscription with Stripe:", error);
-          return;
-        }
-        
-        setIsSubscribed(data?.subscribed || false);
-        console.log("💳 Subscription status updated from Stripe:", data?.subscribed);
-      } catch (error) {
-        console.error("❌ Error in checkUserSubscription:", error);
-      }
-    };
-
-    checkUserSubscription();
-  }, [currentUser]);
-
-  // Guest access utilities
-  const hasGuestAccess = (reviewId: string): boolean => {
-    const token = sessionStorage.getItem(`guest_token_${reviewId}`);
-    const expiresAt = sessionStorage.getItem(`guest_token_expires_${reviewId}`);
-    
-    if (!token || !expiresAt) return false;
-    
-    const expiry = new Date(expiresAt);
-    const now = new Date();
-    
-    if (now > expiry) {
-      // Clean up expired token
-      sessionStorage.removeItem(`guest_token_${reviewId}`);
-      sessionStorage.removeItem(`guest_token_expires_${reviewId}`);
-      return false;
-    }
-    
-    return true;
-  };
-
-  const getGuestToken = (reviewId: string): string | null => {
-    if (!hasGuestAccess(reviewId)) return null;
-    return sessionStorage.getItem(`guest_token_${reviewId}`);
-  };
-
-  const clearGuestAccess = (reviewId: string) => {
-    sessionStorage.removeItem(`guest_token_${reviewId}`);
-    sessionStorage.removeItem(`guest_token_expires_${reviewId}`);
-  };
-
   return {
     currentUser,
-    setCurrentUser: enhancedSetCurrentUser,
+    setCurrentUser,
     session,
     loading,
     isSubscribed,
     setIsSubscribed,
     oneTimeAccessResources,
     setOneTimeAccessResources,
-    initUserData,
-    hasGuestAccess,
-    getGuestToken,
-    clearGuestAccess
+    initUserData: enhancedInitUserData,
+    ...guestAccessUtils
   };
 };
