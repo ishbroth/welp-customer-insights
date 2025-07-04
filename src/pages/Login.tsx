@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -89,12 +90,30 @@ const Login = () => {
             accountType: result.verificationData?.accountType
           });
           
+          // Build the verification URL with all necessary parameters
           const params = new URLSearchParams({
             email: email,
             password: password,
             phone: result.phone || '',
             accountType: result.verificationData?.accountType || 'customer'
           });
+          
+          // Add optional parameters if they exist
+          if (result.verificationData?.name) {
+            params.append('name', result.verificationData.name);
+          }
+          if (result.verificationData?.address) {
+            params.append('address', result.verificationData.address);
+          }
+          if (result.verificationData?.city) {
+            params.append('city', result.verificationData.city);
+          }
+          if (result.verificationData?.state) {
+            params.append('state', result.verificationData.state);
+          }
+          if (result.verificationData?.zipCode) {
+            params.append('zipCode', result.verificationData.zipCode);
+          }
           
           toast({
             title: "Phone Verification Required",
