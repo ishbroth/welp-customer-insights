@@ -171,7 +171,9 @@ serve(async (req) => {
             message: `Verification code sent to ${phoneNumber}`,
             debug: {
               messageSid: messageData.sid,
-              status: messageData.status
+              status: messageData.status,
+              cleanedPhone: cleanPhone,
+              twilioFromNumber: fromNumber
             }
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -255,7 +257,15 @@ serve(async (req) => {
     console.error("🔍 Full error:", error);
     
     return new Response(
-      JSON.stringify({ success: false, message: errorMessage }),
+      JSON.stringify({ 
+        success: false, 
+        message: errorMessage,
+        debug: {
+          timestamp: new Date().toISOString(),
+          userAgent: req.headers.get('user-agent'),
+          referer: req.headers.get('referer')
+        }
+      }),
       { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
