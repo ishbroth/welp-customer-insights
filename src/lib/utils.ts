@@ -1,6 +1,7 @@
 
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { formatPhoneForTwilio } from "@/utils/phoneFormatter";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -9,6 +10,9 @@ export function cn(...inputs: ClassValue[]) {
 // Functions to handle phone verification
 export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: string, code: string }) => {
   try {
+    const formattedPhone = formatPhoneForTwilio(phoneNumber);
+    console.log("🔍 Verifying phone:", { original: phoneNumber, formatted: formattedPhone });
+    
     const response = await fetch(`https://yftvcixhifvrovwhtgtj.supabase.co/functions/v1/verify-phone`, {
       method: 'POST',
       headers: { 
@@ -16,7 +20,7 @@ export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: st
         'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdHZjaXhoaWZ2cm92d2h0Z3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5ODY1ODQsImV4cCI6MjA2MTU2MjU4NH0.dk0-iM54olbkNnCEb92-KNsIeDw9u2owEg4B-fh5ggc`
       },
       body: JSON.stringify({
-        phoneNumber,
+        phoneNumber: formattedPhone,
         code,
         actionType: "verify"
       })
@@ -45,6 +49,9 @@ export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: st
 
 export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: string }) => {
   try {
+    const formattedPhone = formatPhoneForTwilio(phoneNumber);
+    console.log("📤 Resending code to:", { original: phoneNumber, formatted: formattedPhone });
+    
     const response = await fetch(`https://yftvcixhifvrovwhtgtj.supabase.co/functions/v1/verify-phone`, {
       method: 'POST',
       headers: { 
@@ -52,7 +59,7 @@ export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: str
         'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdHZjaXhoaWZ2cm92d2h0Z3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5ODY1ODQsImV4cCI6MjA2MTU2MjU4NH0.dk0-iM54olbkNnCEb92-KNsIeDw9u2owEg4B-fh5ggc`
       },
       body: JSON.stringify({
-        phoneNumber,
+        phoneNumber: formattedPhone,
         actionType: "send"
       })
     });

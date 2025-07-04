@@ -63,13 +63,19 @@ serve(async (req) => {
         authToken: !!authToken, 
         fromNumber: !!fromNumber 
       });
-      throw new Error("Twilio credentials not properly configured");
+      throw new Error("Twilio SMS service not properly configured. Please check your Twilio credentials.");
     }
     
     console.log("✅ Twilio configuration verified");
     
-    // Clean phone number (remove non-digits and ensure it starts with +1 for US numbers)
-    let cleanPhone = phoneNumber.replace(/\D/g, '');
+    // Improved phone number cleaning with URL decoding
+    const decodedPhone = decodeURIComponent(phoneNumber);
+    console.log("📱 Decoded phone number:", decodedPhone);
+    
+    let cleanPhone = decodedPhone.replace(/\D/g, '');
+    console.log("📱 Digits only:", cleanPhone);
+    
+    // Convert to E.164 format for Twilio
     if (cleanPhone.length === 10) {
       cleanPhone = '+1' + cleanPhone;
     } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
@@ -77,7 +83,7 @@ serve(async (req) => {
     } else if (!cleanPhone.startsWith('+')) {
       cleanPhone = '+1' + cleanPhone;
     }
-    console.log("📱 Cleaned phone number:", cleanPhone);
+    console.log("📱 Final E.164 format:", cleanPhone);
     
     // For actionType "send" we send a verification code
     if (actionType === "send") {
@@ -148,8 +154,12 @@ serve(async (req) => {
               throw new Error("This phone number is not verified with your Twilio account. Please verify it in your Twilio console first.");
             } else if (errorData.code === 21614) {
               throw new Error("This phone number is not a valid mobile number for SMS.");
+            } else if (errorData.code === 20003) {
+              throw new Error("Twilio authentication failed. Please check your account credentials.");
+            } else if (errorData.code === 20404) {
+              throw new Error("Twilio phone number not found. Please check your Twilio phone number configuration.");
             } else {
-              throw new Error(`Twilio error: ${errorData.message || 'Unknown error'}`);
+              throw new Error(`Twilio error: ${errorData.message || 'Unknown error'} (Code: ${errorData.code})`);
             }
           } catch (parseError) {
             throw new Error(`Twilio API error: ${response.status} - ${errorText}`);
