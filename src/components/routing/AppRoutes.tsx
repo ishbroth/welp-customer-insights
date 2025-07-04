@@ -1,162 +1,145 @@
 
 import { Routes, Route } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
-import Verification from "@/pages/Verification";
-import VerifyPhone from "@/pages/VerifyPhone";
 import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
 import ProfileReviews from "@/pages/ProfileReviews";
-import CustomerProfile from "@/pages/CustomerProfile";
-import BusinessProfile from "@/pages/BusinessProfile";
 import SearchResults from "@/pages/SearchResults";
 import NewReview from "@/pages/NewReview";
 import ReviewSuccess from "@/pages/ReviewSuccess";
+import CustomerProfile from "@/pages/CustomerProfile";
+import BusinessProfile from "@/pages/BusinessProfile";
 import BusinessReviews from "@/pages/BusinessReviews";
+import VerifyPhone from "@/pages/VerifyPhone";
+import BusinessPasswordSetup from "@/pages/BusinessPasswordSetup";
+import Verification from "@/pages/Verification";
+import VerifyLicense from "@/pages/VerifyLicense";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminVerifyBusiness from "@/pages/AdminVerifyBusiness";
+import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
+import CustomerVerification from "@/pages/CustomerVerification";
 import Subscription from "@/pages/Subscription";
+import BuyCredits from "@/pages/BuyCredits";
 import BillingPage from "@/pages/BillingPage";
 import NotificationsPage from "@/pages/NotificationsPage";
-import BusinessVerificationSuccess from "@/pages/BusinessVerificationSuccess";
-import VerificationResources from "@/pages/VerificationResources";
-import About from "@/pages/About";
-import HowItWorks from "@/pages/HowItWorks";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import ReportReview from "@/pages/ReportReview";
 import FAQ from "@/pages/FAQ";
+import About from "@/pages/About";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
-import SuccessStories from "@/pages/SuccessStories";
+import HowItWorks from "@/pages/HowItWorks";
 import CustomerBenefits from "@/pages/CustomerBenefits";
 import CustomerStories from "@/pages/CustomerStories";
-import CustomerVerification from "@/pages/CustomerVerification";
+import SuccessStories from "@/pages/SuccessStories";
+import VerificationResources from "@/pages/VerificationResources";
 import TwilioDebug from "@/pages/TwilioDebug";
+import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
+import BusinessOwnerRoute from "./BusinessOwnerRoute";
+import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
 
 const AppRoutes = () => {
+  const { user } = useAuth();
+
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/verification" element={<Verification />} />
-      <Route path="/verify-phone" element={<VerifyPhone />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/search" element={<SearchResults />} />
-      <Route path="/twilio-debug" element={<TwilioDebug />} />
-      
-      {/* Public pages */}
-      <Route path="/about" element={<About />} />
-      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/customer/:id" element={<CustomerProfile />} />
+      <Route path="/business/:id" element={<BusinessProfile />} />
+      <Route path="/business/:id/reviews" element={<BusinessReviews />} />
+      <Route path="/verify-phone" element={<VerifyPhone />} />
+      <Route path="/business-password-setup" element={<BusinessPasswordSetup />} />
+      <Route path="/verification" element={<Verification />} />
+      <Route path="/verify-license" element={<VerifyLicense />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/verify-business" element={<AdminVerifyBusiness />} />
+      <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
+      <Route path="/customer-verification" element={<CustomerVerification />} />
+      <Route path="/subscription" element={<Subscription />} />
+      <Route path="/buy-credits" element={<BuyCredits />} />
+      <Route path="/report-review/:reviewId" element={<ReportReview />} />
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/about" element={<About />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
-      <Route path="/success-stories" element={<SuccessStories />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
       <Route path="/customer-benefits" element={<CustomerBenefits />} />
       <Route path="/customer-stories" element={<CustomerStories />} />
-      <Route path="/customer-verification" element={<CustomerVerification />} />
-      
-      {/* Protected Profile Routes */}
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <ProfilePage />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/profile/edit" element={
-        <ProtectedRoute>
-          <ProfileEdit />
-        </ProtectedRoute>
-      } />
-      
-      {/* Customer Reviews - works for both business and customer users */}
-      <Route path="/profile/reviews" element={
-        <ProtectedRoute>
-          <ProfileReviews />
-        </ProtectedRoute>
-      } />
-      
-      {/* Business Reviews - for business users writing reviews about customers */}
-      <Route path="/profile/business-reviews" element={
-        <ProtectedRoute>
-          <BusinessReviews />
-        </ProtectedRoute>
-      } />
-      
-      {/* Billing page with transaction history, payment methods, credits */}
-      <Route path="/profile/billing" element={
-        <ProtectedRoute>
-          <BillingPage />
-        </ProtectedRoute>
-      } />
-      
-      {/* Notifications page */}
-      <Route path="/notifications" element={
-        <ProtectedRoute>
-          <NotificationsPage />
-        </ProtectedRoute>
-      } />
-      
-      {/* Legacy route redirects */}
-      <Route path="/profile-reviews" element={
-        <ProtectedRoute>
-          <ProfileReviews />
-        </ProtectedRoute>
-      } />
-      
-      {/* Profile viewing routes */}
-      <Route path="/customer-profile/:customerId" element={
-        <ProtectedRoute>
-          <CustomerProfile />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/business-profile/:businessId" element={
-        <ProtectedRoute>
-          <BusinessProfile />
-        </ProtectedRoute>
-      } />
-      
-      {/* Alternative business profile route */}
-      <Route path="/business/:businessId" element={
-        <ProtectedRoute>
-          <BusinessProfile />
-        </ProtectedRoute>
-      } />
-      
-      {/* Review routes - both /review/new and /new-review for compatibility */}
-      <Route path="/review/new" element={
-        <ProtectedRoute>
-          <NewReview />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/new-review" element={
-        <ProtectedRoute>
-          <NewReview />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/review/success" element={
-        <ProtectedRoute>
-          <ReviewSuccess />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/subscription" element={
-        <ProtectedRoute>
-          <Subscription />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/business-verification-success" element={
-        <ProtectedRoute>
-          <BusinessVerificationSuccess />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/verification-resources" element={
-        <ProtectedRoute>
-          <VerificationResources />
-        </ProtectedRoute>
-      } />
+      <Route path="/success-stories" element={<SuccessStories />} />
+      <Route path="/verification-resources" element={<VerificationResources />} />
+      <Route path="/twilio-debug" element={<TwilioDebug />} />
+
+      {/* Protected Routes */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/edit"
+        element={
+          <ProtectedRoute>
+            <ProfileEdit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/reviews"
+        element={
+          <ProtectedRoute>
+            <ProfileReviews />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/review/new"
+        element={
+          <ProtectedRoute>
+            <NewReview />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/review/success"
+        element={
+          <ProtectedRoute>
+            <ReviewSuccess />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/billing"
+        element={
+          <ProtectedRoute>
+            <BillingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch all route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
