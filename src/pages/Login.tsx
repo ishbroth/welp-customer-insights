@@ -69,7 +69,9 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      console.log("🔐 Starting login process for:", email);
       const result = await login(email, password);
+      console.log("📊 Login result:", result);
       
       if (result.success) {
         // Handle remember me functionality
@@ -81,7 +83,8 @@ const Login = () => {
         
         // Check if phone verification is needed
         if (result.needsPhoneVerification) {
-          console.log("Redirecting to phone verification:", {
+          console.log("🔄 Phone verification required - redirecting to verification page");
+          console.log("📱 Verification data:", {
             phone: result.phone,
             accountType: result.verificationData?.accountType
           });
@@ -98,6 +101,7 @@ const Login = () => {
             description: "Please complete phone verification to access your account.",
           });
           
+          console.log("🔄 Navigating to verify-phone with params:", params.toString());
           navigate(`/verify-phone?${params.toString()}`);
           return;
         }
@@ -192,6 +196,7 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error("💥 Unexpected error in login:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

@@ -18,11 +18,15 @@ export const useAuthLogin = () => {
   // Check if user needs phone verification
   const checkPhoneVerificationStatus = async (userId: string) => {
     try {
+      console.log("🔍 Checking phone verification status for user:", userId);
+      
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('phone, type, verified')
         .eq('id', userId)
         .single();
+
+      console.log("📋 Profile data:", { profile, error });
 
       if (error) {
         console.error("Error checking profile:", error);
@@ -31,7 +35,9 @@ export const useAuthLogin = () => {
 
       // If user has a phone but is not verified, they need phone verification
       if (profile?.phone && !profile?.verified) {
-        console.log("User has phone but is not verified - needs phone verification");
+        console.log("🚨 User has phone but is not verified - needs phone verification");
+        console.log("📱 Phone:", profile.phone);
+        console.log("✅ Verified status:", profile.verified);
         return { 
           needsPhoneVerification: true, 
           phone: profile.phone,
@@ -39,6 +45,7 @@ export const useAuthLogin = () => {
         };
       }
 
+      console.log("✅ User verification check passed - no phone verification needed");
       return { needsPhoneVerification: false };
     } catch (error) {
       console.error("Error in phone verification check:", error);
@@ -81,6 +88,7 @@ export const useAuthLogin = () => {
           // Check phone verification status
           const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
           if (phoneCheck.needsPhoneVerification) {
+            console.log("🔄 Phone verification needed after email confirmation");
             return { 
               success: true, 
               needsPhoneVerification: true,
@@ -127,11 +135,14 @@ export const useAuthLogin = () => {
         return { success: false, error: error.message };
       }
 
-      console.log("✅ Login successful, checking verification status");
+      console.log("✅ Login successful, checking verification status for user:", data.user.id);
 
       // Check phone verification status for successful login
       const phoneCheck = await checkPhoneVerificationStatus(data.user.id);
+      console.log("📞 Phone verification check result:", phoneCheck);
+      
       if (phoneCheck.needsPhoneVerification) {
+        console.log("🔄 Redirecting to phone verification");
         return { 
           success: true, 
           needsPhoneVerification: true,
@@ -140,6 +151,7 @@ export const useAuthLogin = () => {
         };
       }
 
+      console.log("🎉 Login complete - no additional verification needed");
       // Session and user will be set by the auth state listener
       return { success: true };
     } catch (error: any) {
