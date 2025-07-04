@@ -44,7 +44,7 @@ import BusinessOwnerRoute from "./BusinessOwnerRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
 
 const AppRoutes = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
 
   return (
     <Routes>
