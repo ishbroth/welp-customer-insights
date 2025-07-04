@@ -20,7 +20,7 @@ export const useAuthLogin = () => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('phone, type')
+        .select('phone, type, verified')
         .eq('id', userId)
         .single();
 
@@ -29,18 +29,13 @@ export const useAuthLogin = () => {
         return { needsPhoneVerification: false };
       }
 
-      // If it's a business account and has a phone but no verification completed
-      // Check if there's verification data in session storage
-      const verificationData = sessionStorage.getItem("businessVerificationData");
-      const hasUncompletedVerification = verificationData && 
-        JSON.parse(verificationData).verificationMethod === "phone" && 
-        !JSON.parse(verificationData).isFullyVerified;
-
-      if (profile?.type === 'business' && profile?.phone && hasUncompletedVerification) {
+      // If user has a phone but is not verified, they need phone verification
+      if (profile?.phone && !profile?.verified) {
+        console.log("User has phone but is not verified - needs phone verification");
         return { 
           needsPhoneVerification: true, 
           phone: profile.phone,
-          verificationData: JSON.parse(verificationData)
+          accountType: profile.type
         };
       }
 
@@ -90,7 +85,7 @@ export const useAuthLogin = () => {
               success: true, 
               needsPhoneVerification: true,
               phone: phoneCheck.phone,
-              verificationData: phoneCheck.verificationData
+              verificationData: { accountType: phoneCheck.accountType }
             };
           }
           
@@ -132,7 +127,7 @@ export const useAuthLogin = () => {
         return { success: false, error: error.message };
       }
 
-      console.log("✅ Login successful");
+      console.log("✅ Login successful, checking verification status");
 
       // Check phone verification status for successful login
       const phoneCheck = await checkPhoneVerificationStatus(data.user.id);
@@ -141,7 +136,7 @@ export const useAuthLogin = () => {
           success: true, 
           needsPhoneVerification: true,
           phone: phoneCheck.phone,
-          verificationData: phoneCheck.verificationData
+          verificationData: { accountType: phoneCheck.accountType }
         };
       }
 

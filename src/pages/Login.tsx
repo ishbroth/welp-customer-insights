@@ -81,21 +81,17 @@ const Login = () => {
         
         // Check if phone verification is needed
         if (result.needsPhoneVerification) {
+          console.log("Redirecting to phone verification:", {
+            phone: result.phone,
+            accountType: result.verificationData?.accountType
+          });
+          
           const params = new URLSearchParams({
             email: email,
             password: password,
             phone: result.phone || '',
-            accountType: 'business'
+            accountType: result.verificationData?.accountType || 'customer'
           });
-          
-          // Add verification data if available
-          if (result.verificationData) {
-            Object.entries(result.verificationData).forEach(([key, value]) => {
-              if (value && key !== 'password') {
-                params.append(key, String(value));
-              }
-            });
-          }
           
           toast({
             title: "Phone Verification Required",
