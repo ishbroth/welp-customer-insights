@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle, Phone } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const TwilioSMSTest = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -97,16 +97,14 @@ const TwilioSMSTest = () => {
           <label htmlFor="testPhone" className="block text-sm font-medium mb-1">
             Phone Number to Test
           </label>
-          <Input
-            id="testPhone"
-            type="tel"
-            placeholder="(619) 724-2702"
+          <PhoneInput
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            onChange={setPhoneNumber}
+            placeholder="(619) 724-2702"
             className="w-full"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Enter any phone number to test SMS delivery
+            Enter phone number in (XXX) XXX-XXXX format - it will be automatically formatted
           </p>
         </div>
         
@@ -171,8 +169,8 @@ const TwilioSMSTest = () => {
           <strong>How this works:</strong>
           <ul className="list-disc list-inside mt-1 space-y-1">
             <li>This test calls the same verify-phone function used during signup</li>
-            <li>It will attempt to send an SMS to the number you specify</li>
-            <li>You should receive a verification code if everything is working</li>
+            <li>Phone numbers are automatically formatted to E.164 format (+1XXXXXXXXXX)</li>
+            <li>You should receive a verification code if everything is working correctly</li>
             <li>Check the debug information for detailed Twilio response data</li>
           </ul>
         </div>
