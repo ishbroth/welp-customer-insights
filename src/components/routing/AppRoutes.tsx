@@ -28,6 +28,7 @@ import SuccessStories from "@/pages/SuccessStories";
 import CustomerBenefits from "@/pages/CustomerBenefits";
 import CustomerStories from "@/pages/CustomerStories";
 import CustomerVerification from "@/pages/CustomerVerification";
+import TwilioDebug from "@/pages/TwilioDebug";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -39,6 +40,7 @@ const AppRoutes = () => {
       <Route path="/verification" element={<Verification />} />
       <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/search" element={<SearchResults />} />
+      <Route path="/twilio-debug" element={<TwilioDebug />} />
       
       {/* Public pages */}
       <Route path="/about" element={<About />} />
