@@ -1,10 +1,10 @@
 
-
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import Verification from "@/pages/Verification";
+import VerifyPhone from "@/pages/VerifyPhone";
 import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
 import ProfileReviews from "@/pages/ProfileReviews";
@@ -37,6 +37,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/verification" element={<Verification />} />
+      <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/search" element={<SearchResults />} />
       
       {/* Public pages */}
