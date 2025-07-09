@@ -66,31 +66,9 @@ export const BusinessVerificationStep = ({
     e.preventDefault();
     
     // Validate required fields including state
-    if (!businessName.trim()) {
-      return;
-    }
-    if (!businessEmail.trim()) {
-      return;
-    }
-    if (!businessStreet.trim()) {
-      return;
-    }
-    if (!businessCity.trim()) {
-      return;
-    }
-    if (!businessState.trim()) {
-      return;
-    }
-    if (!businessZipCode.trim()) {
-      return;
-    }
-    if (!businessPhone.trim()) {
-      return;
-    }
-    if (!businessType.trim()) {
-      return;
-    }
-    if (!licenseNumber.trim()) {
+    if (!businessName.trim() || !businessEmail.trim() || !businessStreet.trim() || 
+        !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() || 
+        !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim()) {
       return;
     }
     
@@ -143,7 +121,7 @@ export const BusinessVerificationStep = ({
         className="welp-button w-full mt-6" 
         disabled={isVerifying || hasDuplicates || !businessState.trim()}
       >
-        {isVerifying ? "Verifying..." : (isVerified ? "Update License Information" : "Verify Business")}
+        {isVerifying ? "Processing..." : "Continue to Password Setup"}
       </Button>
     </form>
   );

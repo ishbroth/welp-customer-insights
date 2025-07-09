@@ -1,11 +1,7 @@
 
 import { useAuth } from "@/contexts/auth";
-import { BusinessVerificationDisplay } from "./BusinessVerificationDisplay";
-import { PhoneVerificationFlow } from "./PhoneVerificationFlow";
-import { PasswordSetupStep } from "./PasswordSetupStep";
 import { BusinessVerificationStep } from "./BusinessVerificationStep";
-import { BusinessSignupPopups } from "./BusinessSignupPopups";
-import { useBusinessVerification } from "@/hooks/useBusinessVerification";
+import { PasswordSetupStep } from "./PasswordSetupStep";
 import { useBusinessAccountCreation } from "@/hooks/useBusinessAccountCreation";
 import { useBusinessFormState } from "@/hooks/useBusinessFormState";
 
@@ -47,57 +43,29 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
     setHasDuplicates
   } = useBusinessFormState();
   
-  // Use custom hooks for verification and account creation
-  const {
-    isVerified,
-    isVerifying,
-    verificationData,
-    verificationError,
-    setVerificationError,
-    showTextVerification,
-    realVerificationDetails,
-    showAccountCreatedPopup: verificationAccountCreatedPopup,
-    setShowAccountCreatedPopup: setVerificationAccountCreatedPopup,
-    createdBusinessData: verificationCreatedBusinessData,
-    performBusinessVerification,
-    handleVerificationSuccess,
-    handleEditInformation,
-    handleBackToForm
-  } = useBusinessVerification(currentUser?.id);
-
   const {
     isSubmitting,
-    showAccountCreatedPopup: passwordAccountCreatedPopup,
-    setShowAccountCreatedPopup: setPasswordAccountCreatedPopup,
-    createdBusinessData: passwordCreatedBusinessData,
     createBusinessAccount
   } = useBusinessAccountCreation();
   
-  // Business verification handlers
-  const handleBusinessVerification = async (e: React.FormEvent) => {
+  // Business form validation and step progression
+  const handleBusinessInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Block verification if duplicates exist
-    if (hasDuplicates) {
-      setVerificationError("Please resolve duplicate account issues before proceeding.");
+    // Validate required fields
+    if (!businessName.trim() || !businessEmail.trim() || !businessStreet.trim() || 
+        !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() || 
+        !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim()) {
       return;
     }
     
-    const result = await performBusinessVerification(
-      businessName,
-      businessEmail,
-      businessPhone,
-      businessStreet,
-      businessCity,
-      businessState,
-      businessZipCode,
-      licenseNumber,
-      businessType
-    );
-    
-    if (result.success && result.nextStep) {
-      setStep(result.nextStep);
+    // Block if duplicates exist
+    if (hasDuplicates) {
+      return;
     }
+    
+    // Move to password setup step
+    setStep(2);
   };
   
   const handleCreateBusinessAccount = async () => {
@@ -106,7 +74,7 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       return;
     }
     
-    const result = await createBusinessAccount(
+    await createBusinessAccount(
       businessName,
       businessEmail,
       businessPassword,
@@ -119,15 +87,11 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       licenseNumber,
       businessType
     );
-    
-    if (result.success) {
-      // The popup will be shown automatically
-    }
   };
   
   return (
     <>
-      {step === 1 && !verificationData && !showTextVerification && (
+      {step === 1 && (
         <BusinessVerificationStep
           businessName={businessName}
           setBusinessName={setBusinessName}
@@ -151,36 +115,10 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
           setLicenseNumber={setLicenseNumber}
           hasDuplicates={hasDuplicates}
           onDuplicateFound={setHasDuplicates}
-          verificationError={verificationError}
-          isVerifying={isVerifying}
-          isVerified={isVerified}
-          onSubmit={handleBusinessVerification}
-        />
-      )}
-
-      {step === 1 && showTextVerification && !verificationData && (
-        <PhoneVerificationFlow
-          businessPhone={businessPhone}
-          setBusinessPhone={setBusinessPhone}
-          verificationError={verificationError}
-          setVerificationError={setVerificationError}
-          onVerificationSuccess={handleVerificationSuccess}
-          onBack={handleBackToForm}
-          businessName={businessName}
-          businessStreet={businessStreet}
-          businessCity={businessCity}
-          businessState={businessState}
-          businessZipCode={businessZipCode}
-          businessEmail={businessEmail}
-          businessType={businessType}
-        />
-      )}
-
-      {step === 1 && verificationData && (
-        <BusinessVerificationDisplay
-          verificationData={verificationData}
-          onContinue={() => setStep(2)}
-          onEdit={handleEditInformation}
+          verificationError=""
+          isVerifying={false}
+          isVerified={false}
+          onSubmit={handleBusinessInfoSubmit}
         />
       )}
 
@@ -195,15 +133,6 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
           disabled={hasDuplicates}
         />
       )}
-      
-      <BusinessSignupPopups
-        realVerificationDetails={realVerificationDetails}
-        showAccountCreatedPopup={verificationAccountCreatedPopup || passwordAccountCreatedPopup}
-        setShowAccountCreatedPopup={verificationAccountCreatedPopup ? setVerificationAccountCreatedPopup : setPasswordAccountCreatedPopup}
-        createdBusinessData={verificationCreatedBusinessData || passwordCreatedBusinessData}
-        businessPhone={businessPhone}
-        setBusinessPhone={setBusinessPhone}
-      />
     </>
   );
 };
