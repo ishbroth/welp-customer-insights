@@ -46,27 +46,30 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     console.log("✅ Supabase client initialized");
 
-    // Get Twilio credentials
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
+    // Get AWS credentials
+    const awsAccessKey = Deno.env.get("AWS_ACCESS_KEY_ID");
+    const awsSecretKey = Deno.env.get("AWS_SECRET_ACCESS_KEY");
+    const awsRegion = Deno.env.get("AWS_REGION");
+    const originationNumber = Deno.env.get("AWS_SNS_ORIGINATION_NUMBER");
     
-    console.log("🔐 Twilio configuration check:", { 
-      accountSid: accountSid ? `${accountSid.substring(0, 8)}***` : "MISSING", 
-      authToken: authToken ? "***PRESENT***" : "MISSING", 
-      fromNumber: fromNumber || "MISSING" 
+    console.log("🔐 AWS configuration check:", { 
+      accessKey: awsAccessKey ? `${awsAccessKey.substring(0, 8)}***` : "MISSING", 
+      secretKey: awsSecretKey ? "***PRESENT***" : "MISSING", 
+      region: awsRegion || "MISSING",
+      originationNumber: originationNumber || "MISSING" 
     });
     
-    if (!accountSid || !authToken || !fromNumber) {
-      console.error("❌ Missing Twilio configuration:", { 
-        accountSid: !!accountSid, 
-        authToken: !!authToken, 
-        fromNumber: !!fromNumber 
+    if (!awsAccessKey || !awsSecretKey || !awsRegion || !originationNumber) {
+      console.error("❌ Missing AWS configuration:", { 
+        accessKey: !!awsAccessKey, 
+        secretKey: !!awsSecretKey, 
+        region: !!awsRegion,
+        originationNumber: !!originationNumber 
       });
-      throw new Error("Twilio SMS service not properly configured. Please check your Twilio credentials.");
+      throw new Error("AWS SNS service not properly configured. Please check your AWS credentials.");
     }
     
-    console.log("✅ Twilio configuration verified");
+    console.log("✅ AWS configuration verified");
     
     // Improved phone number cleaning with URL decoding
     const decodedPhone = decodeURIComponent(phoneNumber);
@@ -75,7 +78,7 @@ serve(async (req) => {
     let cleanPhone = decodedPhone.replace(/\D/g, '');
     console.log("📱 Digits only:", cleanPhone);
     
-    // Convert to E.164 format for Twilio
+    // Convert to E.164 format for AWS SNS
     if (cleanPhone.length === 10) {
       cleanPhone = '+1' + cleanPhone;
     } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
@@ -87,7 +90,7 @@ serve(async (req) => {
     
     // For actionType "send" we send a verification code
     if (actionType === "send") {
-      console.log("📤 Sending verification code");
+      console.log("📤 Sending verification code via AWS SNS");
       
       // Generate a random 6-digit code
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -114,84 +117,110 @@ serve(async (req) => {
         throw new Error("Failed to store verification code in database");
       }
       
-      // Send SMS using Twilio REST API directly
+      // Send SMS using AWS SNS
       try {
-        console.log(`📨 Attempting to send SMS to ${cleanPhone} from ${fromNumber}`);
+        console.log(`📨 Attempting to send SMS to ${cleanPhone} via AWS SNS`);
         
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-        const auth = btoa(`${accountSid}:${authToken}`);
+        const smsMessage = `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`;
+        console.log("📝 SMS message prepared");
         
-        const smsBody = `Your Welp verification code is: ${verificationCode}. It expires in 10 minutes.`;
-        console.log("📝 SMS message body prepared");
+        // Create AWS signature for SNS API call
+        const host = `sns.${awsRegion}.amazonaws.com`;
+        const endpoint = `https://${host}/`;
         
-        const response = await fetch(twilioUrl, {
+        const params = new URLSearchParams({
+          'Action': 'Publish',
+          'PhoneNumber': cleanPhone,
+          'Message': smsMessage,
+          'MessageAttributes.AWS.SNS.SMS.SenderID.DataType': 'String',
+          'MessageAttributes.AWS.SNS.SMS.SenderID.StringValue': 'Welp',
+          'Version': '2010-03-31'
+        });
+
+        // Add origination number if provided
+        if (originationNumber) {
+          params.append('MessageAttributes.AWS.SNS.SMS.OriginationNumber.DataType', 'String');
+          params.append('MessageAttributes.AWS.SNS.SMS.OriginationNumber.StringValue', originationNumber);
+        }
+        
+        const body = params.toString();
+        
+        // Create AWS signature v4
+        const now = new Date();
+        const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+        
+        // Create canonical request
+        const canonicalHeaders = `host:${host}\nx-amz-date:${amzDate}\n`;
+        const signedHeaders = 'host;x-amz-date';
+        
+        const canonicalRequest = [
+          'POST',
+          '/',
+          '',
+          canonicalHeaders,
+          signedHeaders,
+          await sha256(body)
+        ].join('\n');
+        
+        // Create string to sign
+        const credentialScope = `${dateStamp}/${awsRegion}/sns/aws4_request`;
+        const stringToSign = [
+          'AWS4-HMAC-SHA256',
+          amzDate,
+          credentialScope,
+          await sha256(canonicalRequest)
+        ].join('\n');
+        
+        // Calculate signature
+        const kDate = await hmacSha256(`AWS4${awsSecretKey}`, dateStamp);
+        const kRegion = await hmacSha256(kDate, awsRegion);
+        const kService = await hmacSha256(kRegion, 'sns');
+        const kSigning = await hmacSha256(kService, 'aws4_request');
+        const signature = await hmacSha256(kSigning, stringToSign, 'hex');
+        
+        // Create authorization header
+        const authorization = `AWS4-HMAC-SHA256 Credential=${awsAccessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+        
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+            'X-Amz-Date': amzDate,
+            'Authorization': authorization,
+            'Host': host
           },
-          body: new URLSearchParams({
-            To: cleanPhone,
-            From: fromNumber,
-            Body: smsBody
-          })
+          body: body
         });
         
-        console.log("📡 Twilio API response status:", response.status);
+        console.log("📡 AWS SNS API response status:", response.status);
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("❌ Twilio API error:", response.status, errorText);
-          
-          // Parse Twilio error for more specific information
-          try {
-            const errorData = JSON.parse(errorText);
-            console.error("🔍 Twilio error details:", errorData);
-            
-            if (errorData.code === 21211) {
-              throw new Error("Invalid phone number format. Please check the phone number and try again.");
-            } else if (errorData.code === 21608) {
-              throw new Error("This phone number is not verified with your Twilio account. Please verify it in your Twilio console first.");
-            } else if (errorData.code === 21614) {
-              throw new Error("This phone number is not a valid mobile number for SMS.");
-            } else if (errorData.code === 20003) {
-              throw new Error("Twilio authentication failed. Please check your account credentials.");
-            } else if (errorData.code === 20404) {
-              throw new Error("Twilio phone number not found. Please check your Twilio phone number configuration.");
-            } else {
-              throw new Error(`Twilio error: ${errorData.message || 'Unknown error'} (Code: ${errorData.code})`);
-            }
-          } catch (parseError) {
-            throw new Error(`Twilio API error: ${response.status} - ${errorText}`);
-          }
+          console.error("❌ AWS SNS API error:", response.status, errorText);
+          throw new Error(`AWS SNS API error: ${response.status} - ${errorText}`);
         }
         
-        const messageData = await response.json();
-        console.log(`✅ SMS sent successfully. Message SID: ${messageData.sid}`);
-        console.log("📊 Message details:", {
-          sid: messageData.sid,
-          status: messageData.status,
-          to: messageData.to,
-          from: messageData.from
-        });
+        const responseText = await response.text();
+        console.log("✅ SMS sent successfully via AWS SNS");
+        console.log("📊 SNS Response:", responseText.substring(0, 200) + "...");
         
         return new Response(
           JSON.stringify({ 
             success: true, 
             message: `Verification code sent to ${phoneNumber}`,
             debug: {
-              messageSid: messageData.sid,
-              status: messageData.status,
+              provider: "AWS SNS",
               cleanedPhone: cleanPhone,
-              twilioFromNumber: fromNumber
+              originationNumber: originationNumber
             }
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
         
-      } catch (twilioError) {
-        console.error("❌ Twilio error details:", twilioError);
-        throw new Error(`Failed to send SMS: ${twilioError.message}`);
+      } catch (snsError) {
+        console.error("❌ AWS SNS error details:", snsError);
+        throw new Error(`Failed to send SMS via AWS SNS: ${snsError.message}`);
       }
     } 
     else if (actionType === "verify") {
@@ -283,3 +312,35 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper functions for AWS signature v4
+async function sha256(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacSha256(key: string | Uint8Array, data: string, encoding: 'hex' | 'raw' = 'raw'): Promise<string | Uint8Array> {
+  const encoder = new TextEncoder();
+  const keyBuffer = typeof key === 'string' ? encoder.encode(key) : key;
+  const dataBuffer = encoder.encode(data);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyBuffer,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, dataBuffer);
+  const signatureArray = new Uint8Array(signature);
+  
+  if (encoding === 'hex') {
+    return Array.from(signatureArray).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  
+  return signatureArray;
+}
