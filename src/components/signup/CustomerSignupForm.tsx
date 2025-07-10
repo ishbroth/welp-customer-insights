@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
+import { usePhoneVerification } from "@/hooks/usePhoneVerification";
+import VerificationCodeInput from "@/components/verification/VerificationCodeInput";
+import VerifyCodeButton from "@/components/verification/VerifyCodeButton";
+import ResendCodeButton from "@/components/verification/ResendCodeButton";
+import { sendVerificationCode } from "@/lib/utils";
 
 const CustomerSignupForm = () => {
   const [name, setName] = useState("");
@@ -17,11 +20,33 @@ const CustomerSignupForm = () => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
+  const [step, setStep] = useState(1); // 1: form, 2: verification
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+
+  // Phone verification hook
+  const {
+    verificationCode,
+    setVerificationCode,
+    isCodeValid,
+    isVerifying,
+    isResending,
+    isResendDisabled,
+    resendTimer,
+    handleVerifyCode,
+    handleResendCode
+  } = usePhoneVerification({
+    email,
+    password,
+    name,
+    phoneNumber: phone,
+    accountType: 'customer',
+    address,
+    city,
+    state,
+    zipCode
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,51 +69,86 @@ const CustomerSignupForm = () => {
       return;
     }
 
+    if (!phone) {
+      toast({
+        title: "Phone Required",
+        description: "Phone number is required for verification.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const result = await signup({
-        email,
-        password,
-        name,
-        phone,
-        zipCode,
-        address,
-        city,
-        state,
-        type: 'customer'
-      });
-
-      if (result.success) {
+      // Send verification code
+      const { success, error } = await sendVerificationCode({ phoneNumber: phone });
+      
+      if (success) {
         toast({
-          title: "Account Created Successfully!",
-          description: "Your customer account has been created. You can now log in.",
+          title: "Verification Code Sent",
+          description: `A verification code has been sent to ${phone}.`,
         });
-        
-        navigate("/login", {
-          state: {
-            message: "Account created successfully! Please log in with your credentials.",
-            email: email
-          }
-        });
+        setStep(2); // Move to verification step
       } else {
         toast({
-          title: "Signup Error",
-          description: result.error || "Failed to create account. Please try again.",
+          title: "Error",
+          description: error || "Failed to send verification code. Please try again.",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Error sending verification code:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred during signup.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (step === 2) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Verify Your Phone Number</h3>
+          <p className="text-sm text-gray-600">
+            We've sent a verification code to {phone}
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <VerificationCodeInput
+            value={verificationCode}
+            onChange={setVerificationCode}
+            isValid={isCodeValid}
+          />
+
+          <VerifyCodeButton
+            onClick={handleVerifyCode}
+            isLoading={isVerifying}
+          />
+
+          <ResendCodeButton
+            onResend={handleResendCode}
+            isDisabled={isResendDisabled}
+            isResending={isResending}
+            timer={resendTimer}
+          />
+
+          <Button 
+            variant="outline" 
+            onClick={() => setStep(1)}
+            className="w-full"
+          >
+            Back to Form
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -146,7 +206,7 @@ const CustomerSignupForm = () => {
         </div>
 
         <div>
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
             type="tel"
@@ -154,6 +214,7 @@ const CustomerSignupForm = () => {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="welp-input"
+            required
           />
         </div>
 
@@ -211,7 +272,7 @@ const CustomerSignupForm = () => {
         className="welp-button w-full mt-6" 
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Creating Account..." : "Create Customer Account"}
+        {isSubmitting ? "Sending Verification Code..." : "Continue to Phone Verification"}
       </Button>
     </form>
   );

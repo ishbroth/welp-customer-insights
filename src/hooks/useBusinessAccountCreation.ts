@@ -1,16 +1,15 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
+import { sendVerificationCode } from "@/lib/utils";
 
 export const useBusinessAccountCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const createBusinessAccount = async (
+  const initiatePhoneVerification = async (
     businessName: string,
     businessEmail: string,
     businessPassword: string,
@@ -42,50 +41,58 @@ export const useBusinessAccountCreation = () => {
       return { success: false };
     }
 
+    if (!businessPhone) {
+      toast({
+        title: "Phone Required",
+        description: "Phone number is required for verification.",
+        variant: "destructive"
+      });
+      return { success: false };
+    }
+
     setIsSubmitting(true);
 
     try {
-      const result = await signup({
-        email: businessEmail,
-        password: businessPassword,
-        name: businessName,
-        phone: businessPhone,
-        zipCode: businessZipCode,
-        address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
-        city: businessCity,
-        state: businessState,
-        type: 'business',
-        businessName: businessName
-      });
-
-      if (result.success) {
+      // Send verification code
+      const { success, error } = await sendVerificationCode({ phoneNumber: businessPhone });
+      
+      if (success) {
         toast({
-          title: "Business Account Created Successfully!",
-          description: "Your business account has been created. You can now log in.",
+          title: "Verification Code Sent",
+          description: `A verification code has been sent to ${businessPhone}.`,
         });
-        
-        navigate("/login", {
+
+        // Navigate to phone verification page with business data
+        navigate("/phone-verification", {
           state: {
-            message: "Business account created successfully! Please log in with your credentials.",
-            email: businessEmail
+            email: businessEmail,
+            password: businessPassword,
+            name: businessName,
+            phoneNumber: businessPhone,
+            accountType: 'business',
+            businessName: businessName,
+            address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
+            city: businessCity,
+            state: businessState,
+            zipCode: businessZipCode
           }
         });
         
         return { success: true };
       } else {
         toast({
-          title: "Signup Error",
-          description: result.error || "Failed to create business account. Please try again.",
+          title: "Error",
+          description: error || "Failed to send verification code. Please try again.",
           variant: "destructive"
         });
         return { success: false };
       }
 
     } catch (error) {
-      console.error("Account creation error:", error);
+      console.error("Verification initiation error:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred during account creation.",
+        description: "An unexpected error occurred during verification setup.",
         variant: "destructive"
       });
       return { success: false };
@@ -96,6 +103,6 @@ export const useBusinessAccountCreation = () => {
 
   return {
     isSubmitting,
-    createBusinessAccount
+    initiatePhoneVerification
   };
 };

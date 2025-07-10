@@ -45,7 +45,7 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
   
   const {
     isSubmitting,
-    createBusinessAccount
+    initiatePhoneVerification
   } = useBusinessAccountCreation();
   
   // Business form validation and step progression
@@ -74,7 +74,7 @@ const BusinessSignupForm = ({ step, setStep }: BusinessSignupFormProps) => {
       return;
     }
     
-    await createBusinessAccount(
+    await initiatePhoneVerification(
       businessName,
       businessEmail,
       businessPassword,

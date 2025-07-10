@@ -65,7 +65,7 @@ export const BusinessVerificationStep = ({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields including state
+    // Validate required fields including state and phone
     if (!businessName.trim() || !businessEmail.trim() || !businessStreet.trim() || 
         !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() || 
         !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim()) {
@@ -119,7 +119,7 @@ export const BusinessVerificationStep = ({
       <Button 
         type="submit" 
         className="welp-button w-full mt-6" 
-        disabled={isVerifying || hasDuplicates || !businessState.trim()}
+        disabled={isVerifying || hasDuplicates || !businessState.trim() || !businessPhone.trim()}
       >
         {isVerifying ? "Processing..." : "Continue to Password Setup"}
       </Button>
