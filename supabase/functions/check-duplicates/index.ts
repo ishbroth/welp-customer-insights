@@ -12,17 +12,32 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log("🚀 DUPLICATE CHECK EDGE FUNCTION CALLED");
+  console.log("📥 Request method:", req.method);
+  console.log("📥 Request URL:", req.url);
+  
   if (req.method === 'OPTIONS') {
+    console.log("✅ Handling CORS preflight request");
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { email, phone, businessName, address, accountType }: DuplicateCheckRequest = await req.json()
+    console.log("📋 Parsing request body...");
+    const requestBody = await req.json()
+    console.log("📋 Request body received:", JSON.stringify(requestBody, null, 2));
+    
+    const { email, phone, businessName, address, accountType }: DuplicateCheckRequest = requestBody
     
     console.log("=== DUPLICATE CHECK EDGE FUNCTION START ===");
-    console.log("Request payload:", { email, phone, businessName, address, accountType });
+    console.log("🔍 Input parameters:");
+    console.log("  - email:", email);
+    console.log("  - phone:", phone);
+    console.log("  - businessName:", businessName);
+    console.log("  - address:", address);
+    console.log("  - accountType:", accountType);
 
     // Create service role client that bypasses RLS
+    console.log("🔑 Creating Supabase admin client...");
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -34,16 +49,29 @@ serve(async (req) => {
       }
     )
 
-    console.log("Supabase admin client created successfully");
-    console.log("Supabase URL:", Deno.env.get('SUPABASE_URL'));
-    console.log("Service role key exists:", !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
+    console.log("✅ Supabase admin client created successfully");
+    console.log("🌐 Supabase URL:", Deno.env.get('SUPABASE_URL'));
+    console.log("🔐 Service role key exists:", !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
+
+    // Test database connection
+    console.log("🧪 Testing database connection...");
+    const { data: testData, error: testError } = await supabaseAdmin
+      .from('profiles')
+      .select('count', { count: 'exact', head: true });
+    
+    if (testError) {
+      console.error("❌ Database connection test failed:", testError);
+    } else {
+      console.log("✅ Database connection successful, total profiles:", testData);
+    }
 
     // Check email duplicates within the same account type (highest priority - always block)
     if (email && accountType) {
-      console.log("Checking email duplicates...");
+      console.log("📧 Checking email duplicates...");
       const emailResult = await checkEmailDuplicates(supabaseAdmin, email, accountType);
       if (emailResult) {
-        console.log("Email duplicate found, returning result");
+        console.log("🚨 EMAIL DUPLICATE FOUND, returning result");
+        console.log("📧 Email result:", JSON.stringify(emailResult, null, 2));
         console.log("=== DUPLICATE CHECK END (EMAIL FOUND) ===");
         return new Response(
           JSON.stringify(emailResult),
@@ -53,15 +81,16 @@ serve(async (req) => {
           }
         );
       }
-      console.log("No email duplicates found, continuing...");
+      console.log("✅ No email duplicates found, continuing...");
     }
 
     // Check phone duplicates within the same account type (second priority - always block)
     if (phone && accountType) {
-      console.log("Checking phone duplicates...");
+      console.log("📱 Checking phone duplicates...");
       const phoneResult = await checkPhoneDuplicates(supabaseAdmin, phone, accountType);
       if (phoneResult) {
-        console.log("Phone duplicate found, returning result");
+        console.log("🚨 PHONE DUPLICATE FOUND, returning result");
+        console.log("📱 Phone result:", JSON.stringify(phoneResult, null, 2));
         console.log("=== DUPLICATE CHECK END (PHONE FOUND) ===");
         return new Response(
           JSON.stringify(phoneResult),
@@ -71,15 +100,16 @@ serve(async (req) => {
           }
         );
       }
-      console.log("No phone duplicates found, continuing...");
+      console.log("✅ No phone duplicates found, continuing...");
     }
 
     // For business accounts, check if combination of details matches existing business
     if (accountType === 'business' && businessName && address) {
-      console.log("Checking business combination duplicates...");
+      console.log("🏢 Checking business combination duplicates...");
       const businessCombinationResult = await checkBusinessCombinationDuplicates(supabaseAdmin, businessName, address);
       if (businessCombinationResult) {
-        console.log("Business combination duplicate found, returning result");
+        console.log("🚨 BUSINESS COMBINATION DUPLICATE FOUND, returning result");
+        console.log("🏢 Business combination result:", JSON.stringify(businessCombinationResult, null, 2));
         console.log("=== DUPLICATE CHECK END (BUSINESS COMBINATION FOUND) ===");
         return new Response(
           JSON.stringify(businessCombinationResult),
@@ -89,15 +119,16 @@ serve(async (req) => {
           }
         );
       }
-      console.log("No business combination duplicates found, continuing...");
+      console.log("✅ No business combination duplicates found, continuing...");
     }
 
     // Individual field checks for business accounts (lower priority, allow continue)
     if (accountType === 'business') {
-      console.log("Checking individual business fields...");
+      console.log("🏢 Checking individual business fields...");
       const individualFieldResult = await checkIndividualBusinessFields(supabaseAdmin, businessName, address);
       if (individualFieldResult) {
-        console.log("Individual field duplicate found, returning result");
+        console.log("🚨 INDIVIDUAL FIELD DUPLICATE FOUND, returning result");
+        console.log("🏢 Individual field result:", JSON.stringify(individualFieldResult, null, 2));
         console.log(`=== DUPLICATE CHECK END (${individualFieldResult.duplicateType?.toUpperCase()} FOUND) ===`);
         return new Response(
           JSON.stringify(individualFieldResult),
@@ -107,10 +138,10 @@ serve(async (req) => {
           }
         );
       }
-      console.log("No individual field duplicates found, continuing...");
+      console.log("✅ No individual field duplicates found, continuing...");
     }
 
-    console.log("No duplicates found within account type:", accountType);
+    console.log("🎉 No duplicates found within account type:", accountType);
     console.log("=== DUPLICATE CHECK END (AVAILABLE) ===");
 
     const noDuplicateResponse: DuplicateCheckResponse = {
@@ -119,6 +150,7 @@ serve(async (req) => {
       allowContinue: false
     };
 
+    console.log("📤 Returning no duplicate response:", JSON.stringify(noDuplicateResponse, null, 2));
     return new Response(
       JSON.stringify(noDuplicateResponse),
       { 
@@ -128,7 +160,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in duplicate check edge function:', error);
+    console.error('💥 Error in duplicate check edge function:', error);
+    console.error('💥 Error stack:', error.stack);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
