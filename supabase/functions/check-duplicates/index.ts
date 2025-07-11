@@ -50,22 +50,47 @@ serve(async (req) => {
     )
 
     console.log("✅ Supabase admin client created successfully");
-    console.log("🌐 Supabase URL:", Deno.env.get('SUPABASE_URL'));
-    console.log("🔐 Service role key exists:", !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
 
-    // Test database connection
+    // Test database connection with detailed logging
     console.log("🧪 Testing database connection...");
-    const { data: testData, error: testError } = await supabaseAdmin
+    const { count: totalCount, error: testError } = await supabaseAdmin
       .from('profiles')
-      .select('count', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true });
     
     if (testError) {
       console.error("❌ Database connection test failed:", testError);
+      return new Response(
+        JSON.stringify({ error: 'Database connection failed', details: testError }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
     } else {
-      console.log("✅ Database connection successful, total profiles:", testData);
+      console.log("✅ Database connection successful, total profiles:", totalCount);
+      
+      // If database is empty, no duplicates are possible
+      if (totalCount === 0) {
+        console.log("🎉 Database is completely empty - no duplicates possible");
+        console.log("=== DUPLICATE CHECK END (EMPTY DATABASE) ===");
+        
+        const noDuplicateResponse: DuplicateCheckResponse = {
+          isDuplicate: false,
+          duplicateType: null,
+          allowContinue: false
+        };
+
+        return new Response(
+          JSON.stringify(noDuplicateResponse),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        );
+      }
     }
 
-    // Check email duplicates within the same account type (highest priority - always block)
+    // Check email duplicates first (highest priority)
     if (email && accountType) {
       console.log("📧 Checking email duplicates...");
       const emailResult = await checkEmailDuplicates(supabaseAdmin, email, accountType);
@@ -84,7 +109,7 @@ serve(async (req) => {
       console.log("✅ No email duplicates found, continuing...");
     }
 
-    // Check phone duplicates within the same account type (second priority - always block)
+    // Check phone duplicates (second priority)
     if (phone && accountType) {
       console.log("📱 Checking phone duplicates...");
       const phoneResult = await checkPhoneDuplicates(supabaseAdmin, phone, accountType);
@@ -103,7 +128,7 @@ serve(async (req) => {
       console.log("✅ No phone duplicates found, continuing...");
     }
 
-    // For business accounts, check if combination of details matches existing business
+    // For business accounts, check business combination duplicates
     if (accountType === 'business' && businessName && address) {
       console.log("🏢 Checking business combination duplicates...");
       const businessCombinationResult = await checkBusinessCombinationDuplicates(supabaseAdmin, businessName, address);
@@ -122,7 +147,7 @@ serve(async (req) => {
       console.log("✅ No business combination duplicates found, continuing...");
     }
 
-    // Individual field checks for business accounts (lower priority, allow continue)
+    // Individual field checks for business accounts (lower priority)
     if (accountType === 'business') {
       console.log("🏢 Checking individual business fields...");
       const individualFieldResult = await checkIndividualBusinessFields(supabaseAdmin, businessName, address);
