@@ -1,15 +1,9 @@
 
 import { VerificationResult } from './types';
 import { verifyLicenseWithStateDatabase } from '../realLicenseVerification';
-import { verifyEIN } from './einVerification';
-import { verifyContractorLicense } from './contractorVerification';
-import { verifyLiquorLicense } from './liquorVerification';
-import { verifyBarAssociation, verifyRealEstateLicense, verifyMedicalLicense } from './professionalVerification';
-import { verifyRestaurantLicense } from './restaurantVerification';
-import { verifyGeneralLicense } from './generalVerification';
 
 /**
- * Verify a business ID (license number or EIN) with enhanced real verification
+ * Verify a business ID (license number or EIN) with real verification only
  */
 export const verifyBusinessId = async (
   businessId: string, 
@@ -30,48 +24,39 @@ export const verifyBusinessId = async (
     };
   }
 
-  // First try real verification for supported states and license types
+  // Only attempt real verification - no mock fallback
   if (state && businessType !== 'ein') {
     try {
       console.log(`Attempting real verification for ${businessType} in ${state}`);
       const realResult = await verifyLicenseWithStateDatabase(cleanId, businessType, state);
       
-      // If real verification succeeded or failed definitively, return that result
-      if (realResult.isRealVerification) {
-        return realResult;
-      }
+      // Return the real verification result (success or failure)
+      return realResult;
     } catch (error) {
-      console.log('Real verification failed, falling back to mock verification:', error);
-      // Continue to mock verification if real verification fails
+      console.log('Real verification failed:', error);
+      return {
+        verified: false,
+        message: "Unable to verify license automatically. Manual verification will be required.",
+        isRealVerification: true
+      };
     }
   }
 
-  // Fall back to mock verification for EINs and unsupported states
-  switch(businessType) {
-    case 'ein':
-      return verifyEIN(cleanId);
-    case 'contractor':
-      return verifyContractorLicense(cleanId, state);
-    case 'bar':
-      return verifyLiquorLicense(cleanId, state);
-    case 'attorney':
-      return verifyBarAssociation(cleanId, state);
-    case 'realtor':
-      return verifyRealEstateLicense(cleanId, state);
-    case 'medical':
-      return verifyMedicalLicense(cleanId, state);
-    case 'restaurant':
-      return verifyRestaurantLicense(cleanId, state);
-    case 'auto':
-    case 'insurance':
-    case 'energy':
-    case 'rentals':
-    case 'retail':
-    case 'other':
-      return verifyGeneralLicense(cleanId, state);
-    default:
-      return verifyGeneralLicense(cleanId, state);
+  // For EINs, we don't have real verification available
+  if (businessType === 'ein') {
+    return {
+      verified: false,
+      message: "EIN verification requires manual review. Your account will be created and you can submit for manual verification.",
+      isRealVerification: true
+    };
   }
+
+  // If no state provided or unsupported type
+  return {
+    verified: false,
+    message: "Please provide your business state for license verification, or manual verification will be required.",
+    isRealVerification: true
+  };
 };
 
 // Re-export types for convenience

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { verifyBusinessId } from "@/utils/businessVerification";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
@@ -45,11 +44,11 @@ export const useBusinessVerification = (currentUserId?: string) => {
     }
     
     try {
-      // Use the business verification utility with state-specific verification
+      // Use only real license verification - no mock fallback
       const result = await verifyBusinessId(licenseNumber, businessType, businessState);
       
       if (result.verified && result.isRealVerification) {
-        // Real verification successful - proceed with immediate verification
+        // Real verification successful - proceed with verified account creation
         console.log('Real verification successful:', result);
         
         setRealVerificationDetails({
@@ -62,7 +61,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
           }
         });
         
-        // Store business data for account creation
+        // Store verified business data for account creation
         const businessData = {
           name: businessName,
           email: businessEmail,
@@ -80,37 +79,10 @@ export const useBusinessVerification = (currentUserId?: string) => {
         sessionStorage.setItem("businessVerificationData", JSON.stringify(businessData));
         return { success: true, nextStep: 2 };
         
-      } else if (result.verified && !result.isRealVerification) {
-        // Mock verification - use existing flow with proper state information
-        const businessData = {
-          name: businessName,
-          email: businessEmail,
-          phone: businessPhone,
-          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
-          licenseNumber: licenseNumber,
-          businessType: businessType,
-          state: businessState,
-          city: businessCity,
-          verificationMethod: "license",
-          isFullyVerified: false
-        };
-        
-        sessionStorage.setItem("businessVerificationData", JSON.stringify(businessData));
-        
-        setVerificationData({
-          name: businessName,
-          address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
-          phone: businessPhone,
-          email: businessEmail,
-          licenseStatus: "Active",
-          licenseType: result.details?.type || "General Business",
-          licenseExpiration: result.details?.expirationDate || "2025-12-31",
-          licenseState: businessState
-        });
-        setVerificationError("");
-        return { success: true, nextStep: 1 };
       } else {
-        // Verification failed - create account immediately and show popup
+        // Real verification failed or not available - create unverified account
+        console.log('Real verification failed or unavailable:', result);
+        
         await createUnverifiedAccount(
           businessName,
           businessEmail,
@@ -125,8 +97,21 @@ export const useBusinessVerification = (currentUserId?: string) => {
         return { success: false };
       }
     } catch (error) {
-      setVerificationError(`An error occurred during verification. ${isVerified ? 'You can update your license information or try again.' : 'Please try again.'}`);
+      setVerificationError(`License verification failed. ${isVerified ? 'You can update your license information or try again.' : 'Your account will be created and you can submit for manual verification later.'}`);
       console.error("Verification error:", error);
+      
+      // Create unverified account even on error
+      await createUnverifiedAccount(
+        businessName,
+        businessEmail,
+        businessPhone,
+        businessStreet,
+        businessCity,
+        businessState,
+        businessZipCode,
+        licenseNumber,
+        businessType
+      );
       return { success: false };
     } finally {
       setIsVerifying(false);
@@ -209,7 +194,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
         console.error("Profile creation error:", profileError);
       }
 
-      // Store business data and show popup
+      // Store business data and show popup - account created but NOT verified
       const businessData = {
         name: businessName,
         email: businessEmail,
@@ -223,7 +208,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
         businessName: businessName,
         businessId: licenseNumber,
         businessType: businessType,
-        verificationMethod: "phone",
+        verificationMethod: "manual_required",
         isFullyVerified: false
       };
 
