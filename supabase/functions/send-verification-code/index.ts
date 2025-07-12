@@ -73,30 +73,41 @@ Deno.serve(async (req) => {
 
     console.log('✅ Verification code stored in database')
 
-    // Check if AWS credentials are configured
+    // Check AWS credentials with detailed diagnostics
     const awsAccessKeyId = Deno.env.get('AWS_ACCESS_KEY_ID')
     const awsSecretAccessKey = Deno.env.get('AWS_SECRET_ACCESS_KEY')
     const awsRegion = Deno.env.get('AWS_REGION') || 'us-east-1'
     const originationNumber = Deno.env.get('AWS_SNS_ORIGINATION_NUMBER')
 
+    console.log('🔍 AWS Configuration Check:')
+    console.log('AWS_ACCESS_KEY_ID:', awsAccessKeyId ? `SET (${awsAccessKeyId.substring(0, 4)}...)` : 'MISSING')
+    console.log('AWS_SECRET_ACCESS_KEY:', awsSecretAccessKey ? `SET (${awsSecretAccessKey.substring(0, 4)}...)` : 'MISSING')
+    console.log('AWS_REGION:', awsRegion)
+    console.log('AWS_SNS_ORIGINATION_NUMBER:', originationNumber ? `SET (${originationNumber})` : 'MISSING')
+
     if (!awsAccessKeyId || !awsSecretAccessKey || !originationNumber) {
       console.error('❌ Missing AWS credentials or origination number')
-      console.error('AWS_ACCESS_KEY_ID:', awsAccessKeyId ? 'SET' : 'MISSING')
-      console.error('AWS_SECRET_ACCESS_KEY:', awsSecretAccessKey ? 'SET' : 'MISSING')
-      console.error('AWS_SNS_ORIGINATION_NUMBER:', originationNumber ? 'SET' : 'MISSING')
       
-      // Return success for testing but log the issue
+      // Return detailed configuration status for debugging
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          message: 'Verification code stored (SMS not sent - AWS not configured)',
+          success: false, 
+          error: 'AWS SMS configuration incomplete',
+          message: 'Verification code stored but SMS cannot be sent',
           debug: {
             phone: formattedPhone,
             code: verificationCode, // Include for testing
-            awsConfigured: false
+            awsConfigured: false,
+            missingConfig: {
+              accessKey: !awsAccessKeyId,
+              secretKey: !awsSecretAccessKey,
+              region: !awsRegion,
+              originationNumber: !originationNumber
+            }
           }
         }),
         { 
+          status: 200, // Return 200 since verification code is stored
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json' 
@@ -105,18 +116,24 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('📤 Sending SMS via AWS SNS...')
+    console.log('📤 Attempting to send SMS via AWS SNS...')
 
     // Create the message
     const message = `Your Welp verification code is: ${verificationCode}. This code expires in 10 minutes.`
     
-    // Prepare AWS SNS request
+    // Prepare AWS SNS request with detailed logging
     const timestamp = new Date().toISOString().replace(/[:\-]|\.\d{3}/g, '')
     const date = timestamp.substr(0, 8)
     const service = 'sns'
     const region = awsRegion
     const host = `${service}.${region}.amazonaws.com`
     const endpoint = `https://${host}/`
+
+    console.log('🔧 AWS Request Details:')
+    console.log('Endpoint:', endpoint)
+    console.log('Host:', host)
+    console.log('Timestamp:', timestamp)
+    console.log('Date:', date)
 
     // Create request body for SNS
     const params = new URLSearchParams({
@@ -131,11 +148,15 @@ Deno.serve(async (req) => {
     })
 
     const payloadString = params.toString()
-    console.log('📦 SNS payload prepared')
+    console.log('📦 SNS payload length:', payloadString.length)
 
-    // Create AWS signature v4
+    // Create AWS signature v4 with detailed logging
+    console.log('🔐 Creating AWS signature...')
+    
     const payloadHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payloadString))
       .then(hash => Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join(''))
+
+    console.log('Payload hash:', payloadHash.substring(0, 16) + '...')
 
     const canonicalHeaders = `host:${host}\nx-amz-date:${timestamp}\n`
     const signedHeaders = 'host;x-amz-date'
@@ -149,6 +170,8 @@ Deno.serve(async (req) => {
       payloadHash
     ].join('\n')
 
+    console.log('✍️ Canonical request created')
+
     // Create string to sign
     const algorithm = 'AWS4-HMAC-SHA256'
     const credentialScope = `${date}/${region}/${service}/aws4_request`
@@ -161,6 +184,8 @@ Deno.serve(async (req) => {
       credentialScope,
       canonicalRequestHash
     ].join('\n')
+
+    console.log('📝 String to sign created')
 
     // Calculate signature
     const getSignatureKey = async (key: string, dateStamp: string, regionName: string, serviceName: string) => {
@@ -207,10 +232,16 @@ Deno.serve(async (req) => {
     ).then(k => crypto.subtle.sign('HMAC', k, new TextEncoder().encode(stringToSign)))
     .then(sig => Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join(''))
 
+    console.log('🔑 Signature created:', signature.substring(0, 16) + '...')
+
     // Create authorization header
     const authorizationHeader = `${algorithm} Credential=${awsAccessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
-    // Send request to AWS SNS
+    console.log('📋 Authorization header created')
+
+    // Send request to AWS SNS with detailed error handling
+    console.log('🚀 Sending request to AWS SNS...')
+    
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -224,23 +255,48 @@ Deno.serve(async (req) => {
 
     const responseText = await response.text()
     console.log('📱 AWS SNS Response Status:', response.status)
-    console.log('📱 AWS SNS Response:', responseText)
+    console.log('📱 AWS SNS Response Headers:', Object.fromEntries(response.headers.entries()))
+    console.log('📱 AWS SNS Response Body:', responseText)
 
     if (!response.ok) {
-      console.error('❌ AWS SNS Error:', responseText)
-      // Still return success since code is stored, but log the SMS failure
+      console.error('❌ AWS SNS Error Details:')
+      console.error('Status:', response.status)
+      console.error('Status Text:', response.statusText)
+      console.error('Response:', responseText)
+      
+      // Parse AWS error if possible
+      let awsErrorDetails = 'Unknown AWS error'
+      try {
+        if (responseText.includes('<Code>') && responseText.includes('<Message>')) {
+          const codeMatch = responseText.match(/<Code>(.*?)<\/Code>/)
+          const messageMatch = responseText.match(/<Message>(.*?)<\/Message>/)
+          if (codeMatch && messageMatch) {
+            awsErrorDetails = `${codeMatch[1]}: ${messageMatch[1]}`
+          }
+        }
+      } catch (parseError) {
+        console.error('Could not parse AWS error:', parseError)
+      }
+      
+      // Return detailed error information
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          message: 'Verification code stored (SMS send failed)',
+          success: false, 
+          error: 'SMS send failed - AWS SNS error',
+          message: 'Verification code stored but SMS send failed',
           debug: {
             phone: formattedPhone,
             code: verificationCode, // Include for testing
-            awsError: responseText,
-            awsStatus: response.status
+            awsConfigured: true,
+            awsError: awsErrorDetails,
+            awsStatus: response.status,
+            awsResponse: responseText.substring(0, 500), // Truncate long responses
+            endpoint: endpoint,
+            region: region
           }
         }),
         { 
+          status: 200, // Return 200 since verification code is stored
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json' 
@@ -257,7 +313,8 @@ Deno.serve(async (req) => {
         message: 'Verification code sent successfully',
         debug: {
           phone: formattedPhone,
-          awsConfigured: true
+          awsConfigured: true,
+          awsRegion: region
         }
       }),
       { 
@@ -276,6 +333,7 @@ Deno.serve(async (req) => {
         error: error.message || 'Failed to send verification code',
         debug: {
           timestamp: new Date().toISOString(),
+          errorType: error.constructor.name,
           errorStack: error.stack
         }
       }),
