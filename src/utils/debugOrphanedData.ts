@@ -69,3 +69,43 @@ export const clearVerificationCodes = async (phoneNumber: string) => {
   
   return { success: !error, error };
 };
+
+/**
+ * Check for permanent accounts that should not be deleted
+ */
+export const checkPermanentAccounts = async (email?: string, phone?: string) => {
+  console.log("🔒 DEBUG: Checking for permanent accounts:", { email, phone });
+  
+  const permanentEmails = [
+    'demo@welp.com',
+    'test@welp.com', 
+    'permanent@welp.com',
+    'iw@sdcarealty.com' // Known business account
+  ];
+  
+  const permanentPhones = [
+    '(619) 724-2702', // Known problematic phone
+    '6197242702' // Cleaned version
+  ];
+  
+  const cleanedPhone = phone ? phone.replace(/\D/g, '') : '';
+  
+  const isPermanentEmail = email && permanentEmails.includes(email);
+  const isPermanentPhone = phone && (
+    permanentPhones.includes(phone) || 
+    permanentPhones.includes(cleanedPhone)
+  );
+  
+  console.log("🔒 DEBUG: Permanent account check results:", {
+    isPermanentEmail,
+    isPermanentPhone,
+    email,
+    phone,
+    cleanedPhone
+  });
+  
+  return {
+    isPermanent: isPermanentEmail || isPermanentPhone,
+    reason: isPermanentEmail ? 'email' : isPermanentPhone ? 'phone' : null
+  };
+};

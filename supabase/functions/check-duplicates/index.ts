@@ -51,100 +51,111 @@ serve(async (req) => {
 
     console.log("✅ Supabase admin client created successfully");
 
-    // CRITICAL: Clear any edge function caches by forcing fresh connections
-    console.log("🧹 CLEARING EDGE FUNCTION CACHES...");
-    
-    // CRITICAL: Comprehensive database state check with ALL phone-containing tables
-    console.log("🧪 COMPREHENSIVE DATABASE STATE CHECK...");
-    
-    // Check all tables that might contain phone data
-    const tables_to_check = [
-      'profiles',
-      'business_info', 
-      'verification_codes',
-      'verification_requests',
-      'reviews',
-      'review_claim_history'
+    // CRITICAL: Check for permanent/demo accounts that should be excluded from cleanup
+    const permanentAccounts = [
+      'demo@welp.com',
+      'test@welp.com', 
+      'permanent@welp.com',
+      // Add any other permanent account identifiers
     ];
+
+    // CRITICAL: Targeted orphaned profile cleanup with permanent account protection
+    console.log("🧹 TARGETED ORPHANED PROFILE CLEANUP WITH PERMANENT ACCOUNT PROTECTION...");
     
-    const phone_data_found = [];
-    const cleaned_phone = phone ? phone.replace(/\D/g, '') : '';
-    
-    for (const table of tables_to_check) {
-      console.log(`🔍 Checking table: ${table}`);
+    // Get all profiles
+    const { data: allProfiles, error: profilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email, phone, name, type, address');
+
+    if (profilesError) {
+      console.error("❌ Error fetching profiles:", profilesError);
+    } else if (allProfiles && allProfiles.length > 0) {
+      console.log(`🔍 Found ${allProfiles.length} profiles, checking for orphaned records...`);
       
-      let query;
-      let phone_field;
+      // Clean phone number for comparison
+      const cleanedInputPhone = phone ? phone.replace(/\D/g, '') : '';
       
-      // Determine the phone field for each table
-      if (table === 'profiles') {
-        phone_field = 'phone';
-        query = supabaseAdmin.from(table).select('id, phone, email, name, type');
-      } else if (table === 'verification_codes' || table === 'verification_requests') {
-        phone_field = 'phone';
-        query = supabaseAdmin.from(table).select('id, phone');
-      } else if (table === 'reviews' || table === 'review_claim_history') {
-        phone_field = 'customer_phone';
-        query = supabaseAdmin.from(table).select('id, customer_phone');
-      } else {
-        // Skip tables without phone fields
-        continue;
+      // Check which profiles are orphaned AND match our input
+      const orphanedProfilesToDelete = [];
+      
+      for (const profile of allProfiles) {
+        // Skip permanent accounts
+        if (permanentAccounts.includes(profile.email)) {
+          console.log(`🔒 Skipping permanent account: ${profile.email}`);
+          continue;
+        }
+        
+        // Check if profile matches the input we're trying to register
+        let isMatchingInput = false;
+        
+        if (email && profile.email === email) {
+          isMatchingInput = true;
+          console.log(`📧 Profile ${profile.id} matches input email: ${email}`);
+        }
+        
+        if (phone && profile.phone) {
+          const cleanedProfilePhone = profile.phone.replace(/\D/g, '');
+          if (cleanedProfilePhone === cleanedInputPhone) {
+            isMatchingInput = true;
+            console.log(`📱 Profile ${profile.id} matches input phone: ${phone} (cleaned: ${cleanedInputPhone})`);
+          }
+        }
+        
+        // Only check auth user for profiles that match our input
+        if (isMatchingInput) {
+          console.log(`🔍 Checking auth user for matching profile: ${profile.id}`);
+          
+          const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+          
+          if (authError && authError.message.includes('User not found')) {
+            console.log(`🗑️ Found orphaned profile matching input: ${profile.id} (${profile.name || profile.email})`);
+            console.log(`   - Email: ${profile.email}`);
+            console.log(`   - Phone: ${profile.phone}`);
+            console.log(`   - Type: ${profile.type}`);
+            orphanedProfilesToDelete.push(profile.id);
+          } else if (authError) {
+            console.log(`❌ Error checking auth user for ${profile.id}:`, authError);
+          } else {
+            console.log(`✅ Profile ${profile.id} has valid auth user - keeping it`);
+          }
+        }
       }
       
-      const { data: table_data, error: table_error } = await query;
-      
-      if (table_error) {
-        console.log(`❌ Error checking ${table}:`, table_error);
-        continue;
-      }
-      
-      console.log(`📊 ${table} contains ${table_data?.length || 0} records`);
-      
-      if (table_data && table_data.length > 0 && cleaned_phone) {
-        // Check each record for phone matches
-        for (const record of table_data) {
-          const record_phone = record[phone_field];
-          if (record_phone) {
-            const cleaned_record_phone = record_phone.replace(/\D/g, '');
-            console.log(`🔍 ${table} record ${record.id}: "${record_phone}" cleaned to "${cleaned_record_phone}"`);
-            
-            if (cleaned_record_phone === cleaned_phone) {
-              console.log(`🚨 PHONE MATCH FOUND IN ${table.toUpperCase()}!`);
-              phone_data_found.push({
-                table: table,
-                record_id: record.id,
-                phone: record_phone,
-                cleaned_phone: cleaned_record_phone
-              });
+      // Delete only the orphaned profiles that match our input data
+      if (orphanedProfilesToDelete.length > 0) {
+        console.log(`🧹 Deleting ${orphanedProfilesToDelete.length} orphaned profiles that match input data...`);
+        
+        const { error: deleteError } = await supabaseAdmin
+          .from('profiles')
+          .delete()
+          .in('id', orphanedProfilesToDelete);
+        
+        if (deleteError) {
+          console.error("❌ Error deleting orphaned profiles:", deleteError);
+        } else {
+          console.log(`✅ Successfully cleaned up ${orphanedProfilesToDelete.length} orphaned profiles matching input`);
+          
+          // Since we just cleaned up matching orphaned data, return no duplicates
+          console.log("🎉 CLEANED UP MATCHING ORPHANED DATA - ALLOWING REGISTRATION");
+          console.log("=== DUPLICATE CHECK END (ORPHANED DATA CLEANED) ===");
+          
+          const noDuplicateResponse: DuplicateCheckResponse = {
+            isDuplicate: false,
+            duplicateType: null,
+            allowContinue: false
+          };
+
+          return new Response(
+            JSON.stringify(noDuplicateResponse),
+            { 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200 
             }
-          }
+          );
         }
+      } else {
+        console.log("✅ No orphaned profiles found matching input data");
       }
-    }
-    
-    if (phone_data_found.length > 0) {
-      console.log("🚨 CRITICAL: PHONE DATA STILL EXISTS IN DATABASE:");
-      phone_data_found.forEach(item => {
-        console.log(`  - Table: ${item.table}, ID: ${item.record_id}, Phone: ${item.phone}`);
-      });
-      
-      return new Response(
-        JSON.stringify({
-          isDuplicate: true,
-          duplicateType: 'phone',
-          existingPhone: phone,
-          existingEmail: '',
-          allowContinue: false,
-          debug_info: {
-            orphaned_data_found: phone_data_found,
-            message: "Phone data still exists in database after cleanup"
-          }
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
     }
 
     // CRITICAL: Test database connection and check if database is empty
@@ -188,50 +199,6 @@ serve(async (req) => {
     }
 
     console.log("📊 Database has " + totalCount + " profiles, proceeding with duplicate checks...");
-
-    // CRITICAL: Ultra-comprehensive orphaned profile cleanup
-    console.log("🧹 ULTRA-COMPREHENSIVE ORPHANED PROFILE CLEANUP...");
-    
-    // Get all profiles
-    const { data: allProfiles, error: profilesError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, email, phone, name, type, address');
-
-    if (profilesError) {
-      console.error("❌ Error fetching profiles:", profilesError);
-    } else if (allProfiles && allProfiles.length > 0) {
-      console.log(`🔍 Found ${allProfiles.length} profiles, checking for orphaned records...`);
-      
-      // Check which profiles have corresponding auth users
-      const orphanedProfiles = [];
-      
-      for (const profile of allProfiles) {
-        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
-        
-        if (authError && authError.message.includes('User not found')) {
-          console.log(`🗑️ Found orphaned profile: ${profile.id} (${profile.name || profile.email})`);
-          orphanedProfiles.push(profile.id);
-        }
-      }
-      
-      // Delete orphaned profiles
-      if (orphanedProfiles.length > 0) {
-        console.log(`🧹 Cleaning up ${orphanedProfiles.length} orphaned profiles...`);
-        
-        const { error: deleteError } = await supabaseAdmin
-          .from('profiles')
-          .delete()
-          .in('id', orphanedProfiles);
-        
-        if (deleteError) {
-          console.error("❌ Error deleting orphaned profiles:", deleteError);
-        } else {
-          console.log(`✅ Successfully cleaned up ${orphanedProfiles.length} orphaned profiles`);
-        }
-      } else {
-        console.log("✅ No orphaned profiles found");
-      }
-    }
 
     // Now proceed with duplicate checks on clean data
     console.log("🔍 Proceeding with duplicate checks on cleaned data...");
