@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WelcomeSection from "@/components/profile/WelcomeSection";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import DeleteAccountSection from "@/components/profile/DeleteAccountSection";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
@@ -105,7 +106,7 @@ const ProfilePage = () => {
             </div>
             
             {/* Profile Information Display */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
@@ -191,6 +192,9 @@ const ProfilePage = () => {
                 )}
               </div>
             </div>
+
+            {/* Delete Account Section */}
+            <DeleteAccountSection />
           </div>
         </main>
       </div>
