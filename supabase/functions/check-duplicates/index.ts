@@ -93,6 +93,53 @@ serve(async (req) => {
 
     console.log("📊 Database has " + totalCount + " profiles, proceeding with duplicate checks...");
 
+    // CRITICAL FIX: Clean up orphaned profiles before checking duplicates
+    console.log("🧹 Checking for and cleaning up orphaned profiles...");
+    
+    // Get all profiles
+    const { data: allProfiles, error: profilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email, phone, name, type, address');
+
+    if (profilesError) {
+      console.error("❌ Error fetching profiles:", profilesError);
+    } else if (allProfiles && allProfiles.length > 0) {
+      console.log(`🔍 Found ${allProfiles.length} profiles, checking for orphaned records...`);
+      
+      // Check which profiles have corresponding auth users
+      const orphanedProfiles = [];
+      
+      for (const profile of allProfiles) {
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+        
+        if (authError && authError.message.includes('User not found')) {
+          console.log(`🗑️ Found orphaned profile: ${profile.id} (${profile.name || profile.email})`);
+          orphanedProfiles.push(profile.id);
+        }
+      }
+      
+      // Delete orphaned profiles
+      if (orphanedProfiles.length > 0) {
+        console.log(`🧹 Cleaning up ${orphanedProfiles.length} orphaned profiles...`);
+        
+        const { error: deleteError } = await supabaseAdmin
+          .from('profiles')
+          .delete()
+          .in('id', orphanedProfiles);
+        
+        if (deleteError) {
+          console.error("❌ Error deleting orphaned profiles:", deleteError);
+        } else {
+          console.log(`✅ Successfully cleaned up ${orphanedProfiles.length} orphaned profiles`);
+        }
+      } else {
+        console.log("✅ No orphaned profiles found");
+      }
+    }
+
+    // Now proceed with duplicate checks on clean data
+    console.log("🔍 Proceeding with duplicate checks on cleaned data...");
+
     // Check email duplicates first (highest priority)
     if (email && accountType) {
       console.log("📧 Checking email duplicates...");
