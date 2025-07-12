@@ -41,7 +41,6 @@ Deno.serve(async (req) => {
 
     if (deleteError) {
       console.error('⚠️ Warning: Could not delete existing codes:', deleteError)
-      // Continue anyway, as this might not be critical
     }
 
     // Insert new verification code
@@ -73,7 +72,7 @@ Deno.serve(async (req) => {
 
     console.log('✅ Verification code stored in database')
 
-    // Check AWS credentials with detailed diagnostics
+    // Check AWS credentials
     const awsAccessKeyId = Deno.env.get('AWS_ACCESS_KEY_ID')
     const awsSecretAccessKey = Deno.env.get('AWS_SECRET_ACCESS_KEY')
     const awsRegion = Deno.env.get('AWS_REGION') || 'us-east-1'
@@ -87,8 +86,6 @@ Deno.serve(async (req) => {
 
     if (!awsAccessKeyId || !awsSecretAccessKey || !originationNumber) {
       console.error('❌ Missing AWS credentials or origination number')
-      
-      // Return detailed configuration status for debugging
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -96,7 +93,7 @@ Deno.serve(async (req) => {
           message: 'Verification code stored but SMS cannot be sent',
           debug: {
             phone: formattedPhone,
-            code: verificationCode, // Include for testing
+            code: verificationCode,
             awsConfigured: false,
             missingConfig: {
               accessKey: !awsAccessKeyId,
@@ -107,7 +104,7 @@ Deno.serve(async (req) => {
           }
         }),
         { 
-          status: 200, // Return 200 since verification code is stored
+          status: 200,
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json' 
@@ -118,10 +115,28 @@ Deno.serve(async (req) => {
 
     console.log('📤 Attempting to send SMS via AWS SNS...')
 
-    // Create the message
     const message = `Your Welp verification code is: ${verificationCode}. This code expires in 10 minutes.`
     
-    // Prepare AWS SNS request with detailed logging
+    // Create proper JSON payload for AWS SNS
+    const snsPayload = {
+      Action: 'Publish',
+      PhoneNumber: formattedPhone,
+      Message: message,
+      'MessageAttributes.AWS.SNS.SMS.SenderID.DataType': 'String',
+      'MessageAttributes.AWS.SNS.SMS.SenderID.StringValue': 'Welp',
+      'MessageAttributes.AWS.SNS.SMS.SMSType.DataType': 'String',
+      'MessageAttributes.AWS.SNS.SMS.SMSType.StringValue': 'Transactional',
+      Version: '2010-03-31'
+    }
+
+    // Convert to URL encoded format
+    const payloadString = Object.entries(snsPayload)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&')
+
+    console.log('📦 SNS payload created, length:', payloadString.length)
+
+    // AWS signature v4 creation
     const timestamp = new Date().toISOString().replace(/[:\-]|\.\d{3}/g, '')
     const date = timestamp.substr(0, 8)
     const service = 'sns'
@@ -133,31 +148,12 @@ Deno.serve(async (req) => {
     console.log('Endpoint:', endpoint)
     console.log('Host:', host)
     console.log('Timestamp:', timestamp)
-    console.log('Date:', date)
 
-    // Create request body for SNS
-    const params = new URLSearchParams({
-      'Action': 'Publish',
-      'PhoneNumber': formattedPhone,
-      'Message': message,
-      'MessageAttributes.AWS.SNS.SMS.SenderID.DataType': 'String',
-      'MessageAttributes.AWS.SNS.SMS.SenderID.StringValue': 'Welp',
-      'MessageAttributes.AWS.SNS.SMS.SMSType.DataType': 'String',
-      'MessageAttributes.AWS.SNS.SMS.SMSType.StringValue': 'Transactional',
-      'Version': '2010-03-31'
-    })
-
-    const payloadString = params.toString()
-    console.log('📦 SNS payload length:', payloadString.length)
-
-    // Create AWS signature v4 with detailed logging
-    console.log('🔐 Creating AWS signature...')
-    
+    // Create payload hash
     const payloadHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payloadString))
       .then(hash => Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join(''))
 
-    console.log('Payload hash:', payloadHash.substring(0, 16) + '...')
-
+    // Create canonical request
     const canonicalHeaders = `host:${host}\nx-amz-date:${timestamp}\n`
     const signedHeaders = 'host;x-amz-date'
     
@@ -169,8 +165,6 @@ Deno.serve(async (req) => {
       signedHeaders,
       payloadHash
     ].join('\n')
-
-    console.log('✍️ Canonical request created')
 
     // Create string to sign
     const algorithm = 'AWS4-HMAC-SHA256'
@@ -184,8 +178,6 @@ Deno.serve(async (req) => {
       credentialScope,
       canonicalRequestHash
     ].join('\n')
-
-    console.log('📝 String to sign created')
 
     // Calculate signature
     const getSignatureKey = async (key: string, dateStamp: string, regionName: string, serviceName: string) => {
@@ -232,16 +224,12 @@ Deno.serve(async (req) => {
     ).then(k => crypto.subtle.sign('HMAC', k, new TextEncoder().encode(stringToSign)))
     .then(sig => Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join(''))
 
-    console.log('🔑 Signature created:', signature.substring(0, 16) + '...')
-
     // Create authorization header
     const authorizationHeader = `${algorithm} Credential=${awsAccessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
-    console.log('📋 Authorization header created')
-
-    // Send request to AWS SNS with detailed error handling
     console.log('🚀 Sending request to AWS SNS...')
     
+    // Send request to AWS SNS
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -255,13 +243,11 @@ Deno.serve(async (req) => {
 
     const responseText = await response.text()
     console.log('📱 AWS SNS Response Status:', response.status)
-    console.log('📱 AWS SNS Response Headers:', Object.fromEntries(response.headers.entries()))
-    console.log('📱 AWS SNS Response Body:', responseText)
+    console.log('📱 AWS SNS Response:', responseText)
 
     if (!response.ok) {
       console.error('❌ AWS SNS Error Details:')
       console.error('Status:', response.status)
-      console.error('Status Text:', response.statusText)
       console.error('Response:', responseText)
       
       // Parse AWS error if possible
@@ -278,7 +264,6 @@ Deno.serve(async (req) => {
         console.error('Could not parse AWS error:', parseError)
       }
       
-      // Return detailed error information
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -286,17 +271,17 @@ Deno.serve(async (req) => {
           message: 'Verification code stored but SMS send failed',
           debug: {
             phone: formattedPhone,
-            code: verificationCode, // Include for testing
+            code: verificationCode,
             awsConfigured: true,
             awsError: awsErrorDetails,
             awsStatus: response.status,
-            awsResponse: responseText.substring(0, 500), // Truncate long responses
+            awsResponse: responseText.substring(0, 500),
             endpoint: endpoint,
             region: region
           }
         }),
         { 
-          status: 200, // Return 200 since verification code is stored
+          status: 200,
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json' 
