@@ -23,17 +23,14 @@ export const checkPhoneDuplicates = async (
     return null;
   }
 
-  // CRITICAL: Check total profiles count first with explicit logging
-  console.log("📱 EXECUTING: Database count query...");
+  // CRITICAL: Re-check total profiles count after cleanup
+  console.log("📱 EXECUTING: Database count query after cleanup...");
   const { count: totalProfiles, error: countError } = await supabaseAdmin
     .from('profiles')
     .select('*', { count: 'exact', head: true });
 
-  console.log("📱 RESULT: Total profiles count:", totalProfiles);
+  console.log("📱 RESULT: Total profiles count after cleanup:", totalProfiles);
   console.log("📱 RESULT: Count query error:", countError);
-  console.log("📱 RESULT: Type of totalProfiles:", typeof totalProfiles);
-  console.log("📱 RESULT: totalProfiles === null:", totalProfiles === null);
-  console.log("📱 RESULT: totalProfiles === 0:", totalProfiles === 0);
 
   if (countError) {
     console.log("📱 ERROR: Database count query failed:", countError);
@@ -41,14 +38,14 @@ export const checkPhoneDuplicates = async (
     return null;
   }
 
-  // CRITICAL: If database is empty, return no duplicates immediately
+  // CRITICAL: If database is empty after cleanup, return no duplicates immediately
   if (totalProfiles === 0 || totalProfiles === null) {
-    console.log("📱 CRITICAL: Database is empty (totalProfiles = " + totalProfiles + ") - RETURNING NULL");
+    console.log("📱 CRITICAL: Database is empty after cleanup (totalProfiles = " + totalProfiles + ") - RETURNING NULL");
     console.log("📱=== PHONE DUPLICATE CHECK DEBUG END (EMPTY DB) ===");
     return null;
   }
 
-  console.log("📱 CONTINUING: Database has " + totalProfiles + " profiles, proceeding with phone check...");
+  console.log("📱 CONTINUING: Database has " + totalProfiles + " profiles after cleanup, proceeding with phone check...");
 
   // Get all profiles that have phone numbers for the specified account type
   console.log("📱 EXECUTING: Phone profiles query for account type:", accountType);
@@ -61,7 +58,6 @@ export const checkPhoneDuplicates = async (
 
   console.log("📱 RESULT: Profiles with phones found:", profilesWithPhones?.length || 0);
   console.log("📱 RESULT: Phone query error:", phonesError);
-  console.log("📱 RESULT: Full profiles data:", JSON.stringify(profilesWithPhones, null, 2));
 
   if (phonesError) {
     console.log("📱 ERROR: Phone query failed:", phonesError);
@@ -77,10 +73,43 @@ export const checkPhoneDuplicates = async (
 
   console.log("📱 PROCESSING: Found " + profilesWithPhones.length + " profiles with phones for account type '" + accountType + "'");
   
-  // Check each profile's phone against our input
+  // CRITICAL: Additional verification - check if any of these profiles are orphaned
+  console.log("📱 VERIFYING: Checking if found profiles have valid auth users...");
+  const validProfiles = [];
+  
   for (let i = 0; i < profilesWithPhones.length; i++) {
     const profile = profilesWithPhones[i];
-    console.log("📱 CHECKING PROFILE " + (i + 1) + ":");
+    console.log("📱 VERIFYING PROFILE " + (i + 1) + ":");
+    console.log("📱   Profile ID:", profile.id);
+    console.log("📱   Profile phone raw:", profile.phone);
+    
+    // Check if this profile has a corresponding auth user
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    
+    if (authError && authError.message.includes('User not found')) {
+      console.log("📱   ORPHANED: Profile has no corresponding auth user - SKIPPING");
+      continue;
+    } else if (authError) {
+      console.log("📱   ERROR checking auth user:", authError);
+      continue;
+    } else {
+      console.log("📱   VALID: Profile has corresponding auth user");
+      validProfiles.push(profile);
+    }
+  }
+  
+  console.log("📱 VERIFIED: " + validProfiles.length + " valid profiles with phones after auth verification");
+  
+  if (validProfiles.length === 0) {
+    console.log("📱 SUCCESS: No valid profiles with phones found after auth verification");
+    console.log("📱=== PHONE DUPLICATE CHECK DEBUG END (NO VALID PHONES) ===");
+    return null;
+  }
+  
+  // Check each valid profile's phone against our input
+  for (let i = 0; i < validProfiles.length; i++) {
+    const profile = validProfiles[i];
+    console.log("📱 CHECKING VALID PROFILE " + (i + 1) + ":");
     console.log("📱   Profile ID:", profile.id);
     console.log("📱   Profile phone raw:", profile.phone);
     console.log("📱   Profile type:", profile.type);
@@ -97,7 +126,6 @@ export const checkPhoneDuplicates = async (
     console.log("📱     Input cleaned: '" + cleanedInputPhone + "' (length: " + cleanedInputPhone.length + ")");
     console.log("📱     Stored cleaned: '" + cleanedStoredPhone + "' (length: " + cleanedStoredPhone.length + ")");
     console.log("📱     Exact match:", cleanedStoredPhone === cleanedInputPhone);
-    console.log("📱     Input === Stored:", cleanedInputPhone === cleanedStoredPhone);
     
     if (cleanedStoredPhone === cleanedInputPhone) {
       console.log("🚨📱 DUPLICATE FOUND!");
