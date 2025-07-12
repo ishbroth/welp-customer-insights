@@ -38,63 +38,54 @@ export const checkPhoneDuplicates = async (
     return null;
   }
 
-  // Get all profiles for the specific account type that have phone numbers
-  const { data: profilesWithPhones, error: phonesError } = await supabaseAdmin
+  // Get all profiles that have phone numbers
+  const { data: allProfilesWithPhones, error: allPhonesError } = await supabaseAdmin
     .from('profiles')
     .select('id, phone, email, name, type, address')
-    .eq('type', accountType)
     .not('phone', 'is', null)
     .neq('phone', '');
 
-  console.log("📱 Profiles with phones for account type '" + accountType + "':", profilesWithPhones?.length || 0);
-  console.log("📱 Phone profiles error:", phonesError);
+  console.log("📱 All profiles with phones (any type):", allProfilesWithPhones?.length || 0);
+  console.log("📱 All phones error:", allPhonesError);
 
-  if (phonesError) {
-    console.log("📱 Error fetching profiles with phones:", phonesError);
-    console.log("📱=== PHONE DUPLICATE CHECK DEBUG END (ERROR) ===");
-    return null;
+  if (allPhonesError) {
+    console.log("📱 Error fetching all profiles with phones:", allPhonesError);
   }
 
-  // If no profiles have phones, no duplicates possible
-  if (!profilesWithPhones || profilesWithPhones.length === 0) {
-    console.log("📱 No profiles with phones found for account type:", accountType);
-    console.log("📱=== PHONE DUPLICATE CHECK DEBUG END (NO PHONES) ===");
-    return null;
-  }
-
-  console.log("📱 Found profiles with phones:", JSON.stringify(profilesWithPhones, null, 2));
-
-  // Check each profile's phone against our input
-  for (const profile of profilesWithPhones) {
-    if (!profile.phone) {
-      console.log("📱 Skipping profile with null/empty phone:", profile.id);
-      continue;
-    }
-
-    // Clean the stored phone number
-    const cleanedStoredPhone = profile.phone.replace(/\D/g, '');
+  if (allProfilesWithPhones && allProfilesWithPhones.length > 0) {
+    console.log("📱 Found profiles with phones:", JSON.stringify(allProfilesWithPhones, null, 2));
     
-    console.log("📱 Comparing phones:");
-    console.log("📱   Input: '" + cleanedInputPhone + "' (length: " + cleanedInputPhone.length + ")");
-    console.log("📱   Stored: '" + cleanedStoredPhone + "' (length: " + cleanedStoredPhone.length + ")");
-    console.log("📱   Profile:", JSON.stringify(profile, null, 2));
-    
-    // Exact match comparison
-    if (cleanedStoredPhone === cleanedInputPhone) {
-      console.log("🚨📱 PHONE DUPLICATE FOUND!");
-      console.log("🚨📱 Matching profile:", JSON.stringify(profile, null, 2));
-      console.log("📱=== PHONE DUPLICATE CHECK DEBUG END (DUPLICATE FOUND) ===");
+    // Check each profile's phone against our input
+    for (const profile of allProfilesWithPhones) {
+      if (!profile.phone) continue;
+
+      const cleanedStoredPhone = profile.phone.replace(/\D/g, '');
       
-      return {
-        isDuplicate: true,
-        duplicateType: 'phone',
-        existingPhone: phone,
-        existingEmail: profile.email || '',
-        allowContinue: false
-      };
-    } else {
-      console.log("📱 No match - phones are different");
+      console.log("📱 Comparing phones:");
+      console.log("📱   Input: '" + cleanedInputPhone + "' (length: " + cleanedInputPhone.length + ")");
+      console.log("📱   Stored: '" + cleanedStoredPhone + "' (length: " + cleanedStoredPhone.length + ")");
+      console.log("📱   Profile type:", profile.type);
+      console.log("📱   Checking against account type:", accountType);
+      
+      // Only check within the same account type
+      if (profile.type === accountType && cleanedStoredPhone === cleanedInputPhone) {
+        console.log("🚨📱 PHONE DUPLICATE FOUND within same account type!");
+        console.log("🚨📱 Matching profile:", JSON.stringify(profile, null, 2));
+        console.log("📱=== PHONE DUPLICATE CHECK DEBUG END (DUPLICATE FOUND) ===");
+        
+        return {
+          isDuplicate: true,
+          duplicateType: 'phone',
+          existingPhone: phone,
+          existingEmail: profile.email || '',
+          allowContinue: false
+        };
+      } else {
+        console.log("📱 No match - either different account type or different phone");
+      }
     }
+  } else {
+    console.log("📱 No profiles with phones found");
   }
 
   console.log("✅📱 No phone duplicates found within account type: " + accountType);

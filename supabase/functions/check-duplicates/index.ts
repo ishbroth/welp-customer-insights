@@ -69,7 +69,7 @@ serve(async (req) => {
     } else {
       console.log("✅ Database connection successful, total profiles:", totalCount);
       
-      // If database is empty, no duplicates are possible
+      // CRITICAL: If database is empty, no duplicates are possible
       if (totalCount === 0) {
         console.log("🎉 Database is completely empty - no duplicates possible");
         console.log("=== DUPLICATE CHECK END (EMPTY DATABASE) ===");
