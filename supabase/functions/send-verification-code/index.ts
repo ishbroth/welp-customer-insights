@@ -126,6 +126,7 @@ Deno.serve(async (req) => {
     })
 
     console.log('📦 SNS payload created')
+    console.log('📦 Full payload being sent:', snsPayload.toString())
 
     // AWS signature v4 creation
     const timestamp = new Date().toISOString().replace(/[:\-]|\.\d{3}/g, '')
@@ -139,6 +140,7 @@ Deno.serve(async (req) => {
     console.log('Endpoint:', endpoint)
     console.log('Host:', host)
     console.log('Timestamp:', timestamp)
+    console.log('Region:', region)
 
     // Create payload hash
     const payloadString = snsPayload.toString()
@@ -219,6 +221,7 @@ Deno.serve(async (req) => {
     // Create authorization header
     const authorizationHeader = `${algorithm} Credential=${awsAccessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
 
+    console.log('🔐 Authorization header created')
     console.log('🚀 Sending request to AWS SNS...')
     
     // Send request to AWS SNS
@@ -235,11 +238,13 @@ Deno.serve(async (req) => {
 
     const responseText = await response.text()
     console.log('📱 AWS SNS Response Status:', response.status)
-    console.log('📱 AWS SNS Response:', responseText)
+    console.log('📱 AWS SNS Response Headers:', Object.fromEntries(response.headers.entries()))
+    console.log('📱 AWS SNS Response Body:', responseText)
 
     if (!response.ok) {
       console.error('❌ AWS SNS Error Details:')
       console.error('Status:', response.status)
+      console.error('Status Text:', response.statusText)
       console.error('Response:', responseText)
       
       // Parse AWS error if possible
@@ -267,9 +272,11 @@ Deno.serve(async (req) => {
             awsConfigured: true,
             awsError: awsErrorDetails,
             awsStatus: response.status,
+            awsStatusText: response.statusText,
             awsResponse: responseText.substring(0, 500),
             endpoint: endpoint,
-            region: region
+            region: region,
+            requestPayload: payloadString
           }
         }),
         { 
@@ -283,6 +290,20 @@ Deno.serve(async (req) => {
     }
 
     console.log('✅ SMS sent successfully via AWS SNS')
+    
+    // Parse success response to get message ID if available
+    let messageId = null
+    try {
+      if (responseText.includes('<MessageId>')) {
+        const messageIdMatch = responseText.match(/<MessageId>(.*?)<\/MessageId>/)
+        if (messageIdMatch) {
+          messageId = messageIdMatch[1]
+          console.log('📱 AWS SNS Message ID:', messageId)
+        }
+      }
+    } catch (parseError) {
+      console.error('Could not parse message ID:', parseError)
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -291,7 +312,9 @@ Deno.serve(async (req) => {
         debug: {
           phone: formattedPhone,
           awsConfigured: true,
-          awsRegion: region
+          awsRegion: region,
+          messageId: messageId,
+          awsResponse: responseText.substring(0, 200)
         }
       }),
       { 
