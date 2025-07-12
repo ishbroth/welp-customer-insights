@@ -8,6 +8,7 @@ export type VerificationResult = {
     expirationDate?: string;
     businessName?: string;
     issuingAuthority?: string;
+    state?: string;
   };
   isRealVerification?: boolean;
 };
