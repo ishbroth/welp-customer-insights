@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { sendVerificationCode } from "@/lib/utils";
 
 export const useBusinessAccountCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,11 +45,11 @@ export const useBusinessAccountCreation = () => {
       return { success: false };
     }
 
-    if (businessPassword.length < 8) {
+    if (businessPassword.length < 6) {
       console.error("Password validation failed: password too short");
       toast({
         title: "Password Too Short",
-        description: "Password must be at least 8 characters long.",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive"
       });
       return { success: false };
@@ -71,46 +70,26 @@ export const useBusinessAccountCreation = () => {
     try {
       console.log("Attempting to send verification code to:", businessPhone);
       
-      // Send verification code
-      const { success, error } = await sendVerificationCode({ phoneNumber: businessPhone });
+      // Navigate to phone verification page with all the data as URL params
+      const params = new URLSearchParams({
+        email: businessEmail,
+        password: businessPassword,
+        name: businessName,
+        phone: businessPhone,
+        accountType: 'business',
+        businessName: businessName,
+        address: businessStreet,
+        city: businessCity,
+        state: businessState,
+        zipCode: businessZipCode
+      });
       
-      console.log("Verification code response:", { success, error });
+      console.log("Navigating to phone verification with params:", params.toString());
       
-      if (success) {
-        console.log("Verification code sent successfully, navigating to phone verification");
-        
-        toast({
-          title: "Verification Code Sent",
-          description: `A verification code has been sent to ${businessPhone}.`,
-        });
-
-        // Navigate to phone verification page with business data
-        navigate("/phone-verification", {
-          state: {
-            email: businessEmail,
-            password: businessPassword,
-            name: businessName,
-            phoneNumber: businessPhone,
-            accountType: 'business',
-            businessName: businessName,
-            address: `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`,
-            city: businessCity,
-            state: businessState,
-            zipCode: businessZipCode
-          }
-        });
-        
-        console.log("=== BUSINESS ACCOUNT CREATION DEBUG END (SUCCESS) ===");
-        return { success: true };
-      } else {
-        console.error("Failed to send verification code:", error);
-        toast({
-          title: "Error",
-          description: error || "Failed to send verification code. Please try again.",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
+      navigate(`/phone-verification?${params.toString()}`);
+      
+      console.log("=== BUSINESS ACCOUNT CREATION DEBUG END (SUCCESS) ===");
+      return { success: true };
 
     } catch (error) {
       console.error("Verification initiation error:", error);

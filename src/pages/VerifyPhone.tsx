@@ -76,10 +76,9 @@ const VerifyPhone = () => {
       console.log("📤 Sending initial SMS to:", phoneNumber);
       
       try {
-        const { data, error } = await supabase.functions.invoke("verify-phone", {
+        const { data, error } = await supabase.functions.invoke("send-verification-code", {
           body: {
-            phoneNumber: phoneNumber,
-            actionType: "send"
+            phoneNumber: phoneNumber
           }
         });
         
