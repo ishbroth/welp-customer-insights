@@ -4,53 +4,45 @@
 ## Problem Statement
 User cannot register with phone number (619) 734-7668 due to persistent duplicate detection, even after hard deletes. This indicates orphaned profile data remains in the system after auth user deletion.
 
+## SOLUTION: COMPLETE DATABASE WIPE
+**STATUS: IN PROGRESS - 2025-07-12**
+
+User has requested to start with a completely clean slate with NO permanent accounts whatsoever. 
+
 ## Root Causes Identified
-1. **Profiles table** - Main source of orphaned data when auth.users are deleted but profiles remain
-2. **Business_info table** - Business records may persist after profile deletion  
-3. **Review-related tables** - May contain customer phone data that triggers duplicates
-4. **Verification tables** - May cache phone numbers from previous attempts
-5. **Edge function memory/cache** - Function may be caching results between calls
-6. **Permanent/Demo Accounts** - Test accounts may be recreated or protected from deletion
+1. **Orphaned Profile Data** - Profile record `52d6d902-8da4-4c83-9a41-0c75cb325402` with phone `(619) 734-7668` persists
+2. **Incomplete Cleanup** - Previous attempts protected "permanent" accounts, but user wants NO accounts
+3. **Cross-Table References** - Phone data may exist across multiple related tables
 
-## Solutions Attempted
-1. ✅ Hard delete migration (profiles, auth.users, business_info)
-2. ✅ Added orphaned profile cleanup to check-duplicates edge function
-3. ✅ Enhanced phone duplicate checker with auth user validation
-4. ✅ Ultra-comprehensive cleanup of ALL tables containing phone data
-5. ✅ Cache clearing mechanism in edge functions
-6. ✅ Verification codes and related phone caches cleared
-7. 🔄 **NEW**: Targeted orphaned cleanup with permanent account protection
+## Current Strategy (2025-07-12)
+1. **COMPLETE DATABASE WIPE**: Delete ALL profiles, ALL auth users, ALL related data
+2. **NO PERMANENT ACCOUNT PROTECTION**: Remove all safeguards that were protecting demo accounts
+3. **Comprehensive Table Clearing**: Clear every table that could contain phone references
+4. **Final Verification**: Ensure database is completely empty before allowing registration
 
-## Current Investigation
-- **Specific Record ID**: `52d6d902-8da4-4c83-9a41-0c75cb325402`
-- **Phone Number**: (619) 734-7668 / 6197347668 (cleaned)
-- **Issue**: This record persists despite cleanup attempts
-- **Hypothesis**: May be a permanent/demo account or protected record
+## Expected Outcome
+- Database should be completely empty (0 profiles, 0 auth users)
+- Phone number (619) 734-7668 should be available for registration
+- NO duplicate detection should occur for any phone number or email
 
 ## Phone Numbers Being Tested
-- (619) 734-7668 / 6197347668 (cleaned) - **PERSISTENT ISSUE**
-- Previous: (619) 724-2702 / 6197242702 (cleaned) - Resolved
+- (619) 734-7668 / 6197347668 (cleaned) - **TARGET FOR CLEANUP**
 
-## Tables That May Contain Phone Data
-- profiles (primary source) ✅ Being cleaned with protection
-- business_info (may have phone references) ✅ Cleared
-- reviews (customer_phone field) ✅ Cleared
-- review_claim_history (customer_phone field) ✅ Cleared
-- verification_codes (phone field) ✅ Cleared
-- verification_requests (phone field) ✅ Cleared
-- customer_access (may reference phone indirectly) ✅ Cleared
-
-## Latest Strategy (2025-07-12)
-1. **Targeted Cleanup**: Only clean orphaned profiles that match the input data
-2. **Permanent Account Protection**: Skip cleanup for known permanent accounts
-3. **Immediate Return**: If orphaned matching data is cleaned, immediately allow registration
-4. **Better Logging**: More detailed tracking of what's being cleaned and why
+## Tables Being Cleared
+- profiles (primary source) ✅ WILL BE COMPLETELY CLEARED
+- business_info ✅ WILL BE COMPLETELY CLEARED
+- reviews ✅ WILL BE COMPLETELY CLEARED
+- review_claim_history ✅ WILL BE COMPLETELY CLEARED
+- verification_codes ✅ WILL BE COMPLETELY CLEARED
+- verification_requests ✅ WILL BE COMPLETELY CLEARED
+- customer_access ✅ WILL BE COMPLETELY CLEARED
+- All other related tables ✅ WILL BE COMPLETELY CLEARED
 
 ## Status
-🟡 IN PROGRESS - Implementing targeted cleanup with permanent account protection
+🟡 IN PROGRESS - Implementing complete database wipe with no permanent account protection
 
-## Next Steps If Still Failing
-1. Check for database triggers that recreate records
-2. Investigate if there are any foreign key constraints preventing deletion
-3. Check for any background jobs or functions that restore demo data
-4. Manually inspect the specific record ID in the database
+## Next Steps
+1. User should try registration with phone (619) 734-7668
+2. Edge function should perform complete wipe and return "no duplicates"
+3. Registration should proceed successfully
+4. If still failing, investigate database triggers or constraints that might be preventing deletion

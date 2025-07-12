@@ -71,41 +71,33 @@ export const clearVerificationCodes = async (phoneNumber: string) => {
 };
 
 /**
- * Check for permanent accounts that should not be deleted
+ * Get total database counts for verification
  */
-export const checkPermanentAccounts = async (email?: string, phone?: string) => {
-  console.log("🔒 DEBUG: Checking for permanent accounts:", { email, phone });
+export const getDatabaseCounts = async () => {
+  console.log("🔍 DEBUG: Getting database counts...");
   
-  const permanentEmails = [
-    'demo@welp.com',
-    'test@welp.com', 
-    'permanent@welp.com',
-    'iw@sdcarealty.com' // Known business account
-  ];
+  const { count: profileCount } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true });
   
-  const permanentPhones = [
-    '(619) 724-2702', // Known problematic phone
-    '6197242702' // Cleaned version
-  ];
+  const { count: businessCount } = await supabase
+    .from('business_info')
+    .select('*', { count: 'exact', head: true });
+    
+  const { count: reviewCount } = await supabase
+    .from('reviews')
+    .select('*', { count: 'exact', head: true });
   
-  const cleanedPhone = phone ? phone.replace(/\D/g, '') : '';
-  
-  const isPermanentEmail = email && permanentEmails.includes(email);
-  const isPermanentPhone = phone && (
-    permanentPhones.includes(phone) || 
-    permanentPhones.includes(cleanedPhone)
-  );
-  
-  console.log("🔒 DEBUG: Permanent account check results:", {
-    isPermanentEmail,
-    isPermanentPhone,
-    email,
-    phone,
-    cleanedPhone
+  console.log("🔍 DEBUG: Database counts:", {
+    profiles: profileCount,
+    business_info: businessCount,
+    reviews: reviewCount
   });
   
   return {
-    isPermanent: isPermanentEmail || isPermanentPhone,
-    reason: isPermanentEmail ? 'email' : isPermanentPhone ? 'phone' : null
+    profiles: profileCount || 0,
+    business_info: businessCount || 0,
+    reviews: reviewCount || 0,
+    isEmpty: (profileCount || 0) === 0 && (businessCount || 0) === 0 && (reviewCount || 0) === 0
   };
 };

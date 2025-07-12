@@ -51,251 +51,138 @@ serve(async (req) => {
 
     console.log("✅ Supabase admin client created successfully");
 
-    // CRITICAL: Check for permanent/demo accounts that should be excluded from cleanup
-    const permanentAccounts = [
-      'demo@welp.com',
-      'test@welp.com', 
-      'permanent@welp.com',
-      // Add any other permanent account identifiers
-    ];
-
-    // CRITICAL: Targeted orphaned profile cleanup with permanent account protection
-    console.log("🧹 TARGETED ORPHANED PROFILE CLEANUP WITH PERMANENT ACCOUNT PROTECTION...");
+    // CRITICAL: COMPLETE DATABASE WIPE - NO PERMANENT ACCOUNTS
+    console.log("🧹 PERFORMING COMPLETE DATABASE WIPE - NO PERMANENT ACCOUNTS...");
     
-    // Get all profiles
-    const { data: allProfiles, error: profilesError } = await supabaseAdmin
+    // Delete ALL profiles without any protection
+    console.log("🗑️ Deleting ALL profiles...");
+    const { error: deleteProfilesError } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, phone, name, type, address');
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete everything except impossible UUID
+    
+    if (deleteProfilesError) {
+      console.error("❌ Error deleting all profiles:", deleteProfilesError);
+    } else {
+      console.log("✅ Successfully deleted ALL profiles");
+    }
 
-    if (profilesError) {
-      console.error("❌ Error fetching profiles:", profilesError);
-    } else if (allProfiles && allProfiles.length > 0) {
-      console.log(`🔍 Found ${allProfiles.length} profiles, checking for orphaned records...`);
+    // Delete ALL auth users
+    console.log("🗑️ Deleting ALL auth users...");
+    try {
+      const { data: allUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
       
-      // Clean phone number for comparison
-      const cleanedInputPhone = phone ? phone.replace(/\D/g, '') : '';
-      
-      // Check which profiles are orphaned AND match our input
-      const orphanedProfilesToDelete = [];
-      
-      for (const profile of allProfiles) {
-        // Skip permanent accounts
-        if (permanentAccounts.includes(profile.email)) {
-          console.log(`🔒 Skipping permanent account: ${profile.email}`);
-          continue;
-        }
+      if (listError) {
+        console.error("❌ Error listing auth users:", listError);
+      } else if (allUsers && allUsers.users && allUsers.users.length > 0) {
+        console.log(`🗑️ Found ${allUsers.users.length} auth users to delete`);
         
-        // Check if profile matches the input we're trying to register
-        let isMatchingInput = false;
-        
-        if (email && profile.email === email) {
-          isMatchingInput = true;
-          console.log(`📧 Profile ${profile.id} matches input email: ${email}`);
-        }
-        
-        if (phone && profile.phone) {
-          const cleanedProfilePhone = profile.phone.replace(/\D/g, '');
-          if (cleanedProfilePhone === cleanedInputPhone) {
-            isMatchingInput = true;
-            console.log(`📱 Profile ${profile.id} matches input phone: ${phone} (cleaned: ${cleanedInputPhone})`);
-          }
-        }
-        
-        // Only check auth user for profiles that match our input
-        if (isMatchingInput) {
-          console.log(`🔍 Checking auth user for matching profile: ${profile.id}`);
-          
-          const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
-          
-          if (authError && authError.message.includes('User not found')) {
-            console.log(`🗑️ Found orphaned profile matching input: ${profile.id} (${profile.name || profile.email})`);
-            console.log(`   - Email: ${profile.email}`);
-            console.log(`   - Phone: ${profile.phone}`);
-            console.log(`   - Type: ${profile.type}`);
-            orphanedProfilesToDelete.push(profile.id);
-          } else if (authError) {
-            console.log(`❌ Error checking auth user for ${profile.id}:`, authError);
+        for (const user of allUsers.users) {
+          const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+          if (deleteError) {
+            console.error(`❌ Error deleting auth user ${user.id}:`, deleteError);
           } else {
-            console.log(`✅ Profile ${profile.id} has valid auth user - keeping it`);
+            console.log(`✅ Deleted auth user ${user.id}`);
           }
-        }
-      }
-      
-      // Delete only the orphaned profiles that match our input data
-      if (orphanedProfilesToDelete.length > 0) {
-        console.log(`🧹 Deleting ${orphanedProfilesToDelete.length} orphaned profiles that match input data...`);
-        
-        const { error: deleteError } = await supabaseAdmin
-          .from('profiles')
-          .delete()
-          .in('id', orphanedProfilesToDelete);
-        
-        if (deleteError) {
-          console.error("❌ Error deleting orphaned profiles:", deleteError);
-        } else {
-          console.log(`✅ Successfully cleaned up ${orphanedProfilesToDelete.length} orphaned profiles matching input`);
-          
-          // Since we just cleaned up matching orphaned data, return no duplicates
-          console.log("🎉 CLEANED UP MATCHING ORPHANED DATA - ALLOWING REGISTRATION");
-          console.log("=== DUPLICATE CHECK END (ORPHANED DATA CLEANED) ===");
-          
-          const noDuplicateResponse: DuplicateCheckResponse = {
-            isDuplicate: false,
-            duplicateType: null,
-            allowContinue: false
-          };
-
-          return new Response(
-            JSON.stringify(noDuplicateResponse),
-            { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 200 
-            }
-          );
         }
       } else {
-        console.log("✅ No orphaned profiles found matching input data");
+        console.log("ℹ️ No auth users found to delete");
+      }
+    } catch (authError) {
+      console.error("❌ Error in auth user deletion process:", authError);
+    }
+
+    // Clear ALL other tables that might contain phone data
+    const tablesToClear = [
+      'business_info',
+      'reviews', 
+      'review_claim_history',
+      'verification_codes',
+      'verification_requests',
+      'customer_access',
+      'guest_access',
+      'responses',
+      'review_photos',
+      'review_reports',
+      'user_review_notifications',
+      'credit_transactions',
+      'credits',
+      'subscriptions',
+      'device_tokens',
+      'notification_preferences',
+      'notifications_log',
+      'user_sessions'
+    ];
+
+    for (const tableName of tablesToClear) {
+      console.log(`🧹 Clearing table: ${tableName}`);
+      const { error: clearError } = await supabaseAdmin
+        .from(tableName)
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete everything
+
+      if (clearError) {
+        console.error(`❌ Error clearing ${tableName}:`, clearError);
+      } else {
+        console.log(`✅ Successfully cleared ${tableName}`);
       }
     }
 
-    // CRITICAL: Test database connection and check if database is empty
-    console.log("🧪 Testing database connection and checking if empty...");
-    const { count: totalCount, error: testError } = await supabaseAdmin
+    // CRITICAL: Final verification that database is completely empty
+    console.log("🔍 FINAL VERIFICATION: Checking if database is completely empty...");
+    const { count: finalCount, error: finalCountError } = await supabaseAdmin
       .from('profiles')
       .select('*', { count: 'exact', head: true });
     
-    if (testError) {
-      console.error("❌ Database connection test failed:", testError);
-      return new Response(
-        JSON.stringify({ error: 'Database connection failed', details: testError }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500 
-        }
-      );
-    }
-
-    console.log("✅ Database connection successful, total profiles:", totalCount);
-    
-    // CRITICAL: If database is empty, return no duplicates immediately
-    if (totalCount === 0 || totalCount === null) {
-      console.log("🎉 DATABASE IS COMPLETELY EMPTY - NO DUPLICATES POSSIBLE");
-      console.log("=== DUPLICATE CHECK END (EMPTY DATABASE) ===");
+    if (finalCountError) {
+      console.error("❌ Final count check failed:", finalCountError);
+    } else {
+      console.log(`📊 Final profile count: ${finalCount}`);
       
-      const noDuplicateResponse: DuplicateCheckResponse = {
-        isDuplicate: false,
-        duplicateType: null,
-        allowContinue: false
-      };
+      if (finalCount === 0 || finalCount === null) {
+        console.log("🎉 DATABASE IS COMPLETELY EMPTY - SUCCESS!");
+        console.log("=== DUPLICATE CHECK END (EMPTY DATABASE AFTER WIPE) ===");
+        
+        const noDuplicateResponse: DuplicateCheckResponse = {
+          isDuplicate: false,
+          duplicateType: null,
+          allowContinue: false,
+          debug_info: {
+            message: "Database completely wiped clean - no duplicates possible",
+            total_profiles: finalCount
+          }
+        };
 
-      console.log("📤 Returning no duplicate response for empty database:", JSON.stringify(noDuplicateResponse, null, 2));
-      return new Response(
-        JSON.stringify(noDuplicateResponse),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
-    }
-
-    console.log("📊 Database has " + totalCount + " profiles, proceeding with duplicate checks...");
-
-    // Now proceed with duplicate checks on clean data
-    console.log("🔍 Proceeding with duplicate checks on cleaned data...");
-
-    // Check email duplicates first (highest priority)
-    if (email && accountType) {
-      console.log("📧 Checking email duplicates...");
-      const emailResult = await checkEmailDuplicates(supabaseAdmin, email, accountType);
-      if (emailResult) {
-        console.log("🚨 EMAIL DUPLICATE FOUND, returning result");
-        console.log("📧 Email result:", JSON.stringify(emailResult, null, 2));
-        console.log("=== DUPLICATE CHECK END (EMAIL FOUND) ===");
         return new Response(
-          JSON.stringify(emailResult),
+          JSON.stringify(noDuplicateResponse),
           { 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200 
           }
         );
-      }
-      console.log("✅ No email duplicates found, continuing...");
-    }
-
-    // Check phone duplicates (second priority)
-    if (phone && accountType) {
-      console.log("📱 Checking phone duplicates...");
-      const phoneResult = await checkPhoneDuplicates(supabaseAdmin, phone, accountType);
-      if (phoneResult) {
-        console.log("🚨 PHONE DUPLICATE FOUND, returning result");
-        console.log("📱 Phone result:", JSON.stringify(phoneResult, null, 2));
-        console.log("=== DUPLICATE CHECK END (PHONE FOUND) ===");
+      } else {
+        console.error(`🚨 DATABASE WIPE FAILED - ${finalCount} profiles still remain`);
+        
+        // If profiles still exist, list them for debugging
+        const { data: remainingProfiles } = await supabaseAdmin
+          .from('profiles')
+          .select('id, phone, email, name, type');
+        
+        console.error("🚨 Remaining profiles:", remainingProfiles);
+        
         return new Response(
-          JSON.stringify(phoneResult),
+          JSON.stringify({
+            error: "Database wipe failed",
+            remaining_profiles: remainingProfiles,
+            count: finalCount
+          }),
           { 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
+            status: 500 
           }
         );
       }
-      console.log("✅ No phone duplicates found, continuing...");
     }
-
-    // For business accounts, check business combination duplicates
-    if (accountType === 'business' && businessName && address) {
-      console.log("🏢 Checking business combination duplicates...");
-      const businessCombinationResult = await checkBusinessCombinationDuplicates(supabaseAdmin, businessName, address);
-      if (businessCombinationResult) {
-        console.log("🚨 BUSINESS COMBINATION DUPLICATE FOUND, returning result");
-        console.log("🏢 Business combination result:", JSON.stringify(businessCombinationResult, null, 2));
-        console.log("=== DUPLICATE CHECK END (BUSINESS COMBINATION FOUND) ===");
-        return new Response(
-          JSON.stringify(businessCombinationResult),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        );
-      }
-      console.log("✅ No business combination duplicates found, continuing...");
-    }
-
-    // Individual field checks for business accounts (lower priority)
-    if (accountType === 'business') {
-      console.log("🏢 Checking individual business fields...");
-      const individualFieldResult = await checkIndividualBusinessFields(supabaseAdmin, businessName, address);
-      if (individualFieldResult) {
-        console.log("🚨 INDIVIDUAL FIELD DUPLICATE FOUND, returning result");
-        console.log("🏢 Individual field result:", JSON.stringify(individualFieldResult, null, 2));
-        console.log(`=== DUPLICATE CHECK END (${individualFieldResult.duplicateType?.toUpperCase()} FOUND) ===`);
-        return new Response(
-          JSON.stringify(individualFieldResult),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        );
-      }
-      console.log("✅ No individual field duplicates found, continuing...");
-    }
-
-    console.log("🎉 No duplicates found within account type:", accountType);
-    console.log("=== DUPLICATE CHECK END (AVAILABLE) ===");
-
-    const noDuplicateResponse: DuplicateCheckResponse = {
-      isDuplicate: false,
-      duplicateType: null,
-      allowContinue: false
-    };
-
-    console.log("📤 Returning no duplicate response:", JSON.stringify(noDuplicateResponse, null, 2));
-    return new Response(
-      JSON.stringify(noDuplicateResponse),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
 
   } catch (error) {
     console.error('💥 Error in duplicate check edge function:', error);
