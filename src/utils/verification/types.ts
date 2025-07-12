@@ -9,6 +9,7 @@ export type VerificationResult = {
     businessName?: string;
     issuingAuthority?: string;
     state?: string;
+    licenseNumber?: string;
   };
   isRealVerification?: boolean;
 };
