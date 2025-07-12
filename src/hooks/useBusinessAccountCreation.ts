@@ -71,6 +71,7 @@ export const useBusinessAccountCreation = () => {
       console.log("Attempting to send verification code to:", businessPhone);
       
       // Navigate to phone verification page with all the data as URL params
+      // FIXED: Changed from /phone-verification to /verify-phone to match actual route
       const params = new URLSearchParams({
         email: businessEmail,
         password: businessPassword,
@@ -86,7 +87,7 @@ export const useBusinessAccountCreation = () => {
       
       console.log("Navigating to phone verification with params:", params.toString());
       
-      navigate(`/phone-verification?${params.toString()}`);
+      navigate(`/verify-phone?${params.toString()}`);
       
       console.log("=== BUSINESS ACCOUNT CREATION DEBUG END (SUCCESS) ===");
       return { success: true };
