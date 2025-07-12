@@ -1,9 +1,10 @@
 
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BusinessAddressSection } from "./BusinessAddressSection";
-import BusinessTypeSelect from "@/components/search/BusinessTypeSelect";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { BusinessContactSection } from "./BusinessContactSection";
+import { BUSINESS_TYPE_OPTIONS } from "./businessFormData";
 
 interface BusinessInfoFormProps {
   businessName: string;
@@ -84,10 +85,18 @@ export const BusinessInfoForm = ({
         <label htmlFor="businessType" className="block text-sm font-medium mb-1">
           Business Type <span className="text-red-500">*</span>
         </label>
-        <BusinessTypeSelect
-          value={businessType}
-          onValueChange={setBusinessType}
-        />
+        <Select value={businessType} onValueChange={setBusinessType} required>
+          <SelectTrigger className="welp-input">
+            <SelectValue placeholder="Select business type" />
+          </SelectTrigger>
+          <SelectContent>
+            {BUSINESS_TYPE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {!businessType && (
           <p className="text-sm text-red-500 mt-1">Please select a business type</p>
         )}
