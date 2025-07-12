@@ -1,6 +1,6 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 
 interface EmailValidationAlertProps {
@@ -9,12 +9,12 @@ interface EmailValidationAlertProps {
 
 export const EmailValidationAlert = ({ emailExists }: EmailValidationAlertProps) => {
   if (!emailExists) return null;
-
+  
   return (
     <Alert className="mt-2 bg-red-50 border-red-200">
       <AlertTriangle className="h-4 w-4 text-red-600" />
       <AlertDescription className="text-red-800">
-        This email is already registered with an existing business account.
+        This email is already registered. Please use a different email or sign in to your existing account.
       </AlertDescription>
     </Alert>
   );
@@ -26,12 +26,12 @@ interface PhoneValidationAlertProps {
 
 export const PhoneValidationAlert = ({ phoneExists }: PhoneValidationAlertProps) => {
   if (!phoneExists) return null;
-
+  
   return (
     <Alert className="mt-2 bg-red-50 border-red-200">
       <AlertTriangle className="h-4 w-4 text-red-600" />
       <AlertDescription className="text-red-800">
-        This phone number is already registered with an existing business account.
+        This phone number is already registered. Please use a different phone number or sign in to your existing account.
       </AlertDescription>
     </Alert>
   );
@@ -41,31 +41,14 @@ interface DuplicateBusinessAlertProps {
   duplicateResult: DuplicateCheckResult | null;
 }
 
-const getDuplicateMessage = (duplicateResult: DuplicateCheckResult) => {
-  switch (duplicateResult.duplicateType) {
-    case 'email':
-      return "This email is already registered with an existing business account.";
-    case 'phone':
-      return "This phone number is already registered with an existing business account.";
-    case 'business_combination':
-      return "A business with similar details already exists in our system.";
-    case 'address':
-      return "This address is already registered with another business.";
-    case 'business_name':
-      return "A business with a similar name already exists.";
-    default:
-      return "This information matches an existing business account.";
-  }
-};
-
 export const DuplicateBusinessAlert = ({ duplicateResult }: DuplicateBusinessAlertProps) => {
-  if (!duplicateResult || duplicateResult.duplicateType !== 'business_combination') return null;
-
+  if (!duplicateResult?.isDuplicate) return null;
+  
   return (
-    <Alert className="mt-2 bg-red-50 border-red-200">
-      <AlertTriangle className="h-4 w-4 text-red-600" />
-      <AlertDescription className="text-red-800">
-        {getDuplicateMessage(duplicateResult)}
+    <Alert className="mt-2 bg-yellow-50 border-yellow-200">
+      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+      <AlertDescription className="text-yellow-800">
+        A similar business registration was found. Please review your information or contact support if you believe this is an error.
       </AlertDescription>
     </Alert>
   );
@@ -77,8 +60,11 @@ interface CheckingDuplicatesIndicatorProps {
 
 export const CheckingDuplicatesIndicator = ({ isCheckingDuplicates }: CheckingDuplicatesIndicatorProps) => {
   if (!isCheckingDuplicates) return null;
-
+  
   return (
-    <p className="text-sm text-gray-500 mt-1">Checking for duplicates...</p>
+    <div className="flex items-center mt-2 text-sm text-gray-600">
+      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+      Checking for existing accounts...
+    </div>
   );
 };

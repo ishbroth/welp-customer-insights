@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { BusinessAddressSection } from "./BusinessAddressSection";
 import BusinessTypeSelect from "@/components/search/BusinessTypeSelect";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { useDuplicateCheck } from "@/hooks/useDuplicateCheck";
+import { BusinessContactSection } from "./BusinessContactSection";
 
 interface BusinessInfoFormProps {
   businessName: string;
@@ -52,12 +52,6 @@ export const BusinessInfoForm = ({
   setLicenseNumber,
   onDuplicateFound
 }: BusinessInfoFormProps) => {
-  
-  useDuplicateCheck({
-    email: businessEmail,
-    phone: businessPhone,
-    onDuplicateFound
-  });
 
   return (
     <div className="space-y-6">
@@ -76,34 +70,15 @@ export const BusinessInfoForm = ({
         setBusinessZipCode={setBusinessZipCode}
       />
       
-      <div>
-        <label htmlFor="businessEmail" className="block text-sm font-medium mb-1">
-          Business Email <span className="text-red-500">*</span>
-        </label>
-        <Input
-          id="businessEmail"
-          type="email"
-          placeholder="your@business.com"
-          value={businessEmail}
-          onChange={(e) => setBusinessEmail(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="businessPhone" className="block text-sm font-medium mb-1">
-          Business Phone <span className="text-red-500">*</span>
-        </label>
-        <PhoneInput
-          id="businessPhone"
-          placeholder="Your business phone number"
-          value={businessPhone}
-          onChange={setBusinessPhone}
-          className="welp-input"
-          required
-        />
-      </div>
+      <BusinessContactSection
+        businessEmail={businessEmail}
+        setBusinessEmail={setBusinessEmail}
+        businessPhone={businessPhone}
+        setBusinessPhone={setBusinessPhone}
+        businessName={businessName}
+        businessAddress={`${businessStreet} ${businessCity} ${businessState} ${businessZipCode}`.trim()}
+        onDuplicateFound={onDuplicateFound}
+      />
       
       <div>
         <label htmlFor="businessType" className="block text-sm font-medium mb-1">
