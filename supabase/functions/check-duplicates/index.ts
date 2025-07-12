@@ -51,8 +51,8 @@ serve(async (req) => {
 
     console.log("✅ Supabase admin client created successfully");
 
-    // Test database connection with detailed logging
-    console.log("🧪 Testing database connection...");
+    // CRITICAL: Test database connection and check if database is empty
+    console.log("🧪 Testing database connection and checking if empty...");
     const { count: totalCount, error: testError } = await supabaseAdmin
       .from('profiles')
       .select('*', { count: 'exact', head: true });
@@ -66,29 +66,32 @@ serve(async (req) => {
           status: 500 
         }
       );
-    } else {
-      console.log("✅ Database connection successful, total profiles:", totalCount);
-      
-      // CRITICAL: If database is empty, no duplicates are possible
-      if (totalCount === 0) {
-        console.log("🎉 Database is completely empty - no duplicates possible");
-        console.log("=== DUPLICATE CHECK END (EMPTY DATABASE) ===");
-        
-        const noDuplicateResponse: DuplicateCheckResponse = {
-          isDuplicate: false,
-          duplicateType: null,
-          allowContinue: false
-        };
-
-        return new Response(
-          JSON.stringify(noDuplicateResponse),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        );
-      }
     }
+
+    console.log("✅ Database connection successful, total profiles:", totalCount);
+    
+    // CRITICAL: If database is empty, return no duplicates immediately
+    if (totalCount === 0 || totalCount === null) {
+      console.log("🎉 DATABASE IS COMPLETELY EMPTY - NO DUPLICATES POSSIBLE");
+      console.log("=== DUPLICATE CHECK END (EMPTY DATABASE) ===");
+      
+      const noDuplicateResponse: DuplicateCheckResponse = {
+        isDuplicate: false,
+        duplicateType: null,
+        allowContinue: false
+      };
+
+      console.log("📤 Returning no duplicate response for empty database:", JSON.stringify(noDuplicateResponse, null, 2));
+      return new Response(
+        JSON.stringify(noDuplicateResponse),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+
+    console.log("📊 Database has " + totalCount + " profiles, proceeding with duplicate checks...");
 
     // Check email duplicates first (highest priority)
     if (email && accountType) {
