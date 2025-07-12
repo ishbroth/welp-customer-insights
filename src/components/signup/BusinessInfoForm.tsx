@@ -83,11 +83,11 @@ export const BusinessInfoForm = ({
       
       <div>
         <label htmlFor="businessType" className="block text-sm font-medium mb-1">
-          Business Type <span className="text-red-500">*</span>
+          License Type/EIN <span className="text-red-500">*</span>
         </label>
         <Select value={businessType} onValueChange={setBusinessType} required>
           <SelectTrigger className="welp-input">
-            <SelectValue placeholder="Select business type" />
+            <SelectValue placeholder="Select license type or EIN" />
           </SelectTrigger>
           <SelectContent>
             {BUSINESS_TYPE_OPTIONS.map((option) => (
@@ -98,7 +98,7 @@ export const BusinessInfoForm = ({
           </SelectContent>
         </Select>
         {!businessType && (
-          <p className="text-sm text-red-500 mt-1">Please select a business type</p>
+          <p className="text-sm text-red-500 mt-1">Please select a license type</p>
         )}
       </div>
       
@@ -109,7 +109,7 @@ export const BusinessInfoForm = ({
         <Input
           id="licenseNumber"
           type="text"
-          placeholder="Your business license number"
+          placeholder="Your business license number or EIN"
           value={licenseNumber}
           onChange={(e) => setLicenseNumber(e.target.value)}
           className="welp-input"

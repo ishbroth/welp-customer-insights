@@ -65,13 +65,21 @@ export const BusinessVerificationStep = ({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("🔍 LICENSE VERIFICATION TRIGGERED");
+    console.log("Business Type (License Type):", businessType);
+    console.log("License Number:", licenseNumber);
+    console.log("Business State:", businessState);
+    
     // Validate required fields including state and phone
     if (!businessName.trim() || !businessEmail.trim() || !businessStreet.trim() || 
         !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() || 
         !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim()) {
+      console.error("❌ Required fields missing for verification");
       return;
     }
     
+    // Trigger automatic verification through the onSubmit handler
+    console.log("✅ Triggering automatic license verification...");
     onSubmit(e);
   };
 
@@ -121,8 +129,17 @@ export const BusinessVerificationStep = ({
         className="welp-button w-full mt-6" 
         disabled={isVerifying || hasDuplicates || !businessState.trim() || !businessPhone.trim()}
       >
-        {isVerifying ? "Processing..." : "Continue to Password Setup"}
+        {isVerifying ? "Verifying License..." : "Continue to Password Setup"}
       </Button>
+
+      {isVerifying && (
+        <div className="mt-2 text-center text-sm text-gray-600">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-welp-red mr-2"></div>
+            Automatically verifying your {businessType === 'ein' ? 'EIN' : 'license'} with state databases...
+          </div>
+        </div>
+      )}
     </form>
   );
 };
