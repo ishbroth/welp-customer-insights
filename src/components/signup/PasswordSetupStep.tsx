@@ -23,8 +23,18 @@ export const PasswordSetupStep = ({
 }: PasswordSetupStepProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("=== PASSWORD SETUP SUBMIT DEBUG ===");
+    console.log("Form submission triggered");
+    console.log("Disabled:", disabled);
+    console.log("Is Submitting:", isSubmitting);
+    console.log("Password length:", businessPassword.length);
+    console.log("Passwords match:", businessPassword === businessConfirmPassword);
+    
     if (!disabled) {
+      console.log("Calling onCreateAccount...");
       onCreateAccount();
+    } else {
+      console.log("Form submission blocked - component is disabled");
     }
   };
 
@@ -40,7 +50,10 @@ export const PasswordSetupStep = ({
           id="businessPassword"
           type="password"
           value={businessPassword}
-          onChange={(e) => setBusinessPassword(e.target.value)}
+          onChange={(e) => {
+            console.log("Password field changed, new length:", e.target.value.length);
+            setBusinessPassword(e.target.value);
+          }}
           className="welp-input"
           required
           disabled={disabled}
@@ -55,7 +68,10 @@ export const PasswordSetupStep = ({
           id="businessConfirmPassword"
           type="password"
           value={businessConfirmPassword}
-          onChange={(e) => setBusinessConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            console.log("Confirm password field changed, passwords match:", e.target.value === businessPassword);
+            setBusinessConfirmPassword(e.target.value);
+          }}
           className="welp-input"
           required
           disabled={disabled}
@@ -66,6 +82,9 @@ export const PasswordSetupStep = ({
         type="submit" 
         className="welp-button w-full" 
         disabled={isSubmitting || disabled}
+        onClick={() => {
+          console.log("Button clicked - disabled:", isSubmitting || disabled);
+        }}
       >
         {isSubmitting ? "Creating Account..." : "Create Business Account"}
       </Button>

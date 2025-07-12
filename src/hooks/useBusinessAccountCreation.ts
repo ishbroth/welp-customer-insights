@@ -22,8 +22,22 @@ export const useBusinessAccountCreation = () => {
     licenseNumber: string,
     businessType: string
   ) => {
+    console.log("=== BUSINESS ACCOUNT CREATION DEBUG START ===");
+    console.log("Business Details:", {
+      businessName,
+      businessEmail,
+      businessPhone,
+      businessStreet,
+      businessCity,
+      businessState,
+      businessZipCode,
+      licenseNumber,
+      businessType
+    });
+
     // Validate passwords
     if (businessPassword !== businessConfirmPassword) {
+      console.error("Password validation failed: passwords do not match");
       toast({
         title: "Password Mismatch",
         description: "Passwords do not match. Please check and try again.",
@@ -33,6 +47,7 @@ export const useBusinessAccountCreation = () => {
     }
 
     if (businessPassword.length < 8) {
+      console.error("Password validation failed: password too short");
       toast({
         title: "Password Too Short",
         description: "Password must be at least 8 characters long.",
@@ -42,6 +57,7 @@ export const useBusinessAccountCreation = () => {
     }
 
     if (!businessPhone) {
+      console.error("Validation failed: phone number required");
       toast({
         title: "Phone Required",
         description: "Phone number is required for verification.",
@@ -53,10 +69,16 @@ export const useBusinessAccountCreation = () => {
     setIsSubmitting(true);
 
     try {
+      console.log("Attempting to send verification code to:", businessPhone);
+      
       // Send verification code
       const { success, error } = await sendVerificationCode({ phoneNumber: businessPhone });
       
+      console.log("Verification code response:", { success, error });
+      
       if (success) {
+        console.log("Verification code sent successfully, navigating to phone verification");
+        
         toast({
           title: "Verification Code Sent",
           description: `A verification code has been sent to ${businessPhone}.`,
@@ -78,8 +100,10 @@ export const useBusinessAccountCreation = () => {
           }
         });
         
+        console.log("=== BUSINESS ACCOUNT CREATION DEBUG END (SUCCESS) ===");
         return { success: true };
       } else {
+        console.error("Failed to send verification code:", error);
         toast({
           title: "Error",
           description: error || "Failed to send verification code. Please try again.",
@@ -90,6 +114,7 @@ export const useBusinessAccountCreation = () => {
 
     } catch (error) {
       console.error("Verification initiation error:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
       toast({
         title: "Error",
         description: "An unexpected error occurred during verification setup.",
@@ -98,6 +123,7 @@ export const useBusinessAccountCreation = () => {
       return { success: false };
     } finally {
       setIsSubmitting(false);
+      console.log("=== BUSINESS ACCOUNT CREATION DEBUG END ===");
     }
   };
 
