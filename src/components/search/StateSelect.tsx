@@ -1,12 +1,58 @@
 
-import React from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const US_STATES = [
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" }
+];
 
 interface StateSelectProps {
   value: string;
@@ -15,65 +61,16 @@ interface StateSelectProps {
 
 const StateSelect = ({ value, onValueChange }: StateSelectProps) => {
   return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger 
-        className="welp-input" 
-        aria-label="State"
-      >
-        <SelectValue placeholder="State" />
+    <Select value={value} onValueChange={onValueChange} required>
+      <SelectTrigger className="welp-input">
+        <SelectValue placeholder="Select state" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="AL">AL</SelectItem>
-        <SelectItem value="AK">AK</SelectItem>
-        <SelectItem value="AZ">AZ</SelectItem>
-        <SelectItem value="AR">AR</SelectItem>
-        <SelectItem value="CA">CA</SelectItem>
-        <SelectItem value="CO">CO</SelectItem>
-        <SelectItem value="CT">CT</SelectItem>
-        <SelectItem value="DE">DE</SelectItem>
-        <SelectItem value="FL">FL</SelectItem>
-        <SelectItem value="GA">GA</SelectItem>
-        <SelectItem value="HI">HI</SelectItem>
-        <SelectItem value="ID">ID</SelectItem>
-        <SelectItem value="IL">IL</SelectItem>
-        <SelectItem value="IN">IN</SelectItem>
-        <SelectItem value="IA">IA</SelectItem>
-        <SelectItem value="KS">KS</SelectItem>
-        <SelectItem value="KY">KY</SelectItem>
-        <SelectItem value="LA">LA</SelectItem>
-        <SelectItem value="ME">ME</SelectItem>
-        <SelectItem value="MD">MD</SelectItem>
-        <SelectItem value="MA">MA</SelectItem>
-        <SelectItem value="MI">MI</SelectItem>
-        <SelectItem value="MN">MN</SelectItem>
-        <SelectItem value="MS">MS</SelectItem>
-        <SelectItem value="MO">MO</SelectItem>
-        <SelectItem value="MT">MT</SelectItem>
-        <SelectItem value="NE">NE</SelectItem>
-        <SelectItem value="NV">NV</SelectItem>
-        <SelectItem value="NH">NH</SelectItem>
-        <SelectItem value="NJ">NJ</SelectItem>
-        <SelectItem value="NM">NM</SelectItem>
-        <SelectItem value="NY">NY</SelectItem>
-        <SelectItem value="NC">NC</SelectItem>
-        <SelectItem value="ND">ND</SelectItem>
-        <SelectItem value="OH">OH</SelectItem>
-        <SelectItem value="OK">OK</SelectItem>
-        <SelectItem value="OR">OR</SelectItem>
-        <SelectItem value="PA">PA</SelectItem>
-        <SelectItem value="RI">RI</SelectItem>
-        <SelectItem value="SC">SC</SelectItem>
-        <SelectItem value="SD">SD</SelectItem>
-        <SelectItem value="TN">TN</SelectItem>
-        <SelectItem value="TX">TX</SelectItem>
-        <SelectItem value="UT">UT</SelectItem>
-        <SelectItem value="VT">VT</SelectItem>
-        <SelectItem value="VA">VA</SelectItem>
-        <SelectItem value="WA">WA</SelectItem>
-        <SelectItem value="WV">WV</SelectItem>
-        <SelectItem value="WI">WI</SelectItem>
-        <SelectItem value="WY">WY</SelectItem>
-        <SelectItem value="DC">DC</SelectItem>
+        {US_STATES.map((state) => (
+          <SelectItem key={state.value} value={state.value}>
+            {state.label}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
