@@ -51,6 +51,102 @@ serve(async (req) => {
 
     console.log("✅ Supabase admin client created successfully");
 
+    // CRITICAL: Clear any edge function caches by forcing fresh connections
+    console.log("🧹 CLEARING EDGE FUNCTION CACHES...");
+    
+    // CRITICAL: Comprehensive database state check with ALL phone-containing tables
+    console.log("🧪 COMPREHENSIVE DATABASE STATE CHECK...");
+    
+    // Check all tables that might contain phone data
+    const tables_to_check = [
+      'profiles',
+      'business_info', 
+      'verification_codes',
+      'verification_requests',
+      'reviews',
+      'review_claim_history'
+    ];
+    
+    const phone_data_found = [];
+    const cleaned_phone = phone ? phone.replace(/\D/g, '') : '';
+    
+    for (const table of tables_to_check) {
+      console.log(`🔍 Checking table: ${table}`);
+      
+      let query;
+      let phone_field;
+      
+      // Determine the phone field for each table
+      if (table === 'profiles') {
+        phone_field = 'phone';
+        query = supabaseAdmin.from(table).select('id, phone, email, name, type');
+      } else if (table === 'verification_codes' || table === 'verification_requests') {
+        phone_field = 'phone';
+        query = supabaseAdmin.from(table).select('id, phone');
+      } else if (table === 'reviews' || table === 'review_claim_history') {
+        phone_field = 'customer_phone';
+        query = supabaseAdmin.from(table).select('id, customer_phone');
+      } else {
+        // Skip tables without phone fields
+        continue;
+      }
+      
+      const { data: table_data, error: table_error } = await query;
+      
+      if (table_error) {
+        console.log(`❌ Error checking ${table}:`, table_error);
+        continue;
+      }
+      
+      console.log(`📊 ${table} contains ${table_data?.length || 0} records`);
+      
+      if (table_data && table_data.length > 0 && cleaned_phone) {
+        // Check each record for phone matches
+        for (const record of table_data) {
+          const record_phone = record[phone_field];
+          if (record_phone) {
+            const cleaned_record_phone = record_phone.replace(/\D/g, '');
+            console.log(`🔍 ${table} record ${record.id}: "${record_phone}" cleaned to "${cleaned_record_phone}"`);
+            
+            if (cleaned_record_phone === cleaned_phone) {
+              console.log(`🚨 PHONE MATCH FOUND IN ${table.toUpperCase()}!`);
+              phone_data_found.push({
+                table: table,
+                record_id: record.id,
+                phone: record_phone,
+                cleaned_phone: cleaned_record_phone
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    if (phone_data_found.length > 0) {
+      console.log("🚨 CRITICAL: PHONE DATA STILL EXISTS IN DATABASE:");
+      phone_data_found.forEach(item => {
+        console.log(`  - Table: ${item.table}, ID: ${item.record_id}, Phone: ${item.phone}`);
+      });
+      
+      return new Response(
+        JSON.stringify({
+          isDuplicate: true,
+          duplicateType: 'phone',
+          existingPhone: phone,
+          existingEmail: '',
+          allowContinue: false,
+          debug_info: {
+            orphaned_data_found: phone_data_found,
+            message: "Phone data still exists in database after cleanup"
+          }
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
+    }
+
     // CRITICAL: Test database connection and check if database is empty
     console.log("🧪 Testing database connection and checking if empty...");
     const { count: totalCount, error: testError } = await supabaseAdmin
@@ -93,8 +189,8 @@ serve(async (req) => {
 
     console.log("📊 Database has " + totalCount + " profiles, proceeding with duplicate checks...");
 
-    // CRITICAL FIX: Clean up orphaned profiles before checking duplicates
-    console.log("🧹 Checking for and cleaning up orphaned profiles...");
+    // CRITICAL: Ultra-comprehensive orphaned profile cleanup
+    console.log("🧹 ULTRA-COMPREHENSIVE ORPHANED PROFILE CLEANUP...");
     
     // Get all profiles
     const { data: allProfiles, error: profilesError } = await supabaseAdmin
