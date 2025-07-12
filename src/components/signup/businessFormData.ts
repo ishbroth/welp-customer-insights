@@ -1,13 +1,17 @@
+
 export const BUSINESS_TYPE_OPTIONS = [
-  { value: "contractor", label: "Contractor" },
-  { value: "liquor", label: "Liquor License" },
+  { value: "ein", label: "EIN" },
+  { value: "contractor", label: "Contractors" },
+  { value: "bar", label: "Liquor Licenses" },
+  { value: "attorney", label: "Law/Legal" },
+  { value: "realtor", label: "Real Estate" },
+  { value: "medical", label: "Medical/Dental" },
   { value: "restaurant", label: "Restaurant/Food Service" },
-  { value: "real_estate", label: "Real Estate" },
-  { value: "healthcare", label: "Healthcare Professional" },
-  { value: "automotive", label: "Automotive Services" },
-  { value: "beauty", label: "Beauty/Cosmetology" },
+  { value: "auto", label: "Automotive Services" },
+  { value: "insurance", label: "Insurance" },
+  { value: "energy", label: "Energy" },
+  { value: "rentals", label: "Vendors/Sellers" },
   { value: "retail", label: "Retail/Business License" },
-  { value: "professional", label: "Professional Services" },
   { value: "other", label: "Other License Type" }
 ];
 
