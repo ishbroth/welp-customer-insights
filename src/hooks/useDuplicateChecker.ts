@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
-import { debugOrphanedData } from "@/utils/debugOrphanedData";
+import { debugAnyOrphanedData } from "@/utils/debugOrphanedData";
 
 interface UseDuplicateCheckerProps {
   businessEmail: string;
@@ -37,7 +37,7 @@ export const useDuplicateChecker = ({
       
       try {
         // CRITICAL: Add debug logging before duplicate check
-        const debugInfo = await debugOrphanedData(businessPhone);
+        const debugInfo = await debugAnyOrphanedData(businessPhone);
         console.log("🔍 DEBUG: Orphaned data check results:", debugInfo);
         
         const result = await checkDuplicatesViaEdgeFunction(

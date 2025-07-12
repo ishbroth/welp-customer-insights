@@ -27,7 +27,7 @@ export const verifyTotalCleanup = async () => {
     'notification_preferences',
     'notifications_log',
     'user_sessions'
-  ];
+  ] as const;
   
   const results: any = {};
   let totalRecords = 0;
@@ -149,10 +149,18 @@ export const getDatabaseCounts = async () => {
   let total = 0;
   
   const tables = [
-    'profiles', 'business_info', 'reviews', 'verification_codes',
-    'verification_requests', 'customer_access', 'guest_access',
-    'responses', 'review_photos', 'review_reports', 'credits'
-  ];
+    'profiles', 
+    'business_info', 
+    'reviews', 
+    'verification_codes',
+    'verification_requests', 
+    'customer_access', 
+    'guest_access',
+    'responses', 
+    'review_photos', 
+    'review_reports', 
+    'credits'
+  ] as const;
   
   for (const table of tables) {
     const { count } = await supabase
