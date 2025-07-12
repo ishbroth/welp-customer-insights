@@ -117,24 +117,15 @@ Deno.serve(async (req) => {
 
     const message = `Your Welp verification code is: ${verificationCode}. This code expires in 10 minutes.`
     
-    // Create proper JSON payload for AWS SNS
-    const snsPayload = {
-      Action: 'Publish',
-      PhoneNumber: formattedPhone,
-      Message: message,
-      'MessageAttributes.AWS.SNS.SMS.SenderID.DataType': 'String',
-      'MessageAttributes.AWS.SNS.SMS.SenderID.StringValue': 'Welp',
-      'MessageAttributes.AWS.SNS.SMS.SMSType.DataType': 'String',
-      'MessageAttributes.AWS.SNS.SMS.SMSType.StringValue': 'Transactional',
-      Version: '2010-03-31'
-    }
+    // Create AWS SNS payload - FIXED FORMAT
+    const snsPayload = new URLSearchParams({
+      'Action': 'Publish',
+      'PhoneNumber': formattedPhone,
+      'Message': message,
+      'Version': '2010-03-31'
+    })
 
-    // Convert to URL encoded format
-    const payloadString = Object.entries(snsPayload)
-      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-      .join('&')
-
-    console.log('📦 SNS payload created, length:', payloadString.length)
+    console.log('📦 SNS payload created')
 
     // AWS signature v4 creation
     const timestamp = new Date().toISOString().replace(/[:\-]|\.\d{3}/g, '')
@@ -150,6 +141,7 @@ Deno.serve(async (req) => {
     console.log('Timestamp:', timestamp)
 
     // Create payload hash
+    const payloadString = snsPayload.toString()
     const payloadHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payloadString))
       .then(hash => Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join(''))
 
