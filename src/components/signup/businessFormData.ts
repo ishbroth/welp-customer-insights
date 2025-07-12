@@ -1,16 +1,14 @@
-
 export const BUSINESS_TYPE_OPTIONS = [
-  { value: "restaurant", label: "Restaurant" },
-  { value: "retail", label: "Retail Store" },
-  { value: "healthcare", label: "Healthcare" },
-  { value: "automotive", label: "Automotive" },
-  { value: "beauty", label: "Beauty & Wellness" },
-  { value: "home_services", label: "Home Services" },
-  { value: "professional_services", label: "Professional Services" },
-  { value: "fitness", label: "Fitness & Recreation" },
-  { value: "education", label: "Education" },
-  { value: "entertainment", label: "Entertainment" },
-  { value: "other", label: "Other" }
+  { value: "contractor", label: "Contractor" },
+  { value: "liquor", label: "Liquor License" },
+  { value: "restaurant", label: "Restaurant/Food Service" },
+  { value: "real_estate", label: "Real Estate" },
+  { value: "healthcare", label: "Healthcare Professional" },
+  { value: "automotive", label: "Automotive Services" },
+  { value: "beauty", label: "Beauty/Cosmetology" },
+  { value: "retail", label: "Retail/Business License" },
+  { value: "professional", label: "Professional Services" },
+  { value: "other", label: "Other License Type" }
 ];
 
 export const US_STATES = [
