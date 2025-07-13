@@ -9,7 +9,7 @@ interface WelpAppIconProps {
 const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }) => {
   const iconSize = size;
   const fontSize = size * 0.24; // 200% larger - was 0.12
-  const asteriskSize = size * 0.5; // 200% larger - was 0.25
+  const asteriskSize = size * 0.6; // 20% larger - was 0.5
 
   return (
     <div 
@@ -32,20 +32,20 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
         
         {/* Yelp-style asterisk with 5 arms (4 actual arms + period replacing top arm), tilted opposite direction */}
         <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.3}) rotate(12)`}>
-          {/* Right arm (0 degrees) - bulbous shape like Yelp */}
+          {/* Right arm (0 degrees) - bulbous shape like Yelp with spacing */}
           <path
-            d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
-                Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
-                Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
+            d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+                Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
+                Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
             fill="white"
           />
           
           {/* Bottom-right diagonal arm (72 degrees) */}
           <g transform="rotate(72)">
             <path
-              d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
-                  Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
-                  Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
+              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+                  Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
               fill="white"
             />
           </g>
@@ -53,9 +53,9 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           {/* Bottom-left diagonal arm (144 degrees) */}
           <g transform="rotate(144)">
             <path
-              d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
-                  Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
-                  Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
+              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+                  Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
               fill="white"
             />
           </g>
@@ -63,9 +63,9 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           {/* Top-left diagonal arm (216 degrees) */}
           <g transform="rotate(216)">
             <path
-              d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
-                  Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
-                  Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
+              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+                  Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
               fill="white"
             />
           </g>
