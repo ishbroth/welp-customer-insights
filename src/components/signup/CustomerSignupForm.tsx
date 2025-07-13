@@ -5,9 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { usePhoneVerification } from "@/hooks/usePhoneVerification";
+import { useCustomerDuplicateCheck } from "@/hooks/useCustomerDuplicateCheck";
 import VerificationCodeInput from "@/components/verification/VerificationCodeInput";
 import VerifyCodeButton from "@/components/verification/VerifyCodeButton";
 import ResendCodeButton from "@/components/verification/ResendCodeButton";
+import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
+import { DuplicateCustomerDialog } from "./DuplicateCustomerDialog";
 import { sendVerificationCode } from "@/lib/utils";
 
 const CustomerSignupForm = () => {
@@ -25,6 +28,17 @@ const CustomerSignupForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
+
+  // Duplicate checking hook for customer accounts
+  const {
+    duplicateResult,
+    showDuplicateDialog,
+    setShowDuplicateDialog,
+    isChecking,
+    phoneExists,
+    emailExistsCheck,
+    setDuplicateResult
+  } = useCustomerDuplicateCheck(email, phone, firstName, lastName);
 
   // Phone verification hook
   const {
@@ -88,6 +102,12 @@ const CustomerSignupForm = () => {
       return;
     }
 
+    // Check for duplicates that should block registration
+    if (duplicateResult?.isDuplicate && !duplicateResult.allowContinue) {
+      setShowDuplicateDialog(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -117,6 +137,13 @@ const CustomerSignupForm = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleContinueWithDuplicate = () => {
+    setShowDuplicateDialog(false);
+    setDuplicateResult(null);
+    // Continue with form submission
+    handleSubmit(new Event('submit') as any);
   };
 
   if (step === 2) {
@@ -161,143 +188,166 @@ const CustomerSignupForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="firstName">First Name *</Label>
-          <Input
-            id="firstName"
-            type="text"
-            placeholder="John"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="welp-input"
-            required
-          />
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="firstName">First Name *</Label>
+            <Input
+              id="firstName"
+              type="text"
+              placeholder="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="welp-input"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="lastName">Last Name *</Label>
+            <Input
+              id="lastName"
+              type="text"
+              placeholder="Doe"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="welp-input"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="john@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="welp-input"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="password">Password *</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="welp-input"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="confirmPassword">Confirm Password *</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="welp-input"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="phone">Phone Number *</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="(555) 123-4567"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="welp-input"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              type="text"
+              placeholder="123 Main St"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="welp-input"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              type="text"
+              placeholder="New York"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="welp-input"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              type="text"
+              placeholder="NY"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className="welp-input"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="zipCode">Zip Code</Label>
+            <Input
+              id="zipCode"
+              type="text"
+              placeholder="10001"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              className="welp-input"
+            />
+          </div>
         </div>
 
-        <div>
-          <Label htmlFor="lastName">Last Name *</Label>
-          <Input
-            id="lastName"
-            type="text"
-            placeholder="Doe"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="welp-input"
-            required
-          />
-        </div>
+        {/* Validation alerts */}
+        <CustomerValidationAlerts
+          existingEmailError={false}
+          emailExistsCheck={emailExistsCheck}
+          phoneExists={phoneExists}
+          isChecking={isChecking}
+          duplicateResult={duplicateResult}
+        />
 
-        <div>
-          <Label htmlFor="email">Email Address *</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="john@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="welp-input"
-            required
-          />
-        </div>
+        <Button 
+          type="submit" 
+          className="welp-button w-full mt-6" 
+          disabled={
+            isSubmitting || 
+            isChecking ||
+            (duplicateResult?.isDuplicate && !duplicateResult.allowContinue)
+          }
+        >
+          {isSubmitting ? "Sending Verification Code..." : "Continue to Phone Verification"}
+        </Button>
+      </form>
 
-        <div>
-          <Label htmlFor="password">Password *</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="welp-input"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="confirmPassword">Confirm Password *</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="welp-input"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="phone">Phone Number *</Label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="(555) 123-4567"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="welp-input"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="address">Address</Label>
-          <Input
-            id="address"
-            type="text"
-            placeholder="123 Main St"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="welp-input"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="city">City</Label>
-          <Input
-            id="city"
-            type="text"
-            placeholder="New York"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="welp-input"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="state">State</Label>
-          <Input
-            id="state"
-            type="text"
-            placeholder="NY"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            className="welp-input"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="zipCode">Zip Code</Label>
-          <Input
-            id="zipCode"
-            type="text"
-            placeholder="10001"
-            value={zipCode}
-            onChange={(e) => setZipCode(e.target.value)}
-            className="welp-input"
-          />
-        </div>
-      </div>
-
-      <Button 
-        type="submit" 
-        className="welp-button w-full mt-6" 
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Sending Verification Code..." : "Continue to Phone Verification"}
-      </Button>
-    </form>
+      {/* Duplicate account dialog */}
+      <DuplicateCustomerDialog
+        isOpen={showDuplicateDialog}
+        onClose={() => setShowDuplicateDialog(false)}
+        onContinue={handleContinueWithDuplicate}
+        duplicateResult={duplicateResult}
+      />
+    </>
   );
 };
 

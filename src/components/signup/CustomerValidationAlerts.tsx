@@ -1,7 +1,6 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
-import { Link } from "react-router-dom";
+import { AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
 
 interface CustomerValidationAlertsProps {
@@ -19,51 +18,60 @@ export const CustomerValidationAlerts = ({
   isChecking,
   duplicateResult
 }: CustomerValidationAlertsProps) => {
-  return (
-    <>
-      {(existingEmailError || emailExistsCheck) && (
-        <Alert className="mt-2 bg-amber-50 border-amber-200">
-          <Info className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-2">
-            <span>This email is already registered.</span>
-            <div>
-              <Link to="/login" className="text-welp-primary hover:underline font-medium">
-                Sign in instead
-              </Link>
-              {" or "}
-              <Link to="/forgot-password" className="text-welp-primary hover:underline font-medium">
-                Reset password
-              </Link>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
+  if (isChecking) {
+    return (
+      <Alert className="border-blue-200 bg-blue-50">
+        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          Checking for existing accounts...
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
-      {isChecking && (
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            Checking for existing customer accounts...
-          </AlertDescription>
-        </Alert>
-      )}
+  if (duplicateResult?.isDuplicate && duplicateResult.duplicateType === 'email') {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          This email is already registered. Please use a different email or sign in instead.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
-      {duplicateResult && duplicateResult.isDuplicate && (
-        <Alert className="bg-amber-50 border-amber-200">
-          <Info className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
-            {duplicateResult.duplicateType === 'email' && 
-              "This email is already registered with an existing customer account."
-            }
-            {duplicateResult.duplicateType === 'phone' && 
-              "This phone number is already registered with an existing customer account."
-            }
-            {duplicateResult.duplicateType === 'customer_name' && 
-              "A customer with this name and phone number already exists."
-            }
-          </AlertDescription>
-        </Alert>
-      )}
-    </>
-  );
+  if (duplicateResult?.isDuplicate && duplicateResult.duplicateType === 'phone') {
+    return (
+      <Alert className="border-yellow-200 bg-yellow-50">
+        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-800">
+          This phone number is already registered with a customer account. You can continue if this is your phone number.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (existingEmailError || emailExistsCheck) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          This email is already registered. Please use a different email or sign in instead.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (phoneExists) {
+    return (
+      <Alert className="border-yellow-200 bg-yellow-50">
+        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-800">
+          This phone number is already registered. You can continue if this is your phone number.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return null;
 };
