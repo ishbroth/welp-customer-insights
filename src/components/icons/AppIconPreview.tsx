@@ -2,9 +2,38 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import WelpAppIcon from './WelpAppIcon';
 
 const AppIconPreview: React.FC = () => {
   const downloadIcon = (size: number, format: 'png' | 'svg' = 'png') => {
+    // Create a temporary container to render the WelpAppIcon
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.innerHTML = `
+      <div style="width: ${size}px; height: ${size}px;">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="${size}" height="${size}" rx="${size * 0.18}" fill="#ea384c"/>
+          <g transform="translate(${size * 0.65}, ${size * 0.3}) rotate(12)">
+            <path d="M ${size * 0.012} 0 Q ${size * 0.108} -${size * 0.06} ${size * 0.204} -${size * 0.03} Q ${size * 0.228} 0 ${size * 0.204} ${size * 0.03} Q ${size * 0.108} ${size * 0.06} ${size * 0.012} 0" fill="white"/>
+            <g transform="rotate(72)">
+              <path d="M ${size * 0.012} 0 Q ${size * 0.108} -${size * 0.06} ${size * 0.204} -${size * 0.03} Q ${size * 0.228} 0 ${size * 0.204} ${size * 0.03} Q ${size * 0.108} ${size * 0.06} ${size * 0.012} 0" fill="white"/>
+            </g>
+            <g transform="rotate(144)">
+              <path d="M ${size * 0.012} 0 Q ${size * 0.108} -${size * 0.06} ${size * 0.204} -${size * 0.03} Q ${size * 0.228} 0 ${size * 0.204} ${size * 0.03} Q ${size * 0.108} ${size * 0.06} ${size * 0.012} 0" fill="white"/>
+            </g>
+            <g transform="rotate(216)">
+              <path d="M ${size * 0.012} 0 Q ${size * 0.108} -${size * 0.06} ${size * 0.204} -${size * 0.03} Q ${size * 0.228} 0 ${size * 0.204} ${size * 0.03} Q ${size * 0.108} ${size * 0.06} ${size * 0.012} 0" fill="white"/>
+            </g>
+            <circle cx="${size * 0.039}" cy="-${size * 0.12}" r="${size * 0.048}" fill="white"/>
+          </g>
+          <text x="${size / 2}" y="${size * 0.82}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="${size * 0.24}" font-family="system-ui, -apple-system, sans-serif" font-weight="700" letter-spacing="0.08em">Welp</text>
+        </svg>
+      </div>
+    `;
+    document.body.appendChild(tempContainer);
+
+    // Convert SVG to canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -12,35 +41,28 @@ const AppIconPreview: React.FC = () => {
     canvas.width = size;
     canvas.height = size;
 
-    // Create gradient background
-    const gradient = ctx.createLinearGradient(0, 0, size, size);
-    gradient.addColorStop(0, '#ea384c');
-    gradient.addColorStop(1, '#d02e40');
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
+    const svgElement = tempContainer.querySelector('svg');
+    if (!svgElement) return;
 
-    // Add rounded corners
-    ctx.globalCompositeOperation = 'destination-in';
-    ctx.beginPath();
-    const radius = size * 0.225; // iOS standard corner radius
-    ctx.roundRect(0, 0, size, size, radius);
-    ctx.fill();
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
 
-    ctx.globalCompositeOperation = 'source-over';
-
-    // Add "W" text
-    ctx.fillStyle = 'white';
-    ctx.font = `bold ${size * 0.6}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('W', size / 2, size / 2);
-
-    // Download the image
-    const link = document.createElement('a');
-    link.download = `welp-icon-${size}x${size}.${format}`;
-    link.href = canvas.toDataURL(`image/${format}`);
-    link.click();
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      
+      // Download the image
+      const link = document.createElement('a');
+      link.download = `welp-icon-${size}x${size}.${format}`;
+      link.href = canvas.toDataURL(`image/${format}`);
+      link.click();
+      
+      // Cleanup
+      URL.revokeObjectURL(svgUrl);
+      document.body.removeChild(tempContainer);
+    };
+    img.src = svgUrl;
   };
 
   const iconSizes = [
@@ -66,24 +88,12 @@ const AppIconPreview: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-center mb-8">Welp App Icon Preview</h1>
           
-          {/* Large Preview */}
+          {/* Large Preview - Using our custom WelpAppIcon */}
           <div className="text-center mb-12">
-            <div 
-              className="inline-block w-32 h-32 rounded-3xl shadow-lg mx-auto mb-4"
-              style={{
-                background: 'linear-gradient(135deg, #ea384c 0%, #d02e40 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '4rem',
-                fontWeight: 'bold',
-                color: 'white',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-              }}
-            >
-              W
+            <div className="inline-block shadow-lg mx-auto mb-4">
+              <WelpAppIcon size={128} className="rounded-3xl" />
             </div>
-            <p className="text-gray-600">Preview (128×128)</p>
+            <p className="text-gray-600">Preview (128×128) - Custom Welp Icon with Asterisk & Period</p>
           </div>
 
           {/* Download Grid */}
@@ -109,6 +119,13 @@ const AppIconPreview: React.FC = () => {
           </div>
 
           <div className="mt-8 p-6 bg-blue-50 rounded-lg">
+            <h2 className="text-lg font-semibold mb-2">About This Icon</h2>
+            <ul className="text-sm text-gray-700 space-y-1 mb-4">
+              <li>• Features a custom Yelp-style asterisk with 4 arms and a period</li>
+              <li>• Red background (#ea384c) with rounded corners for iOS style</li>
+              <li>• "Welp" text with professional typography</li>
+              <li>• Designed specifically for the Welp brand identity</li>
+            </ul>
             <h2 className="text-lg font-semibold mb-2">Usage Instructions</h2>
             <ul className="text-sm text-gray-700 space-y-1">
               <li>• Use 16×16 and 32×32 for favicon.ico</li>
