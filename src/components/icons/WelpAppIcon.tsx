@@ -34,18 +34,18 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
         <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.3}) rotate(12)`}>
           {/* Right arm (0 degrees) */}
           <path
-            d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+            d={`M ${asteriskSize * 0.02} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                 Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.02} 0`}
             fill="white"
           />
           
           {/* Bottom-right diagonal arm (72 degrees) */}
           <g transform="rotate(72)">
             <path
-              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+              d={`M ${asteriskSize * 0.02} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                   Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.02} 0`}
               fill="white"
             />
           </g>
@@ -53,9 +53,9 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           {/* Bottom-left diagonal arm (144 degrees) */}
           <g transform="rotate(144)">
             <path
-              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+              d={`M ${asteriskSize * 0.02} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                   Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.02} 0`}
               fill="white"
             />
           </g>
@@ -63,17 +63,17 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           {/* Top-left diagonal arm (216 degrees) */}
           <g transform="rotate(216)">
             <path
-              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+              d={`M ${asteriskSize * 0.02} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                   Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.02} 0`}
               fill="white"
             />
           </g>
           
           {/* Period positioned at 288 degrees (72° from top-left arm) */}
           <circle
-            cx={asteriskSize * 0.08}
-            cy={-asteriskSize * 0.25}
+            cx={asteriskSize * 0.04}
+            cy={-asteriskSize * 0.20}
             r={asteriskSize * 0.08}
             fill="white"
           />
