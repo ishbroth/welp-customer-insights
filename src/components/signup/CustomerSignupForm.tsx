@@ -11,7 +11,8 @@ import ResendCodeButton from "@/components/verification/ResendCodeButton";
 import { sendVerificationCode } from "@/lib/utils";
 
 const CustomerSignupForm = () => {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,7 +40,7 @@ const CustomerSignupForm = () => {
   } = usePhoneVerification({
     email,
     password,
-    name,
+    name: `${firstName} ${lastName}`,
     phoneNumber: phone,
     accountType: 'customer',
     address,
@@ -50,6 +51,15 @@ const CustomerSignupForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!firstName || !lastName) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both first and last name.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast({
@@ -154,13 +164,26 @@ const CustomerSignupForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="name">Full Name *</Label>
+          <Label htmlFor="firstName">First Name *</Label>
           <Input
-            id="name"
+            id="firstName"
             type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            placeholder="John"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="welp-input"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="lastName">Last Name *</Label>
+          <Input
+            id="lastName"
+            type="text"
+            placeholder="Doe"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             className="welp-input"
             required
           />
