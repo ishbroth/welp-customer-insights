@@ -86,17 +86,17 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           />
         </g>
         
-        {/* "Welp" text in bottom third - reduced scaling to fit within icon */}
+        {/* "Welp" text centered in the icon square */}
         <text
           x={iconSize / 2}
           y={iconSize * 0.82}
           textAnchor="middle"
+          dominantBaseline="middle"
           fill="white"
           fontSize={fontSize}
           fontFamily="system-ui, -apple-system, sans-serif"
           fontWeight="700"
           letterSpacing="0.08em"
-          transform={`scale(1.1, 1)`}
         >
           Welp
         </text>
