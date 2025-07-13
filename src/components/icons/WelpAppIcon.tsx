@@ -31,48 +31,66 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
         />
         
         {/* Custom cartoonish asterisk with separated arms and period replacing top arm */}
-        <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.25}) rotate(15)`}>
-          {/* Bottom arm (vertical down) - separated from center */}
+        <g transform={`translate(${iconSize * 0.5}, ${iconSize * 0.33}) rotate(0)`}>
+          {/* Top-right diagonal arm (45 degrees) - separated from center */}
           <path
-            d={`M 0 ${asteriskSize * 0.15} L 0 ${asteriskSize * 0.4}`}
+            d={`M ${asteriskSize * 0.08} -${asteriskSize * 0.08} L ${asteriskSize * 0.32} -${asteriskSize * 0.32}`}
             stroke="white"
-            strokeWidth={asteriskSize * 0.12}
+            strokeWidth={asteriskSize * 0.08}
             strokeLinecap="round"
             fill="none"
           />
           
-          {/* Bottom-left diagonal arm - separated from center */}
+          {/* Right horizontal arm (90 degrees) - separated from center */}
           <path
-            d={`M -${asteriskSize * 0.11} ${asteriskSize * 0.11} L -${asteriskSize * 0.35} ${asteriskSize * 0.35}`}
+            d={`M ${asteriskSize * 0.08} 0 L ${asteriskSize * 0.32} 0`}
             stroke="white"
-            strokeWidth={asteriskSize * 0.12}
+            strokeWidth={asteriskSize * 0.08}
             strokeLinecap="round"
             fill="none"
           />
           
-          {/* Bottom-right diagonal arm - separated from center */}
+          {/* Bottom-right diagonal arm (135 degrees) - separated from center */}
           <path
-            d={`M ${asteriskSize * 0.11} ${asteriskSize * 0.11} L ${asteriskSize * 0.35} ${asteriskSize * 0.35}`}
+            d={`M ${asteriskSize * 0.08} ${asteriskSize * 0.08} L ${asteriskSize * 0.32} ${asteriskSize * 0.32}`}
             stroke="white"
-            strokeWidth={asteriskSize * 0.12}
+            strokeWidth={asteriskSize * 0.08}
             strokeLinecap="round"
             fill="none"
           />
           
-          {/* Top-left diagonal arm - separated from center */}
+          {/* Bottom vertical arm (180 degrees) - separated from center */}
           <path
-            d={`M -${asteriskSize * 0.11} -${asteriskSize * 0.11} L -${asteriskSize * 0.35} -${asteriskSize * 0.35}`}
+            d={`M 0 ${asteriskSize * 0.08} L 0 ${asteriskSize * 0.32}`}
             stroke="white"
-            strokeWidth={asteriskSize * 0.12}
+            strokeWidth={asteriskSize * 0.08}
             strokeLinecap="round"
             fill="none"
           />
           
-          {/* Top-right diagonal arm - separated from center */}
+          {/* Bottom-left diagonal arm (225 degrees) - separated from center */}
           <path
-            d={`M ${asteriskSize * 0.11} -${asteriskSize * 0.11} L ${asteriskSize * 0.35} -${asteriskSize * 0.35}`}
+            d={`M -${asteriskSize * 0.08} ${asteriskSize * 0.08} L -${asteriskSize * 0.32} ${asteriskSize * 0.32}`}
             stroke="white"
-            strokeWidth={asteriskSize * 0.12}
+            strokeWidth={asteriskSize * 0.08}
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Left horizontal arm (270 degrees) - separated from center */}
+          <path
+            d={`M -${asteriskSize * 0.08} 0 L -${asteriskSize * 0.32} 0`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.08}
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Top-left diagonal arm (315 degrees) - separated from center */}
+          <path
+            d={`M -${asteriskSize * 0.08} -${asteriskSize * 0.08} L -${asteriskSize * 0.32} -${asteriskSize * 0.32}`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.08}
             strokeLinecap="round"
             fill="none"
           />
@@ -80,8 +98,8 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           {/* Period replacing the top arm of the asterisk */}
           <circle
             cx="0"
-            cy={-asteriskSize * 0.35}
-            r={asteriskSize * 0.08}
+            cy={-asteriskSize * 0.32}
+            r={asteriskSize * 0.06}
             fill="white"
           />
         </g>
