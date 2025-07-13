@@ -32,48 +32,48 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
         
         {/* Yelp-style asterisk with 5 arms (4 actual arms + period replacing top arm), tilted opposite direction */}
         <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.3}) rotate(12)`}>
-          {/* Right arm (0 degrees) */}
+          {/* Right arm (0 degrees) - inner end moved closer to center */}
           <path
-            d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+            d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                 Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.08} 0`}
             fill="white"
           />
           
-          {/* Bottom-right diagonal arm (72 degrees) */}
+          {/* Bottom-right diagonal arm (72 degrees) - inner end moved closer to center */}
           <g transform="rotate(72)">
             <path
-              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                   Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.08} 0`}
               fill="white"
             />
           </g>
           
-          {/* Bottom-left diagonal arm (144 degrees) */}
+          {/* Bottom-left diagonal arm (144 degrees) - inner end moved closer to center */}
           <g transform="rotate(144)">
             <path
-              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                   Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.08} 0`}
               fill="white"
             />
           </g>
           
-          {/* Top-left diagonal arm (216 degrees) */}
+          {/* Top-left diagonal arm (216 degrees) - inner end moved closer to center */}
           <g transform="rotate(216)">
             <path
-              d={`M ${asteriskSize * 0.05} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.18} -${asteriskSize * 0.1} ${asteriskSize * 0.34} -${asteriskSize * 0.05} 
                   Q ${asteriskSize * 0.38} 0 ${asteriskSize * 0.34} ${asteriskSize * 0.05} 
-                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.05} 0`}
+                  Q ${asteriskSize * 0.18} ${asteriskSize * 0.1} ${asteriskSize * 0.08} 0`}
               fill="white"
             />
           </g>
           
-          {/* Period positioned at 288 degrees (72° from top-left arm) */}
+          {/* Period positioned closer to center */}
           <circle
-            cx={asteriskSize * 0.08}
-            cy={-asteriskSize * 0.25}
+            cx={asteriskSize * 0.06}
+            cy={-asteriskSize * 0.20}
             r={asteriskSize * 0.08}
             fill="white"
           />
