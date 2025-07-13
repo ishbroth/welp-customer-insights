@@ -97,7 +97,6 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           fontWeight="700"
           letterSpacing="0.08em"
           transform={`scale(1.6, 1)`}
-          transformOrigin={`${iconSize / 2} ${iconSize * 0.82}`}
         >
           Welp
         </text>
