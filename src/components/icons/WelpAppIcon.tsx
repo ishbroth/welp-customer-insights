@@ -30,75 +30,50 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           fill="#ea384c"
         />
         
-        {/* Custom cartoonish asterisk with separated arms and period replacing top arm */}
-        <g transform={`translate(${iconSize * 0.5}, ${iconSize * 0.33}) rotate(0)`}>
-          {/* Top-right diagonal arm (45 degrees) - separated from center */}
+        {/* Custom cartoonish asterisk with 5 arms and period at top, tilted slightly */}
+        <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.3}) rotate(-12)`}>
+          {/* Right arm (0 degrees) */}
           <path
-            d={`M ${asteriskSize * 0.08} -${asteriskSize * 0.08} L ${asteriskSize * 0.32} -${asteriskSize * 0.32}`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
+            d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+            fill="white"
           />
           
-          {/* Right horizontal arm (90 degrees) - separated from center */}
-          <path
-            d={`M ${asteriskSize * 0.08} 0 L ${asteriskSize * 0.32} 0`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
-          />
+          {/* Bottom-right diagonal arm (72 degrees) */}
+          <g transform="rotate(72)">
+            <path
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              fill="white"
+            />
+          </g>
           
-          {/* Bottom-right diagonal arm (135 degrees) - separated from center */}
-          <path
-            d={`M ${asteriskSize * 0.08} ${asteriskSize * 0.08} L ${asteriskSize * 0.32} ${asteriskSize * 0.32}`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
-          />
+          {/* Bottom-left diagonal arm (144 degrees) */}
+          <g transform="rotate(144)">
+            <path
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              fill="white"
+            />
+          </g>
           
-          {/* Bottom vertical arm (180 degrees) - separated from center */}
-          <path
-            d={`M 0 ${asteriskSize * 0.08} L 0 ${asteriskSize * 0.32}`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
-          />
+          {/* Top-left diagonal arm (216 degrees) */}
+          <g transform="rotate(216)">
+            <path
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              fill="white"
+            />
+          </g>
           
-          {/* Bottom-left diagonal arm (225 degrees) - separated from center */}
-          <path
-            d={`M -${asteriskSize * 0.08} ${asteriskSize * 0.08} L -${asteriskSize * 0.32} ${asteriskSize * 0.32}`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
-          />
+          {/* Top-right diagonal arm (288 degrees) */}
+          <g transform="rotate(288)">
+            <path
+              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              fill="white"
+            />
+          </g>
           
-          {/* Left horizontal arm (270 degrees) - separated from center */}
-          <path
-            d={`M -${asteriskSize * 0.08} 0 L -${asteriskSize * 0.32} 0`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
-          />
-          
-          {/* Top-left diagonal arm (315 degrees) - separated from center */}
-          <path
-            d={`M -${asteriskSize * 0.08} -${asteriskSize * 0.08} L -${asteriskSize * 0.32} -${asteriskSize * 0.32}`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.08}
-            strokeLinecap="round"
-            fill="none"
-          />
-          
-          {/* Period replacing the top arm of the asterisk */}
+          {/* Period at the top */}
           <circle
             cx="0"
-            cy={-asteriskSize * 0.32}
+            cy={-asteriskSize * 0.35}
             r={asteriskSize * 0.06}
             fill="white"
           />
