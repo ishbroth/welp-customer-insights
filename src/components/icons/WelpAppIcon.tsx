@@ -70,10 +70,10 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
             />
           </g>
           
-          {/* Period centered between the two top arms - positioned equidistant from both top arms */}
+          {/* Period centered between the two top arms - adjusted to be more centered */}
           <circle
-            cx={asteriskSize * 0.08}
-            cy={-asteriskSize * 0.25}
+            cx={asteriskSize * 0.05}
+            cy={-asteriskSize * 0.26}
             r={asteriskSize * 0.08}
             fill="white"
           />
