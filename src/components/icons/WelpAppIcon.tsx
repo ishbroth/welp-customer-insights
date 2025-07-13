@@ -70,10 +70,10 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
             />
           </g>
           
-          {/* Period positioned at 288 degrees (72° from top-left arm) */}
+          {/* Period positioned at 288 degrees (equidistant between top-left arm at 216° and right arm at 0°) */}
           <circle
-            cx={asteriskSize * 0.04}
-            cy={-asteriskSize * 0.20}
+            cx={asteriskSize * 0.14}
+            cy={-asteriskSize * 0.14}
             r={asteriskSize * 0.08}
             fill="white"
           />
