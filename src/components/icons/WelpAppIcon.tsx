@@ -30,34 +30,54 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           fill="#ea384c"
         />
         
-        {/* Custom cartoonish asterisk with period replacing top point */}
+        {/* Custom cartoonish asterisk with separated arms and period replacing top arm */}
         <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.25}) rotate(15)`}>
-          {/* Vertical line (bottom part only since top is replaced by period) */}
+          {/* Bottom arm (vertical down) */}
           <path
-            d={`M 0 -${asteriskSize * 0.1} L 0 ${asteriskSize * 0.4}`}
+            d={`M 0 ${asteriskSize * 0.08} L 0 ${asteriskSize * 0.4}`}
             stroke="white"
             strokeWidth={asteriskSize * 0.12}
             strokeLinecap="round"
             fill="none"
           />
           
-          {/* Diagonal lines with gaps in the center for cartoonish effect */}
+          {/* Bottom-left diagonal arm */}
           <path
-            d={`M -${asteriskSize * 0.35} -${asteriskSize * 0.2} L -${asteriskSize * 0.08} -${asteriskSize * 0.08} M ${asteriskSize * 0.08} ${asteriskSize * 0.08} L ${asteriskSize * 0.35} ${asteriskSize * 0.2}`}
-            stroke="white"
-            strokeWidth={asteriskSize * 0.12}
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path
-            d={`M -${asteriskSize * 0.35} ${asteriskSize * 0.2} L -${asteriskSize * 0.08} ${asteriskSize * 0.08} M ${asteriskSize * 0.08} -${asteriskSize * 0.08} L ${asteriskSize * 0.35} -${asteriskSize * 0.2}`}
+            d={`M -${asteriskSize * 0.06} ${asteriskSize * 0.06} L -${asteriskSize * 0.35} ${asteriskSize * 0.2}`}
             stroke="white"
             strokeWidth={asteriskSize * 0.12}
             strokeLinecap="round"
             fill="none"
           />
           
-          {/* Period replacing the top point of the asterisk */}
+          {/* Bottom-right diagonal arm */}
+          <path
+            d={`M ${asteriskSize * 0.06} ${asteriskSize * 0.06} L ${asteriskSize * 0.35} ${asteriskSize * 0.2}`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.12}
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Top-left diagonal arm */}
+          <path
+            d={`M -${asteriskSize * 0.06} -${asteriskSize * 0.06} L -${asteriskSize * 0.35} -${asteriskSize * 0.2}`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.12}
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Top-right diagonal arm */}
+          <path
+            d={`M ${asteriskSize * 0.06} -${asteriskSize * 0.06} L ${asteriskSize * 0.35} -${asteriskSize * 0.2}`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.12}
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Period replacing the top arm of the asterisk */}
           <circle
             cx="0"
             cy={-asteriskSize * 0.35}
@@ -66,7 +86,7 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           />
         </g>
         
-        {/* "Welp" text in bottom third - 200% larger */}
+        {/* "Welp" text in bottom third - 200% larger and stretched to fill 80% width */}
         <text
           x={iconSize / 2}
           y={iconSize * 0.82}
@@ -75,7 +95,9 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           fontSize={fontSize}
           fontFamily="system-ui, -apple-system, sans-serif"
           fontWeight="700"
-          letterSpacing="-0.02em"
+          letterSpacing="0.08em"
+          transform={`scale(1.6, 1)`}
+          transformOrigin={`${iconSize / 2} ${iconSize * 0.82}`}
         >
           Welp
         </text>
