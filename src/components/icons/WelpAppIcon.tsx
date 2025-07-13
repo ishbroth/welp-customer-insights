@@ -30,51 +30,51 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           fill="#ea384c"
         />
         
-        {/* Custom cartoonish asterisk with 5 arms and period at top, tilted slightly */}
+        {/* Yelp-style asterisk with 4 bulbous arms and period at top, tilted slightly */}
         <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.3}) rotate(-12)`}>
-          {/* Right arm (0 degrees) */}
+          {/* Right arm (0 degrees) - bulbous shape like Yelp */}
           <path
-            d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+            d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
+                Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
+                Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
             fill="white"
           />
           
-          {/* Bottom-right diagonal arm (72 degrees) */}
-          <g transform="rotate(72)">
+          {/* Bottom-right diagonal arm (90 degrees) */}
+          <g transform="rotate(90)">
             <path
-              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
+                  Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
+                  Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
               fill="white"
             />
           </g>
           
-          {/* Bottom-left diagonal arm (144 degrees) */}
-          <g transform="rotate(144)">
+          {/* Left arm (180 degrees) */}
+          <g transform="rotate(180)">
             <path
-              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
+                  Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
+                  Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
               fill="white"
             />
           </g>
           
-          {/* Top-left diagonal arm (216 degrees) */}
-          <g transform="rotate(216)">
+          {/* Top-left diagonal arm (270 degrees) */}
+          <g transform="rotate(270)">
             <path
-              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
+              d={`M 0 0 Q ${asteriskSize * 0.15} -${asteriskSize * 0.08} ${asteriskSize * 0.28} -${asteriskSize * 0.04} 
+                  Q ${asteriskSize * 0.32} 0 ${asteriskSize * 0.28} ${asteriskSize * 0.04} 
+                  Q ${asteriskSize * 0.15} ${asteriskSize * 0.08} 0 0`}
               fill="white"
             />
           </g>
           
-          {/* Top-right diagonal arm (288 degrees) */}
-          <g transform="rotate(288)">
-            <path
-              d={`M ${asteriskSize * 0.08} 0 Q ${asteriskSize * 0.2} -${asteriskSize * 0.02} ${asteriskSize * 0.32} 0 Q ${asteriskSize * 0.2} ${asteriskSize * 0.02} ${asteriskSize * 0.08} 0`}
-              fill="white"
-            />
-          </g>
-          
-          {/* Period at the top */}
+          {/* Period at the top (replacing the 5th arm) */}
           <circle
             cx="0"
-            cy={-asteriskSize * 0.35}
-            r={asteriskSize * 0.06}
+            cy={-asteriskSize * 0.32}
+            r={asteriskSize * 0.08}
             fill="white"
           />
         </g>
