@@ -3,7 +3,7 @@ import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { User } from "@/types";
 
 // Define the return type for login function
-interface LoginResult {
+export interface LoginResult {
   success: boolean;
   error?: string;
   needsPhoneVerification?: boolean;
@@ -31,6 +31,8 @@ export interface SignupData {
   email: string;
   password: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   zipCode?: string;
   address?: string;

@@ -2,7 +2,7 @@
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
-import { SignupData } from "./types";
+import { SignupData, LoginResult } from "./types";
 
 /**
  * Hook for authentication methods (login, signup, logout, etc.)
@@ -14,53 +14,63 @@ export const useAuthMethods = (
   currentUser: User | null,
   setCurrentUser: (user: User | null) => void
 ) => {
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     console.log("🔐 Attempting login for:", email);
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
+      if (error) {
+        console.error("❌ Login error:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("✅ Login successful");
+      return { success: true };
+    } catch (error: any) {
       console.error("❌ Login error:", error);
-      throw error;
+      return { success: false, error: error.message };
     }
-
-    console.log("✅ Login successful");
-    return { user: data.user, session: data.session };
   };
 
-  const signup = async (signupData: SignupData) => {
+  const signup = async (signupData: SignupData): Promise<{ success: boolean; error?: string }> => {
     console.log("📝 Attempting signup for:", signupData.email);
     
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email: signupData.email,
-      password: signupData.password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: signupData.name,
-          type: signupData.type,
-          first_name: signupData.firstName,
-          last_name: signupData.lastName,
-          phone: signupData.phone,
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: signupData.email,
+        password: signupData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: signupData.name,
+            type: signupData.type,
+            first_name: signupData.firstName,
+            last_name: signupData.lastName,
+            phone: signupData.phone,
+          }
         }
+      });
+
+      if (error) {
+        console.error("❌ Signup error:", error);
+        return { success: false, error: error.message };
       }
-    });
 
-    if (error) {
+      console.log("✅ Signup successful");
+      return { success: true };
+    } catch (error: any) {
       console.error("❌ Signup error:", error);
-      throw error;
+      return { success: false, error: error.message };
     }
-
-    console.log("✅ Signup successful");
-    return { user: data.user, session: data.session };
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     console.log("🚪 Attempting logout");
     
     const { error } = await supabase.auth.signOut();
@@ -78,7 +88,7 @@ export const useAuthMethods = (
     console.log("✅ Logout successful");
   };
 
-  const updateProfile = async (updates: Partial<User>) => {
+  const updateProfile = async (updates: Partial<User>): Promise<void> => {
     if (!currentUser) {
       throw new Error("No user logged in");
     }
@@ -89,13 +99,13 @@ export const useAuthMethods = (
       .from('profiles')
       .update({
         name: updates.name,
-        first_name: updates.first_name,
-        last_name: updates.last_name,
+        first_name: updates.firstName,
+        last_name: updates.lastName,
         phone: updates.phone,
         address: updates.address,
         city: updates.city,
         state: updates.state,
-        zipcode: updates.zipcode,
+        zipcode: updates.zipCode,
         bio: updates.bio,
         avatar: updates.avatar
       })
@@ -111,14 +121,13 @@ export const useAuthMethods = (
     setCurrentUser(updatedUser);
     
     console.log("✅ Profile updated successfully");
-    return updatedUser;
   };
 
   const hasOneTimeAccess = (resourceId: string): boolean => {
     return oneTimeAccessResources.includes(resourceId);
   };
 
-  const markOneTimeAccess = (resourceId: string) => {
+  const markOneTimeAccess = async (resourceId: string): Promise<void> => {
     if (!hasOneTimeAccess(resourceId)) {
       setOneTimeAccessResources([...oneTimeAccessResources, resourceId]);
     }
