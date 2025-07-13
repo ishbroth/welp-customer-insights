@@ -38,6 +38,8 @@ import CustomerStories from "@/pages/CustomerStories";
 import SuccessStories from "@/pages/SuccessStories";
 import VerificationResources from "@/pages/VerificationResources";
 import TwilioDebug from "@/pages/TwilioDebug";
+import AppIconPreviewPage from "@/pages/AppIconPreview";
+import AppStoreAssetsPage from "@/pages/AppStoreAssets";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "./ProtectedRoute";
 import BusinessOwnerRoute from "./BusinessOwnerRoute";
@@ -79,6 +81,10 @@ const AppRoutes = () => {
       <Route path="/success-stories" element={<SuccessStories />} />
       <Route path="/verification-resources" element={<VerificationResources />} />
       <Route path="/twilio-debug" element={<TwilioDebug />} />
+      
+      {/* App Store Assets Routes */}
+      <Route path="/app-icon-preview" element={<AppIconPreviewPage />} />
+      <Route path="/app-store-assets" element={<AppStoreAssetsPage />} />
 
       {/* Protected Routes */}
       <Route
