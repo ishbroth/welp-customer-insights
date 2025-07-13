@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -25,7 +24,7 @@ const AppIconPreview: React.FC = () => {
             <g transform="rotate(216)">
               <path d="M ${size * 0.012} 0 Q ${size * 0.108} -${size * 0.06} ${size * 0.204} -${size * 0.03} Q ${size * 0.228} 0 ${size * 0.204} ${size * 0.03} Q ${size * 0.108} ${size * 0.06} ${size * 0.012} 0" fill="white"/>
             </g>
-            <circle cx="${size * 0.039}" cy="-${size * 0.12}" r="${size * 0.048}" fill="white"/>
+            <circle cx="${size * 0.045}" cy="-${size * 0.12}" r="${size * 0.048}" fill="white"/>
           </g>
           <text x="${size / 2}" y="${size * 0.82}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="${size * 0.24}" font-family="system-ui, -apple-system, sans-serif" font-weight="700" letter-spacing="0.08em">Welp</text>
         </svg>

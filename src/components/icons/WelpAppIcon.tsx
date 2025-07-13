@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface WelpAppIconProps {
@@ -69,9 +70,9 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
             />
           </g>
           
-          {/* Period positioned at 288 degrees (72° from top-left arm) - fine-tuned position */}
+          {/* Period positioned at 288 degrees - moved slightly to the right for better centering */}
           <circle
-            cx={asteriskSize * 0.065}
+            cx={asteriskSize * 0.075}
             cy={-asteriskSize * 0.20}
             r={asteriskSize * 0.08}
             fill="white"
