@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'Welp. - Review Customers',
   webDir: 'dist',
   server: {
-    url: 'https://www.welpbiz.com',
+    url: 'https://mywelp.com',
     cleartext: true
   },
   plugins: {
