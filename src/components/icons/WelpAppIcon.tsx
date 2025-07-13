@@ -8,8 +8,8 @@ interface WelpAppIconProps {
 
 const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }) => {
   const iconSize = size;
-  const fontSize = size * 0.12; // Font size relative to icon size
-  const asteriskSize = size * 0.25; // Asterisk size relative to icon size
+  const fontSize = size * 0.24; // 200% larger - was 0.12
+  const asteriskSize = size * 0.5; // 200% larger - was 0.25
 
   return (
     <div 
@@ -30,26 +30,43 @@ const WelpAppIcon: React.FC<WelpAppIconProps> = ({ size = 1024, className = "" }
           fill="#ea384c"
         />
         
-        {/* Custom asterisk with period on top - positioned in top right area */}
+        {/* Custom cartoonish asterisk with period replacing top point */}
         <g transform={`translate(${iconSize * 0.65}, ${iconSize * 0.25}) rotate(15)`}>
-          {/* Main asterisk body */}
+          {/* Vertical line (bottom part only since top is replaced by period) */}
           <path
-            d={`M 0 -${asteriskSize * 0.4} L 0 ${asteriskSize * 0.4} M -${asteriskSize * 0.35} -${asteriskSize * 0.2} L ${asteriskSize * 0.35} ${asteriskSize * 0.2} M -${asteriskSize * 0.35} ${asteriskSize * 0.2} L ${asteriskSize * 0.35} -${asteriskSize * 0.2}`}
+            d={`M 0 -${asteriskSize * 0.1} L 0 ${asteriskSize * 0.4}`}
             stroke="white"
-            strokeWidth={asteriskSize * 0.08}
+            strokeWidth={asteriskSize * 0.12}
             strokeLinecap="round"
             fill="none"
           />
-          {/* Period at the top instead of exclamation point */}
+          
+          {/* Diagonal lines with gaps in the center for cartoonish effect */}
+          <path
+            d={`M -${asteriskSize * 0.35} -${asteriskSize * 0.2} L -${asteriskSize * 0.08} -${asteriskSize * 0.08} M ${asteriskSize * 0.08} ${asteriskSize * 0.08} L ${asteriskSize * 0.35} ${asteriskSize * 0.2}`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.12}
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d={`M -${asteriskSize * 0.35} ${asteriskSize * 0.2} L -${asteriskSize * 0.08} ${asteriskSize * 0.08} M ${asteriskSize * 0.08} -${asteriskSize * 0.08} L ${asteriskSize * 0.35} -${asteriskSize * 0.2}`}
+            stroke="white"
+            strokeWidth={asteriskSize * 0.12}
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Period replacing the top point of the asterisk */}
           <circle
             cx="0"
-            cy={-asteriskSize * 0.55}
-            r={asteriskSize * 0.06}
+            cy={-asteriskSize * 0.35}
+            r={asteriskSize * 0.08}
             fill="white"
           />
         </g>
         
-        {/* "Welp" text in bottom third */}
+        {/* "Welp" text in bottom third - 200% larger */}
         <text
           x={iconSize / 2}
           y={iconSize * 0.82}
