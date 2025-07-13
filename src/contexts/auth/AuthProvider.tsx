@@ -1,5 +1,5 @@
 
-import { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { User } from "@/types";
 import { AuthContextType } from "./types";
 import { useAuthState } from "./useAuthState";
