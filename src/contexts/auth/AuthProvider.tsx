@@ -5,11 +5,16 @@ import { AuthContextType } from "./types";
 import { useAuthState } from "./useAuthState";
 import { useAuthMethods } from "./useAuthMethods";
 
-// Create the Auth Context
+// Create the Auth Context with a default value to prevent null context issues
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Auth Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  console.log("🔧 AuthProvider rendering");
+  
+  const authState = useAuthState();
+  console.log("🔧 AuthState initialized:", !!authState);
+  
   const {
     currentUser,
     setCurrentUser,
@@ -19,7 +24,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsSubscribed,
     oneTimeAccessResources,
     setOneTimeAccessResources
-  } = useAuthState();
+  } = authState;
+
+  const authMethods = useAuthMethods(setIsSubscribed, oneTimeAccessResources, setOneTimeAccessResources, currentUser, setCurrentUser);
+  console.log("🔧 AuthMethods initialized:", !!authMethods);
 
   const {
     login,
@@ -28,9 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateProfile,
     hasOneTimeAccess,
     markOneTimeAccess
-  } = useAuthMethods(setIsSubscribed, oneTimeAccessResources, setOneTimeAccessResources, currentUser, setCurrentUser);
+  } = authMethods;
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
     session,
     loading,
@@ -45,6 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setCurrentUser
   };
 
+  console.log("🔧 AuthProvider value created:", !!value);
+
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -56,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
+    console.error("❌ useAuth called outside of AuthProvider");
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

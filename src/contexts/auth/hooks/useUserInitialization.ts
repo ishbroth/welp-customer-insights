@@ -1,36 +1,20 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 
 /**
- * Hook for initializing user data
+ * Hook for initializing user data and profile information
  */
 export const useUserInitialization = () => {
   const initUserData = async (userId: string, forceRefresh: boolean = false) => {
+    console.log("🔄 Initializing user data for:", userId);
+    
     try {
-      console.log("🔄 Initializing user data for:", userId, "Force refresh:", forceRefresh);
-      
       // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          name,
-          email,
-          phone,
-          address,
-          city,
-          state,
-          zipcode,
-          type,
-          avatar,
-          bio,
-          verified,
-          business_id,
-          first_name,
-          last_name
-        `)
+        .select('*')
         .eq('id', userId)
         .single();
 
@@ -39,60 +23,61 @@ export const useUserInitialization = () => {
         return { userProfile: null, accessResources: [] };
       }
 
-      if (!profile) {
-        console.log("❌ No profile found for user:", userId);
-        return { userProfile: null, accessResources: [] };
-      }
-
-      console.log("✅ Profile found:", profile);
-
-      let licenseType = '';
-      let businessVerified = false;
-
-      // If user is a business, fetch business info
-      if (profile.type === 'business') {
-        const { data: businessInfo, error: businessError } = await supabase
+      // Fetch business info if user is a business type
+      let businessInfo = null;
+      if (profile?.type === 'business' || profile?.type === 'admin') {
+        const { data: businessData, error: businessError } = await supabase
           .from('business_info')
-          .select('license_type, verified')
+          .select('*')
           .eq('id', userId)
           .single();
 
-        if (!businessError && businessInfo) {
-          licenseType = businessInfo.license_type || '';
-          businessVerified = businessInfo.verified || false;
-          console.log("📋 Business info:", { licenseType, businessVerified });
+        if (!businessError && businessData) {
+          businessInfo = businessData;
         }
       }
+
+      // Create user object
+      const userProfile: User = {
+        id: profile.id,
+        name: profile.name || '',
+        email: profile.email || '',
+        type: profile.type as 'customer' | 'business' | 'admin',
+        avatar: profile.avatar,
+        phone: profile.phone,
+        address: profile.address,
+        city: profile.city,
+        state: profile.state,
+        zipcode: profile.zipcode,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        bio: profile.bio,
+        business_id: profile.business_id,
+        businessInfo: businessInfo ? {
+          business_name: businessInfo.business_name,
+          business_category: businessInfo.business_category,
+          business_subcategory: businessInfo.business_subcategory,
+          license_number: businessInfo.license_number,
+          license_type: businessInfo.license_type,
+          license_state: businessInfo.license_state,
+          license_status: businessInfo.license_status,
+          license_expiration: businessInfo.license_expiration,
+          website: businessInfo.website,
+          additional_info: businessInfo.additional_info,
+          additional_licenses: businessInfo.additional_licenses,
+          verified: businessInfo.verified
+        } : undefined
+      };
 
       // Fetch one-time access resources
       const { data: accessData, error: accessError } = await supabase
         .from('guest_access')
         .select('review_id')
-        .eq('access_token', `user_${userId}`)
-        .gt('expires_at', new Date().toISOString());
+        .eq('access_token', userId); // This might need adjustment based on your logic
 
       const accessResources = accessError ? [] : (accessData?.map(item => item.review_id) || []);
 
-      const userProfile: User = {
-        id: profile.id,
-        name: profile.name || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
-        address: profile.address || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        zipCode: profile.zipcode || '',
-        type: profile.type as 'customer' | 'business' | 'admin',
-        avatar: profile.avatar || '',
-        bio: profile.bio || '',
-        verified: profile.verified || businessVerified,
-        businessId: profile.business_id || '',
-        licenseType: licenseType,
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || ''
-      };
-
-      console.log("🎉 User profile initialized:", userProfile);
+      console.log("✅ User data initialized:", userProfile);
       return { userProfile, accessResources };
 
     } catch (error) {
