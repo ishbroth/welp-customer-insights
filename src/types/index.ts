@@ -1,8 +1,9 @@
-
 export interface User {
   id: string;
   email: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   address?: string;
   city?: string;
@@ -13,6 +14,20 @@ export interface User {
   bio?: string;
   businessId?: string;
   licenseType?: string;
+  businessInfo?: {
+    business_name: string;
+    business_category?: string;
+    business_subcategory?: string;
+    license_number?: string;
+    license_type?: string;
+    license_state?: string;
+    license_status?: string;
+    license_expiration?: string;
+    website?: string;
+    additional_info?: string;
+    additional_licenses?: string;
+    verified: boolean;
+  };
 }
 
 export interface Review {

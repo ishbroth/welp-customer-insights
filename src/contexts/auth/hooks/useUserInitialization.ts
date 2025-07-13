@@ -73,7 +73,7 @@ export const useUserInitialization = () => {
       const { data: accessData, error: accessError } = await supabase
         .from('guest_access')
         .select('review_id')
-        .eq('access_token', userId); // This might need adjustment based on your logic
+        .eq('access_token', userId);
 
       const accessResources = accessError ? [] : (accessData?.map(item => item.review_id) || []);
 
