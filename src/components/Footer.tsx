@@ -1,8 +1,14 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const navigate = useNavigate();
+
+  const handleLinkClick = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <footer className="bg-welp-dark text-white py-6 mt-auto">
@@ -21,35 +27,35 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-3">About</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li><Link to="/about" className="hover:text-welp-primary transition-colors">About Welp.</Link></li>
-              <li><Link to="/how-it-works" className="hover:text-welp-primary transition-colors">How It Works</Link></li>
+              <li><button onClick={() => handleLinkClick("/about")} className="hover:text-welp-primary transition-colors cursor-pointer">About Welp.</button></li>
+              <li><button onClick={() => handleLinkClick("/how-it-works")} className="hover:text-welp-primary transition-colors cursor-pointer">How It Works</button></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-3">Support</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li><Link to="/faq" className="hover:text-welp-primary transition-colors">FAQ</Link></li>
-              <li><Link to="/terms" className="hover:text-welp-primary transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="hover:text-welp-primary transition-colors">Privacy Policy</Link></li>
+              <li><button onClick={() => handleLinkClick("/faq")} className="hover:text-welp-primary transition-colors cursor-pointer">FAQ</button></li>
+              <li><button onClick={() => handleLinkClick("/terms")} className="hover:text-welp-primary transition-colors cursor-pointer">Terms of Service</button></li>
+              <li><button onClick={() => handleLinkClick("/privacy")} className="hover:text-welp-primary transition-colors cursor-pointer">Privacy Policy</button></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-3">Business Owners</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li><Link to="/verification" className="hover:text-welp-primary transition-colors">Business Verification</Link></li>
-              <li><Link to="/subscription" className="hover:text-welp-primary transition-colors">Subscription Benefits</Link></li>
-              <li><Link to="/success-stories" className="hover:text-welp-primary transition-colors">Success Stories</Link></li>
+              <li><button onClick={() => handleLinkClick("/verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Business Verification</button></li>
+              <li><button onClick={() => handleLinkClick("/subscription")} className="hover:text-welp-primary transition-colors cursor-pointer">Subscription Benefits</button></li>
+              <li><button onClick={() => handleLinkClick("/success-stories")} className="hover:text-welp-primary transition-colors cursor-pointer">Success Stories</button></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-3">Customer Accounts</h4>
             <ul className="space-y-2 text-gray-300 text-sm">
-              <li><Link to="/customer-verification" className="hover:text-welp-primary transition-colors">Customer Verification</Link></li>
-              <li><Link to="/customer-benefits" className="hover:text-welp-primary transition-colors">Subscription Benefits</Link></li>
-              <li><Link to="/customer-stories" className="hover:text-welp-primary transition-colors">Success Stories</Link></li>
+              <li><button onClick={() => handleLinkClick("/customer-verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Customer Verification</button></li>
+              <li><button onClick={() => handleLinkClick("/customer-benefits")} className="hover:text-welp-primary transition-colors cursor-pointer">Subscription Benefits</button></li>
+              <li><button onClick={() => handleLinkClick("/customer-stories")} className="hover:text-welp-primary transition-colors cursor-pointer">Success Stories</button></li>
             </ul>
           </div>
         </div>
