@@ -38,12 +38,12 @@ const CustomerVerification = () => {
               
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-3">
-                  Benefits of Customer Verification:
+                  Automatic Customer Verification:
                 </h3>
                 
                 <ul className="list-disc pl-5 space-y-3">
                   <li>
-                    <span className="font-medium">Manage your reputation</span> by responding to reviews about you.
+                    <span className="font-medium">Manage your reputation</span> - subscribe or buy credits to respond to reviews about you.
                   </li>
                   <li>
                     <span className="font-medium">Dispute inaccurate information</span> to maintain your reputation integrity.
@@ -71,7 +71,7 @@ const CustomerVerification = () => {
                 </li>
                 <li>
                   <span className="font-medium">Verify your identity</span> - 
-                  We use a secure verification process to confirm you are a real person.
+                  We use a secure verification process to confirm you are a real person. You will automatically receive a verified badge for your customer account after successful phone verification.
                 </li>
                 <li>
                   <span className="font-medium">Create your profile</span> - 
@@ -93,7 +93,7 @@ const CustomerVerification = () => {
               <p>
                 Welp operates on a reverse model where <span className="font-medium">businesses review customers</span>. 
                 Having a verified customer account allows you to participate in this ecosystem, 
-                respond to reviews about you, and build a positive reputation that can benefit you 
+                subscribe or buy credits to respond to reviews about you, and build a positive reputation that can benefit you 
                 in future business interactions.
               </p>
             </div>
