@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useToast } from "@/hooks/use-toast";
 import { usePhoneVerification } from "@/hooks/usePhoneVerification";
 import { useCustomerDuplicateCheck } from "@/hooks/useCustomerDuplicateCheck";
@@ -190,132 +191,130 @@ const CustomerSignupForm = () => {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="firstName">First Name *</Label>
-            <Input
-              id="firstName"
-              type="text"
-              placeholder="John"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="welp-input"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="firstName">First Name *</Label>
+          <Input
+            id="firstName"
+            type="text"
+            placeholder="John"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="welp-input"
+            required
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="lastName">Last Name *</Label>
-            <Input
-              id="lastName"
-              type="text"
-              placeholder="Doe"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="welp-input"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="lastName">Last Name *</Label>
+          <Input
+            id="lastName"
+            type="text"
+            placeholder="Doe"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="welp-input"
+            required
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="email">Email Address *</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="john@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="welp-input"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="email">Email Address *</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="john@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="welp-input"
+            required
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="password">Password *</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="welp-input"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="phone">Phone Number *</Label>
+          <PhoneInput
+            id="phone"
+            placeholder="(555) 123-4567"
+            value={phone}
+            onChange={setPhone}
+            className="welp-input"
+            required
+          />
+          <p className="text-sm text-gray-500 mt-1">This will be used for account verification via a one-time SMS text message</p>
+        </div>
 
-          <div>
-            <Label htmlFor="confirmPassword">Confirm Password *</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="welp-input"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="password">Password *</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="welp-input"
+            required
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="phone">Phone Number *</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="(555) 123-4567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="welp-input"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="confirmPassword">Confirm Password *</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="welp-input"
+            required
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              type="text"
-              placeholder="123 Main St"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="welp-input"
-            />
-          </div>
+        <div>
+          <Label htmlFor="address">Address</Label>
+          <Input
+            id="address"
+            type="text"
+            placeholder="123 Main St"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="welp-input"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              type="text"
-              placeholder="New York"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="welp-input"
-            />
-          </div>
+        <div>
+          <Label htmlFor="city">City</Label>
+          <Input
+            id="city"
+            type="text"
+            placeholder="New York"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="welp-input"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="state">State</Label>
-            <Input
-              id="state"
-              type="text"
-              placeholder="NY"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="welp-input"
-            />
-          </div>
+        <div>
+          <Label htmlFor="state">State</Label>
+          <Input
+            id="state"
+            type="text"
+            placeholder="NY"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            className="welp-input"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="zipCode">Zip Code</Label>
-            <Input
-              id="zipCode"
-              type="text"
-              placeholder="10001"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              className="welp-input"
-            />
-          </div>
+        <div>
+          <Label htmlFor="zipCode">Zip Code</Label>
+          <Input
+            id="zipCode"
+            type="text"
+            placeholder="10001"
+            value={zipCode}
+            onChange={(e) => setZipCode(e.target.value)}
+            className="welp-input"
+          />
         </div>
 
         {/* Validation alerts */}
