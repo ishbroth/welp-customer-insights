@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLoading } from '@/contexts/LoadingContext';
 
 interface LoadingRouteProps {
@@ -8,21 +9,18 @@ interface LoadingRouteProps {
 
 const LoadingRoute: React.FC<LoadingRouteProps> = ({ children }) => {
   const { showPageLoading } = useLoading();
-  const hasTriggeredRef = useRef(false);
+  const location = useLocation();
+  const previousLocationRef = useRef<string>('');
 
   useEffect(() => {
-    // Only trigger loading once per route change
-    if (!hasTriggeredRef.current) {
-      console.log('📍 LoadingRoute mounted - triggering page loading');
+    // Only trigger loading if the location actually changed
+    const currentPath = location.pathname + location.search;
+    if (previousLocationRef.current !== currentPath && previousLocationRef.current !== '') {
+      console.log(`📍 Route changed from ${previousLocationRef.current} to ${currentPath} - triggering page loading`);
       showPageLoading();
-      hasTriggeredRef.current = true;
     }
-
-    // Reset the flag when component unmounts
-    return () => {
-      hasTriggeredRef.current = false;
-    };
-  }, [showPageLoading]);
+    previousLocationRef.current = currentPath;
+  }, [location.pathname, location.search, showPageLoading]);
 
   return <>{children}</>;
 };

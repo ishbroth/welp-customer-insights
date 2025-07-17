@@ -26,6 +26,7 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isPageLoadingRef = useRef(false); // Prevent multiple simultaneous page loads
 
   // Clear any existing timeout when component unmounts
   useEffect(() => {
@@ -51,9 +52,10 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
   }, [hasInitiallyLoaded]);
 
   const showPageLoading = () => {
-    // Only show page loading if we've already done initial load
-    if (hasInitiallyLoaded) {
+    // Only show page loading if we've already done initial load and not already loading
+    if (hasInitiallyLoaded && !isPageLoadingRef.current && !isLoading) {
       console.log('🔄 Starting page transition loading...');
+      isPageLoadingRef.current = true;
       
       // Clear any existing timeout
       if (loadingTimeoutRef.current) {
@@ -64,7 +66,10 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
       loadingTimeoutRef.current = setTimeout(() => {
         console.log('✅ Page transition loading complete');
         setIsLoading(false);
+        isPageLoadingRef.current = false;
       }, 500); // 0.5 seconds for page transitions
+    } else if (isPageLoadingRef.current) {
+      console.log('⏸️ Page loading already in progress, skipping...');
     }
   };
 
