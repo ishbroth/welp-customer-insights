@@ -51,8 +51,21 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
   }, [hasInitiallyLoaded]);
 
   const showPageLoading = () => {
-    // Disable page loading for now to prevent conflicts
-    console.log('🚫 Page loading disabled to prevent conflicts');
+    // Only show page loading if we've already done initial load
+    if (hasInitiallyLoaded) {
+      console.log('🔄 Starting page transition loading...');
+      
+      // Clear any existing timeout
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      setIsLoading(true);
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.log('✅ Page transition loading complete');
+        setIsLoading(false);
+      }, 500); // 0.5 seconds for page transitions
+    }
   };
 
   const showInitialLoading = () => {
