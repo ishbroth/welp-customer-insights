@@ -104,7 +104,13 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
       console.log("Submitting verification request...");
       
       // Get the session token for authentication
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Error getting session:", sessionError);
+        toast.error("Authentication error. Please try logging in again.");
+        return;
+      }
       
       if (!session) {
         toast.error("You must be logged in to submit verification");

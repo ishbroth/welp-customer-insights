@@ -70,9 +70,14 @@ export const useAuthLogin = () => {
         
         try {
           // Try to confirm the email directly
-          await supabase.functions.invoke('confirm-email', {
+          const { error: confirmError } = await supabase.functions.invoke('confirm-email', {
             body: { email }
           });
+          
+          if (confirmError) {
+            console.error("❌ Error confirming email:", confirmError);
+            return { success: false, error: "Unable to verify account. Please contact support." };
+          }
           
           // Try login again
           const { data: confirmedData, error: confirmedError } = await supabase.auth.signInWithPassword({
@@ -86,15 +91,17 @@ export const useAuthLogin = () => {
           }
           
           // Check phone verification status
-          const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
-          if (phoneCheck.needsPhoneVerification) {
-            console.log("🔄 Phone verification needed after email confirmation");
-            return { 
-              success: true, 
-              needsPhoneVerification: true,
-              phone: phoneCheck.phone,
-              verificationData: { accountType: phoneCheck.accountType }
-            };
+          if (confirmedData.user) {
+            const phoneCheck = await checkPhoneVerificationStatus(confirmedData.user.id);
+            if (phoneCheck.needsPhoneVerification) {
+              console.log("🔄 Phone verification needed after email confirmation");
+              return { 
+                success: true, 
+                needsPhoneVerification: true,
+                phone: phoneCheck.phone,
+                verificationData: { accountType: phoneCheck.accountType }
+              };
+            }
           }
           
           return { success: true };
@@ -114,7 +121,7 @@ export const useAuthLogin = () => {
             .from('profiles')
             .select('id, type, phone, verified, name, address, city, state, zipcode')
             .eq('email', email)
-            .single();
+            .maybeSingle();
           
           if (profile && !profileError) {
             console.log("👤 User profile found but login failed");
@@ -162,25 +169,29 @@ export const useAuthLogin = () => {
         return { success: false, error: error.message };
       }
 
-      console.log("✅ Login successful, checking verification status for user:", data.user.id);
+      if (data.user) {
+        console.log("✅ Login successful, checking verification status for user:", data.user.id);
 
-      // Check phone verification status for successful login
-      const phoneCheck = await checkPhoneVerificationStatus(data.user.id);
-      console.log("📞 Phone verification check result:", phoneCheck);
-      
-      if (phoneCheck.needsPhoneVerification) {
-        console.log("🔄 Redirecting to phone verification");
-        return { 
-          success: true, 
-          needsPhoneVerification: true,
-          phone: phoneCheck.phone,
-          verificationData: { accountType: phoneCheck.accountType }
-        };
+        // Check phone verification status for successful login
+        const phoneCheck = await checkPhoneVerificationStatus(data.user.id);
+        console.log("📞 Phone verification check result:", phoneCheck);
+        
+        if (phoneCheck.needsPhoneVerification) {
+          console.log("🔄 Redirecting to phone verification");
+          return { 
+            success: true, 
+            needsPhoneVerification: true,
+            phone: phoneCheck.phone,
+            verificationData: { accountType: phoneCheck.accountType }
+          };
+        }
+
+        console.log("🎉 Login complete - no additional verification needed");
+        // Session and user will be set by the auth state listener
+        return { success: true };
       }
 
-      console.log("🎉 Login complete - no additional verification needed");
-      // Session and user will be set by the auth state listener
-      return { success: true };
+      return { success: false, error: "Login failed" };
     } catch (error: any) {
       console.error("❌ Login error:", error);
       return { success: false, error: "An unexpected error occurred" };
