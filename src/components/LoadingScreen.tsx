@@ -1,8 +1,15 @@
 
 import React from 'react';
+import { useLoading } from '@/contexts/LoadingContext';
 import './LoadingScreen.css';
 
 const LoadingScreen: React.FC = () => {
+  const { isLoading } = useLoading();
+
+  if (!isLoading) {
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 bg-[#ea384c] flex items-center justify-center z-50">
       <div className="relative">
