@@ -70,6 +70,11 @@ enable_signup = true
 enable_confirmations = false
 template_sms = "Your code is {{ .Code }} ."
 
+# Reduced OTP token expiry for security (5 minutes = 300 seconds)
+[auth.otp_expiry]
+email = 300
+sms = 300
+
 [functions.send-verification-code]
 verify_jwt = false
 
