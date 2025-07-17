@@ -1,5 +1,6 @@
 
 import React from 'react';
+import './LoadingScreen.css';
 
 const LoadingScreen: React.FC = () => {
   return (
@@ -58,40 +59,6 @@ const LoadingScreen: React.FC = () => {
             />
           </g>
         </svg>
-        
-        <style jsx>{`
-          @keyframes clockwise-highlight {
-            0% { fill: white; }
-            10% { fill: #3b82f6; }
-            20% { fill: white; }
-            100% { fill: white; }
-          }
-          
-          .period {
-            animation: clockwise-highlight 2s infinite;
-            animation-delay: 0s;
-          }
-          
-          .arm-right {
-            animation: clockwise-highlight 2s infinite;
-            animation-delay: 0.4s;
-          }
-          
-          .arm-bottom-right {
-            animation: clockwise-highlight 2s infinite;
-            animation-delay: 0.8s;
-          }
-          
-          .arm-bottom-left {
-            animation: clockwise-highlight 2s infinite;
-            animation-delay: 1.2s;
-          }
-          
-          .arm-top-left {
-            animation: clockwise-highlight 2s infinite;
-            animation-delay: 1.6s;
-          }
-        `}</style>
       </div>
     </div>
   );
