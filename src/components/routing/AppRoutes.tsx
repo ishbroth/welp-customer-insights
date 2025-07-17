@@ -1,6 +1,7 @@
 
 import { Routes, Route } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import LoadingRoute from "./LoadingRoute";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
@@ -50,102 +51,116 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/search" element={<SearchResults />} />
-      <Route path="/customer/:id" element={<CustomerProfile />} />
-      <Route path="/business/:id" element={<BusinessProfile />} />
-      <Route path="/business/:id/reviews" element={<BusinessReviews />} />
-      <Route path="/verify-phone" element={<VerifyPhone />} />
-      <Route path="/business-password-setup" element={<BusinessPasswordSetup />} />
-      <Route path="/verification" element={<Verification />} />
-      <Route path="/verify-license" element={<VerifyLicense />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/verify-business" element={<AdminVerifyBusiness />} />
-      <Route path="/business-verification-success" element={<BusinessVerificationSuccess />} />
-      <Route path="/customer-verification" element={<CustomerVerification />} />
-      <Route path="/subscription" element={<Subscription />} />
-      <Route path="/buy-credits" element={<BuyCredits />} />
-      <Route path="/report-review/:reviewId" element={<ReportReview />} />
-      <Route path="/faq" element={<FAQ />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/how-it-works" element={<HowItWorks />} />
-      <Route path="/customer-benefits" element={<CustomerBenefits />} />
-      <Route path="/customer-stories" element={<CustomerStories />} />
-      <Route path="/success-stories" element={<SuccessStories />} />
-      <Route path="/verification-resources" element={<VerificationResources />} />
-      <Route path="/twilio-debug" element={<TwilioDebug />} />
+      {/* Public Routes - wrapped with LoadingRoute for page transitions */}
+      <Route path="/" element={<LoadingRoute><Index /></LoadingRoute>} />
+      <Route path="/login" element={<LoadingRoute><Login /></LoadingRoute>} />
+      <Route path="/signup" element={<LoadingRoute><Signup /></LoadingRoute>} />
+      <Route path="/forgot-password" element={<LoadingRoute><ForgotPassword /></LoadingRoute>} />
+      <Route path="/reset-password" element={<LoadingRoute><ResetPassword /></LoadingRoute>} />
+      <Route path="/search" element={<LoadingRoute><SearchResults /></LoadingRoute>} />
+      <Route path="/customer/:id" element={<LoadingRoute><CustomerProfile /></LoadingRoute>} />
+      <Route path="/business/:id" element={<LoadingRoute><BusinessProfile /></LoadingRoute>} />
+      <Route path="/business/:id/reviews" element={<LoadingRoute><BusinessReviews /></LoadingRoute>} />
+      <Route path="/verify-phone" element={<LoadingRoute><VerifyPhone /></LoadingRoute>} />
+      <Route path="/business-password-setup" element={<LoadingRoute><BusinessPasswordSetup /></LoadingRoute>} />
+      <Route path="/verification" element={<LoadingRoute><Verification /></LoadingRoute>} />
+      <Route path="/verify-license" element={<LoadingRoute><VerifyLicense /></LoadingRoute>} />
+      <Route path="/admin/login" element={<LoadingRoute><AdminLogin /></LoadingRoute>} />
+      <Route path="/admin/verify-business" element={<LoadingRoute><AdminVerifyBusiness /></LoadingRoute>} />
+      <Route path="/business-verification-success" element={<LoadingRoute><BusinessVerificationSuccess /></LoadingRoute>} />
+      <Route path="/customer-verification" element={<LoadingRoute><CustomerVerification /></LoadingRoute>} />
+      <Route path="/subscription" element={<LoadingRoute><Subscription /></LoadingRoute>} />
+      <Route path="/buy-credits" element={<LoadingRoute><BuyCredits /></LoadingRoute>} />
+      <Route path="/report-review/:reviewId" element={<LoadingRoute><ReportReview /></LoadingRoute>} />
+      <Route path="/faq" element={<LoadingRoute><FAQ /></LoadingRoute>} />
+      <Route path="/about" element={<LoadingRoute><About /></LoadingRoute>} />
+      <Route path="/terms" element={<LoadingRoute><Terms /></LoadingRoute>} />
+      <Route path="/privacy" element={<LoadingRoute><Privacy /></LoadingRoute>} />
+      <Route path="/how-it-works" element={<LoadingRoute><HowItWorks /></LoadingRoute>} />
+      <Route path="/customer-benefits" element={<LoadingRoute><CustomerBenefits /></LoadingRoute>} />
+      <Route path="/customer-stories" element={<LoadingRoute><CustomerStories /></LoadingRoute>} />
+      <Route path="/success-stories" element={<LoadingRoute><SuccessStories /></LoadingRoute>} />
+      <Route path="/verification-resources" element={<LoadingRoute><VerificationResources /></LoadingRoute>} />
+      <Route path="/twilio-debug" element={<LoadingRoute><TwilioDebug /></LoadingRoute>} />
       
       {/* App Store Assets Routes */}
-      <Route path="/app-icon-preview" element={<AppIconPreviewPage />} />
-      <Route path="/app-store-assets" element={<AppStoreAssetsPage />} />
+      <Route path="/app-icon-preview" element={<LoadingRoute><AppIconPreviewPage /></LoadingRoute>} />
+      <Route path="/app-store-assets" element={<LoadingRoute><AppStoreAssetsPage /></LoadingRoute>} />
 
-      {/* Protected Routes */}
+      {/* Protected Routes - wrapped with LoadingRoute for page transitions */}
       <Route
         path="/profile"
         element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
       <Route
         path="/profile/edit"
         element={
-          <ProtectedRoute>
-            <ProfileEdit />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <ProfileEdit />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
       <Route
         path="/profile/reviews"
         element={
-          <ProtectedRoute>
-            <ProfileReviews />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <ProfileReviews />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
       <Route
         path="/review/new"
         element={
-          <ProtectedRoute>
-            <NewReview />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <NewReview />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
       <Route
         path="/review/success"
         element={
-          <ProtectedRoute>
-            <ReviewSuccess />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <ReviewSuccess />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
       <Route
         path="/billing"
         element={
-          <ProtectedRoute>
-            <BillingPage />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <BillingPage />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
       <Route
         path="/notifications"
         element={
-          <ProtectedRoute>
-            <NotificationsPage />
-          </ProtectedRoute>
+          <LoadingRoute>
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          </LoadingRoute>
         }
       />
 
       {/* Catch all route */}
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={<LoadingRoute><NotFound /></LoadingRoute>} />
     </Routes>
   );
 };
