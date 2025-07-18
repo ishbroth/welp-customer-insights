@@ -10,7 +10,7 @@ const LoadingScreen: React.FC = () => {
     return null;
   }
 
-  console.log('🎯 LoadingScreen rendering with large asterisk (240x240)');
+  console.log('🎯 LoadingScreen rendering with large asterisk (320x320)');
 
   return (
     <div className="fixed inset-0 bg-[#ea384c] flex items-center justify-center z-50">
@@ -23,7 +23,7 @@ const LoadingScreen: React.FC = () => {
           className="animate-pulse"
         >
           {/* Asterisk with 5 arms (4 actual arms + period replacing top arm), tilted */}
-          <g transform="translate(208, 96) rotate(12)">
+          <g transform="translate(160, 160) rotate(12)">
             {/* Right arm (0 degrees) */}
             <path
               d="M 3.2 0 Q 28.8 -16 54.4 -8 Q 60.8 0 54.4 8 Q 28.8 16 3.2 0"
