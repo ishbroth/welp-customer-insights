@@ -1,14 +1,15 @@
 
 
+
 @keyframes clockwise-highlight {
   0% { 
     fill: white; 
   }
-  10% { 
+  20% { 
     fill: #3b82f6; 
   }
-  20% { 
-    fill: white; 
+  80% { 
+    fill: #3b82f6; 
   }
   100% { 
     fill: white; 
@@ -39,4 +40,5 @@
   animation: clockwise-highlight 0.5s;
   animation-delay: 0.3s;
 }
+
 
