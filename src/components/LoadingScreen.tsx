@@ -10,21 +10,23 @@ const LoadingScreen: React.FC = () => {
     return null;
   }
 
+  console.log('🎯 LoadingScreen rendering with large asterisk (240x240)');
+
   return (
     <div className="fixed inset-0 bg-[#ea384c] flex items-center justify-center z-50">
       <div className="relative">
         <svg
-          width="240"
-          height="240"
-          viewBox="0 0 240 240"
+          width="320"
+          height="320"
+          viewBox="0 0 320 320"
           xmlns="http://www.w3.org/2000/svg"
           className="animate-pulse"
         >
           {/* Asterisk with 5 arms (4 actual arms + period replacing top arm), tilted */}
-          <g transform="translate(156, 72) rotate(12)">
+          <g transform="translate(208, 96) rotate(12)">
             {/* Right arm (0 degrees) */}
             <path
-              d="M 2.4 0 Q 21.6 -12 40.8 -6 Q 45.6 0 40.8 6 Q 21.6 12 2.4 0"
+              d="M 3.2 0 Q 28.8 -16 54.4 -8 Q 60.8 0 54.4 8 Q 28.8 16 3.2 0"
               fill="white"
               className="arm-right"
             />
@@ -32,7 +34,7 @@ const LoadingScreen: React.FC = () => {
             {/* Bottom-right diagonal arm (72 degrees) */}
             <g transform="rotate(72)">
               <path
-                d="M 2.4 0 Q 21.6 -12 40.8 -6 Q 45.6 0 40.8 6 Q 21.6 12 2.4 0"
+                d="M 3.2 0 Q 28.8 -16 54.4 -8 Q 60.8 0 54.4 8 Q 28.8 16 3.2 0"
                 fill="white"
                 className="arm-bottom-right"
               />
@@ -41,7 +43,7 @@ const LoadingScreen: React.FC = () => {
             {/* Bottom-left diagonal arm (144 degrees) */}
             <g transform="rotate(144)">
               <path
-                d="M 2.4 0 Q 21.6 -12 40.8 -6 Q 45.6 0 40.8 6 Q 21.6 12 2.4 0"
+                d="M 3.2 0 Q 28.8 -16 54.4 -8 Q 60.8 0 54.4 8 Q 28.8 16 3.2 0"
                 fill="white"
                 className="arm-bottom-left"
               />
@@ -50,7 +52,7 @@ const LoadingScreen: React.FC = () => {
             {/* Top-left diagonal arm (216 degrees) */}
             <g transform="rotate(216)">
               <path
-                d="M 2.4 0 Q 21.6 -12 40.8 -6 Q 45.6 0 40.8 6 Q 21.6 12 2.4 0"
+                d="M 3.2 0 Q 28.8 -16 54.4 -8 Q 60.8 0 54.4 8 Q 28.8 16 3.2 0"
                 fill="white"
                 className="arm-top-left"
               />
@@ -58,9 +60,9 @@ const LoadingScreen: React.FC = () => {
             
             {/* Period positioned at 288 degrees */}
             <circle
-              cx="9"
-              cy="-24"
-              r="9.6"
+              cx="12"
+              cy="-32"
+              r="12.8"
               fill="white"
               className="period"
             />
