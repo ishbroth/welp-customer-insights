@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 interface LoadingContextType {
@@ -67,7 +66,7 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
         console.log('✅ Page transition loading complete');
         setIsLoading(false);
         isPageLoadingRef.current = false;
-      }, 500); // 0.5 seconds for page transitions
+      }, 250); // Reduced from 500ms to 250ms
     } else if (isPageLoadingRef.current) {
       console.log('⏸️ Page loading already in progress, skipping...');
     }
