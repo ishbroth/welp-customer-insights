@@ -1,4 +1,3 @@
-
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
@@ -25,6 +24,60 @@ export const useAuthMethods = (
 
       if (error) {
         console.error("❌ Login error:", error);
+        
+        // Check if this is a "user not found" error, which might indicate incomplete registration
+        if (error.message === "Invalid login credentials") {
+          console.log("🔍 Invalid login credentials - checking if user exists but needs phone verification");
+          
+          // Check if a user exists with this email but might need phone verification
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, type, phone, verified, name, address, city, state, zipcode')
+              .eq('email', email)
+              .maybeSingle();
+            
+            if (profile && !profileError) {
+              console.log("👤 User profile found but login failed");
+              console.log("📋 Profile details:", {
+                id: profile.id,
+                type: profile.type,
+                phone: profile.phone,
+                verified: profile.verified
+              });
+              
+              // If user has a phone and is not verified, they need phone verification
+              if (profile.phone && !profile.verified) {
+                console.log("🔄 User needs to complete phone verification");
+                return { 
+                  success: true, 
+                  needsPhoneVerification: true,
+                  phone: profile.phone,
+                  verificationData: { 
+                    accountType: profile.type,
+                    name: profile.name,
+                    address: profile.address,
+                    city: profile.city,
+                    state: profile.state,
+                    zipCode: profile.zipcode
+                  }
+                };
+              } else {
+                // User exists but likely needs password setup (business account)
+                console.log("👤 User profile found but likely needs password setup");
+                return { 
+                  success: false, 
+                  needsPasswordSetup: true,
+                  error: "Account found but password not set. Please complete your registration by setting up your password.",
+                  phone: profile.phone
+                };
+              }
+            }
+          } catch (profileCheckError) {
+            console.error("❌ Error checking profile for incomplete registration:", profileCheckError);
+          }
+        }
+        
         return { success: false, error: error.message };
       }
 
@@ -32,7 +85,7 @@ export const useAuthMethods = (
       return { success: true };
     } catch (error: any) {
       console.error("❌ Login error:", error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || "An unexpected error occurred" };
     }
   };
 

@@ -208,6 +208,7 @@ const Login = () => {
           return;
         }
         
+        // Show error toast - this is the important part that should always show
         toast({
           title: "Login Failed",
           description: result.error || "Invalid email or password. Please try again.",
