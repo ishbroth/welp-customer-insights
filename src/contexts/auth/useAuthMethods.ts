@@ -72,9 +72,15 @@ export const useAuthMethods = (
                   phone: profile.phone
                 };
               }
+            } else {
+              // No profile found, this is a regular invalid login
+              console.log("👤 No profile found - regular invalid login");
+              return { success: false, error: "Invalid email or password. Please try again." };
             }
           } catch (profileCheckError) {
             console.error("❌ Error checking profile for incomplete registration:", profileCheckError);
+            // If profile check fails, still return the original error
+            return { success: false, error: "Invalid email or password. Please try again." };
           }
         }
         
