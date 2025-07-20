@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -85,10 +84,6 @@ const Login = () => {
         // Check if phone verification is needed
         if (result.needsPhoneVerification) {
           console.log("🔄 Phone verification required - redirecting to verification page");
-          console.log("📱 Verification data:", {
-            phone: result.phone,
-            accountType: result.verificationData?.accountType
-          });
           
           // Build the verification URL with all necessary parameters
           const params = new URLSearchParams({
@@ -120,7 +115,6 @@ const Login = () => {
             description: "Please complete phone verification to access your account.",
           });
           
-          console.log("🔄 Navigating to verify-phone with params:", params.toString());
           navigate(`/verify-phone?${params.toString()}`);
           return;
         }
@@ -184,36 +178,34 @@ const Login = () => {
             return;
           } catch (error) {
             console.error("Error parsing pending review data:", error);
-            // Fallback to default redirect
           }
         }
         
         // Default redirect to the returnTo URL or profile
         navigate(returnTo);
       } else {
-        // Check if user needs password setup
+        // Handle all error cases
         if (result.needsPasswordSetup) {
           toast({
             title: "Complete Registration",
             description: "Please complete your account setup.",
           });
           
-          // Redirect to password setup with user info
           navigate('/business-password-setup', {
             state: {
               businessEmail: email,
               phone: result.phone
             }
           });
-          return;
+        } else {
+          // Show error toast for all other failures
+          console.log("🚨 Showing error toast:", result.error);
+          toast({
+            title: "Login Failed",
+            description: result.error || "Invalid email or password. Please try again.",
+            variant: "destructive",
+          });
         }
-        
-        // Show error toast - this is the important part that should always show
-        toast({
-          title: "Login Failed",
-          description: result.error || "Invalid email or password. Please try again.",
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error("💥 Unexpected error in login:", error);
