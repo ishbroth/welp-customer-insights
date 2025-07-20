@@ -58,6 +58,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
+      console.log("🚨 Missing email or password - showing validation toast");
       toast({
         title: "Error",
         description: "Please enter both email and password.",
@@ -184,7 +185,9 @@ const Login = () => {
         // Default redirect to the returnTo URL or profile
         navigate(returnTo);
       } else {
-        // Handle all error cases
+        // Handle all error cases - THIS IS THE CRITICAL PART
+        console.log("🚨 Login failed, attempting to show toast with error:", result.error);
+        
         if (result.needsPasswordSetup) {
           toast({
             title: "Complete Registration",
@@ -199,16 +202,24 @@ const Login = () => {
           });
         } else {
           // Show error toast for all other failures
-          console.log("🚨 Showing error toast:", result.error);
+          console.log("🚨 About to call toast() with:", {
+            title: "Login Failed",
+            description: result.error || "Invalid email or password. Please try again.",
+            variant: "destructive"
+          });
+          
           toast({
             title: "Login Failed",
             description: result.error || "Invalid email or password. Please try again.",
             variant: "destructive",
           });
+          
+          console.log("🚨 Toast call completed");
         }
       }
     } catch (error) {
       console.error("💥 Unexpected error in login:", error);
+      console.log("🚨 Showing unexpected error toast");
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
