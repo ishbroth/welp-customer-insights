@@ -1,0 +1,46 @@
+
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Red background -->
+  <rect width="32" height="32" rx="6" fill="#ea384c"/>
+  
+  <!-- Welp-style asterisk with 4 arms + period, centered and scaled for favicon -->
+  <g transform="translate(16, 16) rotate(12)">
+    <!-- Right arm (0 degrees) -->
+    <path
+      d="M 0.3 0 Q 2.9 -1.6 5.4 -0.8 Q 6.1 0 5.4 0.8 Q 2.9 1.6 0.3 0"
+      fill="white"
+    />
+    
+    <!-- Bottom-right diagonal arm (72 degrees) -->
+    <g transform="rotate(72)">
+      <path
+        d="M 0.3 0 Q 2.9 -1.6 5.4 -0.8 Q 6.1 0 5.4 0.8 Q 2.9 1.6 0.3 0"
+        fill="white"
+      />
+    </g>
+    
+    <!-- Bottom-left diagonal arm (144 degrees) -->
+    <g transform="rotate(144)">
+      <path
+        d="M 0.3 0 Q 2.9 -1.6 5.4 -0.8 Q 6.1 0 5.4 0.8 Q 2.9 1.6 0.3 0"
+        fill="white"
+      />
+    </g>
+    
+    <!-- Top-left diagonal arm (216 degrees) -->
+    <g transform="rotate(216)">
+      <path
+        d="M 0.3 0 Q 2.9 -1.6 5.4 -0.8 Q 6.1 0 5.4 0.8 Q 2.9 1.6 0.3 0"
+        fill="white"
+      />
+    </g>
+    
+    <!-- Period positioned at 288 degrees -->
+    <circle
+      cx="1.2"
+      cy="-3.2"
+      r="1.3"
+      fill="white"
+    />
+  </g>
+</svg>
