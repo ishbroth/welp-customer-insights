@@ -60,7 +60,7 @@ export const useBusinessAccountCreation = () => {
       localStorage.setItem("pendingVerification", JSON.stringify(businessData));
 
       // Send email verification code
-      const { success, error } = await sendEmailVerificationCode({ 
+      const { success, message } = await sendEmailVerificationCode({ 
         email: businessEmail 
       });
 
@@ -75,7 +75,7 @@ export const useBusinessAccountCreation = () => {
       } else {
         toast({
           title: "Error",
-          description: error || "Failed to send verification code. Please try again.",
+          description: message || "Failed to send verification code. Please try again.",
           variant: "destructive"
         });
       }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,7 +128,7 @@ const CustomerSignupForm = () => {
       localStorage.setItem("pendingVerification", JSON.stringify(userData));
 
       // Send verification code
-      const { success, error } = await sendEmailVerificationCode({ email });
+      const { success, message } = await sendEmailVerificationCode({ email });
       
       if (success) {
         toast({
@@ -138,7 +139,7 @@ const CustomerSignupForm = () => {
       } else {
         toast({
           title: "Error",
-          description: error || "Failed to send verification code. Please try again.",
+          description: message || "Failed to send verification code. Please try again.",
           variant: "destructive"
         });
       }
