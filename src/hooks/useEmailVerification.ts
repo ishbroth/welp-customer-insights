@@ -47,7 +47,7 @@ export const useEmailVerification = ({
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { initUserData } = useAuth();
+  const auth = useAuth();
 
   // Validate verification code
   useEffect(() => {
@@ -121,40 +121,16 @@ export const useEmailVerification = ({
           description: "Your email has been verified and account created successfully.",
         });
 
-        // If we have session data from the response, the user was automatically signed in
-        if (data.session && data.user) {
-          console.log("User automatically signed in, initializing profile...");
-          
-          // Initialize user data in the auth context
-          try {
-            await initUserData(data.user.id, true);
-          } catch (initError) {
-            console.error("Error initializing user data:", initError);
-          }
-          
-          // Clear any stored verification data
-          localStorage.removeItem("pendingVerification");
-          
-          // Redirect based on account type
-          if (accountType === 'business') {
-            navigate("/dashboard");
-          } else {
-            navigate("/profile");
-          }
-        } else if (data.autoSignInFailed) {
-          // Account was created but auto sign-in failed, redirect to login
-          toast({
-            title: "Please Sign In",
-            description: "Your account was created successfully. Please sign in to continue.",
-          });
-          navigate("/login");
+        console.log("Account created and user signed in successfully");
+        
+        // Clear any stored verification data
+        localStorage.removeItem("pendingVerification");
+        
+        // The user should now be automatically signed in, redirect based on account type
+        if (accountType === 'business') {
+          navigate("/dashboard");
         } else {
-          // Fallback redirect
-          if (accountType === 'business') {
-            navigate("/dashboard");
-          } else {
-            navigate("/profile");
-          }
+          navigate("/profile");
         }
       } else {
         toast({
