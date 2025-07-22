@@ -1,229 +1,88 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+import { useAuth } from '@/contexts/auth';
+import { useToast } from '@/hooks/use-toast';
+import { usePostAuthRedirect } from '@/hooks/usePostAuthRedirect';
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { login, currentUser } = useAuth();
   const { toast } = useToast();
-  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get success message and return URL if passed from another page
-  const [successMessage, setSuccessMessage] = useState<string | null>(
-    location.state?.message || null
-  );
-  const returnTo = location.state?.returnTo || "/profile";
-  const prefilledEmail = location.state?.email || "";
 
-  // Load remembered credentials on component mount and handle prefilled email
+  // Use the post-auth redirect hook
+  usePostAuthRedirect();
+
+  // Handle redirect with message from account creation
   useEffect(() => {
-    // First priority: prefilled email from navigation state
-    if (prefilledEmail) {
-      setEmail(prefilledEmail);
-    } else {
-      // Second priority: remembered email from localStorage
-      const rememberedEmail = localStorage.getItem("welp_remembered_email");
-      if (rememberedEmail) {
-        setEmail(rememberedEmail);
-        setRememberMe(true);
+    const state = location.state as any;
+    if (state?.message) {
+      toast({
+        title: "Account Created",
+        description: state.message,
+      });
+      
+      // Pre-fill email if provided
+      if (state.email) {
+        setEmail(state.email);
+      }
+      
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, toast]);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.type === 'business') {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/profile', { replace: true });
       }
     }
-  }, [prefilledEmail]);
+  }, [currentUser, navigate]);
 
-  // Clear the success message after 10 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(null);
-      }, 10000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      console.log("🚨 Missing email or password - showing validation toast");
-      toast({
-        title: "Error",
-        description: "Please enter both email and password.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsLoading(true);
-    
+
+    console.log("🔐 Starting login process for:", email);
+
     try {
-      console.log("🔐 Starting login process for:", email);
       const result = await login(email, password);
       console.log("📊 Login result:", result);
-      
+
       if (result.success) {
-        // Handle remember me functionality
-        if (rememberMe) {
-          localStorage.setItem("welp_remembered_email", email);
-        } else {
-          localStorage.removeItem("welp_remembered_email");
-        }
-        
-        // Check if phone verification is needed
-        if (result.needsPhoneVerification) {
-          console.log("🔄 Phone verification required - redirecting to verification page");
-          
-          // Build the verification URL with all necessary parameters
-          const params = new URLSearchParams({
-            email: email,
-            password: password,
-            phone: result.phone || '',
-            accountType: result.verificationData?.accountType || 'customer'
-          });
-          
-          // Add optional parameters if they exist
-          if (result.verificationData?.name) {
-            params.append('name', result.verificationData.name);
-          }
-          if (result.verificationData?.address) {
-            params.append('address', result.verificationData.address);
-          }
-          if (result.verificationData?.city) {
-            params.append('city', result.verificationData.city);
-          }
-          if (result.verificationData?.state) {
-            params.append('state', result.verificationData.state);
-          }
-          if (result.verificationData?.zipCode) {
-            params.append('zipCode', result.verificationData.zipCode);
-          }
-          
-          toast({
-            title: "Phone Verification Required",
-            description: "Please complete phone verification to access your account.",
-          });
-          
-          navigate(`/verify-phone?${params.toString()}`);
-          return;
-        }
-        
+        console.log("✅ Login successful");
         toast({
-          title: "Logged In",
-          description: "Welcome back to Welp.",
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
         });
-        
-        // Check for pending review access first (highest priority)
-        const pendingReviewAccess = sessionStorage.getItem('pendingReviewAccess');
-        if (pendingReviewAccess) {
-          try {
-            const { reviewId, accessType } = JSON.parse(pendingReviewAccess);
-            sessionStorage.removeItem('pendingReviewAccess');
-            
-            if (accessType === 'one-time') {
-              // Redirect to one-time payment
-              const { data, error } = await supabase.functions.invoke("create-payment", {
-                body: {
-                  reviewId,
-                  amount: 300,
-                  isGuest: false
-                }
-              });
-              
-              if (error) {
-                toast({
-                  title: "Payment Error",
-                  description: "Could not create payment session. Please try again.",
-                  variant: "destructive"
-                });
-                navigate(`/subscription?reviewId=${reviewId}&type=one-time`);
-                return;
-              }
-              
-              if (data?.url) {
-                window.location.href = data.url;
-                return;
-              }
-            } else {
-              // Redirect to subscription page
-              navigate('/subscription');
-              return;
-            }
-          } catch (error) {
-            console.error("Error handling pending review access:", error);
-          }
-        }
-        
-        // Check if there's pending review data from the customer search
-        const pendingReviewData = sessionStorage.getItem('pendingReviewData');
-        if (pendingReviewData) {
-          try {
-            const customerData = JSON.parse(pendingReviewData);
-            sessionStorage.removeItem('pendingReviewData');
-            
-            // Redirect to review form with customer data pre-filled
-            const params = new URLSearchParams(customerData);
-            navigate(`/review/new?${params.toString()}`);
-            return;
-          } catch (error) {
-            console.error("Error parsing pending review data:", error);
-          }
-        }
-        
-        // Default redirect to the returnTo URL or profile
-        navigate(returnTo);
+        // Navigation will be handled by the useEffect hook above
       } else {
-        // Handle all error cases - THIS IS THE CRITICAL PART
-        console.log("🚨 Login failed, attempting to show toast with error:", result.error);
-        
-        if (result.needsPasswordSetup) {
-          toast({
-            title: "Complete Registration",
-            description: "Please complete your account setup.",
-          });
-          
-          navigate('/business-password-setup', {
-            state: {
-              businessEmail: email,
-              phone: result.phone
-            }
-          });
-        } else {
-          // Show error toast for all other failures
-          console.log("🚨 About to call toast() with:", {
-            title: "Login Failed",
-            description: result.error || "Invalid email or password. Please try again.",
-            variant: "destructive"
-          });
-          
-          toast({
-            title: "Login Failed",
-            description: result.error || "Invalid email or password. Please try again.",
-            variant: "destructive",
-          });
-          
-          console.log("🚨 Toast call completed");
-        }
+        console.log("❌ Login failed:", result.error);
+        toast({
+          title: "Login Failed",
+          description: result.error || "Invalid email or password",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error("💥 Unexpected error in login:", error);
-      console.log("🚨 Showing unexpected error toast");
+      console.error("❌ Login error:", error);
       toast({
-        title: "Error",
+        title: "Login Error",
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -231,82 +90,59 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow py-12">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-md mx-auto p-6">
-            <h1 className="text-3xl font-bold text-center mb-6">Log In to Welp.</h1>
-            
-            {successMessage && (
-              <Alert className="mb-6 bg-green-50 border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
-              </Alert>
-            )}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="welp-input"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label htmlFor="password" className="block text-sm font-medium">Password</label>
-                    <Link to="/forgot-password" className="text-sm text-welp-primary hover:underline">
-                      Forgot Password?
-                    </Link>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="welp-input"
-                    required
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="remember-me"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  />
-                  <label htmlFor="remember-me" className="text-sm text-gray-600">
-                    Remember me on this device
-                  </label>
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="welp-button w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Logging in..." : "Log In"}
-                </Button>
-              </div>
-            </form>
-            
-            <div className="text-center mt-6">
-              <p className="text-sm text-gray-600">
-                Don't have an account? <Link to="/signup" className="text-welp-primary hover:underline">Sign Up</Link>
-              </p>
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Sign In</CardTitle>
+          <CardDescription>
+            Enter your email and password to access your account
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
-          </Card>
-        </div>
-      </main>
-      <Footer />
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing In..." : "Sign In"}
+            </Button>
+            <div className="text-sm text-center">
+              Don't have an account?{" "}
+              <Link 
+                to="/signup" 
+                className="text-blue-600 hover:underline"
+              >
+                Sign up here
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
 };

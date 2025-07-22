@@ -117,22 +117,42 @@ export const useEmailVerification = ({
       }
 
       if (data.success && data.isValid) {
+        console.log("✅ Account created and user signed in successfully");
+        
         toast({
           title: "Account Created!",
           description: "Your email has been verified and account created successfully.",
         });
 
-        console.log("✅ Account created and user signed in successfully");
-        
         // Clear any stored verification data
         localStorage.removeItem("pendingVerification");
         
-        // The user should now be automatically signed in, redirect based on account type
-        if (accountType === 'business') {
-          navigate("/dashboard");
-        } else {
-          navigate("/profile");
-        }
+        // Wait a moment for the session to be properly established
+        // The edge function should have automatically signed in the user
+        setTimeout(() => {
+          // Check if we have a session after the automatic sign-in
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+              console.log("✅ Session confirmed, redirecting to profile");
+              // Redirect based on account type
+              if (accountType === 'business') {
+                navigate("/dashboard", { replace: true });
+              } else {
+                navigate("/profile", { replace: true });
+              }
+            } else {
+              console.log("⚠️ No session found after account creation, redirecting to login");
+              // If no session, redirect to login with a message
+              navigate("/login", { 
+                replace: true,
+                state: { 
+                  message: "Account created successfully! Please sign in with your credentials.",
+                  email: email 
+                }
+              });
+            }
+          });
+        }, 1000); // Give the auth state time to update
       } else {
         toast({
           title: "Verification Failed",
