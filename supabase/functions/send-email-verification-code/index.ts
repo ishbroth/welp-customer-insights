@@ -107,12 +107,12 @@ serve(async (req) => {
       throw new Error("Failed to store verification code in database");
     }
 
-    // Send email using Resend
+    // Send email using Resend with your verified domain
     try {
       console.log(`📨 Attempting to send email to ${email}`);
       
       const emailResult = await resend.emails.send({
-        from: 'Welp. <noreply@resend.dev>',
+        from: 'Welp. <noreply@mywelp.com>',
         to: [email],
         subject: 'Your Welp. Verification Code',
         html: `
