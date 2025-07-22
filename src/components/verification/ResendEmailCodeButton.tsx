@@ -1,36 +1,37 @@
 
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 interface ResendEmailCodeButtonProps {
-  onResend: () => void;
-  isDisabled: boolean;
-  isResending: boolean;
+  onClick: () => void;
+  isLoading: boolean;
+  disabled: boolean;
   timer: number;
 }
 
-const ResendEmailCodeButton = ({
-  onResend,
-  isDisabled,
-  isResending,
-  timer
-}: ResendEmailCodeButtonProps) => {
+const ResendEmailCodeButton: React.FC<ResendEmailCodeButtonProps> = ({ 
+  onClick, 
+  isLoading, 
+  disabled, 
+  timer 
+}) => {
   return (
     <Button
-      variant="outline"
-      onClick={onResend}
-      disabled={isDisabled || isResending}
-      className="w-full"
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      disabled={disabled || isLoading}
     >
-      {isResending ? (
+      {isLoading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Sending...
         </>
-      ) : isDisabled ? (
-        `Resend code in ${timer}s`
+      ) : disabled ? (
+        `Resend Code (${timer}s)`
       ) : (
-        "Resend verification code"
+        "Resend Code"
       )}
     </Button>
   );

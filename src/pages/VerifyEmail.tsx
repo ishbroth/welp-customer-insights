@@ -1,215 +1,87 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import EmailVerificationCodeInput from "@/components/verification/EmailVerificationCodeInput";
-import VerifyEmailCodeButton from "@/components/verification/VerifyEmailCodeButton";
-import ResendEmailCodeButton from "@/components/verification/ResendEmailCodeButton";
-import { supabase } from "@/integrations/supabase/client";
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import EmailVerificationCodeInput from '@/components/verification/EmailVerificationCodeInput';
+import VerifyEmailCodeButton from '@/components/verification/VerifyEmailCodeButton';
+import ResendEmailCodeButton from '@/components/verification/ResendEmailCodeButton';
+import { useEmailVerification } from '@/hooks/useEmailVerification';
 
-const VerifyEmail = () => {
-  const [searchParams] = useSearchParams();
+const VerifyEmail: React.FC = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { state } = location;
   
-  const [verificationCode, setVerificationCode] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [isResendDisabled, setIsResendDisabled] = useState(true);
-  const [resendTimer, setResendTimer] = useState(60);
-
-  // Get parameters from URL
-  const email = searchParams.get("email");
-  const accountType = searchParams.get("type");
+  // Extract userData from state or use defaults
+  const userData = state?.userData || {};
+  const { email = '', accountType = 'customer' } = userData;
   
-  // Get user data from localStorage if available
-  const [userData, setUserData] = useState<any>(null);
-
-  useEffect(() => {
+  // If no email is provided, redirect to signup
+  React.useEffect(() => {
     if (!email) {
-      toast({
-        title: "Error",
-        description: "No email provided for verification",
-        variant: "destructive"
-      });
-      navigate("/");
-      return;
+      navigate('/signup', { replace: true });
     }
+  }, [email, navigate]);
 
-    // Try to get user data from localStorage
-    const storedUserData = localStorage.getItem("pendingVerification");
-    if (storedUserData) {
-      try {
-        setUserData(JSON.parse(storedUserData));
-      } catch (error) {
-        console.error("Error parsing stored user data:", error);
-      }
-    }
-  }, [email, navigate, toast]);
-
-  // Resend timer logic
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isResendDisabled && resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((prev) => {
-          if (prev <= 1) {
-            setIsResendDisabled(false);
-            return 60;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    
-    return () => clearInterval(interval);
-  }, [isResendDisabled, resendTimer]);
-
-  const handleVerifyCode = async () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid 6-digit verification code",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsVerifying(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-email-code', {
-        body: {
-          email,
-          code: verificationCode,
-          accountType,
-          userData
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.success && data.isValid) {
-        // Clear stored user data
-        localStorage.removeItem("pendingVerification");
-        
-        toast({
-          title: "Email Verified!",
-          description: "Your account has been created successfully.",
-        });
-
-        // Redirect based on account type
-        if (accountType === 'business') {
-          navigate("/dashboard");
-        } else {
-          navigate("/");
-        }
-      } else {
-        toast({
-          title: "Verification Failed",
-          description: data.message || "Invalid or expired verification code",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error verifying email code:", error);
-      toast({
-        title: "Verification Error",
-        description: "Failed to verify email code. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (!email) return;
-
-    setIsResending(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('send-email-verification-code', {
-        body: { email }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.success) {
-        toast({
-          title: "Code Sent",
-          description: "A new verification code has been sent to your email.",
-        });
-        setIsResendDisabled(true);
-        setResendTimer(60);
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to send verification code",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error resending verification code:", error);
-      toast({
-        title: "Error",
-        description: "Failed to resend verification code. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsResending(false);
-    }
-  };
+  // Use the email verification hook
+  const {
+    verificationCode,
+    setVerificationCode,
+    isCodeValid,
+    isVerifying,
+    isResending,
+    isResendDisabled,
+    resendTimer,
+    handleVerifyCode,
+    handleResendCode
+  } = useEmailVerification({
+    email,
+    password: userData.password || '',
+    name: userData.name || '',
+    accountType,
+    // Pass through all the other user data
+    ...userData
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-welp-red mb-2">Welp.</h1>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Verify Your Email
-          </h2>
-          <p className="text-gray-600">
-            We've sent a verification code to:
-          </p>
-          <p className="font-semibold text-gray-800">{email}</p>
-        </div>
-
-        <div className="space-y-6">
-          <EmailVerificationCodeInput
-            value={verificationCode}
-            onChange={setVerificationCode}
-            isValid={verificationCode.length === 0 || verificationCode.length === 6}
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Verify Your Email</CardTitle>
+          <CardDescription>
+            We've sent a verification code to <span className="font-medium">{email}</span>. Please enter it below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <EmailVerificationCodeInput 
+            value={verificationCode} 
+            onChange={setVerificationCode} 
           />
-
-          <VerifyEmailCodeButton
-            onClick={handleVerifyCode}
-            isLoading={isVerifying}
-            disabled={verificationCode.length !== 6}
+          
+          <VerifyEmailCodeButton 
+            onClick={handleVerifyCode} 
+            isLoading={isVerifying} 
+            disabled={!isCodeValid || isVerifying}
           />
-
-          <ResendEmailCodeButton
-            onResend={handleResendCode}
-            isDisabled={isResendDisabled}
-            isResending={isResending}
+        </CardContent>
+        
+        <CardFooter className="flex justify-between border-t pt-6">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/signup')}
+          >
+            Back to Signup
+          </Button>
+          
+          <ResendEmailCodeButton 
+            onClick={handleResendCode} 
+            isLoading={isResending} 
+            disabled={isResendDisabled} 
             timer={resendTimer}
           />
-
-          <div className="text-center">
-            <button
-              onClick={() => navigate("/")}
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

@@ -1,49 +1,36 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React from 'react';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 interface EmailVerificationCodeInputProps {
   value: string;
   onChange: (value: string) => void;
-  isValid?: boolean;
 }
 
-const EmailVerificationCodeInput = ({
-  value,
-  onChange,
-  isValid = true
-}: EmailVerificationCodeInputProps) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value.replace(/\D/g, ''); // Only allow digits
-    if (inputValue.length <= 6) {
-      onChange(inputValue);
-    }
-  };
-
+const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({ 
+  value, 
+  onChange 
+}) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="email-verification-code">
-        Enter the 6-digit code sent to your email
-      </Label>
-      <Input
-        id="email-verification-code"
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        placeholder="000000"
+      <div className="text-sm font-medium text-gray-700">Verification Code</div>
+      <InputOTP
         value={value}
-        onChange={handleChange}
-        className={`text-center text-xl tracking-wider font-mono ${
-          !isValid ? 'border-red-500' : ''
-        }`}
+        onChange={onChange}
         maxLength={6}
-        autoComplete="one-time-code"
+        render={({ slots }) => (
+          <div className="flex gap-2 justify-center">
+            <InputOTPGroup>
+              {slots.map((slot, index) => (
+                <InputOTPSlot key={index} {...slot} />
+              ))}
+            </InputOTPGroup>
+          </div>
+        )}
       />
-      {!isValid && (
-        <p className="text-sm text-red-600">
-          Please enter a valid 6-digit verification code
-        </p>
-      )}
+      <p className="text-xs text-gray-500 mt-2">
+        Enter the 6-digit code sent to your email
+      </p>
     </div>
   );
 };

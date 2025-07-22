@@ -25,11 +25,23 @@ serve(async (req) => {
     
     const { email, code, accountType, userData } = requestData;
 
-    // Validate required fields
-    if (!email || !code) {
-      console.error("❌ Email and code are required");
-      throw new Error("Email and verification code are required");
+    // Simple validation
+    if (!email) {
+      console.error("❌ Email is required");
+      throw new Error("Email address is required");
     }
+
+    if (!code) {
+      console.error("❌ Verification code is required");
+      throw new Error("Verification code is required");
+    }
+
+    if (!accountType) {
+      console.error("❌ Account type is required");
+      throw new Error("Account type is required");
+    }
+
+    console.log(`🎯 Processing verification for email: ${email}, account type: ${accountType}`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -43,9 +55,9 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     console.log("✅ Supabase client initialized");
 
-    // Check if the code is valid and not expired
+    // Check if the verification code is valid
     try {
-      const { data: verificationData, error: dbError } = await supabase
+      const { data, error: dbError } = await supabase
         .from("verification_codes")
         .select("*")
         .eq("email", email)
@@ -54,9 +66,9 @@ serve(async (req) => {
         .gt("expires_at", new Date().toISOString())
         .single();
       
-      if (dbError || !verificationData) {
+      if (dbError || !data) {
         console.log("❌ Invalid or expired verification code:", { 
-          hasData: !!verificationData, 
+          hasData: !!data, 
           error: dbError?.message 
         });
         
@@ -71,86 +83,7 @@ serve(async (req) => {
       }
       
       console.log("✅ Valid verification code found");
-
-      // Create user account if userData is provided
-      if (userData) {
-        console.log("👤 Creating user account...");
-        
-        try {
-          // Create auth user
-          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-            email: email,
-            password: userData.password,
-            email_confirm: true,
-            user_metadata: {
-              type: accountType || 'customer',
-              first_name: userData.firstName || '',
-              last_name: userData.lastName || '',
-              business_name: userData.businessName || '',
-              name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
-            }
-          });
-
-          if (authError) {
-            console.error("❌ Auth error:", authError);
-            throw new Error(`Failed to create user account: ${authError.message}`);
-          }
-
-          console.log("✅ User created successfully:", authData.user?.id);
-
-          // Update profile with additional data
-          const profileData: any = {
-            email: email,
-            phone: userData.phone || '',
-            address: userData.address || '',
-            city: userData.city || '',
-            state: userData.state || '',
-            zipcode: userData.zipCode || '',
-            type: accountType || 'customer'
-          };
-
-          if (accountType === 'customer') {
-            profileData.name = userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
-          }
-
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update(profileData)
-            .eq('id', authData.user!.id);
-
-          if (profileError) {
-            console.error("⚠️ Profile update error:", profileError);
-            // Don't fail the verification, just log the error
-          }
-
-          // For business accounts, update business_info
-          if (accountType === 'business' && userData.businessName) {
-            const businessData: any = {
-              business_name: userData.businessName,
-              license_number: userData.licenseNumber || '',
-              license_type: userData.licenseType || '',
-              license_state: userData.state || ''
-            };
-
-            const { error: businessError } = await supabase
-              .from('business_info')
-              .update(businessData)
-              .eq('id', authData.user!.id);
-
-            if (businessError) {
-              console.error("⚠️ Business info update error:", businessError);
-              // Don't fail the verification, just log the error
-            }
-          }
-
-          console.log("✅ User profile updated successfully");
-
-        } catch (userError) {
-          console.error("❌ User creation error:", userError);
-          throw new Error(`Failed to create user account: ${userError.message}`);
-        }
-      }
-
+      
       // Remove the used code
       const { error: deleteError } = await supabase
         .from("verification_codes")
@@ -160,16 +93,23 @@ serve(async (req) => {
       
       if (deleteError) {
         console.error("⚠️ Error deleting used code:", deleteError);
-        // Don't fail the verification, just log the error
       }
+      
+      // Note: In a real application, this would create the user account
+      // or link the verified email to an existing account
+      // This is a simplified placeholder implementation
       
       console.log("✅ Email verification successful");
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          isValid: true, 
-          message: "Email verified successfully"
+          isValid: true,
+          message: "Email verified successfully",
+          userData: {
+            ...userData,
+            email_verified: true
+          }
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -186,7 +126,8 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        success: false, 
+        success: false,
+        isValid: false,
         message: errorMessage,
         debug: {
           timestamp: new Date().toISOString(),

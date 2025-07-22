@@ -15,6 +15,7 @@ import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
 import BusinessReviews from "@/pages/BusinessReviews";
 import VerifyPhone from "@/pages/VerifyPhone";
+import VerifyEmail from "@/pages/VerifyEmail";
 import BusinessPasswordSetup from "@/pages/BusinessPasswordSetup";
 import Verification from "@/pages/Verification";
 import VerifyLicense from "@/pages/VerifyLicense";
@@ -62,6 +63,7 @@ const AppRoutes = () => {
       <Route path="/business/:id" element={<LoadingRoute><BusinessProfile /></LoadingRoute>} />
       <Route path="/business/:id/reviews" element={<LoadingRoute><BusinessReviews /></LoadingRoute>} />
       <Route path="/verify-phone" element={<LoadingRoute><VerifyPhone /></LoadingRoute>} />
+      <Route path="/verify-email" element={<LoadingRoute><VerifyEmail /></LoadingRoute>} />
       <Route path="/business-password-setup" element={<LoadingRoute><BusinessPasswordSetup /></LoadingRoute>} />
       <Route path="/verification" element={<LoadingRoute><Verification /></LoadingRoute>} />
       <Route path="/verify-license" element={<LoadingRoute><VerifyLicense /></LoadingRoute>} />

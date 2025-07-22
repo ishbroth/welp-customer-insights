@@ -1,23 +1,24 @@
 
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 interface VerifyEmailCodeButtonProps {
   onClick: () => void;
   isLoading: boolean;
-  disabled?: boolean;
+  disabled: boolean;
 }
 
-const VerifyEmailCodeButton = ({
-  onClick,
-  isLoading,
-  disabled = false
-}: VerifyEmailCodeButtonProps) => {
+const VerifyEmailCodeButton: React.FC<VerifyEmailCodeButtonProps> = ({ 
+  onClick, 
+  isLoading, 
+  disabled 
+}) => {
   return (
     <Button
+      className="w-full"
       onClick={onClick}
-      disabled={isLoading || disabled}
-      className="welp-button w-full"
+      disabled={disabled}
     >
       {isLoading ? (
         <>
