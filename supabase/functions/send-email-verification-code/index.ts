@@ -107,12 +107,12 @@ serve(async (req) => {
       throw new Error("Failed to store verification code in database");
     }
 
-    // Send email using Resend with your verified domain
+    // Send email using Resend with the default onboarding domain
     try {
       console.log(`📨 Attempting to send email to ${email}`);
       
       const emailResult = await resend.emails.send({
-        from: 'Welp. <noreply@mywelp.com>',
+        from: 'Welp <onboarding@resend.dev>',
         to: [email],
         subject: 'Your Welp. Verification Code',
         html: `
