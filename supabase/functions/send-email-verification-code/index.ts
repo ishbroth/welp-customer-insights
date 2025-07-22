@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -45,6 +46,9 @@ serve(async (req) => {
       console.error("❌ Missing Resend API key");
       throw new Error("Email service not properly configured");
     }
+    
+    // Log the API key length to verify it exists (without exposing the actual key)
+    console.log(`🔑 Resend API key length: ${resendApiKey.length}`);
 
     const resend = new Resend(resendApiKey);
     console.log("✅ Resend client initialized");
@@ -56,12 +60,16 @@ serve(async (req) => {
     // Store the code in the verification_codes table
     try {
       // First, check if there's an existing record
-      const { data: existingCode } = await supabase
+      const { data: existingCode, error: findError } = await supabase
         .from("verification_codes")
         .select("id")
         .eq("email", email)
         .eq("verification_type", 'email')
         .maybeSingle();
+      
+      if (findError) {
+        console.error("❌ Error finding existing code:", findError);
+      }
       
       let dbOperation;
       
@@ -89,7 +97,7 @@ serve(async (req) => {
       }
       
       if (dbOperation.error) {
-        console.error("❌ Database error:", dbOperation.error);
+        console.error("❌ Database operation error:", dbOperation.error);
         throw new Error(`Database error: ${dbOperation.error.message}`);
       }
       
@@ -133,9 +141,11 @@ serve(async (req) => {
         `,
       });
 
+      console.log("📊 Email result:", emailResult);
+
       if (emailResult.error) {
         console.error("❌ Resend error:", emailResult.error);
-        throw new Error(`Failed to send email: ${emailResult.error.message}`);
+        throw new Error(`Failed to send email: ${JSON.stringify(emailResult.error)}`);
       }
 
       console.log("✅ Email sent successfully");
