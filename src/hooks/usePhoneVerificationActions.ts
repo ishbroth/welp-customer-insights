@@ -1,7 +1,7 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { verifyPhoneNumber, resendVerificationCode } from "@/lib/utils";
+import { resendVerificationCode } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UsePhoneVerificationActionsProps {
@@ -53,98 +53,80 @@ export const usePhoneVerificationActions = ({
     setIsVerifying(true);
     
     try {
-      // Verify the code
-      const { isValid, error } = await verifyPhoneNumber({
-        phoneNumber,
-        code: verificationCode
+      // Split name into first and last name
+      const nameParts = (name || '').trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Prepare user data for account creation
+      const userData = {
+        email,
+        password,
+        name,
+        firstName,
+        lastName,
+        phone: phoneNumber,
+        address,
+        city,
+        state,
+        zipCode,
+        accountType,
+        businessName
+      };
+
+      // Verify the code and create account using the new edge function
+      const { data, error } = await supabase.functions.invoke('verify-phone-code', {
+        body: {
+          phoneNumber,
+          code: verificationCode,
+          userData
+        }
       });
       
-      if (isValid) {
-        // Now create the actual user account
-        console.log("Phone verified, creating user account...");
-        
-        // Split name into first and last name
-        const nameParts = (name || '').trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
+      if (error) {
+        console.error("Error verifying phone code:", error);
+        throw new Error(error.message);
+      }
 
-        // Create the user account in Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: { 
-              name, 
-              type: accountType,
+      if (data.success && data.isValid) {
+        console.log("Phone verified and account created successfully");
+
+        // Show success toast
+        toast({
+          title: "Account Created Successfully!",
+          description: accountType === 'customer' 
+            ? "Your account has been created and verified. You can now log in." 
+            : "Your phone number has been verified. Now let's set up your password.",
+        });
+        
+        // Redirect based on account type
+        if (accountType === 'business') {
+          navigate('/business-password-setup', {
+            state: {
+              businessEmail: email,
+              phone: phoneNumber,
+              businessName,
               address,
               city,
               state,
-              zipCode: zipCode,
-              phone: phoneNumber,
-              first_name: firstName,
-              last_name: lastName
-            },
-            emailRedirectTo: `${window.location.origin}/login`,
-          }
-        });
-
-        if (authError) {
-          console.error("Auth signup error:", authError);
-          throw new Error(authError.message);
-        }
-
-        if (authData.user) {
-          console.log("User created in auth, creating profile...");
-          
-          // Create profile using the edge function
-          const { error: profileError } = await supabase.functions.invoke('create-profile', {
-            body: {
-              userId: authData.user.id,
-              name: name,
-              phone: phoneNumber,
-              address: address,
-              city: city,
-              state: state,
-              zipCode: zipCode,
-              type: accountType,
-              businessName: businessName,
-              email: email,
-              // CRITICAL: For customer accounts, set verified to true since phone verification is complete
-              verified: accountType === 'customer' ? true : false
+              zipCode
             }
           });
-
-          if (profileError) {
-            console.error("Profile creation error:", profileError);
-            throw new Error(profileError.message);
-          }
-
-          console.log("Profile created successfully");
-          console.log(`Customer account verification status set to: ${accountType === 'customer'}`);
-
-          // Show success toast
-          toast({
-            title: "Account Created Successfully!",
-            description: accountType === 'customer' 
-              ? "Your account has been created and verified. You can now log in." 
-              : "Your phone number has been verified. Now let's set up your password.",
-          });
-          
-          // Redirect based on account type
-          if (accountType === 'business') {
-            navigate('/business-password-setup', {
+        } else {
+          // For customer accounts, they should now be automatically signed in
+          if (data.session && data.user) {
+            console.log("User automatically signed in, redirecting to profile");
+            navigate("/profile");
+          } else if (data.autoSignInFailed) {
+            // Account was created but auto sign-in failed, redirect to login
+            navigate("/login", {
               state: {
-                businessEmail: email,
-                phone: phoneNumber,
-                businessName,
-                address,
-                city,
-                state,
-                zipCode
+                message: "Account created successfully! Please log in with your credentials.",
+                email: email
               }
             });
           } else {
-            // For customer accounts, redirect to login with success message
+            // Fallback to login page
             navigate("/login", {
               state: {
                 message: "Account created successfully! Please log in with your credentials.",
@@ -157,7 +139,7 @@ export const usePhoneVerificationActions = ({
         setIsCodeValid(false);
         toast({
           title: "Verification Failed",
-          description: error || "Invalid verification code. Please try again.",
+          description: data.message || "Invalid verification code. Please try again.",
           variant: "destructive",
         });
       }
