@@ -689,23 +689,29 @@ export type Database = {
         Row: {
           code: string
           created_at: string
+          email: string | null
           expires_at: string
           id: string
           phone: string
+          verification_type: string
         }
         Insert: {
           code: string
           created_at?: string
+          email?: string | null
           expires_at: string
           id?: string
           phone: string
+          verification_type?: string
         }
         Update: {
           code?: string
           created_at?: string
+          email?: string | null
           expires_at?: string
           id?: string
           phone?: string
+          verification_type?: string
         }
         Relationships: []
       }

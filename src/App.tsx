@@ -1,42 +1,45 @@
-
-import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/contexts/auth/AuthProvider";
-import { LoadingProvider } from "@/contexts/LoadingContext";
-import AppRoutes from "@/components/routing/AppRoutes";
-import LoadingScreen from "@/components/LoadingScreen";
+import { QueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-
-const queryClient = new QueryClient();
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Home from "@/pages/Home";
+import BusinessSearch from "@/pages/BusinessSearch";
+import BusinessProfile from "@/pages/BusinessProfile";
+import Profile from "@/pages/Profile";
+import EditProfile from "@/pages/EditProfile";
+import Signup from "@/pages/Signup";
+import Signin from "@/pages/Signin";
+import CustomerSupport from "@/pages/CustomerSupport";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import NotFound from "@/pages/NotFound";
+import { useAuth } from "@/contexts/auth";
+import { useEffect } from "react";
+import VerifyPhone from "@/pages/VerifyPhone";
+import VerifyEmail from "@/pages/VerifyEmail";
 
 function App() {
   return (
-    <LoadingProvider>
-      <AppContent />
-    </LoadingProvider>
+    <QueryClient>
+      <Toaster />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<BusinessSearch />} />
+          <Route path="/business/:id" element={<BusinessProfile />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/signin" element={<Signin />} />
+          <Route path="/customer-support" element={<CustomerSupport />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="*" element={<NotFound />} />
+          <Route path="/verify-phone" element={<VerifyPhone />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+        </Routes>
+      </Router>
+    </QueryClient>
   );
 }
-
-// Separate component that uses the loading context
-const AppContent = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <LoadingScreenWrapper />
-          <AppRoutes />
-          <Toaster />
-        </Router>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-};
-
-// Separate component for loading screen to isolate context usage
-const LoadingScreenWrapper = () => {
-  // This will be handled by the LoadingProvider context
-  return <LoadingScreen />;
-};
 
 export default App;

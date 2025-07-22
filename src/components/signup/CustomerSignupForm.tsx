@@ -3,16 +3,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PhoneInput } from "@/components/ui/phone-input";
 import { useToast } from "@/hooks/use-toast";
-import { usePhoneVerification } from "@/hooks/usePhoneVerification";
 import { useCustomerDuplicateCheck } from "@/hooks/useCustomerDuplicateCheck";
-import VerificationCodeInput from "@/components/verification/VerificationCodeInput";
-import VerifyCodeButton from "@/components/verification/VerifyCodeButton";
-import ResendCodeButton from "@/components/verification/ResendCodeButton";
+import EmailVerificationCodeInput from "@/components/verification/EmailVerificationCodeInput";
+import VerifyEmailCodeButton from "@/components/verification/VerifyEmailCodeButton";
+import ResendEmailCodeButton from "@/components/verification/ResendEmailCodeButton";
 import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
 import { DuplicateCustomerDialog } from "./DuplicateCustomerDialog";
-import { sendVerificationCode } from "@/lib/utils";
+import { sendEmailVerificationCode } from "@/utils/emailUtils";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
 
 const CustomerSignupForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -41,7 +40,7 @@ const CustomerSignupForm = () => {
     setDuplicateResult
   } = useCustomerDuplicateCheck(email, phone, firstName, lastName);
 
-  // Phone verification hook
+  // Email verification hook
   const {
     verificationCode,
     setVerificationCode,
@@ -52,16 +51,18 @@ const CustomerSignupForm = () => {
     resendTimer,
     handleVerifyCode,
     handleResendCode
-  } = usePhoneVerification({
+  } = useEmailVerification({
     email,
     password,
     name: `${firstName} ${lastName}`,
-    phoneNumber: phone,
     accountType: 'customer',
     address,
     city,
     state,
-    zipCode
+    zipCode,
+    firstName,
+    lastName,
+    phone
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,10 +95,10 @@ const CustomerSignupForm = () => {
       return;
     }
 
-    if (!phone) {
+    if (!email) {
       toast({
-        title: "Phone Required",
-        description: "Phone number is required for verification.",
+        title: "Email Required",
+        description: "Email address is required for verification.",
         variant: "destructive"
       });
       return;
@@ -112,13 +113,27 @@ const CustomerSignupForm = () => {
     setIsSubmitting(true);
 
     try {
+      // Store user data for verification step
+      const userData = {
+        firstName,
+        lastName,
+        email,
+        password,
+        phone,
+        address,
+        city,
+        state,
+        zipCode
+      };
+      localStorage.setItem("pendingVerification", JSON.stringify(userData));
+
       // Send verification code
-      const { success, error } = await sendVerificationCode({ phoneNumber: phone });
+      const { success, error } = await sendEmailVerificationCode({ email });
       
       if (success) {
         toast({
           title: "Verification Code Sent",
-          description: `A verification code has been sent to ${phone}.`,
+          description: `A verification code has been sent to ${email}.`,
         });
         setStep(2); // Move to verification step
       } else {
@@ -151,25 +166,25 @@ const CustomerSignupForm = () => {
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h3 className="text-lg font-semibold mb-2">Verify Your Phone Number</h3>
+          <h3 className="text-lg font-semibold mb-2">Verify Your Email</h3>
           <p className="text-sm text-gray-600">
-            We've sent a verification code to {phone}
+            We've sent a verification code to {email}
           </p>
         </div>
 
         <div className="space-y-4">
-          <VerificationCodeInput
+          <EmailVerificationCodeInput
             value={verificationCode}
             onChange={setVerificationCode}
             isValid={isCodeValid}
           />
 
-          <VerifyCodeButton
+          <VerifyEmailCodeButton
             onClick={handleVerifyCode}
             isLoading={isVerifying}
           />
 
-          <ResendCodeButton
+          <ResendEmailCodeButton
             onResend={handleResendCode}
             isDisabled={isResendDisabled}
             isResending={isResending}
@@ -230,20 +245,20 @@ const CustomerSignupForm = () => {
             className="welp-input"
             required
           />
-          <p className="text-sm text-gray-500 mt-1">This will be used as your login username</p>
+          <p className="text-sm text-gray-500 mt-1">This will be used as your login username and for verification</p>
         </div>
 
         <div>
-          <Label htmlFor="phone">Phone Number *</Label>
-          <PhoneInput
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
             id="phone"
+            type="tel"
             placeholder="(555) 123-4567"
             value={phone}
-            onChange={setPhone}
+            onChange={(e) => setPhone(e.target.value)}
             className="welp-input"
-            required
           />
-          <p className="text-sm text-gray-500 mt-1">This will be used for account verification via a one-time SMS text message</p>
+          <p className="text-sm text-gray-500 mt-1">Optional - for account recovery</p>
         </div>
 
         <div>
@@ -342,7 +357,7 @@ const CustomerSignupForm = () => {
             (duplicateResult?.isDuplicate && !duplicateResult.allowContinue)
           }
         >
-          {isSubmitting ? "Sending Verification Code..." : "Continue to Phone Verification"}
+          {isSubmitting ? "Sending Verification Code..." : "Continue to Email Verification"}
         </Button>
       </form>
 
