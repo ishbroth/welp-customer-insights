@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +71,15 @@ const CustomerSignupForm = () => {
       toast({
         title: "Missing Information",
         description: "Please enter both first and last name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!phone) {
+      toast({
+        title: "Phone Number Required",
+        description: "Phone number is required for account verification.",
         variant: "destructive"
       });
       return;
@@ -249,7 +257,7 @@ const CustomerSignupForm = () => {
         </div>
 
         <div>
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
             type="tel"
@@ -257,8 +265,8 @@ const CustomerSignupForm = () => {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="welp-input"
+            required
           />
-          <p className="text-sm text-gray-500 mt-1">Optional - for account recovery</p>
         </div>
 
         <div>
