@@ -692,7 +692,7 @@ export type Database = {
           email: string | null
           expires_at: string
           id: string
-          phone: string
+          phone: string | null
           verification_type: string
         }
         Insert: {
@@ -701,7 +701,7 @@ export type Database = {
           email?: string | null
           expires_at: string
           id?: string
-          phone: string
+          phone?: string | null
           verification_type?: string
         }
         Update: {
@@ -710,7 +710,7 @@ export type Database = {
           email?: string | null
           expires_at?: string
           id?: string
-          phone?: string
+          phone?: string | null
           verification_type?: string
         }
         Relationships: []
