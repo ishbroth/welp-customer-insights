@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -56,18 +55,42 @@ serve(async (req) => {
 
     // Store the code in the verification_codes table
     try {
-      const { error: dbError } = await supabase
+      // First, check if there's an existing record
+      const { data: existingCode } = await supabase
         .from("verification_codes")
-        .upsert({
-          email: email,
-          code: verificationCode,
-          verification_type: 'email',
-          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
-        }, { onConflict: 'email' });
+        .select("id")
+        .eq("email", email)
+        .eq("verification_type", 'email')
+        .maybeSingle();
       
-      if (dbError) {
-        console.error("❌ Database error:", dbError);
-        throw new Error(`Database error: ${dbError.message}`);
+      let dbOperation;
+      
+      if (existingCode) {
+        // If a code already exists, update it
+        console.log("🔄 Updating existing verification code");
+        dbOperation = await supabase
+          .from("verification_codes")
+          .update({
+            code: verificationCode,
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
+          })
+          .eq("id", existingCode.id);
+      } else {
+        // Otherwise insert a new one
+        console.log("➕ Creating new verification code");
+        dbOperation = await supabase
+          .from("verification_codes")
+          .insert({
+            email: email,
+            code: verificationCode,
+            verification_type: 'email',
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
+          });
+      }
+      
+      if (dbOperation.error) {
+        console.error("❌ Database error:", dbOperation.error);
+        throw new Error(`Database error: ${dbOperation.error.message}`);
       }
       
       console.log("💾 Verification code stored in database");
