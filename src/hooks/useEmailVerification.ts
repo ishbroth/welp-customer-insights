@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/auth";
 
 interface UseEmailVerificationProps {
   email: string;
@@ -47,7 +46,6 @@ export const useEmailVerification = ({
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const auth = useAuth();
 
   // Validate verification code
   useEffect(() => {
@@ -86,6 +84,8 @@ export const useEmailVerification = ({
     setIsVerifying(true);
 
     try {
+      console.log("🔍 Verifying email code and creating account...");
+      
       // Prepare user data for account creation
       const userData = {
         password,
@@ -112,6 +112,7 @@ export const useEmailVerification = ({
       });
 
       if (error) {
+        console.error("❌ Error verifying email code:", error);
         throw error;
       }
 
@@ -121,7 +122,7 @@ export const useEmailVerification = ({
           description: "Your email has been verified and account created successfully.",
         });
 
-        console.log("Account created and user signed in successfully");
+        console.log("✅ Account created and user signed in successfully");
         
         // Clear any stored verification data
         localStorage.removeItem("pendingVerification");
@@ -140,7 +141,7 @@ export const useEmailVerification = ({
         });
       }
     } catch (error) {
-      console.error("Error verifying email code:", error);
+      console.error("❌ Error verifying email code:", error);
       toast({
         title: "Verification Error",
         description: "Failed to verify email code. Please try again.",

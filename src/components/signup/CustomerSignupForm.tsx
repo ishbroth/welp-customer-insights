@@ -121,20 +121,6 @@ const CustomerSignupForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Store user data for verification step
-      const userData = {
-        firstName,
-        lastName,
-        email,
-        password,
-        phone,
-        address,
-        city,
-        state,
-        zipCode
-      };
-      localStorage.setItem("pendingVerification", JSON.stringify(userData));
-
       // Send verification code
       const { success, message } = await sendEmailVerificationCode({ email });
       

@@ -57,11 +57,11 @@ serve(async (req) => {
 
     console.log("Email code verified successfully, creating account...");
 
-    // Create the user account
+    // Create the user account with admin client - email confirmed from the start
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: userData.password,
-      email_confirm: true, // Mark email as confirmed
+      email_confirm: true, // Mark email as confirmed since we verified the code
       user_metadata: {
         name: userData.name,
         firstName: userData.firstName,
