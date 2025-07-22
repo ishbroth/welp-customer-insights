@@ -21,8 +21,8 @@ const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({
         render={({ slots }) => (
           <div className="flex gap-2 justify-center">
             <InputOTPGroup>
-              {slots.map((slot, index) => (
-                <InputOTPSlot key={index} {...slot} />
+              {slots.map((slot, idx) => (
+                <InputOTPSlot key={idx} {...slot} index={idx} />
               ))}
             </InputOTPGroup>
           </div>

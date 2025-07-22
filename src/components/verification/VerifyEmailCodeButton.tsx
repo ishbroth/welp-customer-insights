@@ -18,7 +18,7 @@ const VerifyEmailCodeButton: React.FC<VerifyEmailCodeButtonProps> = ({
     <Button
       className="w-full"
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || isLoading}
     >
       {isLoading ? (
         <>

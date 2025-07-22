@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,18 +175,18 @@ const CustomerSignupForm = () => {
           <EmailVerificationCodeInput
             value={verificationCode}
             onChange={setVerificationCode}
-            isValid={isCodeValid}
           />
 
           <VerifyEmailCodeButton
             onClick={handleVerifyCode}
             isLoading={isVerifying}
+            disabled={!isCodeValid}
           />
 
           <ResendEmailCodeButton
-            onResend={handleResendCode}
-            isDisabled={isResendDisabled}
-            isResending={isResending}
+            onClick={handleResendCode}
+            disabled={isResendDisabled}
+            isLoading={isResending}
             timer={resendTimer}
           />
 

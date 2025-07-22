@@ -1,5 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
+
+interface EmailVerificationRequest {
+  email: string;
+}
 
 /**
  * Sends an email verification code to the specified email address
@@ -7,16 +10,16 @@ import { supabase } from "@/integrations/supabase/client";
  * @param email The email address to send verification code to
  * @returns Promise with result of sending the verification code
  */
-export const sendEmailVerificationCode = async (email: string): Promise<{ 
+export const sendEmailVerificationCode = async (params: EmailVerificationRequest): Promise<{ 
   success: boolean; 
   message: string;
   debug?: any;
 }> => {
   try {
-    console.log(`📧 Sending verification code to: ${email}`);
+    console.log(`📧 Sending verification code to: ${params.email}`);
     
     const { data, error } = await supabase.functions.invoke('send-email-verification-code', {
-      body: { email }
+      body: { email: params.email }
     });
 
     if (error) {
