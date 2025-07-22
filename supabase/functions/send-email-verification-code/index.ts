@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
-import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,179 +8,111 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("📧 Send-email-verification-code function called");
+    const { email } = await req.json();
     
-    const requestData = await req.json();
-    console.log("📋 Request data:", { email: requestData.email });
-    
-    const { email } = requestData;
-
-    // Validate email
     if (!email) {
-      console.error("❌ Email is required");
-      throw new Error("Email address is required");
+      throw new Error("Email is required");
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("❌ Missing Supabase configuration");
-      throw new Error("Database configuration not properly set up");
-    }
+    console.log("Sending verification code to:", email);
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    console.log("✅ Supabase client initialized");
+    // Initialize Supabase client with service role key
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    // Initialize Resend
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      console.error("❌ Missing Resend API key");
-      throw new Error("Email service not properly configured");
-    }
-    
-    // Log the API key length to verify it exists (without exposing the actual key)
-    console.log(`🔑 Resend API key length: ${resendApiKey.length}`);
+    // Generate a 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // Expires in 10 minutes
 
-    const resend = new Resend(resendApiKey);
-    console.log("✅ Resend client initialized");
-
-    // Generate a random 6-digit code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("🔢 Generated verification code");
-
-    // Store the code in the verification_codes table
-    try {
-      // First, check if there's an existing record
-      const { data: existingCode, error: findError } = await supabase
-        .from("verification_codes")
-        .select("id")
-        .eq("email", email)
-        .eq("verification_type", 'email')
-        .maybeSingle();
-      
-      if (findError) {
-        console.error("❌ Error finding existing code:", findError);
-      }
-      
-      let dbOperation;
-      
-      if (existingCode) {
-        // If a code already exists, update it
-        console.log("🔄 Updating existing verification code");
-        dbOperation = await supabase
-          .from("verification_codes")
-          .update({
-            code: verificationCode,
-            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
-          })
-          .eq("id", existingCode.id);
-      } else {
-        // Otherwise insert a new one
-        console.log("➕ Creating new verification code");
-        dbOperation = await supabase
-          .from("verification_codes")
-          .insert({
-            email: email,
-            code: verificationCode,
-            verification_type: 'email',
-            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min expiry
-          });
-      }
-      
-      if (dbOperation.error) {
-        console.error("❌ Database operation error:", dbOperation.error);
-        throw new Error(`Database error: ${dbOperation.error.message}`);
-      }
-      
-      console.log("💾 Verification code stored in database");
-    } catch (dbError) {
-      console.error("❌ Failed to store verification code:", dbError);
-      throw new Error("Failed to store verification code in database");
-    }
-
-    // Send email using Resend with your verified domain
-    try {
-      console.log(`📨 Attempting to send email to ${email}`);
-      
-      const emailResult = await resend.emails.send({
-        from: 'Welp. <noreply@mywelp.com>',
-        to: [email],
-        subject: 'Your Welp. Verification Code',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #ea384c; margin: 0;">Welp.</h1>
-              <p style="color: #666; margin: 5px 0;">Verify your email address</p>
-            </div>
-            
-            <div style="background: #f8f9fa; border-radius: 8px; padding: 30px; text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #333; margin-bottom: 15px;">Your verification code is:</h2>
-              <div style="font-size: 32px; font-weight: bold; color: #ea384c; letter-spacing: 8px; margin: 20px 0; font-family: monospace;">
-                ${verificationCode}
-              </div>
-            </div>
-            
-            <div style="text-align: center; color: #666; font-size: 14px;">
-              <p>This code will expire in 10 minutes.</p>
-              <p>If you didn't request this verification, you can safely ignore this email.</p>
-            </div>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 12px;">
-              <p>© 2024 Welp. - Because businesses are people too</p>
-            </div>
-          </div>
-        `,
+    // Store the verification code in the database
+    const { error: dbError } = await supabase
+      .from('email_verification_codes')
+      .upsert({
+        email: email,
+        code: code,
+        expires_at: expiresAt.toISOString(),
+        used: false
+      }, {
+        onConflict: 'email'
       });
 
-      console.log("📊 Email result:", emailResult);
-
-      if (emailResult.error) {
-        console.error("❌ Resend error:", emailResult.error);
-        throw new Error(`Failed to send email: ${JSON.stringify(emailResult.error)}`);
-      }
-
-      console.log("✅ Email sent successfully");
-      console.log("📊 Email ID:", emailResult.data?.id);
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Verification code sent to ${email}`,
-          debug: {
-            provider: "Resend",
-            emailId: emailResult.data?.id
-          }
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-
-    } catch (emailError) {
-      console.error("❌ Email sending error:", emailError);
-      throw new Error(`Failed to send verification email: ${emailError.message}`);
+    if (dbError) {
+      console.error("Database error:", dbError);
+      throw new Error("Failed to store verification code");
     }
 
+    // Send email using Resend
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY not configured");
+    }
+
+    const emailResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "noreply@mywelp.com",
+        to: [email],
+        subject: "Your Welp Verification Code",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333; text-align: center;">Verify Your Email</h2>
+            <p style="font-size: 16px; color: #555;">
+              Thank you for signing up! Please use the verification code below to complete your registration:
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+              <span style="background-color: #f5f5f5; padding: 15px 25px; font-size: 24px; font-weight: bold; letter-spacing: 3px; border-radius: 5px; display: inline-block;">${code}</span>
+            </div>
+            <p style="font-size: 14px; color: #777;">
+              This code will expire in 10 minutes. If you didn't request this code, please ignore this email.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="font-size: 12px; color: #999; text-align: center;">
+              This email was sent by Welp. Please do not reply to this email.
+            </p>
+          </div>
+        `,
+      }),
+    });
+
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text();
+      console.error("Resend API error:", errorText);
+      throw new Error(`Failed to send email: ${errorText}`);
+    }
+
+    const emailResult = await emailResponse.json();
+    console.log("Email sent successfully:", emailResult);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: `Verification code sent to ${email}`,
+        debug: {
+          provider: "Resend",
+          emailId: emailResult.id
+        }
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("💥 Error in send-email-verification-code function:", errorMessage);
-    console.error("🔍 Full error:", error);
-    
+    console.error("Error sending verification code:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        message: errorMessage,
-        debug: {
-          timestamp: new Date().toISOString(),
-          userAgent: req.headers.get('user-agent'),
-          referer: req.headers.get('referer')
-        }
+        message: error instanceof Error ? error.message : "Failed to send verification code" 
       }),
       { 
         status: 400,
