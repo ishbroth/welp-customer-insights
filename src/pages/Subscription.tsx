@@ -86,8 +86,26 @@ const Subscription = () => {
       }
       
       if (data?.url) {
-        console.log("🚀 Legacy - Redirecting to Stripe checkout URL:", data.url);
-        window.location.href = data.url;
+        console.log("🚀 Legacy - Opening Stripe checkout in new tab:", data.url);
+        
+        // Open Stripe checkout in a new tab to avoid iframe restrictions
+        const newWindow = window.open(data.url, '_blank');
+        
+        if (newWindow) {
+          toast({
+            title: "Checkout Opened",
+            description: "Stripe checkout has opened in a new tab. Complete your payment there and return to this page.",
+          });
+        } else {
+          toast({
+            title: "Popup Blocked",
+            description: "Please allow popups for this site and try again, or copy this URL to complete your payment: " + data.url,
+            variant: "destructive"
+          });
+        }
+        
+        // Reset processing state since user will complete checkout in new tab
+        setIsProcessing(false);
       } else {
         console.error("❌ No checkout URL returned:", data);
         toast({

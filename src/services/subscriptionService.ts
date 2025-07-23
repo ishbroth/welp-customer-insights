@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const handleSubscription = async (
@@ -52,23 +53,27 @@ export const handleSubscription = async (
         throw new Error("No checkout URL returned from Stripe");
       }
       
-      console.log("🚀 Subscription - Redirecting to Stripe checkout URL:", data.url);
+      console.log("🚀 Subscription - Opening Stripe checkout in new tab:", data.url);
       
-      // Add a small delay to ensure the UI updates before redirect
-      setTimeout(() => {
-        try {
-          window.location.href = data.url;
-        } catch (redirectError) {
-          console.error("❌ Error redirecting to Stripe:", redirectError);
-          toast({
-            title: "Redirect Error",
-            description: "Failed to redirect to Stripe checkout. Please try again.",
-            variant: "destructive"
-          });
-          setIsProcessing(false);
-          resolve();
-        }
-      }, 100);
+      // Open Stripe checkout in a new tab to avoid iframe restrictions
+      const newWindow = window.open(data.url, '_blank');
+      
+      if (newWindow) {
+        toast({
+          title: "Checkout Opened",
+          description: "Stripe checkout has opened in a new tab. Complete your payment there and return to this page.",
+        });
+      } else {
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups for this site and try again, or copy this URL to complete your payment: " + data.url,
+          variant: "destructive"
+        });
+      }
+      
+      // Reset processing state since user will complete checkout in new tab
+      setIsProcessing(false);
+      resolve();
       
     } catch (error) {
       console.error("❌ Subscription error:", error);
@@ -120,9 +125,12 @@ export const openCustomerPortal = async (): Promise<void> => {
       throw new Error("No portal URL returned");
     }
     
-    console.log("Opening customer portal URL:", data.url);
-    // Open Stripe customer portal in the current window
-    window.location.href = data.url;
+    console.log("Opening customer portal in new tab:", data.url);
+    // Open Stripe customer portal in a new tab
+    const newWindow = window.open(data.url, '_blank');
+    if (!newWindow) {
+      throw new Error("Popup blocked. Please allow popups for this site.");
+    }
   } catch (error) {
     console.error("Error opening customer portal:", error);
     throw error;
