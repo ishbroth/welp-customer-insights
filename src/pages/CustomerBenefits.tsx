@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -191,32 +192,6 @@ const CustomerBenefits = () => {
             />
             
             <SubscriptionFAQ isCustomer={true} />
-
-            {/* Call to Action */}
-            <div className="mt-16 py-16 bg-welp-primary text-white rounded-lg">
-              <div className="container mx-auto px-6 text-center">
-                <h2 className="text-3xl font-bold mb-4">Ready to Upgrade?</h2>
-                <p className="text-xl mb-8 max-w-2xl mx-auto">
-                  Join thousands of customers who have taken control of their online reputation
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
-                    onClick={handleSubscribeClick}
-                    disabled={isProcessing}
-                    className="bg-white text-welp-primary hover:bg-gray-100 font-semibold px-8 py-3"
-                  >
-                    {isProcessing ? "Processing..." : "Start Premium Today"}
-                  </Button>
-                  <Button 
-                    onClick={handleLegacySubscribeClick}
-                    disabled={isProcessing}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-8 py-3"
-                  >
-                    {isProcessing ? "Processing..." : "Get Lifetime Access"}
-                  </Button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </main>
