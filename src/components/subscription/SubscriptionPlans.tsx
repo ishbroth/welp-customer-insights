@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, X, Star } from "lucide-react";
@@ -61,7 +60,7 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
         
         <div className="text-center">
           <Link to="/buy-credits">
-            <Button variant="outline" className="w-full text-sm">
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm">
               Buy Credits ($3 each)
             </Button>
           </Link>
@@ -214,7 +213,7 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
         
         <div className="text-center">
           <Link to="/buy-credits">
-            <Button variant="outline" className="w-full text-sm">
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm">
               Buy Credits ($3 each)
             </Button>
           </Link>
