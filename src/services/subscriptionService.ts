@@ -12,6 +12,8 @@ export const handleSubscription = async (
   isCustomer: boolean
 ): Promise<void> => {
   return new Promise(async (resolve) => {
+    console.log("🔥 handleSubscription function called with isCustomer:", isCustomer);
+    
     setIsProcessing(true);
     
     try {
@@ -19,6 +21,7 @@ export const handleSubscription = async (
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session || !session.user) {
+        console.error("❌ No session found");
         toast({
           title: "Authentication Error",
           description: "Please log in to subscribe.",
@@ -29,36 +32,36 @@ export const handleSubscription = async (
         return;
       }
       
-      console.log("Starting subscription process for user:", session.user.email);
+      console.log("✅ Session found, starting subscription process for user:", session.user.email);
       
       // Call the create-checkout edge function
       const userType = isCustomer ? "customer" : "business";
-      console.log("Calling create-checkout with userType:", userType);
+      console.log("📞 Calling create-checkout with userType:", userType);
       
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { userType },
       });
       
-      console.log("Create-checkout response:", { data, error });
+      console.log("📋 Create-checkout response:", { data, error });
       
       if (error) {
-        console.error("Edge function error:", error);
+        console.error("❌ Edge function error:", error);
         throw new Error(error.message || "Unknown error from create-checkout");
       }
       
       if (!data?.url) {
-        console.error("No checkout URL returned:", data);
+        console.error("❌ No checkout URL returned:", data);
         throw new Error("No checkout URL returned from Stripe");
       }
       
-      console.log("Subscription - Redirecting to Stripe checkout URL:", data.url);
+      console.log("🚀 Subscription - Redirecting to Stripe checkout URL:", data.url);
       
       // Add a small delay to ensure the UI updates before redirect
       setTimeout(() => {
         try {
           window.location.href = data.url;
         } catch (redirectError) {
-          console.error("Error redirecting to Stripe:", redirectError);
+          console.error("❌ Error redirecting to Stripe:", redirectError);
           toast({
             title: "Redirect Error",
             description: "Failed to redirect to Stripe checkout. Please try again.",
@@ -70,7 +73,7 @@ export const handleSubscription = async (
       }, 100);
       
     } catch (error) {
-      console.error("Subscription error:", error);
+      console.error("❌ Subscription error:", error);
       toast({
         title: "Subscription Error",
         description: error instanceof Error ? error.message : "An error occurred while processing your subscription. Please try again.",

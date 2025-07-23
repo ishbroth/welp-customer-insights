@@ -11,6 +11,11 @@ interface SubscriptionPlanProps {
 }
 
 const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<SubscriptionPlanProps, "type">) => {
+  const handlePremiumClick = () => {
+    console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
+    handleSubscribe();
+  };
+
   return (
     <div className="grid md:grid-cols-2 gap-8">
       {/* Free Plan */}
@@ -89,7 +94,7 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
         </ul>
         
         <Button 
-          onClick={handleSubscribe}
+          onClick={handlePremiumClick}
           className="welp-button w-full"
           disabled={isProcessing}
         >
@@ -101,6 +106,11 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
 };
 
 const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<SubscriptionPlanProps, "type">) => {
+  const handlePremiumClick = () => {
+    console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
+    handleSubscribe();
+  };
+
   return (
     <div className="grid md:grid-cols-2 gap-8">
       {/* Free Plan */}
@@ -179,7 +189,7 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
         </ul>
         
         <Button 
-          onClick={handleSubscribe}
+          onClick={handlePremiumClick}
           className="welp-button w-full"
           disabled={isProcessing}
         >

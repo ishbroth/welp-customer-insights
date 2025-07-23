@@ -37,6 +37,14 @@ const Subscription = () => {
   }, [location]);
 
   const handleSubscribeClick = async () => {
+    console.log("🔥 Subscribe button clicked! isProcessing:", isProcessing, "isCustomer:", isCustomer);
+    
+    if (isProcessing) {
+      console.log("⏳ Already processing, ignoring click");
+      return;
+    }
+    
+    console.log("📞 About to call handleSubscription");
     await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer);
   };
 
