@@ -10,6 +10,7 @@ import ProfilePhotoSection from "@/components/profile/ProfilePhotoSection";
 import PhotoEditDialog from "@/components/profile/PhotoEditDialog";
 import ProfileForm from "@/components/profile/ProfileForm";
 import AccountTypeSection from "@/components/profile/AccountTypeSection";
+import DeleteAccountSection from "@/components/profile/DeleteAccountSection";
 
 const ProfileEdit = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -99,12 +100,14 @@ const ProfileEdit = () => {
                     <ProfileForm />
                   </TabsContent>
                   
-                  <TabsContent value="account" className="mt-6">
+                  <TabsContent value="account" className="mt-6 space-y-6">
                     <AccountTypeSection 
                       isSubscribed={isSubscribed}
                       currentUserType={currentUser?.type}
                       setIsSubscribed={setIsSubscribed}
                     />
+                    
+                    <DeleteAccountSection />
                   </TabsContent>
                 </Tabs>
               </div>
