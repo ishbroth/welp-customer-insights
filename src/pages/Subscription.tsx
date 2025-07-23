@@ -46,7 +46,7 @@ const Subscription = () => {
     }
     
     console.log("📞 About to call handleSubscription");
-    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer);
+    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser);
   };
 
   const handleLegacySubscribeClick = async () => {

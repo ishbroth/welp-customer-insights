@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const handleSubscription = async (
@@ -9,7 +8,8 @@ export const handleSubscription = async (
     description: string;
     variant?: "default" | "destructive";
   }) => void,
-  isCustomer: boolean
+  isCustomer: boolean,
+  currentUser?: any
 ): Promise<void> => {
   return new Promise(async (resolve) => {
     console.log("🔥 handleSubscription function called with isCustomer:", isCustomer);
@@ -17,11 +17,9 @@ export const handleSubscription = async (
     setIsProcessing(true);
     
     try {
-      // Get current user session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session || !session.user) {
-        console.error("❌ No session found");
+      // Check if we have a current user passed in
+      if (!currentUser) {
+        console.error("❌ No current user provided");
         toast({
           title: "Authentication Error",
           description: "Please log in to subscribe.",
@@ -32,7 +30,7 @@ export const handleSubscription = async (
         return;
       }
       
-      console.log("✅ Session found, starting subscription process for user:", session.user.email);
+      console.log("✅ Current user found, starting subscription process for user:", currentUser.email);
       
       // Call the create-checkout edge function
       const userType = isCustomer ? "customer" : "business";
