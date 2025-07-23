@@ -1,11 +1,9 @@
-
 import { useAuth } from "@/contexts/auth";
 import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WelcomeSection from "@/components/profile/WelcomeSection";
 import ProfileSidebar from "@/components/ProfileSidebar";
-import DeleteAccountSection from "@/components/profile/DeleteAccountSection";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
@@ -192,9 +190,6 @@ const ProfilePage = () => {
                 )}
               </div>
             </div>
-
-            {/* Delete Account Section */}
-            <DeleteAccountSection />
           </div>
         </main>
       </div>
