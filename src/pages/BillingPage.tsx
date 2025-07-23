@@ -1,165 +1,66 @@
-
 import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import ProfileSidebar from "@/components/ProfileSidebar";
-import { toast } from "@/components/ui/sonner";
-import { openCustomerPortal } from "@/services/subscriptionService";
-import { useBillingData } from "@/hooks/useBillingData";
-import { useCredits } from "@/hooks/useCredits";
-import BillingPageHeader from "@/components/billing/BillingPageHeader";
-import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
-import PaymentMethodsCard from "@/components/billing/PaymentMethodsCard";
-import TransactionHistoryCard from "@/components/billing/TransactionHistoryCard";
-import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
-import { useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { toast } from "sonner";
 
 const BillingPage = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentUser, setIsSubscribed } = useAuth();
-  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
-  const [searchParams] = useSearchParams();
-  const { processSuccessfulPurchase } = useCredits();
-  
-  const {
-    isLoadingData,
-    subscriptionData,
-    paymentMethods,
-    transactions,
-    hasStripeCustomer,
-    setHasStripeCustomer,
-    loadBillingData
-  } = useBillingData(currentUser);
+  const [loading, setLoading] = useState(false);
+  const { currentUser, isSubscribed } = useAuth();
 
-  // Handle successful credit purchase
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const credits = searchParams.get('credits');
-    
-    if (success === 'true' && credits) {
-      const creditAmount = parseInt(credits);
-      if (!isNaN(creditAmount)) {
-        processSuccessfulPurchase(creditAmount);
-        
-        // Clean up URL parameters
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('success');
-        newUrl.searchParams.delete('credits');
-        window.history.replaceState({}, '', newUrl.toString());
-      }
-    }
-  }, [searchParams, processSuccessfulPurchase]);
-
-  // Check if this is a permanent account
-  const permanentAccountEmails = [
-    'iw@thepaintedpainter.com',
-    'isaac.wiley99@gmail.com'
-  ];
-  const isPermanentAccount = currentUser?.email && permanentAccountEmails.includes(currentUser.email);
-
-  // Handle opening Stripe customer portal
-  const handleManageSubscription = async () => {
-    if (isPermanentAccount) {
-      toast.error("This account has permanent subscription access and cannot manage payment methods through Stripe. Contact support for any billing changes.");
-      return;
-    }
-
-    if (!hasStripeCustomer) {
-      toast.error("You need to have an active subscription to manage payment methods. Please subscribe first.");
-      return;
-    }
-
+  const handleSubscription = async () => {
+    setLoading(true);
     try {
-      setIsLoadingPortal(true);
-      console.log("Opening customer portal for user:", currentUser?.email);
-      await openCustomerPortal();
-    } catch (error: any) {
-      console.error("Error opening customer portal:", error);
-      
-      // Handle specific error cases
-      if (error.message?.includes("No Stripe customer found")) {
-        toast.error("You need to subscribe first to manage your billing settings.");
-        setHasStripeCustomer(false);
-      } else if (error.message?.includes("permanent subscription access")) {
-        toast.error("This account has permanent access and cannot manage payment methods through Stripe.");
-      } else {
-        toast.error("Could not open subscription management portal. Please try again.");
-      }
-      setIsLoadingPortal(false);
+      // Placeholder for subscription logic
+      toast.success("Subscription feature coming soon!");
+    } catch (error) {
+      toast.error("Failed to process subscription");
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Handle unsubscribe
-  const handleUnsubscribe = async () => {
-    try {
-      // For permanent accounts, just update local state
-      if (isPermanentAccount) {
-        setIsSubscribed(false);
-        toast.success("Subscription cancelled successfully.");
-        return;
-      }
-
-      // For regular users, call Stripe to cancel subscription
-      setIsLoadingPortal(true);
-      await openCustomerPortal();
-    } catch (error: any) {
-      console.error("Error cancelling subscription:", error);
-      toast.error("Could not cancel subscription. Please try again.");
-      setIsLoadingPortal(false);
-    }
-  };
-
-  if (!currentUser) {
-    return <div>Please log in to view billing information.</div>;
-  }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <div className="flex-grow flex flex-col md:flex-row">
-        <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
+    <div className="container mx-auto py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Billing & Subscription</h1>
         
-        <main className="flex-1 p-6">
-          <div className="container mx-auto max-w-3xl">
-            <BillingPageHeader 
-              isLoadingData={isLoadingData}
-              onRefresh={loadBillingData}
-            />
-
-            <div className="space-y-6">
-              <CreditsBalanceCard />
-
-              <CurrentSubscriptionCard
-                isLoadingData={isLoadingData}
-                subscriptionData={subscriptionData}
-                hasStripeCustomer={hasStripeCustomer}
-                isLoadingPortal={isLoadingPortal}
-                currentUserType={currentUser?.type}
-                currentUserEmail={currentUser?.email}
-                onManageSubscription={handleManageSubscription}
-                onUnsubscribe={handleUnsubscribe}
-              />
-
-              <PaymentMethodsCard
-                isLoadingData={isLoadingData}
-                paymentMethods={paymentMethods}
-                hasStripeCustomer={hasStripeCustomer}
-                isLoadingPortal={isLoadingPortal}
-                onManageSubscription={handleManageSubscription}
-              />
-
-              <TransactionHistoryCard
-                isLoadingData={isLoadingData}
-                transactions={transactions}
-                hasStripeCustomer={hasStripeCustomer}
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Plan</CardTitle>
+            <CardDescription>
+              Manage your subscription and billing information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Status:</span>
+              <span className={`px-2 py-1 rounded text-sm ${
+                isSubscribed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              }`}>
+                {isSubscribed ? 'Active' : 'Free'}
+              </span>
             </div>
-          </div>
-        </main>
+            
+            <div className="flex justify-between items-center">
+              <span className="font-medium">User:</span>
+              <span>{currentUser?.name || currentUser?.email}</span>
+            </div>
+            
+            {!isSubscribed && (
+              <div className="pt-4">
+                <Button 
+                  onClick={handleSubscription}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? "Processing..." : "Upgrade to Premium"}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-      <Footer />
     </div>
   );
 };

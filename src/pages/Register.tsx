@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,13 +21,18 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await signup({
+        email,
+        password,
+        name,
+        type: "customer"
+      });
 
       if (result.success) {
-        toast.success("Login successful!");
-        navigate("/");
+        toast.success("Registration successful! Please check your email to verify your account.");
+        navigate("/login");
       } else {
-        toast.error(result.error || "Login failed");
+        toast.error(result.error || "Registration failed");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -39,13 +45,24 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign In</CardTitle>
+          <CardTitle>Create Account</CardTitle>
           <CardDescription>
-            Welcome back! Please sign in to your account
+            Join us to get started with your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Enter your full name"
+              />
+            </div>
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -65,18 +82,18 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Enter your password"
+                placeholder="Create a password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">
-                Create one
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
               </Link>
             </p>
           </div>
@@ -86,4 +103,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
