@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
@@ -190,86 +189,6 @@ const CustomerBenefits = () => {
               handleSubscribe={handleSubscribeClick}
               handleLegacySubscribe={handleLegacySubscribeClick}
             />
-
-            {/* Feature Comparison */}
-            <div className="mt-16">
-              <h2 className="text-2xl font-bold text-center text-gray-800 mb-12">What You Get</h2>
-              
-              <div className="max-w-4xl mx-auto">
-                <div className="grid md:grid-cols-3 gap-8">
-                  {/* Free Column */}
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold mb-6 text-gray-600">Basic (Free)</h3>
-                    <ul className="space-y-4">
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Pay per review access</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">One response per review</span>
-                      </li>
-                      <li className="flex items-center justify-center text-gray-400">
-                        <span className="text-sm">Limited features</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Premium Column */}
-                  <div className="text-center border-2 border-welp-primary rounded-lg p-6 relative">
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-welp-primary text-white px-4 py-1 rounded-full text-sm font-bold">
-                      RECOMMENDED
-                    </div>
-                    <h3 className="text-xl font-semibold mb-6 text-welp-primary">Premium</h3>
-                    <ul className="space-y-4">
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Unlimited review access</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Unlimited responses</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Priority support</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Ongoing conversations</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Legacy Column */}
-                  <div className="text-center border-2 border-yellow-500 rounded-lg p-6 relative">
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                      <Star className="h-3 w-3" />
-                      LIFETIME
-                    </div>
-                    <h3 className="text-xl font-semibold mb-6 text-yellow-600">Legacy</h3>
-                    <ul className="space-y-4">
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Everything in Premium</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Lifetime access</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">Future features included</span>
-                      </li>
-                      <li className="flex items-center justify-center">
-                        <Check className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-sm">VIP support</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
             
             <SubscriptionFAQ isCustomer={true} />
 
