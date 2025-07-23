@@ -1,23 +1,29 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Check, X, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface SubscriptionPlanProps {
   type: "customer" | "business";
   isProcessing: boolean;
   handleSubscribe: () => void;
+  handleLegacySubscribe: () => void;
 }
 
-const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<SubscriptionPlanProps, "type">) => {
+const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe }: Omit<SubscriptionPlanProps, "type">) => {
   const handlePremiumClick = () => {
     console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
     handleSubscribe();
   };
 
+  const handleLegacyClick = () => {
+    console.log("🔥 Legacy button clicked! isProcessing:", isProcessing);
+    handleLegacySubscribe();
+  };
+
   return (
-    <div className="grid md:grid-cols-2 gap-8">
+    <div className="grid md:grid-cols-3 gap-6">
       {/* Free Plan */}
       <Card className="p-6 border-2">
         <div className="text-center mb-6">
@@ -43,16 +49,20 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
             <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
             <span className="text-gray-500">Unlimited access to reviews</span>
           </li>
-          <li className="flex items-start">
-            <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
-            <span className="text-gray-500">Unlimited responses to businesses</span>
-          </li>
         </ul>
         
-        <div className="text-center">
+        <div className="text-center mb-4">
           <Link to="/profile/reviews">
             <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
               Current Plan
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="text-center">
+          <Link to="/buy-credits">
+            <Button variant="outline" className="w-full text-sm">
+              Buy Credits ($3 each)
             </Button>
           </Link>
         </div>
@@ -101,18 +111,68 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
           {isProcessing ? "Processing..." : "Subscribe Now"}
         </Button>
       </Card>
+
+      {/* Legacy Plan */}
+      <Card className="p-6 border-2 border-yellow-500 relative">
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+          <Star className="h-3 w-3" />
+          LIFETIME
+        </div>
+        
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">Legacy</h2>
+          <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal"> once</span></div>
+          <div className="text-sm text-gray-500">Lifetime Access</div>
+        </div>
+        
+        <ul className="space-y-3 mb-8">
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Everything in Premium</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Lifetime access - no recurring fees</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Grandfathered into all future features</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>VIP customer support</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Save $144+ per year vs Premium</span>
+          </li>
+        </ul>
+        
+        <Button 
+          onClick={handleLegacyClick}
+          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+          disabled={isProcessing}
+        >
+          {isProcessing ? "Processing..." : "Get Lifetime Access"}
+        </Button>
+      </Card>
     </div>
   );
 };
 
-const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<SubscriptionPlanProps, "type">) => {
+const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe }: Omit<SubscriptionPlanProps, "type">) => {
   const handlePremiumClick = () => {
     console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
     handleSubscribe();
   };
 
+  const handleLegacyClick = () => {
+    console.log("🔥 Legacy button clicked! isProcessing:", isProcessing);
+    handleLegacySubscribe();
+  };
+
   return (
-    <div className="grid md:grid-cols-2 gap-8">
+    <div className="grid md:grid-cols-3 gap-6">
       {/* Free Plan */}
       <Card className="p-6 border-2">
         <div className="text-center mb-6">
@@ -144,10 +204,18 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
           </li>
         </ul>
         
-        <div className="text-center">
+        <div className="text-center mb-4">
           <Link to="/signup?type=business">
             <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
               Current Plan
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="text-center">
+          <Link to="/buy-credits">
+            <Button variant="outline" className="w-full text-sm">
+              Buy Credits ($3 each)
             </Button>
           </Link>
         </div>
@@ -196,12 +264,57 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe }: Omit<Subsc
           {isProcessing ? "Processing..." : "Subscribe Now"}
         </Button>
       </Card>
+
+      {/* Legacy Plan */}
+      <Card className="p-6 border-2 border-yellow-500 relative">
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+          <Star className="h-3 w-3" />
+          LIFETIME
+        </div>
+        
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">Legacy</h2>
+          <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal"> once</span></div>
+          <div className="text-sm text-gray-500">Lifetime Access</div>
+        </div>
+        
+        <ul className="space-y-3 mb-8">
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Everything in Premium</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Lifetime access - no recurring fees</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Grandfathered into all future features</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>VIP customer support</span>
+          </li>
+          <li className="flex items-start">
+            <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <span>Save $144+ per year vs Premium</span>
+          </li>
+        </ul>
+        
+        <Button 
+          onClick={handleLegacyClick}
+          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+          disabled={isProcessing}
+        >
+          {isProcessing ? "Processing..." : "Get Lifetime Access"}
+        </Button>
+      </Card>
     </div>
   );
 };
 
-export const SubscriptionPlans = ({ type, isProcessing, handleSubscribe }: SubscriptionPlanProps) => {
+export const SubscriptionPlans = ({ type, isProcessing, handleSubscribe, handleLegacySubscribe }: SubscriptionPlanProps) => {
   return type === "customer" 
-    ? <CustomerSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} />
-    : <BusinessSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} />;
+    ? <CustomerSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} handleLegacySubscribe={handleLegacySubscribe} />
+    : <BusinessSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} handleLegacySubscribe={handleLegacySubscribe} />;
 };
