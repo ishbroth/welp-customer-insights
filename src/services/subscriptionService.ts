@@ -43,10 +43,10 @@ export const handleSubscription = async (
         throw new Error("No checkout URL returned");
       }
       
-      // Open Stripe checkout in a new window
-      window.location.href = data.url;
+      console.log("Subscription - Redirecting to Stripe checkout URL:", data.url);
       
-      console.log("Subscription - Redirecting to Stripe checkout");
+      // Redirect to Stripe checkout in the same window
+      window.location.href = data.url;
       
       // We'll set subscription status after returning from Stripe
       setIsProcessing(false);
