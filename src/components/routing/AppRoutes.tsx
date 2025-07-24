@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingRoute from "./LoadingRoute";
@@ -8,6 +9,7 @@ import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import VerifyEmail from "@/pages/VerifyEmail";
 import BillingPage from "@/pages/BillingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
@@ -32,6 +34,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/customer-benefits" element={<CustomerBenefits />} />
       <Route path="/search" element={<SearchResults />} />
       
