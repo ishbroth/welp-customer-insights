@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
@@ -34,10 +33,7 @@ const ProfilePage = () => {
     try {
       console.log("Creating credit payment session...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
-        body: { 
-          creditAmount: 1,
-          totalCost: 300 // $3.00 in cents
-        }
+        body: {} // Remove the specific credit amount and total cost parameters
       });
 
       if (error) {
@@ -236,7 +232,7 @@ const ProfilePage = () => {
                         className="flex-1"
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        Buy Credits ($3)
+                        Buy Credits ($3 each)
                       </Button>
                       
                       {!isSubscribed && !subscriptionData?.subscribed ? (

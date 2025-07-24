@@ -49,14 +49,6 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Request body contains credit purchase info
-    const { creditAmount, totalCost } = await req.json();
-    logStep("Request data", { creditAmount, totalCost });
-
-    if (!creditAmount || !totalCost || creditAmount <= 0 || totalCost <= 0) {
-      throw new Error("Invalid credit amount or total cost");
-    }
-
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
@@ -101,11 +93,11 @@ serve(async (req) => {
             currency: "usd",
             product_data: {
               name: "Credits",
-              description: "Purchase credits at $3 each for accessing premium features"
+              description: "Purchase credits at $3.00 each for accessing premium features"
             },
             unit_amount: 300, // $3.00 per credit in cents
           },
-          quantity: creditAmount,
+          quantity: 1, // Start with 1 credit by default
           adjustable_quantity: {
             enabled: true,
             minimum: 1,
