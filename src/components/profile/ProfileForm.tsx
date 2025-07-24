@@ -17,36 +17,48 @@ const ProfileForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { currentUser, updateProfile } = useAuth();
-  const [databaseLicenseType, setDatabaseLicenseType] = useState<string>("");
+  const [businessData, setBusinessData] = useState<{
+    licenseType: string;
+    licenseNumber: string;
+  }>({ licenseType: "", licenseNumber: "" });
+  const [isLoadingBusinessData, setIsLoadingBusinessData] = useState(false);
   
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
 
-  // Fetch the actual license type from database
+  // Fetch business data from database
   useEffect(() => {
-    const fetchDatabaseLicenseType = async () => {
+    const fetchBusinessData = async () => {
       if (!currentUser?.id || !isBusinessAccount) return;
 
+      setIsLoadingBusinessData(true);
       try {
-        const { data: businessData, error } = await supabase
+        // Fetch from business_info table
+        const { data: businessInfo, error: businessError } = await supabase
           .from('business_info')
-          .select('license_type')
+          .select('license_type, license_number')
           .eq('id', currentUser.id)
           .single();
 
-        if (error) {
-          console.error("Error fetching business license type:", error);
+        if (businessError) {
+          console.error("Error fetching business info:", businessError);
           return;
         }
 
-        console.log("=== PROFILE FORM INIT ===");
-        console.log("Database license_type from business_info:", businessData?.license_type);
-        setDatabaseLicenseType(businessData?.license_type || "");
+        console.log("=== BUSINESS DATA FETCHED ===");
+        console.log("Business info from database:", businessInfo);
+        
+        setBusinessData({
+          licenseType: businessInfo?.license_type || "",
+          licenseNumber: businessInfo?.license_number || currentUser?.businessId || ""
+        });
       } catch (error) {
-        console.error("Error in fetchDatabaseLicenseType:", error);
+        console.error("Error in fetchBusinessData:", error);
+      } finally {
+        setIsLoadingBusinessData(false);
       }
     };
 
-    fetchDatabaseLicenseType();
+    fetchBusinessData();
   }, [currentUser?.id, isBusinessAccount]);
 
   const form = useForm<ProfileFormValues>({
@@ -55,8 +67,8 @@ const ProfileForm = () => {
       name: currentUser?.name || "",
       email: currentUser?.email || "",
       bio: currentUser?.bio || "",
-      businessId: currentUser?.businessId || "",
-      licenseType: "", // Will be set below once we fetch from database
+      businessId: "",
+      licenseType: "",
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
       suite: (currentUser as any)?.suite || "",
@@ -66,13 +78,20 @@ const ProfileForm = () => {
     },
   });
 
-  // Update the licenseType field when database value is loaded
+  // Update form values when business data is loaded
   useEffect(() => {
-    if (databaseLicenseType) {
-      console.log("Setting form licenseType to:", databaseLicenseType);
-      form.setValue('licenseType', databaseLicenseType);
+    if (businessData.licenseType || businessData.licenseNumber) {
+      console.log("Setting form values with business data:", businessData);
+      
+      if (businessData.licenseType) {
+        form.setValue('licenseType', businessData.licenseType);
+      }
+      
+      if (businessData.licenseNumber) {
+        form.setValue('businessId', businessData.licenseNumber);
+      }
     }
-  }, [databaseLicenseType, form]);
+  }, [businessData, form]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -132,6 +151,18 @@ const ProfileForm = () => {
       });
     }
   };
+
+  // Show loading state while fetching business data
+  if (isBusinessAccount && isLoadingBusinessData) {
+    return (
+      <div className="flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading business information...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
