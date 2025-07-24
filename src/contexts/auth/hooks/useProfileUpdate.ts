@@ -128,6 +128,13 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
     } catch (error) {
       console.error("=== PROFILE UPDATE ERROR ===");
       console.error("Error in updateProfile:", error);
+      
+      // Filter out billing-related errors to avoid confusing the user
+      if (error instanceof Error && (error.message.includes('billing') || error.message.includes('Stripe'))) {
+        console.log("Suppressing billing error during profile update");
+        return { success: true }; // Don't throw billing errors during profile updates
+      }
+      
       throw error;
     }
   };

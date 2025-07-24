@@ -107,6 +107,7 @@ const ProfileForm = () => {
       
       await updateProfile(updateData);
       
+      // Show success toast immediately after successful update
       toast({
         title: "Profile updated successfully",
         description: "Your profile information has been saved.",
@@ -123,11 +124,20 @@ const ProfileForm = () => {
       console.error("=== FORM SUBMIT ERROR ===");
       console.error("Error updating profile:", error);
       
-      toast({
-        title: "Update failed",
-        description: error instanceof Error ? error.message : "There was an error updating your profile. Please try again.",
-        variant: "destructive",
-      });
+      // Only show profile update error, not billing errors
+      if (error instanceof Error && !error.message.includes('billing') && !error.message.includes('Stripe')) {
+        toast({
+          title: "Update failed",
+          description: error.message || "There was an error updating your profile. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Update failed",
+          description: "There was an error updating your profile. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
