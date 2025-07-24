@@ -3,10 +3,10 @@
   0% { 
     fill: white; 
   }
-  25% { 
+  10% { 
     fill: #3b82f6; 
   }
-  75% { 
+  90% { 
     fill: #3b82f6; 
   }
   100% { 
@@ -15,26 +15,26 @@
 }
 
 .period {
-  animation: clockwise-highlight 2s infinite;
-  animation-delay: 1.6s;
+  animation: clockwise-highlight 0.5s infinite;
+  animation-delay: 0.4s;
 }
 
 .arm-right {
-  animation: clockwise-highlight 2s infinite;
+  animation: clockwise-highlight 0.5s infinite;
   animation-delay: 0s;
 }
 
 .arm-bottom-right {
-  animation: clockwise-highlight 2s infinite;
-  animation-delay: 0.4s;
+  animation: clockwise-highlight 0.5s infinite;
+  animation-delay: 0.1s;
 }
 
 .arm-bottom-left {
-  animation: clockwise-highlight 2s infinite;
-  animation-delay: 0.8s;
+  animation: clockwise-highlight 0.5s infinite;
+  animation-delay: 0.2s;
 }
 
 .arm-top-left {
-  animation: clockwise-highlight 2s infinite;
-  animation-delay: 1.2s;
+  animation: clockwise-highlight 0.5s infinite;
+  animation-delay: 0.3s;
 }
