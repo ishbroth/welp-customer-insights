@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const CreditsBalanceCard = () => {
   const { balance, isLoading, loadCreditsData } = useCredits();
@@ -13,9 +15,37 @@ const CreditsBalanceCard = () => {
 
   const isSubscribed = subscriptionData?.subscribed || false;
 
-  const handleBuyCredits = () => {
+  const handleBuyCredits = async () => {
     if (isSubscribed) return; // Don't navigate if subscribed
-    window.location.href = '/buy-credits';
+    
+    if (!currentUser) {
+      toast.error("Please log in to purchase credits");
+      return;
+    }
+
+    try {
+      console.log("Creating credit payment session...");
+      const { data, error } = await supabase.functions.invoke('create-credit-payment', {
+        body: {} // Remove the specific credit amount and total cost parameters
+      });
+
+      if (error) {
+        console.error("Error creating payment session:", error);
+        toast.error("Failed to create payment session");
+        return;
+      }
+
+      if (data?.url) {
+        console.log("Opening Stripe checkout...");
+        window.open(data.url, '_blank');
+      } else {
+        console.error("No URL returned from payment session");
+        toast.error("Failed to create payment session");
+      }
+    } catch (error) {
+      console.error("Error in handleBuyCredits:", error);
+      toast.error("An error occurred while processing your request");
+    }
   };
 
   return (
@@ -61,7 +91,7 @@ const CreditsBalanceCard = () => {
                   className={isSubscribed ? "opacity-50 cursor-not-allowed" : ""}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Buy Credits
+                  Buy Credits ($3 each)
                 </Button>
               </div>
             </div>
