@@ -1,66 +1,61 @@
 
-# Phone Verification System - Reference Documentation
-
-This document provides a complete reference for the phone verification system that was implemented in Welp. This code has been preserved for future use if phone verification needs to be re-implemented.
+# Phone Verification System Reference
 
 ## Overview
-The phone verification system used SMS messages sent via AWS SNS to verify user phone numbers during registration for both customer and business accounts.
+SMS-based phone verification using AWS SNS with Twilio fallback.
 
-## Key Components
+## Core Components
+- **VerifyPhone**: Main verification page
+- **usePhoneVerification**: Verification logic
+- **usePhoneVerificationActions**: Verification actions
+- **useVerificationTimer**: Resend timer management
 
-### 1. Edge Functions
-- **File:** `supabase/functions/verify-phone/index.ts` (347 lines)
-- **Purpose:** Handles both sending SMS codes and verifying submitted codes
-- **Actions:** 
-  - `send`: Generates 6-digit code, stores in DB, sends SMS via AWS SNS
-  - `verify`: Validates submitted code against database
+## Verification Flow
+1. User enters phone number during signup
+2. SMS code sent via AWS SNS (primary) or Twilio (fallback)
+3. User enters 6-digit code
+4. Code validated against database
+5. Account activated on successful verification
 
-### 2. Database Table
-- **Table:** `verification_codes`
-- **Columns:** phone, code, expires_at (10 min expiry), verification_type
-- **RLS:** Complete lockdown - only edge functions can access
+## Key Functions
 
-### 3. React Components
-- **VerificationCodeInput** (`src/components/verification/VerificationCodeInput.tsx`)
-- **VerifyCodeButton** (`src/components/verification/VerifyCodeButton.tsx`)
-- **ResendCodeButton** (`src/components/verification/ResendCodeButton.tsx`)
-- **VerifyPhone page** (`src/pages/VerifyPhone.tsx`)
+### Send Verification Code
+```typescript
+const handleResendCode = async () => {
+  const { success, error } = await resendVerificationCode({ phoneNumber });
+}
+```
 
-### 4. Custom Hooks
-- **usePhoneVerification** (`src/hooks/usePhoneVerification.ts`)
-- **Features:** Code validation, resend logic, account creation handling
+### Verify Code
+```typescript
+const handleVerifyCode = async (verificationCode: string) => {
+  const { data, error } = await supabase.functions.invoke('verify-phone-code', {
+    body: { phoneNumber, code: verificationCode, userData }
+  });
+}
+```
 
-### 5. Utility Functions
-- **phoneFormatter.ts** (`src/utils/phoneFormatter.ts`)
-- **sendVerificationCode** (`src/lib/utils.ts`)
+## Common Issues & Solutions
 
-## AWS SNS Configuration
-Required environment variables:
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY` 
-- `AWS_REGION`
-- `AWS_SNS_ORIGINATION_NUMBER`
+### Issue 1: SMS Not Delivered
+**Symptoms**: User doesn't receive verification code
+**Cause**: AWS SNS sandbox restrictions or provider issues
+**Solution**: Check AWS console for delivery status, try Twilio fallback
 
-## Registration Flow
-1. User enters phone number in registration form
-2. System sends SMS verification code via AWS SNS
-3. User redirected to verification page
-4. User enters 6-digit code
-5. System validates code and creates account
-6. User redirected to dashboard
+### Issue 2: Code Expired
+**Symptoms**: Valid code rejected
+**Cause**: Code expired (10-minute limit)
+**Solution**: Generate new code, cleanup expired codes
 
-## Key Features
-- 6-digit numeric codes
-- 10-minute expiration
-- Resend functionality with 60-second cooldown
-- Support for both customer and business account types
-- E.164 phone number formatting
-- Comprehensive error handling and logging
+### Issue 3: Invalid Code Format
+**Symptoms**: Code validation fails
+**Cause**: Non-numeric characters or wrong length
+**Solution**: Validate 6-digit numeric format before submission
 
-## Integration Points
-The phone verification system was integrated into:
-- Customer signup flow (`CustomerSignupForm.tsx`)
-- Business signup flow (`BusinessSignupForm.tsx`)
-- Phone validation in forms (`PhoneInput` component)
-
-This system was fully functional but put on hold due to AWS SNS production access delays.
+## Testing Checklist
+- [ ] SMS code sent successfully
+- [ ] Code validates correctly
+- [ ] Resend functionality works
+- [ ] Expired codes handled properly
+- [ ] Account created on successful verification
+- [ ] Error messages clear and helpful
