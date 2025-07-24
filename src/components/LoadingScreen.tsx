@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useLoading } from '@/contexts/LoadingContext';
+import './LoadingScreen.css';
 
 const LoadingScreen: React.FC = () => {
   const { isPageLoading } = useLoading();
@@ -17,15 +18,15 @@ const LoadingScreen: React.FC = () => {
           height="60"
           viewBox="0 0 60 60"
           className="animate-spin"
-          style={{ animationDuration: '1s' }}
+          style={{ animationDuration: '2s' }}
         >
-          {/* Using the same asterisk design from WelpAppIcon */}
+          {/* Using the same asterisk design from WelpAppIcon with clockwise highlighting */}
           <g transform="translate(30, 30) rotate(12)">
             {/* Right arm (0 degrees) */}
             <path
               d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
               fill="white"
-              className="animate-pulse"
+              className="arm-right"
             />
             
             {/* Bottom-right diagonal arm (72 degrees) */}
@@ -33,7 +34,7 @@ const LoadingScreen: React.FC = () => {
               <path
                 d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
                 fill="white"
-                className="animate-pulse"
+                className="arm-bottom-right"
               />
             </g>
             
@@ -42,7 +43,7 @@ const LoadingScreen: React.FC = () => {
               <path
                 d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
                 fill="white"
-                className="animate-pulse"
+                className="arm-bottom-left"
               />
             </g>
             
@@ -51,7 +52,7 @@ const LoadingScreen: React.FC = () => {
               <path
                 d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
                 fill="white"
-                className="animate-pulse"
+                className="arm-top-left"
               />
             </g>
             
@@ -61,7 +62,7 @@ const LoadingScreen: React.FC = () => {
               cy="-6"
               r="2.4"
               fill="white"
-              className="animate-pulse"
+              className="period"
             />
           </g>
         </svg>
