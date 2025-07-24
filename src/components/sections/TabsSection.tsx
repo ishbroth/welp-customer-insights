@@ -110,63 +110,71 @@ const TabsSection = () => {
             </TabsContent>
             
             <TabsContent value="customer">
-              <div className="welp-card">
-                <h2 className="text-2xl font-bold mb-4 text-center">Customer Portal</h2>
-                <p className="text-center mb-6">
-                  View and respond to reviews about you from businesses you've interacted with.
-                </p>
-                <p className="text-center mb-6">
-                  Keep on top of your reputation, and stand out as a preferred customer. Sign up or login to view reviews about you and respond to business owners.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  {currentUser ? (
-                    <>
-                      <Tooltip delayDuration={300}>
-                        <TooltipTrigger asChild>
-                          <div className="flex-1">
-                            <Button 
-                              variant="outline" 
-                              className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
-                              onClick={handleLoggedInClick}
-                              disabled
-                            >
-                              Login
-                            </Button>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
-                          <p>You are already signed in to your account</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip delayDuration={300}>
-                        <TooltipTrigger asChild>
-                          <div className="flex-1">
-                            <Button 
-                              className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
-                              onClick={handleLoggedInClick}
-                              disabled
-                            >
-                              Sign Up as Customer
-                            </Button>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
-                          <p>You are already signed in to your account</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </>
-                  ) : (
-                    <>
-                      <Link to="/login" className="flex-1">
-                        <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
-                          Login
-                        </Button>
-                      </Link>
-                      <Link to="/signup?type=customer" className="flex-1">
-                        <Button className="welp-button w-full">Sign Up as Customer</Button>
-                      </Link>
-                    </>
-                  )}
+              <div className="space-y-6">
+                {/* Login Portal Box */}
+                <div className="welp-card">
+                  <h2 className="text-2xl font-bold mb-4 text-center">Customer Portal</h2>
+                  <p className="text-center mb-6">
+                    View and respond to reviews about you from businesses you've interacted with.
+                  </p>
+                  <p className="text-center mb-6">
+                    Keep on top of your reputation, and stand out as a preferred customer. Sign up or login to view reviews about you and respond to business owners.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    {currentUser ? (
+                      <>
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <div className="flex-1">
+                              <Button 
+                                variant="outline" 
+                                className="w-full border-gray-300 text-gray-400 cursor-not-allowed"
+                                onClick={handleLoggedInClick}
+                                disabled
+                              >
+                                Login
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
+                            <p>You are already signed in to your account</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <div className="flex-1">
+                              <Button 
+                                className="bg-gray-400 text-gray-600 cursor-not-allowed w-full"
+                                onClick={handleLoggedInClick}
+                                disabled
+                              >
+                                Sign Up as Customer
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="bg-black text-white p-2 rounded shadow-lg">
+                            <p>You are already signed in to your account</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/login" className="flex-1">
+                          <Button variant="outline" className="w-full border-welp-primary text-welp-primary hover:bg-welp-primary hover:text-white">
+                            Login
+                          </Button>
+                        </Link>
+                        <Link to="/signup?type=customer" className="flex-1">
+                          <Button className="welp-button w-full">Sign Up as Customer</Button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Search Form Box - Now also available in customer tab */}
+                <div className="welp-card">
+                  <SearchBox simplified className="max-w-md mx-auto" />
                 </div>
               </div>
             </TabsContent>
