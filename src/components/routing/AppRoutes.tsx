@@ -8,7 +8,7 @@ import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
 // Import pages
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
+import Signup from "@/pages/Signup";
 import BillingPage from "@/pages/BillingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
@@ -30,7 +30,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/customer-benefits" element={<CustomerBenefits />} />
       
       <Route path="/profile" element={
