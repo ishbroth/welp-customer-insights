@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useRef } from 'react';
 
 interface LoadingContextType {
   isPageLoading: boolean;
@@ -11,14 +11,24 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isPageLoading, setIsPageLoading] = useState(false);
+  const isPageLoadingRef = useRef(false);
   
-  // Automatically hide loading after a timeout
   const showPageLoading = () => {
+    if (isPageLoadingRef.current) return;
+    
+    isPageLoadingRef.current = true;
     setIsPageLoading(true);
-    setTimeout(() => setIsPageLoading(false), 1000); // Auto-hide after 1 second
+    
+    setTimeout(() => {
+      setIsPageLoading(false);
+      isPageLoadingRef.current = false;
+    }, 1500); // Increased to 1.5 seconds so you can see the animation
   };
   
-  const hidePageLoading = () => setIsPageLoading(false);
+  const hidePageLoading = () => {
+    setIsPageLoading(false);
+    isPageLoadingRef.current = false;
+  };
   
   return (
     <LoadingContext.Provider value={{ isPageLoading, showPageLoading, hidePageLoading }}>
