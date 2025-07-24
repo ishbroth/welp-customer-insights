@@ -53,7 +53,7 @@ export const checkDuplicatesViaEdgeFunction = async (
 };
 
 /**
- * Check if an email already exists using edge function
+ * Check if an email already exists using edge function (account-type-specific)
  */
 export const checkEmailExistsViaEdgeFunction = async (email: string, accountType: 'business' | 'customer' = 'business'): Promise<boolean> => {
   const result = await checkDuplicatesViaEdgeFunction(email, undefined, undefined, undefined, accountType);
@@ -61,7 +61,7 @@ export const checkEmailExistsViaEdgeFunction = async (email: string, accountType
 };
 
 /**
- * Check if a phone already exists using edge function
+ * Check if a phone already exists using edge function (account-type-specific)
  */
 export const checkPhoneExistsViaEdgeFunction = async (phone: string, accountType: 'business' | 'customer' = 'business'): Promise<boolean> => {
   const result = await checkDuplicatesViaEdgeFunction(undefined, phone, undefined, undefined, accountType);

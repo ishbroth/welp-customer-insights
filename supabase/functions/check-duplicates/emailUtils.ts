@@ -10,16 +10,7 @@ export const checkEmailDuplicates = async (
   console.log("Input email:", email);
   console.log("Account type:", accountType);
 
-  // First, let's check if there are ANY profiles at all
-  const { data: allProfiles, error: allError } = await supabaseAdmin
-    .from('profiles')
-    .select('id, email, name, type, phone, address')
-    .limit(10);
-
-  console.log("ALL PROFILES FOR EMAIL CHECK COUNT:", allProfiles?.length || 0);
-  console.log("ALL PROFILES FOR EMAIL CHECK ERROR:", allError);
-  console.log("ALL PROFILES FOR EMAIL CHECK DATA:", allProfiles);
-
+  // Check for email duplicates only within the specified account type
   const { data: emailProfile, error: emailError } = await supabaseAdmin
     .from('profiles')
     .select('id, email, name, type, phone, address')
@@ -27,10 +18,10 @@ export const checkEmailDuplicates = async (
     .eq('type', accountType)
     .maybeSingle();
 
-  console.log("Email check result (filtered by account type):", { emailProfile, emailError, accountType });
+  console.log(`Email check result (filtered by account type ${accountType}):`, { emailProfile, emailError });
 
   if (emailProfile) {
-    console.log("EMAIL MATCH FOUND - DUPLICATE DETECTED:", emailProfile);
+    console.log("EMAIL MATCH FOUND WITHIN ACCOUNT TYPE - DUPLICATE DETECTED:", emailProfile);
     return {
       isDuplicate: true,
       duplicateType: 'email',
