@@ -74,7 +74,7 @@ export const BusinessContactSection = ({
           className="welp-input"
           required
         />
-        <p className="text-sm text-gray-500 mt-1">This will be used for business communication purposes</p>
+        <p className="text-sm text-gray-500 mt-1">This may be used for business verification. Must be a real, active number.</p>
         <PhoneValidationAlert phoneExists={phoneExists} />
         <DuplicateBusinessAlert duplicateResult={duplicateResult} />
         <CheckingDuplicatesIndicator isCheckingDuplicates={isCheckingDuplicates} />
