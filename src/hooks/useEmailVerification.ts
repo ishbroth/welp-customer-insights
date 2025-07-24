@@ -127,11 +127,14 @@ export const useEmailVerification = ({
         // Clear any stored verification data
         localStorage.removeItem("pendingVerification");
         
-        // The edge function should have automatically signed in the user
-        // Give it a moment to establish the session, then redirect to profile
-        setTimeout(() => {
+        // Redirect to the appropriate success page based on account type
+        if (accountType === 'business') {
+          // For business accounts, redirect to email verification success page
+          navigate(`/email-verification-success?email=${encodeURIComponent(email)}&type=business`);
+        } else {
+          // For customer accounts, redirect to profile
           navigate("/profile", { replace: true });
-        }, 1000);
+        }
         
       } else {
         toast({
