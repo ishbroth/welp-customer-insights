@@ -42,112 +42,78 @@ const ProfilePage = () => {
           <div className="max-w-4xl mx-auto">
             <WelcomeSection />
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Profile Overview Card */}
-              <Card className="lg:col-span-2">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Profile Information
-                  </CardTitle>
-                  <Link to="/profile/edit">
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </Link>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start space-x-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={currentUser.avatar || ""} alt={currentUser.name} />
-                      <AvatarFallback className="bg-blue-100 text-blue-800 text-lg">
-                        {currentUser.name?.[0]?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h2 className="text-xl font-semibold">{currentUser.name}</h2>
-                        {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) && (
-                          <VerifiedBadge />
-                        )}
-                      </div>
-                      <div className="space-y-2 text-sm text-gray-600">
-                        {currentUser.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            <span>{currentUser.email}</span>
-                          </div>
-                        )}
-                        {currentUser.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            <span>{currentUser.phone}</span>
-                          </div>
-                        )}
-                        {(currentUser.address || currentUser.city) && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>
-                              {[currentUser.address, currentUser.city, currentUser.state]
-                                .filter(Boolean)
-                                .join(', ')}
-                              {currentUser.zipCode && ` ${currentUser.zipCode}`}
-                            </span>
-                          </div>
-                        )}
-                        {isBusinessAccount && currentUser.businessId && (
-                          <div className="flex items-center gap-2">
-                            <Building className="h-4 w-4" />
-                            <span>Business ID: {currentUser.businessId}</span>
-                          </div>
-                        )}
-                      </div>
-                      {currentUser.bio && (
-                        <p className="mt-3 text-gray-700">{currentUser.bio}</p>
+            {/* Single Profile Overview Card */}
+            <Card className="w-full">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Profile Information
+                </CardTitle>
+                <Link to="/profile/edit">
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-start space-x-4">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={currentUser.avatar || ""} alt={currentUser.name} />
+                    <AvatarFallback className="bg-blue-100 text-blue-800 text-lg">
+                      {currentUser.name?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h2 className="text-xl font-semibold">{currentUser.name}</h2>
+                      {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) && (
+                        <VerifiedBadge />
                       )}
                     </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      {currentUser.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          <span>{currentUser.email}</span>
+                        </div>
+                      )}
+                      {currentUser.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          <span>{currentUser.phone}</span>
+                        </div>
+                      )}
+                      {(currentUser.address || currentUser.city || currentUser.state || currentUser.zipCode) && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          <div>
+                            {currentUser.address && (
+                              <div>{currentUser.address}</div>
+                            )}
+                            <div>
+                              {currentUser.city && currentUser.city}
+                              {currentUser.city && currentUser.state && ', '}
+                              {currentUser.state && currentUser.state}
+                              {currentUser.zipCode && ` ${currentUser.zipCode}`}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {isBusinessAccount && currentUser.businessId && (
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4" />
+                          <span>Business ID: {currentUser.businessId}</span>
+                        </div>
+                      )}
+                    </div>
+                    {currentUser.bio && (
+                      <p className="mt-3 text-gray-700">{currentUser.bio}</p>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Link to="/profile/edit" className="block">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </Link>
-                  <Link to="/profile/billing" className="block">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Building className="h-4 w-4 mr-2" />
-                      Billing & Subscription
-                    </Button>
-                  </Link>
-                  {isBusinessAccount && (
-                    <Link to="/profile/business-reviews" className="block">
-                      <Button variant="outline" className="w-full justify-start">
-                        <User className="h-4 w-4 mr-2" />
-                        My Customer Reviews
-                      </Button>
-                    </Link>
-                  )}
-                  {currentUser.type === 'customer' && (
-                    <Link to="/profile/reviews" className="block">
-                      <Button variant="outline" className="w-full justify-start">
-                        <User className="h-4 w-4 mr-2" />
-                        Reviews About Me
-                      </Button>
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Account Status */}
             <Card className="mt-6">
