@@ -1,65 +1,89 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { useBillingData } from "@/hooks/useBillingData";
+import { openCustomerPortal } from "@/services/subscriptionService";
+import BillingPageHeader from "@/components/billing/BillingPageHeader";
+import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
+import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
+import PaymentMethodsCard from "@/components/billing/PaymentMethodsCard";
+import TransactionHistoryCard from "@/components/billing/TransactionHistoryCard";
 
 const BillingPage = () => {
-  const [loading, setLoading] = useState(false);
-  const { currentUser, isSubscribed } = useAuth();
+  const { currentUser } = useAuth();
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  
+  const {
+    isLoadingData,
+    subscriptionData,
+    paymentMethods,
+    transactions,
+    hasStripeCustomer,
+    loadBillingData
+  } = useBillingData(currentUser);
 
-  const handleSubscription = async () => {
-    setLoading(true);
+  const handleManageSubscription = async () => {
+    setIsLoadingPortal(true);
     try {
-      // Placeholder for subscription logic
-      toast.success("Subscription feature coming soon!");
+      await openCustomerPortal();
     } catch (error) {
-      toast.error("Failed to process subscription");
+      console.error("Failed to open customer portal:", error);
+      toast.error("Failed to open customer portal. Please try again.");
     } finally {
-      setLoading(false);
+      setIsLoadingPortal(false);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    try {
+      // This would typically call an unsubscribe endpoint
+      toast.success("Unsubscription request processed");
+    } catch (error) {
+      toast.error("Failed to process unsubscription");
     }
   };
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Billing & Subscription</h1>
+      <div className="max-w-6xl mx-auto">
+        <BillingPageHeader 
+          isLoadingData={isLoadingData}
+          onRefresh={loadBillingData}
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Plan</CardTitle>
-            <CardDescription>
-              Manage your subscription and billing information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Status:</span>
-              <span className={`px-2 py-1 rounded text-sm ${
-                isSubscribed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-              }`}>
-                {isSubscribed ? 'Active' : 'Free'}
-              </span>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <CurrentSubscriptionCard
+              isLoadingData={isLoadingData}
+              subscriptionData={subscriptionData}
+              hasStripeCustomer={hasStripeCustomer}
+              isLoadingPortal={isLoadingPortal}
+              currentUserType={currentUser?.user_type}
+              currentUserEmail={currentUser?.email}
+              onManageSubscription={handleManageSubscription}
+              onUnsubscribe={handleUnsubscribe}
+            />
             
-            <div className="flex justify-between items-center">
-              <span className="font-medium">User:</span>
-              <span>{currentUser?.name || currentUser?.email}</span>
-            </div>
+            <CreditsBalanceCard />
+          </div>
+          
+          <div className="space-y-6">
+            <PaymentMethodsCard
+              isLoadingData={isLoadingData}
+              paymentMethods={paymentMethods}
+              hasStripeCustomer={hasStripeCustomer}
+              isLoadingPortal={isLoadingPortal}
+              onManageSubscription={handleManageSubscription}
+            />
             
-            {!isSubscribed && (
-              <div className="pt-4">
-                <Button 
-                  onClick={handleSubscription}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  {loading ? "Processing..." : "Upgrade to Premium"}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <TransactionHistoryCard
+              isLoadingData={isLoadingData}
+              transactions={transactions}
+              hasStripeCustomer={hasStripeCustomer}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
