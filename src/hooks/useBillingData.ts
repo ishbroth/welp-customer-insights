@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -127,7 +126,8 @@ export const useBillingData = (currentUser: any) => {
           setHasStripeCustomer(false);
           setSubscriptionData({ subscribed: false });
         } else {
-          toast.error("Error loading subscription data");
+          // Only log unexpected errors, don't show toast
+          console.error("Unexpected subscription error:", subError);
         }
       } else {
         console.log("Subscription data:", subData);
@@ -142,7 +142,7 @@ export const useBillingData = (currentUser: any) => {
         console.error("Error loading billing info:", billingError);
         // Don't show error for missing customer - this is normal for new users
         if (!billingError.message?.includes("No Stripe customer found")) {
-          toast.error("Error loading billing information");
+          console.error("Unexpected billing error:", billingError);
         }
         // Set empty arrays for new users without Stripe customers
         setPaymentMethods([]);
@@ -155,9 +155,9 @@ export const useBillingData = (currentUser: any) => {
       }
     } catch (error) {
       console.error("Error in loadBillingData:", error);
-      // Only show generic error for unexpected issues
+      // Only log unexpected errors, don't show toast for missing Stripe customer
       if (!error.message?.includes("No Stripe customer found")) {
-        toast.error("Error loading billing data");
+        console.error("Unexpected error in loadBillingData:", error);
       }
     } finally {
       setIsLoadingData(false);

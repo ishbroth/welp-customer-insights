@@ -129,9 +129,9 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
       console.error("=== PROFILE UPDATE ERROR ===");
       console.error("Error in updateProfile:", error);
       
-      // Filter out billing-related errors to avoid confusing the user
-      if (error instanceof Error && (error.message.includes('billing') || error.message.includes('Stripe'))) {
-        console.log("Suppressing billing error during profile update");
+      // Completely suppress billing-related errors during profile updates
+      if (error instanceof Error && (error.message.includes('billing') || error.message.includes('Stripe') || error.message.includes('customer'))) {
+        console.log("Suppressing billing-related error during profile update:", error.message);
         return { success: true }; // Don't throw billing errors during profile updates
       }
       

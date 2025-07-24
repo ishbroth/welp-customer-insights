@@ -124,20 +124,12 @@ const ProfileForm = () => {
       console.error("=== FORM SUBMIT ERROR ===");
       console.error("Error updating profile:", error);
       
-      // Only show profile update error, not billing errors
-      if (error instanceof Error && !error.message.includes('billing') && !error.message.includes('Stripe')) {
-        toast({
-          title: "Update failed",
-          description: error.message || "There was an error updating your profile. Please try again.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Update failed",
-          description: "There was an error updating your profile. Please try again.",
-          variant: "destructive",
-        });
-      }
+      // Show generic error message for profile updates
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
