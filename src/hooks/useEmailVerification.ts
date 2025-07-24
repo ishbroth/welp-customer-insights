@@ -117,7 +117,7 @@ export const useEmailVerification = ({
       }
 
       if (data.success && data.isValid) {
-        console.log("✅ Account created and user signed in successfully");
+        console.log("✅ Account created successfully");
         
         toast({
           title: "Account Created!",
@@ -127,32 +127,12 @@ export const useEmailVerification = ({
         // Clear any stored verification data
         localStorage.removeItem("pendingVerification");
         
-        // Wait a moment for the session to be properly established
         // The edge function should have automatically signed in the user
+        // Give it a moment to establish the session, then redirect to profile
         setTimeout(() => {
-          // Check if we have a session after the automatic sign-in
-          supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-              console.log("✅ Session confirmed, redirecting to profile");
-              // Redirect based on account type
-              if (accountType === 'business') {
-                navigate("/dashboard", { replace: true });
-              } else {
-                navigate("/profile", { replace: true });
-              }
-            } else {
-              console.log("⚠️ No session found after account creation, redirecting to login");
-              // If no session, redirect to login with a message
-              navigate("/login", { 
-                replace: true,
-                state: { 
-                  message: "Account created successfully! Please sign in with your credentials.",
-                  email: email 
-                }
-              });
-            }
-          });
-        }, 1000); // Give the auth state time to update
+          navigate("/profile", { replace: true });
+        }, 1000);
+        
       } else {
         toast({
           title: "Verification Failed",
