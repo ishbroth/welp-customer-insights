@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -32,7 +33,7 @@ const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileRe
             Subscribe now to unlock full access to all reviews and responses.
           </p>
         </div>
-        <Button onClick={() => navigate('/subscription')} className="bg-yellow-600 hover:bg-yellow-700">
+        <Button onClick={() => navigate('/customer-benefits')} className="bg-yellow-600 hover:bg-yellow-700">
           Subscribe Now
         </Button>
       </div>
