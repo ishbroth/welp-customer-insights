@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingRoute from "./LoadingRoute";
@@ -15,6 +14,7 @@ import ProfileEdit from "@/pages/ProfileEdit";
 import ProfileReviews from "@/pages/ProfileReviews";
 import CustomerBenefits from "@/pages/CustomerBenefits";
 import NotificationsPage from "@/pages/NotificationsPage";
+import SearchResults from "@/pages/SearchResults";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -33,6 +33,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/customer-benefits" element={<CustomerBenefits />} />
+      <Route path="/search" element={<SearchResults />} />
       
       <Route path="/profile" element={
         <PrivateRoute>
