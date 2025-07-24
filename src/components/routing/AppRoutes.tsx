@@ -30,53 +30,55 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
-      <Route path="/customer-benefits" element={<CustomerBenefits />} />
-      <Route path="/search" element={<SearchResults />} />
-      
-      <Route path="/profile" element={
-        <PrivateRoute>
-          <ProfilePage />
-        </PrivateRoute>
-      } />
-      
-      <Route path="/profile/edit" element={
-        <PrivateRoute>
-          <ProfileEdit />
-        </PrivateRoute>
-      } />
-      
-      <Route path="/profile/reviews" element={
-        <PrivateRoute>
-          <ProfileReviews />
-        </PrivateRoute>
-      } />
-      
-      <Route path="/profile/business-reviews" element={
-        <PrivateRoute>
-          <ProfileReviews />
-        </PrivateRoute>
-      } />
-      
-      <Route path="/profile/billing" element={
-        <PrivateRoute>
-          <BillingPage />
-        </PrivateRoute>
-      } />
-      
-      <Route path="/notifications" element={
-        <PrivateRoute>
-          <NotificationsPage />
-        </PrivateRoute>
-      } />
-      
-      {/* Redirect any unknown routes to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <LoadingRoute>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/customer-benefits" element={<CustomerBenefits />} />
+        <Route path="/search" element={<SearchResults />} />
+        
+        <Route path="/profile" element={
+          <PrivateRoute>
+            <ProfilePage />
+          </PrivateRoute>
+        } />
+        
+        <Route path="/profile/edit" element={
+          <PrivateRoute>
+            <ProfileEdit />
+          </PrivateRoute>
+        } />
+        
+        <Route path="/profile/reviews" element={
+          <PrivateRoute>
+            <ProfileReviews />
+          </PrivateRoute>
+        } />
+        
+        <Route path="/profile/business-reviews" element={
+          <PrivateRoute>
+            <ProfileReviews />
+          </PrivateRoute>
+        } />
+        
+        <Route path="/profile/billing" element={
+          <PrivateRoute>
+            <BillingPage />
+          </PrivateRoute>
+        } />
+        
+        <Route path="/notifications" element={
+          <PrivateRoute>
+            <NotificationsPage />
+          </PrivateRoute>
+        } />
+        
+        {/* Redirect any unknown routes to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </LoadingRoute>
   );
 };
 
