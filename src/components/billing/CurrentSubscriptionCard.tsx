@@ -1,18 +1,14 @@
 
-import { RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-
-interface SubscriptionData {
-  subscribed: boolean;
-  subscription_tier?: string;
-  subscription_end?: string;
-}
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Crown, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 interface CurrentSubscriptionCardProps {
   isLoadingData: boolean;
-  subscriptionData: SubscriptionData | null;
+  subscriptionData: any;
   hasStripeCustomer: boolean;
   isLoadingPortal: boolean;
   currentUserType?: string;
@@ -31,21 +27,6 @@ const CurrentSubscriptionCard = ({
   onManageSubscription,
   onUnsubscribe
 }: CurrentSubscriptionCardProps) => {
-  const getSubscriptionPlanName = () => {
-    if (!subscriptionData?.subscribed) return "No Active Subscription";
-    
-    const tier = subscriptionData.subscription_tier;
-    if (currentUserType === "business") {
-      return tier ? `Business ${tier} Plan` : "Business Plan";
-    }
-    return tier ? `Customer ${tier} Plan` : "Customer Plan";
-  };
-
-  const getNextBillingDate = () => {
-    if (!subscriptionData?.subscription_end) return "N/A";
-    return new Date(subscriptionData.subscription_end).toLocaleDateString();
-  };
-
   // Check if this is a permanent account
   const permanentAccountEmails = [
     'iw@thepaintedpainter.com',
@@ -53,86 +34,124 @@ const CurrentSubscriptionCard = ({
   ];
   const isPermanentAccount = currentUserEmail && permanentAccountEmails.includes(currentUserEmail);
 
+  if (isLoadingData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Loading Subscription...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show permanent account status
+  if (isPermanentAccount) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-yellow-500" />
+            Permanent Account
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+              Lifetime Access
+            </Badge>
+          </div>
+          <p className="text-sm text-gray-600">
+            This account has permanent subscription access with all premium features included.
+          </p>
+          <div className="text-sm text-gray-500">
+            <p>• Unlimited access to all features</p>
+            <p>• No recurring charges</p>
+            <p>• Grandfathered into future updates</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show subscription status for regular users
+  const isSubscribed = subscriptionData?.subscribed || false;
+  const tier = subscriptionData?.subscription_tier || 'Basic';
+  const endDate = subscriptionData?.subscription_end;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Current Subscription</CardTitle>
-        <CardDescription>Details about your current subscription plan</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          Current Subscription
+          {isSubscribed && (
+            <Badge variant="default" className="bg-green-100 text-green-800">
+              Active
+            </Badge>
+          )}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        {isLoadingData ? (
-          <div className="flex items-center justify-center p-4">
-            <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-            Loading subscription data...
-          </div>
-        ) : (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="font-medium text-lg">
-              {getSubscriptionPlanName()}
-            </p>
-            {subscriptionData?.subscribed ? (
-              <>
-                <p className="text-gray-600">
-                  Active subscription
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Next billing date: {getNextBillingDate()}
-                </p>
-              </>
-            ) : (
-              <p className="text-gray-600">
-                No active subscription
-              </p>
-            )}
-            
-            <div className="mt-4 flex items-center justify-end gap-2">
-              {subscriptionData?.subscribed ? (
-                <>
-                  {hasStripeCustomer && !isPermanentAccount && (
-                    <Button
-                      variant="outline"
-                      onClick={onManageSubscription}
-                      disabled={isLoadingPortal}
-                    >
-                      {isLoadingPortal ? "Loading..." : "Manage Subscription"}
-                    </Button>
-                  )}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive">
-                        Unsubscribe
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will cancel your subscription and you will lose access to premium features. 
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={onUnsubscribe}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Yes, Unsubscribe
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              ) : (
-                <Button
-                  variant="default"
-                  onClick={() => window.location.href = '/subscription'}
-                >
-                  Subscribe Now
-                </Button>
+      <CardContent className="space-y-4">
+        {isSubscribed ? (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Plan:</span>
+                <span>{tier}</span>
+              </div>
+              {endDate && (
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Next billing:</span>
+                  <span>{format(new Date(endDate), 'MMM dd, yyyy')}</span>
+                </div>
               )}
             </div>
-          </div>
+            
+            <div className="space-y-2">
+              <Button 
+                onClick={onManageSubscription}
+                disabled={isLoadingPortal}
+                className="w-full"
+              >
+                {isLoadingPortal ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Manage Subscription'
+                )}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <span className="text-sm">No active subscription</span>
+              </div>
+              <p className="text-sm text-gray-600">
+                You're currently on the basic plan with limited features.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Link to="/customer-benefits" className="block w-full">
+                <Button className="w-full welp-button">
+                  Subscribe Now
+                </Button>
+              </Link>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
