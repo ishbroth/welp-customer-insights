@@ -7,16 +7,21 @@ import ProfileSidebar from "@/components/ProfileSidebar";
 import WelcomeSection from "@/components/profile/WelcomeSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Edit, User, Phone, Mail, MapPin, Building } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import { useBillingData } from "@/hooks/useBillingData";
+import { useCredits } from "@/hooks/useCredits";
 
 const ProfilePage = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isVerified } = useVerifiedStatus(currentUser?.id);
+  const { subscriptionData } = useBillingData(currentUser);
+  const { balance } = useCredits();
+  const navigate = useNavigate();
 
   if (!currentUser) {
     return (
@@ -31,6 +36,7 @@ const ProfilePage = () => {
   }
 
   const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
+  const isCustomerAccount = currentUser.type === "customer";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -121,26 +127,99 @@ const ProfilePage = () => {
                 <CardTitle>Account Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Account Type: {currentUser.type}</p>
-                    <p className="text-sm text-gray-600">
-                      {isBusinessAccount 
-                        ? (isVerified ? "Verified Business Account" : "Business Account - Pending Verification")
-                        : "Verified Customer Account"
-                      }
-                    </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Account Type: {currentUser.type}</p>
+                      <p className="text-sm text-gray-600">
+                        {isBusinessAccount 
+                          ? (isVerified ? "Verified Business Account" : "Business Account - Pending Verification")
+                          : "Verified Customer Account"
+                        }
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                          Pending Verification
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) ? (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                        Pending Verification
-                      </span>
+
+                  {/* Subscription Status */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-medium">Subscription Status</p>
+                        <p className="text-sm text-gray-600">
+                          {isSubscribed || subscriptionData?.subscribed 
+                            ? `Premium subscription active${subscriptionData?.subscription_tier ? ` - ${subscriptionData.subscription_tier}` : ''}`
+                            : "No active subscription"
+                          }
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          isSubscribed || subscriptionData?.subscribed 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {isSubscribed || subscriptionData?.subscribed ? 'Active' : 'Free'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Credits Display */}
+                    {!isSubscribed && !subscriptionData?.subscribed && (
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="font-medium">Credits Balance</p>
+                          <p className="text-sm text-gray-600">
+                            Available credits for one-time review access
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-gray-500" />
+                            <span className="font-medium">{balance || 0}</span>
+                          </div>
+                        </div>
+                      </div>
                     )}
+
+                    {/* Subscription Action Buttons */}
+                    <div className="flex gap-2">
+                      {!isSubscribed && !subscriptionData?.subscribed ? (
+                        <Button 
+                          onClick={() => navigate('/customer-benefits')}
+                          className="flex-1"
+                        >
+                          Subscribe Now
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={() => navigate('/customer-benefits')}
+                          variant="outline"
+                          className="flex-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+                        >
+                          <Star className="h-4 w-4 mr-2" />
+                          Upgrade to Legacy
+                        </Button>
+                      )}
+                      <Button 
+                        onClick={() => navigate('/billing')}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Manage Billing
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
