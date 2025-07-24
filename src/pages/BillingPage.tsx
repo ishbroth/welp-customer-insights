@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { useBillingData } from "@/hooks/useBillingData";
 import { openCustomerPortal } from "@/services/subscriptionService";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import BillingPageHeader from "@/components/billing/BillingPageHeader";
 import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
 import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
@@ -45,46 +47,52 @@ const BillingPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <BillingPageHeader 
-          isLoadingData={isLoadingData}
-          onRefresh={loadBillingData}
-        />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <CurrentSubscriptionCard
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <div className="container mx-auto py-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <BillingPageHeader 
               isLoadingData={isLoadingData}
-              subscriptionData={subscriptionData}
-              hasStripeCustomer={hasStripeCustomer}
-              isLoadingPortal={isLoadingPortal}
-              currentUserType={currentUser?.type}
-              currentUserEmail={currentUser?.email}
-              onManageSubscription={handleManageSubscription}
-              onUnsubscribe={handleUnsubscribe}
+              onRefresh={loadBillingData}
             />
             
-            <CreditsBalanceCard />
-          </div>
-          
-          <div className="space-y-6">
-            <PaymentMethodsCard
-              isLoadingData={isLoadingData}
-              paymentMethods={paymentMethods}
-              hasStripeCustomer={hasStripeCustomer}
-              isLoadingPortal={isLoadingPortal}
-              onManageSubscription={handleManageSubscription}
-            />
-            
-            <TransactionHistoryCard
-              isLoadingData={isLoadingData}
-              transactions={transactions}
-              hasStripeCustomer={hasStripeCustomer}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <CurrentSubscriptionCard
+                  isLoadingData={isLoadingData}
+                  subscriptionData={subscriptionData}
+                  hasStripeCustomer={hasStripeCustomer}
+                  isLoadingPortal={isLoadingPortal}
+                  currentUserType={currentUser?.type}
+                  currentUserEmail={currentUser?.email}
+                  onManageSubscription={handleManageSubscription}
+                  onUnsubscribe={handleUnsubscribe}
+                />
+                
+                <CreditsBalanceCard />
+              </div>
+              
+              <div className="space-y-6">
+                <PaymentMethodsCard
+                  isLoadingData={isLoadingData}
+                  paymentMethods={paymentMethods}
+                  hasStripeCustomer={hasStripeCustomer}
+                  isLoadingPortal={isLoadingPortal}
+                  onManageSubscription={handleManageSubscription}
+                />
+                
+                <TransactionHistoryCard
+                  isLoadingData={isLoadingData}
+                  transactions={transactions}
+                  hasStripeCustomer={hasStripeCustomer}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 };
