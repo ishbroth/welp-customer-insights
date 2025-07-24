@@ -59,7 +59,7 @@ const BillingPage = () => {
               subscriptionData={subscriptionData}
               hasStripeCustomer={hasStripeCustomer}
               isLoadingPortal={isLoadingPortal}
-              currentUserType={currentUser?.user_type}
+              currentUserType={currentUser?.type}
               currentUserEmail={currentUser?.email}
               onManageSubscription={handleManageSubscription}
               onUnsubscribe={handleUnsubscribe}
