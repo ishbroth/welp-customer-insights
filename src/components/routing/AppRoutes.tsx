@@ -12,6 +12,7 @@ import Register from "@/pages/Register";
 import BillingPage from "@/pages/BillingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
+import ProfileReviews from "@/pages/ProfileReviews";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -39,6 +40,18 @@ const AppRoutes = () => {
       <Route path="/profile/edit" element={
         <PrivateRoute>
           <ProfileEdit />
+        </PrivateRoute>
+      } />
+      
+      <Route path="/profile/reviews" element={
+        <PrivateRoute>
+          <ProfileReviews />
+        </PrivateRoute>
+      } />
+      
+      <Route path="/profile/business-reviews" element={
+        <PrivateRoute>
+          <ProfileReviews />
         </PrivateRoute>
       } />
       
