@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth";
 
 export const useAccountDeletion = () => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const { toast } = useToast();
   const { logout } = useAuth();
 
@@ -47,17 +48,11 @@ export const useAccountDeletion = () => {
 
       console.log("✅ Account deletion successful:", data);
       
-      toast({
-        title: "Account deleted successfully",
-        description: "Your account and all associated data have been permanently removed.",
-        variant: "default",
-      });
-
       // Log out the user since their account no longer exists
       await logout();
       
-      // Redirect to home page
-      window.location.href = '/';
+      // Show success popup instead of immediately redirecting
+      setShowSuccessPopup(true);
       
       return true;
 
@@ -76,8 +71,16 @@ export const useAccountDeletion = () => {
     }
   };
 
+  const handleSuccessPopupClose = () => {
+    setShowSuccessPopup(false);
+    // Redirect to home page after popup is closed
+    window.location.href = '/';
+  };
+
   return {
     deleteAccount,
-    isDeleting
+    isDeleting,
+    showSuccessPopup,
+    handleSuccessPopupClose
   };
 };
