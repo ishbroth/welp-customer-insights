@@ -8,12 +8,14 @@ import WelcomeSection from "@/components/profile/WelcomeSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star } from "lucide-react";
+import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useCredits } from "@/hooks/useCredits";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const ProfilePage = () => {
   const { currentUser, isSubscribed } = useAuth();
@@ -22,6 +24,40 @@ const ProfilePage = () => {
   const { subscriptionData } = useBillingData(currentUser);
   const { balance } = useCredits();
   const navigate = useNavigate();
+
+  const handleBuyCredits = async () => {
+    if (!currentUser) {
+      toast.error("Please log in to purchase credits");
+      return;
+    }
+
+    try {
+      console.log("Creating credit payment session...");
+      const { data, error } = await supabase.functions.invoke('create-credit-payment', {
+        body: { 
+          creditAmount: 1,
+          totalCost: 300 // $3.00 in cents
+        }
+      });
+
+      if (error) {
+        console.error("Error creating payment session:", error);
+        toast.error("Failed to create payment session");
+        return;
+      }
+
+      if (data?.url) {
+        console.log("Opening Stripe checkout...");
+        window.open(data.url, '_blank');
+      } else {
+        console.error("No URL returned from payment session");
+        toast.error("Failed to create payment session");
+      }
+    } catch (error) {
+      console.error("Error in handleBuyCredits:", error);
+      toast.error("An error occurred while processing your request");
+    }
+  };
 
   if (!currentUser) {
     return (
@@ -194,6 +230,15 @@ const ProfilePage = () => {
 
                     {/* Subscription Action Buttons */}
                     <div className="flex gap-2">
+                      <Button 
+                        onClick={handleBuyCredits}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Buy Credits ($3)
+                      </Button>
+                      
                       {!isSubscribed && !subscriptionData?.subscribed ? (
                         <Button 
                           onClick={() => navigate('/customer-benefits')}
@@ -211,14 +256,6 @@ const ProfilePage = () => {
                           Upgrade to Legacy
                         </Button>
                       )}
-                      <Button 
-                        onClick={() => navigate('/billing')}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Manage Billing
-                      </Button>
                     </div>
                   </div>
                 </div>
