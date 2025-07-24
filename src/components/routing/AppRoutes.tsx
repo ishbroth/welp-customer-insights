@@ -11,6 +11,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import BillingPage from "@/pages/BillingPage";
 import ProfilePage from "@/pages/ProfilePage";
+import ProfileEdit from "@/pages/ProfileEdit";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -32,6 +33,12 @@ const AppRoutes = () => {
       <Route path="/profile" element={
         <PrivateRoute>
           <ProfilePage />
+        </PrivateRoute>
+      } />
+      
+      <Route path="/profile/edit" element={
+        <PrivateRoute>
+          <ProfileEdit />
         </PrivateRoute>
       } />
       
