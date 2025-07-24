@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { BusinessInfoForm } from "./BusinessInfoForm";
+import { BusinessPasswordSection } from "./BusinessPasswordSection";
 
 interface BusinessVerificationStepProps {
   businessName: string;
@@ -25,11 +26,16 @@ interface BusinessVerificationStepProps {
   setBusinessType: (value: string) => void;
   licenseNumber: string;
   setLicenseNumber: (value: string) => void;
+  businessPassword: string;
+  setBusinessPassword: (value: string) => void;
+  businessConfirmPassword: string;
+  setBusinessConfirmPassword: (value: string) => void;
   hasDuplicates: boolean;
   onDuplicateFound: (hasDuplicate: boolean) => void;
   verificationError: string | null;
   isVerifying: boolean;
   isVerified: boolean;
+  licenseVerified: boolean;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -54,32 +60,50 @@ export const BusinessVerificationStep = ({
   setBusinessType,
   licenseNumber,
   setLicenseNumber,
+  businessPassword,
+  setBusinessPassword,
+  businessConfirmPassword,
+  setBusinessConfirmPassword,
   hasDuplicates,
   onDuplicateFound,
   verificationError,
   isVerifying,
   isVerified,
+  licenseVerified,
   onSubmit
 }: BusinessVerificationStepProps) => {
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("🔍 LICENSE VERIFICATION TRIGGERED");
+    console.log("🔍 BUSINESS SIGNUP FORM SUBMISSION");
     console.log("Business Type (License Type):", businessType);
     console.log("License Number:", licenseNumber);
     console.log("Business State:", businessState);
     
-    // Validate required fields including state and phone
+    // Validate required fields including passwords
     if (!businessName.trim() || !businessEmail.trim() || !businessStreet.trim() || 
         !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() || 
-        !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim()) {
-      console.error("❌ Required fields missing for verification");
+        !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim() ||
+        !businessPassword.trim() || !businessConfirmPassword.trim()) {
+      console.error("❌ Required fields missing for submission");
+      return;
+    }
+
+    // Validate passwords match
+    if (businessPassword !== businessConfirmPassword) {
+      console.error("❌ Passwords do not match");
+      return;
+    }
+
+    // Validate password length
+    if (businessPassword.length < 8) {
+      console.error("❌ Password too short");
       return;
     }
     
-    // Trigger automatic verification through the onSubmit handler
-    console.log("✅ Triggering automatic license verification...");
+    // Trigger email verification and account creation
+    console.log("✅ Triggering email verification...");
     onSubmit(e);
   };
 
@@ -107,6 +131,14 @@ export const BusinessVerificationStep = ({
         licenseNumber={licenseNumber}
         setLicenseNumber={setLicenseNumber}
         onDuplicateFound={onDuplicateFound}
+        licenseVerified={licenseVerified}
+      />
+
+      <BusinessPasswordSection
+        businessPassword={businessPassword}
+        setBusinessPassword={setBusinessPassword}
+        businessConfirmPassword={businessConfirmPassword}
+        setBusinessConfirmPassword={setBusinessConfirmPassword}
       />
       
       {verificationError && (
@@ -129,14 +161,14 @@ export const BusinessVerificationStep = ({
         className="welp-button w-full mt-6" 
         disabled={isVerifying || hasDuplicates || !businessState.trim() || !businessPhone.trim()}
       >
-        {isVerifying ? "Verifying License..." : "Continue to Password Setup"}
+        {isVerifying ? "Processing..." : "Continue to Email Verification"}
       </Button>
 
       {isVerifying && (
         <div className="mt-2 text-center text-sm text-gray-600">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-welp-red mr-2"></div>
-            Automatically verifying your {businessType === 'ein' ? 'EIN' : 'license'} with state databases...
+            Processing your business registration...
           </div>
         </div>
       )}

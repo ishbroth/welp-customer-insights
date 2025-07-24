@@ -1,103 +1,119 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface LicenseVerificationPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  verificationResult: any;
   businessName: string;
-  licenseNumber: string;
+  isVerified: boolean;
+  verificationDetails?: any;
 }
 
-const LicenseVerificationPopup = ({
+export const LicenseVerificationPopup = ({
   isOpen,
   onClose,
-  verificationResult,
   businessName,
-  licenseNumber
+  isVerified,
+  verificationDetails
 }: LicenseVerificationPopupProps) => {
-  if (!verificationResult) return null;
+  const navigate = useNavigate();
 
-  const { verified, message, details, isRealVerification } = verificationResult;
+  const handleContinueToProfile = () => {
+    onClose();
+    navigate('/profile');
+  };
+
+  const handleRequestVerification = () => {
+    onClose();
+    navigate('/verify-license');
+  };
+
+  const handleSkipForNow = () => {
+    onClose();
+    navigate('/profile');
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {verified ? (
+          <DialogTitle className="flex items-center">
+            {isVerified ? (
               <>
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CheckCircle2 className="h-6 w-6 text-green-500 mr-2" />
                 License Verified!
               </>
             ) : (
               <>
-                <XCircle className="h-5 w-5 text-red-500" />
-                Verification Failed
+                <AlertCircle className="h-6 w-6 text-orange-500 mr-2" />
+                License Verification
               </>
             )}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-semibold mb-2">Business Details</h4>
-            <p><strong>Name:</strong> {businessName}</p>
-            <p><strong>License:</strong> {licenseNumber}</p>
-          </div>
-
-          {verified ? (
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-2">Verification Successful</h4>
-              {isRealVerification && (
-                <div className="mb-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Real-time Verified
-                  </span>
-                </div>
-              )}
-              
-              {details && (
-                <div className="text-sm text-green-700 space-y-1">
-                  {details.type && <p><strong>Type:</strong> {details.type}</p>}
-                  {details.status && <p><strong>Status:</strong> {details.status}</p>}
-                  {details.issuingAuthority && <p><strong>Authority:</strong> {details.issuingAuthority}</p>}
-                  {details.expirationDate && <p><strong>Expires:</strong> {details.expirationDate}</p>}
-                </div>
-              )}
-              
-              <p className="text-sm text-green-700 mt-2">
-                Your business license has been successfully verified. You can proceed with account creation.
+          {isVerified ? (
+            <>
+              <p className="text-green-700">
+                Congratulations! Your business license has been successfully verified through our automated system.
               </p>
-            </div>
-          ) : (
-            <div className="bg-red-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-red-800 mb-2">Verification Failed</h4>
-              <p className="text-sm text-red-700 mb-2">{message}</p>
-              
-              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded mt-3">
-                <div className="flex items-start">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 mr-2" />
-                  <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-1">Don't worry!</p>
-                    <p>You can still continue with account creation. Manual verification will be required after registration.</p>
-                  </div>
-                </div>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="font-semibold text-green-800">{businessName}</p>
+                {verificationDetails && (
+                  <p className="text-sm text-green-700">
+                    Verified with {verificationDetails.issuingAuthority || 'state database'}
+                  </p>
+                )}
               </div>
-            </div>
+              <p className="text-sm text-gray-600">
+                Your business profile will display a verified badge, and your reviews will rank higher in search results.
+              </p>
+              <Button 
+                onClick={handleContinueToProfile}
+                className="w-full welp-button"
+              >
+                Continue to Profile
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-700">
+                We were unable to automatically verify your business license at this time. This could be due to:
+              </p>
+              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                <li>License database temporarily unavailable</li>
+                <li>Recent license issuance not yet in system</li>
+                <li>License type not supported for automatic verification</li>
+              </ul>
+              <p className="text-gray-700">
+                You can request manual verification now or continue with an unverified account.
+              </p>
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleRequestVerification}
+                  className="w-full welp-button"
+                >
+                  Request Manual Verification
+                </Button>
+                <Button 
+                  onClick={handleSkipForNow}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Skip for Now
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Note: Unverified businesses may rank lower in search results until verification is complete.
+              </p>
+            </>
           )}
-
-          <div className="flex justify-end">
-            <Button onClick={onClose} className="welp-button">
-              Continue
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default LicenseVerificationPopup;

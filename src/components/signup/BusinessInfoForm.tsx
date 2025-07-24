@@ -1,10 +1,7 @@
 
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BusinessAddressSection } from "./BusinessAddressSection";
-import { PhoneInput } from "@/components/ui/phone-input";
 import { BusinessContactSection } from "./BusinessContactSection";
-import { BUSINESS_TYPE_OPTIONS } from "./businessFormData";
+import { BusinessAddressSection } from "./BusinessAddressSection";
+import { BusinessLicenseSection } from "./BusinessLicenseSection";
 
 interface BusinessInfoFormProps {
   businessName: string;
@@ -27,7 +24,8 @@ interface BusinessInfoFormProps {
   setBusinessType: (value: string) => void;
   licenseNumber: string;
   setLicenseNumber: (value: string) => void;
-  onDuplicateFound: (hasDuplicate: boolean) => void;
+  onDuplicateFound?: (hasDuplicate: boolean) => void;
+  licenseVerified?: boolean;
 }
 
 export const BusinessInfoForm = ({
@@ -51,11 +49,23 @@ export const BusinessInfoForm = ({
   setBusinessType,
   licenseNumber,
   setLicenseNumber,
-  onDuplicateFound
+  onDuplicateFound,
+  licenseVerified = false
 }: BusinessInfoFormProps) => {
+  const businessAddress = `${businessStreet}, ${businessCity}, ${businessState} ${businessZipCode}`;
 
   return (
     <div className="space-y-6">
+      <BusinessContactSection
+        businessEmail={businessEmail}
+        setBusinessEmail={setBusinessEmail}
+        businessPhone={businessPhone}
+        setBusinessPhone={setBusinessPhone}
+        businessName={businessName}
+        businessAddress={businessAddress}
+        onDuplicateFound={onDuplicateFound}
+      />
+      
       <BusinessAddressSection
         businessName={businessName}
         setBusinessName={setBusinessName}
@@ -71,51 +81,14 @@ export const BusinessInfoForm = ({
         setBusinessZipCode={setBusinessZipCode}
       />
       
-      <BusinessContactSection
-        businessEmail={businessEmail}
-        setBusinessEmail={setBusinessEmail}
-        businessPhone={businessPhone}
-        setBusinessPhone={setBusinessPhone}
-        businessName={businessName}
-        businessAddress={`${businessStreet} ${businessCity} ${businessState} ${businessZipCode}`.trim()}
-        onDuplicateFound={onDuplicateFound}
+      <BusinessLicenseSection
+        businessType={businessType}
+        setBusinessType={setBusinessType}
+        licenseNumber={licenseNumber}
+        setLicenseNumber={setLicenseNumber}
+        businessState={businessState}
+        licenseVerified={licenseVerified}
       />
-      
-      <div>
-        <label htmlFor="businessType" className="block text-sm font-medium mb-1">
-          License Type/EIN <span className="text-red-500">*</span>
-        </label>
-        <Select value={businessType} onValueChange={setBusinessType} required>
-          <SelectTrigger className="welp-input">
-            <SelectValue placeholder="Select license type or EIN" />
-          </SelectTrigger>
-          <SelectContent>
-            {BUSINESS_TYPE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {!businessType && (
-          <p className="text-sm text-red-500 mt-1">Please select a license type</p>
-        )}
-      </div>
-      
-      <div>
-        <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1">
-          License Number <span className="text-red-500">*</span>
-        </label>
-        <Input
-          id="licenseNumber"
-          type="text"
-          placeholder="Your business license number or EIN"
-          value={licenseNumber}
-          onChange={(e) => setLicenseNumber(e.target.value)}
-          className="welp-input"
-          required
-        />
-      </div>
     </div>
   );
 };

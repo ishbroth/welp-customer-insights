@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { sendEmailVerificationCode } from "@/utils/emailUtils";
+import { verifyBusinessId } from "@/utils/businessVerification";
 
 export const useBusinessAccountCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +45,28 @@ export const useBusinessAccountCreation = () => {
     setIsSubmitting(true);
 
     try {
-      // Store business data for verification step
+      // Perform license verification
+      console.log("🔍 Performing license verification during signup...");
+      let licenseVerificationResult = null;
+      
+      try {
+        licenseVerificationResult = await verifyBusinessId(
+          licenseNumber,
+          businessType,
+          businessState
+        );
+        console.log("📋 License verification result:", licenseVerificationResult);
+      } catch (verificationError) {
+        console.error("❌ License verification failed:", verificationError);
+        // Continue with signup even if verification fails
+        licenseVerificationResult = {
+          verified: false,
+          message: "Verification unavailable",
+          isRealVerification: false
+        };
+      }
+
+      // Store business data for verification step including license verification result
       const businessData = {
         businessName,
         businessEmail,
@@ -55,7 +77,8 @@ export const useBusinessAccountCreation = () => {
         businessState,
         businessZipCode,
         licenseNumber,
-        businessType
+        businessType,
+        licenseVerificationResult
       };
       localStorage.setItem("pendingVerification", JSON.stringify(businessData));
 
@@ -70,7 +93,7 @@ export const useBusinessAccountCreation = () => {
           description: `A verification code has been sent to ${businessEmail}.`,
         });
 
-        // Navigate to email verification page
+        // Navigate to email verification page with business type
         navigate(`/verify-email?email=${encodeURIComponent(businessEmail)}&type=business`);
       } else {
         toast({

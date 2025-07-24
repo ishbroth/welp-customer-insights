@@ -15,10 +15,10 @@ const Signup = () => {
   const initialAccountType = searchParams.get("type") === "customer" ? "customer" : "business";
   const isUnlockFlow = searchParams.get("unlock") === "review";
   const [accountType, setAccountType] = useState<"business" | "customer">(initialAccountType);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // Always start at step 1 now
   
   useEffect(() => {
-    // Reset form and steps when account type changes
+    // Always reset to step 1 when account type changes (simplified flow)
     setStep(1);
   }, [accountType]);
 
