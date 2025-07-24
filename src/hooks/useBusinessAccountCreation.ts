@@ -93,6 +93,7 @@ export const useBusinessAccountCreation = () => {
           description: `A verification code has been sent to ${businessEmail}.`,
         });
 
+        console.log("🔄 Navigating to email verification page...");
         // Navigate to email verification page with business type
         navigate(`/verify-email?email=${encodeURIComponent(businessEmail)}&type=business`);
       } else {
