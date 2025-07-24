@@ -22,7 +22,7 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
     setTimeout(() => {
       setIsPageLoading(false);
       isPageLoadingRef.current = false;
-    }, 1500); // Increased to 1.5 seconds so you can see the animation
+    }, 500); // Back to 500ms
   };
   
   const hidePageLoading = () => {
