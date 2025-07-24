@@ -1,5 +1,5 @@
 
-import { RefreshCw, Plus, Info } from "lucide-react";
+import { RefreshCw, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCredits } from "@/hooks/useCredits";
@@ -98,17 +98,6 @@ const CreditsBalanceCard = () => {
             {isSubscribed && (
               <div className="mt-2 text-sm text-green-600">
                 ✓ Premium subscription active - unlimited access included
-              </div>
-            )}
-            {!isSubscribed && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-1">💡 Tip: Adjust quantity at checkout</p>
-                    <p>On the Stripe checkout page, you can click the small "Qty" text to adjust how many credits you want to purchase (1-50 credits available).</p>
-                  </div>
-                </div>
               </div>
             )}
           </div>
