@@ -24,7 +24,8 @@ const Login = () => {
 
       if (result.success) {
         toast.success("Login successful!");
-        navigate("/");
+        // Redirect to profile page after successful login
+        navigate("/profile");
       } else {
         toast.error(result.error || "Login failed");
       }
