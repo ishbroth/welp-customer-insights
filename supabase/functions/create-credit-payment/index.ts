@@ -86,13 +86,13 @@ serve(async (req) => {
     
     // Prepare success URL with parameters to identify what was purchased
     const successParams = new URLSearchParams();
-    successParams.append("credits", creditAmount.toString());
+    successParams.append("credits", "true");
     successParams.append("success", "true");
     
     const successUrl = `${origin}/profile/billing?${successParams.toString()}`;
     const cancelUrl = `${origin}/buy-credits?canceled=true`;
     
-    // Create a one-time payment checkout session for credits
+    // Create a one-time payment checkout session for credits with quantity adjustment enabled
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -100,12 +100,17 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${creditAmount} Credits`,
-              description: `Purchase ${creditAmount} credits at $3 each for accessing premium features`
+              name: "Credits",
+              description: "Purchase credits at $3 each for accessing premium features"
             },
-            unit_amount: totalCost, // in cents
+            unit_amount: 300, // $3.00 per credit in cents
           },
-          quantity: 1,
+          quantity: creditAmount,
+          adjustable_quantity: {
+            enabled: true,
+            minimum: 1,
+            maximum: 50 // Allow up to 50 credits per purchase
+          }
         },
       ],
       mode: "payment",
@@ -113,7 +118,6 @@ serve(async (req) => {
       cancel_url: cancelUrl,
       metadata: {
         user_id: user.id,
-        credit_amount: creditAmount.toString(),
         type: "credit_purchase"
       }
     });
