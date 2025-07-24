@@ -6,6 +6,7 @@ import { useBillingData } from "@/hooks/useBillingData";
 import { openCustomerPortal } from "@/services/subscriptionService";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProfileSidebar from "@/components/ProfileSidebar";
 import BillingPageHeader from "@/components/billing/BillingPageHeader";
 import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
 import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
@@ -15,6 +16,7 @@ import TransactionHistoryCard from "@/components/billing/TransactionHistoryCard"
 const BillingPage = () => {
   const { currentUser } = useAuth();
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const {
     isLoadingData,
@@ -49,9 +51,11 @@ const BillingPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1">
-        <div className="container mx-auto py-8 px-4">
-          <div className="max-w-6xl mx-auto">
+      <div className="flex-grow flex flex-col md:flex-row">
+        <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
+        
+        <main className="flex-1 p-6">
+          <div className="container mx-auto max-w-6xl">
             <BillingPageHeader 
               isLoadingData={isLoadingData}
               onRefresh={loadBillingData}
@@ -90,8 +94,8 @@ const BillingPage = () => {
               </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </div>
   );
