@@ -1,91 +1,188 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import ProfileSidebar from "@/components/ProfileSidebar";
+import WelcomeSection from "@/components/profile/WelcomeSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Edit, User, Phone, Mail, MapPin, Building } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 const ProfilePage = () => {
-  const { currentUser, updateProfile } = useAuth();
-  const [name, setName] = useState(currentUser?.name || "");
-  const [email, setEmail] = useState(currentUser?.email || "");
-  const [loading, setLoading] = useState(false);
+  const { currentUser } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isVerified } = useVerifiedStatus(currentUser?.id);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  if (!currentUser) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-    try {
-      await updateProfile({ name, email });
-      toast.success("Profile updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update profile");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isBusinessAccount = currentUser.type === "business" || currentUser.type === "admin";
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Profile Settings</h1>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex-grow flex">
+        <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-              <CardDescription>
-                Update your personal details and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Updating..." : "Update Profile"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        <main className="flex-1 p-6 md:p-8">
+          <div className="max-w-4xl mx-auto">
+            <WelcomeSection />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Profile Overview Card */}
+              <Card className="lg:col-span-2">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Profile Information
+                  </CardTitle>
+                  <Link to="/profile/edit">
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start space-x-4">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage src={currentUser.avatar || ""} alt={currentUser.name} />
+                      <AvatarFallback className="bg-blue-100 text-blue-800 text-lg">
+                        {currentUser.name?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-xl font-semibold">{currentUser.name}</h2>
+                        {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) && (
+                          <VerifiedBadge />
+                        )}
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-600">
+                        {currentUser.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            <span>{currentUser.email}</span>
+                          </div>
+                        )}
+                        {currentUser.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            <span>{currentUser.phone}</span>
+                          </div>
+                        )}
+                        {(currentUser.address || currentUser.city) && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>
+                              {[currentUser.address, currentUser.city, currentUser.state]
+                                .filter(Boolean)
+                                .join(', ')}
+                              {currentUser.zipCode && ` ${currentUser.zipCode}`}
+                            </span>
+                          </div>
+                        )}
+                        {isBusinessAccount && currentUser.businessId && (
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4" />
+                            <span>Business ID: {currentUser.businessId}</span>
+                          </div>
+                        )}
+                      </div>
+                      {currentUser.bio && (
+                        <p className="mt-3 text-gray-700">{currentUser.bio}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Link to="/profile/billing">
-                  <Button variant="outline" className="w-full justify-start">
-                    Billing & Subscription
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              {/* Quick Actions Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Link to="/profile/edit" className="block">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </Link>
+                  <Link to="/profile/billing" className="block">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Building className="h-4 w-4 mr-2" />
+                      Billing & Subscription
+                    </Button>
+                  </Link>
+                  {isBusinessAccount && (
+                    <Link to="/profile/business-reviews" className="block">
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        My Customer Reviews
+                      </Button>
+                    </Link>
+                  )}
+                  {currentUser.type === 'customer' && (
+                    <Link to="/profile/reviews" className="block">
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        Reviews About Me
+                      </Button>
+                    </Link>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Account Status */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Account Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Account Type: {currentUser.type}</p>
+                    <p className="text-sm text-gray-600">
+                      {isBusinessAccount 
+                        ? (isVerified ? "Verified Business Account" : "Business Account - Pending Verification")
+                        : "Verified Customer Account"
+                      }
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                        Pending Verification
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
+      <Footer />
     </div>
   );
 };
