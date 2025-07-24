@@ -82,21 +82,14 @@ const PaymentMethodsCard = ({
           </div>
         ) : (
           <div className="text-center py-6">
-            {hasStripeCustomer ? (
-              <div>
-                <p className="text-gray-500 mb-4">No payment methods found</p>
-                <Button 
-                  variant="outline"
-                  onClick={onManageSubscription}
-                  disabled={isLoadingPortal}
-                >
-                  {isLoadingPortal ? "Loading..." : "Add Payment Method"}
-                </Button>
-              </div>
-            ) : isPermanentAccount ? (
+            {isPermanentAccount ? (
               <div className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <AlertCircle className="h-5 w-5 text-blue-600 mr-2" />
                 <p className="text-blue-800">This account has permanent subscription access and does not require payment methods</p>
+              </div>
+            ) : hasStripeCustomer ? (
+              <div>
+                <p className="text-gray-500 mb-4">No payment methods found</p>
               </div>
             ) : (
               <div className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
