@@ -59,7 +59,7 @@ export const BusinessContactSection = ({
           className="welp-input"
           required
         />
-        <p className="text-sm text-gray-500 mt-1">This will be used to sign in to your account</p>
+        <p className="text-sm text-gray-500 mt-1">This will be used to sign in to your account and for email verification</p>
         <EmailValidationAlert emailExists={emailExists} />
       </div>
       
@@ -74,7 +74,7 @@ export const BusinessContactSection = ({
           className="welp-input"
           required
         />
-        <p className="text-sm text-gray-500 mt-1">This will be used for account verification via a one-time SMS text message</p>
+        <p className="text-sm text-gray-500 mt-1">This will be used for business communication purposes</p>
         <PhoneValidationAlert phoneExists={phoneExists} />
         <DuplicateBusinessAlert duplicateResult={duplicateResult} />
         <CheckingDuplicatesIndicator isCheckingDuplicates={isCheckingDuplicates} />
