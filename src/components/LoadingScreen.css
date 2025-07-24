@@ -1,14 +1,12 @@
 
-
-
 @keyframes clockwise-highlight {
   0% { 
     fill: white; 
   }
-  20% { 
+  25% { 
     fill: #3b82f6; 
   }
-  80% { 
+  75% { 
     fill: #3b82f6; 
   }
   100% { 
@@ -17,28 +15,26 @@
 }
 
 .period {
-  animation: clockwise-highlight 0.5s;
-  animation-delay: 0.4s;
+  animation: clockwise-highlight 2s infinite;
+  animation-delay: 1.6s;
 }
 
 .arm-right {
-  animation: clockwise-highlight 0.5s;
+  animation: clockwise-highlight 2s infinite;
   animation-delay: 0s;
 }
 
 .arm-bottom-right {
-  animation: clockwise-highlight 0.5s;
-  animation-delay: 0.1s;
+  animation: clockwise-highlight 2s infinite;
+  animation-delay: 0.4s;
 }
 
 .arm-bottom-left {
-  animation: clockwise-highlight 0.5s;
-  animation-delay: 0.2s;
+  animation: clockwise-highlight 2s infinite;
+  animation-delay: 0.8s;
 }
 
 .arm-top-left {
-  animation: clockwise-highlight 0.5s;
-  animation-delay: 0.3s;
+  animation: clockwise-highlight 2s infinite;
+  animation-delay: 1.2s;
 }
-
-
