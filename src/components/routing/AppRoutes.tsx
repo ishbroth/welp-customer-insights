@@ -14,6 +14,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
 import ProfileReviews from "@/pages/ProfileReviews";
 import CustomerBenefits from "@/pages/CustomerBenefits";
+import NotificationsPage from "@/pages/NotificationsPage";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -60,6 +61,12 @@ const AppRoutes = () => {
       <Route path="/profile/billing" element={
         <PrivateRoute>
           <BillingPage />
+        </PrivateRoute>
+      } />
+      
+      <Route path="/notifications" element={
+        <PrivateRoute>
+          <NotificationsPage />
         </PrivateRoute>
       } />
       
