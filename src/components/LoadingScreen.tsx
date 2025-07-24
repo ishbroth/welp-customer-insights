@@ -17,8 +17,6 @@ const LoadingScreen: React.FC = () => {
           width="60"
           height="60"
           viewBox="0 0 60 60"
-          className="animate-spin"
-          style={{ animationDuration: '2s' }}
         >
           {/* Using the same asterisk design from WelpAppIcon with clockwise highlighting */}
           <g transform="translate(30, 30) rotate(12)">
