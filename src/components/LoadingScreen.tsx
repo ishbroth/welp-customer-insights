@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useLoading } from '@/contexts/LoadingContext';
-import './LoadingScreen.css';
 
 const LoadingScreen: React.FC = () => {
   const { isPageLoading } = useLoading();
@@ -20,11 +19,51 @@ const LoadingScreen: React.FC = () => {
           className="animate-spin"
           style={{ animationDuration: '1s' }}
         >
-          <path
-            d="M30 6 L36 24 L54 24 L39 36 L45 54 L30 42 L15 54 L21 36 L6 24 L24 24 Z"
-            fill="white"
-            className="animate-pulse"
-          />
+          {/* Using the same asterisk design from WelpAppIcon */}
+          <g transform="translate(30, 30) rotate(12)">
+            {/* Right arm (0 degrees) */}
+            <path
+              d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
+              fill="white"
+              className="animate-pulse"
+            />
+            
+            {/* Bottom-right diagonal arm (72 degrees) */}
+            <g transform="rotate(72)">
+              <path
+                d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
+                fill="white"
+                className="animate-pulse"
+              />
+            </g>
+            
+            {/* Bottom-left diagonal arm (144 degrees) */}
+            <g transform="rotate(144)">
+              <path
+                d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
+                fill="white"
+                className="animate-pulse"
+              />
+            </g>
+            
+            {/* Top-left diagonal arm (216 degrees) */}
+            <g transform="rotate(216)">
+              <path
+                d="M 0.6 0 Q 5.4 -3 10.2 -1.5 Q 11.4 0 10.2 1.5 Q 5.4 3 0.6 0"
+                fill="white"
+                className="animate-pulse"
+              />
+            </g>
+            
+            {/* Period positioned at 288 degrees */}
+            <circle
+              cx="2.25"
+              cy="-6"
+              r="2.4"
+              fill="white"
+              className="animate-pulse"
+            />
+          </g>
         </svg>
       </div>
     </div>
