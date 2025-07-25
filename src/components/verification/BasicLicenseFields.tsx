@@ -2,67 +2,54 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BUSINESS_TYPE_OPTIONS, US_STATES } from "@/components/signup/businessFormData";
+
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
+  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", 
+  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
+  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", 
+  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", 
+  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", 
+  "Wisconsin", "Wyoming"
+];
 
 interface FormData {
   businessName: string;
   primaryLicense: string;
   licenseState: string;
-  licenseType: string;
-  businessType: string;
-  businessSubcategory: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  phone: string;
-  website: string;
-  additionalLicenses: string;
-  additionalInfo: string;
 }
 
 interface BasicLicenseFieldsProps {
-  formData: FormData;
+  formData: Pick<FormData, 'businessName' | 'primaryLicense' | 'licenseState'>;
   onInputChange: (field: string, value: string) => void;
 }
 
 const BasicLicenseFields = ({ formData, onInputChange }: BasicLicenseFieldsProps) => {
   return (
-    <>
+    <div className="space-y-4">
       <div>
         <Label htmlFor="businessName">Business Name *</Label>
         <Input
           id="businessName"
+          type="text"
           value={formData.businessName}
           onChange={(e) => onInputChange("businessName", e.target.value)}
-          required
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="primaryLicense">Primary License Number *</Label>
-        <Input
-          id="primaryLicense"
-          value={formData.primaryLicense}
-          onChange={(e) => onInputChange("primaryLicense", e.target.value)}
+          placeholder="Enter your business name"
           required
         />
       </div>
 
       <div>
-        <Label htmlFor="businessType">Business Type *</Label>
-        <Select value={formData.businessType} onValueChange={(value) => onInputChange("businessType", value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select business type" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {BUSINESS_TYPE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label htmlFor="primaryLicense">Primary License Number *</Label>
+        <Input
+          id="primaryLicense"
+          type="text"
+          value={formData.primaryLicense}
+          onChange={(e) => onInputChange("primaryLicense", e.target.value)}
+          placeholder="Enter your license number"
+          required
+        />
       </div>
 
       <div>
@@ -78,7 +65,7 @@ const BasicLicenseFields = ({ formData, onInputChange }: BasicLicenseFieldsProps
           </SelectContent>
         </Select>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -14,7 +14,6 @@ interface FormData {
   primaryLicense: string;
   licenseState: string;
   licenseType: string;
-  businessType: string;
   businessSubcategory: string;
   address: string;
   city: string;
@@ -42,7 +41,6 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
     primaryLicense: "",
     licenseState: "",
     licenseType: "",
-    businessType: "",
     businessSubcategory: "",
     address: "",
     city: "",
@@ -93,7 +91,7 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
     }
 
     // Validate required fields
-    if (!formData.businessName || !formData.primaryLicense || !formData.businessType) {
+    if (!formData.businessName || !formData.primaryLicense) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -164,7 +162,6 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
               {/* Instant Verification Section */}
               <InstantVerificationSection
                 primaryLicense={formData.primaryLicense}
-                businessType={formData.businessType}
                 licenseState={formData.licenseState}
                 businessName={formData.businessName}
                 currentUserId={currentUser?.id}

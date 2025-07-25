@@ -1,14 +1,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
-import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface InstantVerificationSectionProps {
   primaryLicense: string;
-  businessType: string;
   licenseState: string;
   businessName: string;
   currentUserId?: string;
@@ -18,7 +17,6 @@ interface InstantVerificationSectionProps {
 
 const InstantVerificationSection = ({
   primaryLicense,
-  businessType,
   licenseState,
   businessName,
   currentUserId,
@@ -26,114 +24,92 @@ const InstantVerificationSection = ({
   onVerificationSuccess
 }: InstantVerificationSectionProps) => {
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationAttempted, setVerificationAttempted] = useState(false);
-  const [instantVerified, setInstantVerified] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [error, setError] = useState("");
 
   const handleInstantVerification = async () => {
-    if (!primaryLicense || !businessType) {
-      toast.error("Please enter your license number and select business type first");
+    if (!primaryLicense || !licenseState) {
+      setError("Please fill in license number and state first");
       return;
     }
 
     setIsVerifying(true);
-    setVerificationAttempted(true);
+    setError("");
+    setVerificationResult(null);
 
     try {
-      const result = await verifyBusinessId(
-        primaryLicense, 
-        businessType, 
-        licenseState || state
-      );
-
+      // Use "Business License" as default license type for instant verification
+      const result = await verifyBusinessId(primaryLicense, "Business License", licenseState);
+      
+      setVerificationResult(result);
+      
       if (result.verified && result.isRealVerification) {
-        setInstantVerified(true);
-        const verificationDetails = {
+        onVerificationSuccess({
           businessName,
-          verificationDetails: result.details || {
-            type: "Business License",
-            status: "Active"
+          verificationDetails: {
+            type: result.details?.type || "Business License",
+            status: result.details?.status || "Active",
+            issuingAuthority: result.details?.issuingAuthority || `${licenseState} State Database`,
+            licenseState: licenseState
           }
-        };
-
-        // Update business_info table immediately
-        if (currentUserId) {
-          const { error: updateError } = await supabase
-            .from('business_info')
-            .upsert({
-              id: currentUserId,
-              business_name: businessName,
-              license_number: primaryLicense,
-              license_type: businessType,
-              license_state: licenseState || state,
-              verified: true,
-              license_status: result.details?.status || "Active",
-              additional_info: `Real-time verified: ${result.details?.issuingAuthority || 'State Database'}`
-            });
-
-          if (updateError) {
-            console.error("Error updating business info:", updateError);
-          }
-        }
-
-        onVerificationSuccess(verificationDetails);
-        toast.success("License verified successfully!");
-      } else {
-        toast.error(result.message || "Could not verify license automatically. Please submit manual verification request.");
+        });
       }
     } catch (error) {
-      console.error("Verification error:", error);
-      toast.error("An error occurred during verification. Please try manual submission.");
+      console.error("Instant verification error:", error);
+      setError("Verification failed. Please try again or proceed with manual verification.");
     } finally {
       setIsVerifying(false);
     }
   };
 
-  if (!primaryLicense || !businessType) {
-    return null;
-  }
-
-  if (instantVerified) {
-    return (
-      <div className="md:col-span-2 p-4 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-center text-green-800">
-          <CheckCircle className="h-5 w-5 mr-2" />
-          <span className="font-semibold">License Verified Successfully!</span>
-        </div>
-        <p className="text-sm text-green-700 mt-1">
-          Your business has been verified through real-time license verification. No further action needed.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="md:col-span-2">
+    <Card className="h-fit">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Instant Verification
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-gray-600">
+          Try instant verification first for immediate results
+        </p>
+        
         <Button
           type="button"
           onClick={handleInstantVerification}
-          disabled={isVerifying}
-          className="bg-green-600 hover:bg-green-700 text-white w-full"
+          disabled={isVerifying || !primaryLicense || !licenseState}
+          className="w-full"
         >
-          {isVerifying ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Verifying License...
-            </>
-          ) : (
-            <>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Try Instant Verification
-            </>
-          )}
+          {isVerifying ? "Verifying..." : "Verify Instantly"}
         </Button>
-        {verificationAttempted && !instantVerified && (
-          <p className="text-sm text-gray-600 mt-2 text-center">
-            Instant verification not available for this license. Please continue with manual verification below.
-          </p>
+
+        {error && (
+          <div className="flex items-center gap-2 text-red-600 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {error}
+          </div>
         )}
-      </div>
-    </>
+
+        {verificationResult && (
+          <div className="space-y-2">
+            {verificationResult.verified && verificationResult.isRealVerification ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">License verified successfully!</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-orange-600">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">
+                  Could not verify instantly. Please continue with manual verification.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
