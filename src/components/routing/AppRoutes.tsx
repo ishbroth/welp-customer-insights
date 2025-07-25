@@ -17,6 +17,7 @@ import ProfileReviews from "@/pages/ProfileReviews";
 import CustomerBenefits from "@/pages/CustomerBenefits";
 import NotificationsPage from "@/pages/NotificationsPage";
 import SearchResults from "@/pages/SearchResults";
+import Subscription from "@/pages/Subscription";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -38,6 +39,7 @@ const AppRoutes = () => {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/customer-benefits" element={<CustomerBenefits />} />
         <Route path="/search" element={<SearchResults />} />
+        <Route path="/subscription" element={<Subscription />} />
         
         <Route path="/profile" element={
           <PrivateRoute>
