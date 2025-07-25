@@ -15,6 +15,15 @@ const BusinessReviewsSubscriptionBanner = ({ hasSubscription }: BusinessReviewsS
   const { currentUser } = useAuth();
   const { isVerified } = useVerifiedStatus(currentUser?.id);
 
+  const handleSubscribeClick = () => {
+    // Route based on user type
+    if (currentUser?.type === "business") {
+      navigate("/subscription");
+    } else {
+      navigate("/customer-benefits");
+    }
+  };
+
   if (hasSubscription) {
     return (
       <Alert className="mb-6 border-green-200 bg-green-50">
@@ -61,7 +70,7 @@ const BusinessReviewsSubscriptionBanner = ({ hasSubscription }: BusinessReviewsS
             )}
             <Button 
               size="sm"
-              onClick={() => navigate("/billing")}
+              onClick={handleSubscribeClick}
               className="bg-blue-600 hover:bg-blue-700"
             >
               Upgrade to Premium

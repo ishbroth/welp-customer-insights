@@ -11,10 +11,15 @@ interface SubscriptionButtonProps {
 
 const SubscriptionButton = ({ variant = "default", size = "default", className = "" }: SubscriptionButtonProps) => {
   const navigate = useNavigate();
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, currentUser } = useAuth();
 
   const handleSubscriptionClick = () => {
-    navigate("/subscription");
+    // Route based on user type
+    if (currentUser?.type === "business") {
+      navigate("/subscription");
+    } else {
+      navigate("/customer-benefits");
+    }
   };
 
   return (

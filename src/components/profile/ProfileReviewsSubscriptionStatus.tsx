@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 
 interface ProfileReviewsSubscriptionStatusProps {
   hasSubscription?: boolean;
@@ -8,6 +9,16 @@ interface ProfileReviewsSubscriptionStatusProps {
 
 const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileReviewsSubscriptionStatusProps) => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  const handleSubscribeClick = () => {
+    // Route based on user type
+    if (currentUser?.type === "business") {
+      navigate("/subscription");
+    } else {
+      navigate("/customer-benefits");
+    }
+  };
 
   if (hasSubscription) {
     return (
@@ -33,7 +44,7 @@ const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileRe
             Subscribe now to unlock full access to all reviews and responses.
           </p>
         </div>
-        <Button onClick={() => navigate('/customer-benefits')} className="bg-yellow-600 hover:bg-yellow-700">
+        <Button onClick={handleSubscribeClick} className="bg-yellow-600 hover:bg-yellow-700">
           Subscribe Now
         </Button>
       </div>

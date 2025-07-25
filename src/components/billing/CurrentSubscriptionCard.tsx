@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Crown, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 
 interface CurrentSubscriptionCardProps {
   isLoadingData: boolean;
@@ -27,12 +28,23 @@ const CurrentSubscriptionCard = ({
   onManageSubscription,
   onUnsubscribe
 }: CurrentSubscriptionCardProps) => {
+  const { currentUser } = useAuth();
+
   // Check if this is a permanent account
   const permanentAccountEmails = [
     'iw@thepaintedpainter.com',
     'isaac.wiley99@gmail.com'
   ];
   const isPermanentAccount = currentUserEmail && permanentAccountEmails.includes(currentUserEmail);
+
+  // Route based on user type
+  const getSubscriptionRoute = () => {
+    if (currentUser?.type === "business") {
+      return "/subscription";
+    } else {
+      return "/customer-benefits";
+    }
+  };
 
   if (isLoadingData) {
     return (
@@ -145,7 +157,7 @@ const CurrentSubscriptionCard = ({
             </div>
             
             <div className="space-y-2">
-              <Link to="/customer-benefits" className="block w-full">
+              <Link to={getSubscriptionRoute()} className="block w-full">
                 <Button className="w-full welp-button">
                   Subscribe Now
                 </Button>
