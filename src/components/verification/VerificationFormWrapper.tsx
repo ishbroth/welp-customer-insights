@@ -15,6 +15,7 @@ interface FormData {
   licenseState: string;
   licenseType: string;
   businessSubcategory: string;
+  businessType: string;
   address: string;
   city: string;
   state: string;
@@ -42,6 +43,7 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
     licenseState: "",
     licenseType: "",
     businessSubcategory: "",
+    businessType: "",
     address: "",
     city: "",
     state: "",
@@ -60,6 +62,7 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
         businessName: currentUser.name || "",
         primaryLicense: currentUser.businessId || "",
         licenseState: currentUser.state || "",
+        businessType: currentUser.businessType || "",
         address: currentUser.address || "",
         city: currentUser.city || "",
         state: currentUser.state || "",
@@ -159,10 +162,12 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
                 onInputChange={handleInputChange}
               />
 
-              {/* Instant Verification Section */}
+              {/* Instant Verification Section - Now with all required props */}
               <InstantVerificationSection
                 primaryLicense={formData.primaryLicense}
                 licenseState={formData.licenseState}
+                licenseType={formData.licenseType}
+                businessSubcategory={formData.businessSubcategory}
                 businessName={formData.businessName}
                 currentUserId={currentUser?.id}
                 state={formData.state}

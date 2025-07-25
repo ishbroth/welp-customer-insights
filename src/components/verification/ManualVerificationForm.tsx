@@ -9,6 +9,7 @@ interface FormData {
   licenseState: string;
   licenseType: string;
   businessSubcategory: string;
+  businessType: string; // Added this missing field
   address: string;
   city: string;
   state: string;

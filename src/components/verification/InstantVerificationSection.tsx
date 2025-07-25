@@ -9,6 +9,8 @@ import { verifyBusinessId } from "@/utils/businessVerification";
 interface InstantVerificationSectionProps {
   primaryLicense: string;
   licenseState: string;
+  licenseType: string;
+  businessSubcategory: string;
   businessName: string;
   currentUserId?: string;
   state: string;
@@ -18,6 +20,8 @@ interface InstantVerificationSectionProps {
 const InstantVerificationSection = ({
   primaryLicense,
   licenseState,
+  licenseType,
+  businessSubcategory,
   businessName,
   currentUserId,
   state,
@@ -28,8 +32,8 @@ const InstantVerificationSection = ({
   const [error, setError] = useState("");
 
   const handleInstantVerification = async () => {
-    if (!primaryLicense || !licenseState) {
-      setError("Please fill in license number and state first");
+    if (!primaryLicense || !licenseState || !licenseType) {
+      setError("Please fill in license number, state, and license type first");
       return;
     }
 
@@ -38,8 +42,17 @@ const InstantVerificationSection = ({
     setVerificationResult(null);
 
     try {
-      // Use "Business License" as default license type for instant verification
-      const result = await verifyBusinessId(primaryLicense, "Business License", licenseState);
+      console.log("🔍 Starting instant verification with:", {
+        primaryLicense,
+        licenseType,
+        licenseState,
+        businessSubcategory
+      });
+
+      // Use the actual selected license type instead of hardcoded "Business License"
+      const result = await verifyBusinessId(primaryLicense, licenseType, licenseState);
+      
+      console.log("📋 Instant verification result:", result);
       
       setVerificationResult(result);
       
@@ -47,10 +60,11 @@ const InstantVerificationSection = ({
         onVerificationSuccess({
           businessName,
           verificationDetails: {
-            type: result.details?.type || "Business License",
+            type: licenseType,
             status: result.details?.status || "Active",
             issuingAuthority: result.details?.issuingAuthority || `${licenseState} State Database`,
-            licenseState: licenseState
+            licenseState: licenseState,
+            businessSubcategory: businessSubcategory
           }
         });
       }
@@ -62,6 +76,9 @@ const InstantVerificationSection = ({
     }
   };
 
+  // Button is only enabled when all required fields are filled
+  const isButtonEnabled = primaryLicense && licenseState && licenseType && !isVerifying;
+
   return (
     <Card className="h-fit">
       <CardHeader>
@@ -72,13 +89,13 @@ const InstantVerificationSection = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600">
-          Try instant verification first for immediate results
+          Try instant verification first for immediate results. Requires license number, state, and license type.
         </p>
         
         <Button
           type="button"
           onClick={handleInstantVerification}
-          disabled={isVerifying || !primaryLicense || !licenseState}
+          disabled={!isButtonEnabled}
           className="w-full"
         >
           {isVerifying ? "Verifying..." : "Verify Instantly"}

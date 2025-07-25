@@ -33,19 +33,20 @@ export const useRealTimeLicenseVerification = (
       setHasAttempted(true);
       
       try {
-        console.log("🔍 Real-time license verification:", {
+        console.log("🔍 Real-time license verification with proper license type:", {
           licenseNumber: licenseNumber.trim(),
           businessType,
           businessState
         });
 
+        // Use the actual businessType instead of hardcoded value
         const result = await verifyBusinessId(
           licenseNumber.trim(),
           businessType,
           businessState
         );
 
-        console.log("📋 License verification result:", result);
+        console.log("📋 Real-time license verification result:", result);
         
         setVerificationResult(result);
         setIsVerified(result.verified && result.isRealVerification);

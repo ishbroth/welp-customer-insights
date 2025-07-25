@@ -44,8 +44,16 @@ export const useBusinessVerification = (currentUserId?: string) => {
     }
     
     try {
-      // Use only real license verification - no mock fallback
+      console.log("🔍 Performing business verification with correct license type:", {
+        licenseNumber,
+        businessType,
+        businessState
+      });
+
+      // Use the actual businessType instead of hardcoded value
       const result = await verifyBusinessId(licenseNumber, businessType, businessState);
+      
+      console.log("📋 Business verification result:", result);
       
       if (result.verified && result.isRealVerification) {
         // Real verification successful - proceed with verified account creation
@@ -54,7 +62,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
         setRealVerificationDetails({
           businessName,
           verificationDetails: {
-            type: result.details?.type || "Business License",
+            type: businessType, // Use actual business type
             status: result.details?.status || "Active",
             issuingAuthority: result.details?.issuingAuthority || `${businessState} State Database`,
             licenseState: businessState
