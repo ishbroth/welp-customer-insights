@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_rate_limits: {
+        Row: {
+          attempt_type: string
+          attempts: number
+          blocked_until: string | null
+          created_at: string
+          first_attempt_at: string
+          id: string
+          identifier: string
+          last_attempt_at: string
+        }
+        Insert: {
+          attempt_type: string
+          attempts?: number
+          blocked_until?: string | null
+          created_at?: string
+          first_attempt_at?: string
+          id?: string
+          identifier: string
+          last_attempt_at?: string
+        }
+        Update: {
+          attempt_type?: string
+          attempts?: number
+          blocked_until?: string | null
+          created_at?: string
+          first_attempt_at?: string
+          id?: string
+          identifier?: string
+          last_attempt_at?: string
+        }
+        Relationships: []
+      }
       business_info: {
         Row: {
           additional_info: string | null
@@ -621,6 +654,39 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          created_at: string
+          event_description: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_description: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_description?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -714,29 +780,35 @@ export type Database = {
       }
       verification_codes: {
         Row: {
+          attempt_count: number | null
           code: string
           created_at: string
           email: string | null
           expires_at: string
           id: string
+          max_attempts: number | null
           phone: string | null
           verification_type: string
         }
         Insert: {
+          attempt_count?: number | null
           code: string
           created_at?: string
           email?: string | null
           expires_at: string
           id?: string
+          max_attempts?: number | null
           phone?: string | null
           verification_type?: string
         }
         Update: {
+          attempt_count?: number | null
           code?: string
           created_at?: string
           email?: string | null
           expires_at?: string
           id?: string
+          max_attempts?: number | null
           phone?: string | null
           verification_type?: string
         }
@@ -816,6 +888,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_attempt_type: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+          p_block_minutes?: number
+        }
+        Returns: boolean
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      log_security_event: {
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_event_description: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
       update_user_credits: {
         Args: {
           p_user_id: string
@@ -825,6 +922,10 @@ export type Database = {
           p_stripe_session_id?: string
         }
         Returns: undefined
+      }
+      validate_verification_code: {
+        Args: { p_code: string; p_identifier: string; p_type?: string }
+        Returns: boolean
       }
     }
     Enums: {
