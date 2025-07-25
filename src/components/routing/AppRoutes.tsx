@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useLoading } from "@/contexts/LoadingContext";
@@ -19,6 +18,7 @@ import CustomerBenefits from "@/pages/CustomerBenefits";
 import NotificationsPage from "@/pages/NotificationsPage";
 import SearchResults from "@/pages/SearchResults";
 import Subscription from "@/pages/Subscription";
+import CustomerVerification from "@/pages/CustomerVerification";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -41,6 +41,7 @@ const AppRoutes = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/customer-benefits" element={<CustomerBenefits />} />
+          <Route path="/customer-verification" element={<CustomerVerification />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/subscription" element={<Subscription />} />
           
