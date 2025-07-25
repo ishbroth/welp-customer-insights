@@ -1,16 +1,15 @@
 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LICENSE_TYPES, BUSINESS_CATEGORIES, BUSINESS_SUBCATEGORIES } from "./constants";
+import { LICENSE_TYPES, BUSINESS_SUBCATEGORIES } from "./constants";
 
 interface FormData {
   licenseType: string;
-  businessType: string;
   businessSubcategory: string;
 }
 
 interface BusinessTypeFieldsProps {
-  formData: Pick<FormData, 'licenseType' | 'businessType' | 'businessSubcategory'>;
+  formData: Pick<FormData, 'licenseType' | 'businessSubcategory'>;
   onInputChange: (field: string, value: string) => void;
 }
 
@@ -26,22 +25,6 @@ const BusinessTypeFields = ({ formData, onInputChange }: BusinessTypeFieldsProps
           <SelectContent className="bg-white">
             {LICENSE_TYPES.map((type) => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="businessCategory">Business Category *</Label>
-        <Select value={formData.businessType} onValueChange={(value) => onInputChange("businessType", value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select business category" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {BUSINESS_CATEGORIES.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
             ))}
           </SelectContent>
         </Select>

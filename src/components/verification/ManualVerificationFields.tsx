@@ -8,7 +8,6 @@ interface FormData {
   primaryLicense: string;
   licenseState: string;
   licenseType: string;
-  businessType: string;
   businessSubcategory: string;
   address: string;
   apartmentSuite?: string;
