@@ -8,7 +8,7 @@ import WelcomeSection from "@/components/profile/WelcomeSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart, Shield } from "lucide-react";
+import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
@@ -191,7 +191,7 @@ const ProfilePage = () => {
                               className="bg-green-600 hover:bg-green-700 text-white"
                               size="sm"
                             >
-                              <Shield className="h-4 w-4 mr-2" />
+                              <VerifiedBadge size="sm" className="mr-2" />
                               Get Verified, it's Free!
                             </Button>
                           </div>
