@@ -47,6 +47,7 @@ const AppRoutes = () => {
           <Route path="/customer-verification" element={<CustomerVerification />} />
           <Route path="/customer-stories" element={<CustomerStories />} />
           <Route path="/testimonials" element={<SuccessStories />} />
+          <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/subscription" element={<Subscription />} />
           
