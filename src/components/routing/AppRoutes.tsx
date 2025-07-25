@@ -27,6 +27,7 @@ import About from "@/pages/About";
 import HowItWorks from "@/pages/HowItWorks";
 import FAQ from "@/pages/FAQ";
 import VerifyLicense from "@/pages/VerifyLicense";
+import NewReview from "@/pages/NewReview";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -59,6 +60,12 @@ const AppRoutes = () => {
           <Route path="/about" element={<About />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/faq" element={<FAQ />} />
+          
+          <Route path="/review/new" element={
+            <PrivateRoute>
+              <NewReview />
+            </PrivateRoute>
+          } />
           
           <Route path="/profile" element={
             <PrivateRoute>
