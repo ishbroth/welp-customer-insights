@@ -16,34 +16,49 @@ const CreditsBalanceCard = () => {
   const isSubscribed = subscriptionData?.subscribed || false;
 
   const handleBuyCredits = async () => {
-    if (isSubscribed) return; // Don't navigate if subscribed
+    console.log("🔥 Buy Credits button clicked!");
+    
+    if (isSubscribed) {
+      console.log("❌ User is subscribed, not allowing credit purchase");
+      return; // Don't navigate if subscribed
+    }
     
     if (!currentUser) {
+      console.log("❌ No current user");
       toast.error("Please log in to purchase credits");
       return;
     }
 
     try {
-      console.log("Creating credit payment session...");
+      console.log("📞 About to call create-credit-payment function...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: {} // Remove the specific credit amount and total cost parameters
       });
 
+      console.log("🔍 Function response:", { data, error });
+
       if (error) {
-        console.error("Error creating payment session:", error);
+        console.error("❌ Error creating payment session:", error);
         toast.error("Failed to create payment session");
         return;
       }
 
       if (data?.url) {
-        console.log("Opening Stripe checkout...");
-        window.open(data.url, '_blank');
+        console.log("🚀 Opening Stripe checkout URL:", data.url);
+        const newWindow = window.open(data.url, '_blank');
+        
+        if (newWindow) {
+          toast.success("Stripe checkout opened in new tab!");
+        } else {
+          toast.error("Popup blocked. Please allow popups and try again.");
+        }
       } else {
-        console.error("No URL returned from payment session");
+        console.error("❌ No URL returned from payment session");
+        console.error("Full response data:", data);
         toast.error("Failed to create payment session");
       }
     } catch (error) {
-      console.error("Error in handleBuyCredits:", error);
+      console.error("❌ Error in handleBuyCredits:", error);
       toast.error("An error occurred while processing your request");
     }
   };

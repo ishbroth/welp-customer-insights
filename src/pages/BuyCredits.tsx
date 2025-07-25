@@ -40,7 +40,10 @@ const BuyCredits = () => {
   }, [currentUser, loading, navigate]);
 
   const handlePurchase = async () => {
+    console.log("🔥 Purchase button clicked!");
+    
     if (!currentUser) {
+      console.log("❌ No current user");
       toast.error("Please log in to purchase credits");
       navigate("/login", { 
         state: { 
@@ -52,38 +55,50 @@ const BuyCredits = () => {
     }
 
     if (isSubscribed) {
+      console.log("❌ User already subscribed");
       toast.error("You already have unlimited access with your subscription");
       return;
     }
 
     if (creditAmount < 1) {
+      console.log("❌ Invalid credit amount:", creditAmount);
       toast.error("Please select at least 1 credit");
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log("Starting credit purchase process...");
+      console.log("📞 About to call create-credit-payment function...");
+      console.log("Request parameters:", { creditAmount, totalCost });
       
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: { creditAmount, totalCost }
       });
 
+      console.log("🔍 Function response:", { data, error });
+
       if (error) {
-        console.error("Error creating payment session:", error);
+        console.error("❌ Error from create-credit-payment:", error);
         toast.error("Failed to create payment session. Please try again.");
         return;
       }
 
       if (data?.url) {
-        console.log("Redirecting to Stripe checkout...");
-        window.open(data.url, '_blank');
+        console.log("🚀 Opening Stripe checkout URL:", data.url);
+        const newWindow = window.open(data.url, '_blank');
+        
+        if (newWindow) {
+          toast.success("Stripe checkout opened in new tab!");
+        } else {
+          toast.error("Popup blocked. Please allow popups and try again.");
+        }
       } else {
-        console.error("No checkout URL received");
+        console.error("❌ No checkout URL received from function");
+        console.error("Full response data:", data);
         toast.error("Failed to create payment session. Please try again.");
       }
     } catch (error) {
-      console.error("Error in handlePurchase:", error);
+      console.error("❌ Unexpected error in handlePurchase:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
