@@ -27,6 +27,7 @@ import About from "@/pages/About";
 import HowItWorks from "@/pages/HowItWorks";
 import FAQ from "@/pages/FAQ";
 import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
 import VerifyLicense from "@/pages/VerifyLicense";
 import NewReview from "@/pages/NewReview";
 
@@ -62,6 +63,7 @@ const AppRoutes = () => {
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           
           <Route path="/review/new" element={
             <PrivateRoute>
