@@ -21,6 +21,7 @@ import SearchResults from "@/pages/SearchResults";
 import Subscription from "@/pages/Subscription";
 import CustomerVerification from "@/pages/CustomerVerification";
 import CustomerStories from "@/pages/CustomerStories";
+import SuccessStories from "@/pages/SuccessStories";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -45,6 +46,7 @@ const AppRoutes = () => {
           <Route path="/customer-benefits" element={<CustomerBenefits />} />
           <Route path="/customer-verification" element={<CustomerVerification />} />
           <Route path="/customer-stories" element={<CustomerStories />} />
+          <Route path="/testimonials" element={<SuccessStories />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/subscription" element={<Subscription />} />
           
