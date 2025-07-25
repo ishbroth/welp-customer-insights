@@ -91,10 +91,10 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://yftvcixhifvrovwhtgtj.supabase.co";
     const verificationUrl = `${origin}/admin/verify-business?token=${verificationToken}`;
 
-    // Send email to your verified email address for testing
+    // Send email to support@mywelp.com using your verified domain
     const emailResponse = await resend.emails.send({
-      from: "Welp Verification <onboarding@resend.dev>",
-      to: ["isaac.wiley99@gmail.com"], // Changed to your verified email
+      from: "Welp Verification <support@mywelp.com>",
+      to: ["support@mywelp.com"],
       subject: `Business Verification Request - ${formData.businessName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
