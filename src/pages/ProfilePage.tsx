@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
@@ -7,7 +8,7 @@ import WelcomeSection from "@/components/profile/WelcomeSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart } from "lucide-react";
+import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
@@ -171,15 +172,31 @@ const ProfilePage = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                          Pending Verification
-                        </span>
-                      )}
+                      <div className="space-y-2">
+                        {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            Pending Verification
+                          </span>
+                        )}
+                        
+                        {/* Add verification button for unverified business accounts */}
+                        {isBusinessAccount && !isVerified && (
+                          <div className="mt-2">
+                            <Button 
+                              onClick={() => navigate('/verification-request')}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              size="sm"
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              Get Verified, it's Free!
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
