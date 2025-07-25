@@ -40,29 +40,50 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     // Monitor for potential security issues
     const monitorSecurity = () => {
       // Listen for console errors that might indicate security issues
-      window.addEventListener('error', (event) => {
+      const handleError = (event: ErrorEvent) => {
         if (event.message.includes('Content Security Policy') || 
             event.message.includes('Mixed Content') ||
             event.message.includes('Refused to')) {
           console.warn('Security policy violation detected:', event.message);
         }
-      });
+      };
+      
+      window.addEventListener('error', handleError);
       
       // Monitor for potential XSS attempts
       const originalInnerHTML = Element.prototype.innerHTML;
-      Element.prototype.innerHTML = function(value) {
+      const originalSetAttribute = Element.prototype.setAttribute;
+      
+      Element.prototype.innerHTML = function(value: string) {
         if (typeof value === 'string' && (
           value.includes('<script') || 
           value.includes('javascript:') ||
-          value.includes('on'))) {
+          value.includes('onload=') ||
+          value.includes('onerror='))) {
           console.warn('Potential XSS attempt blocked:', value);
           return;
         }
         return originalInnerHTML.call(this, value);
       };
+      
+      Element.prototype.setAttribute = function(name: string, value: string) {
+        if (name.toLowerCase().startsWith('on') && typeof value === 'string') {
+          console.warn('Potential XSS attempt blocked via attribute:', name, value);
+          return;
+        }
+        return originalSetAttribute.call(this, name, value);
+      };
+      
+      return () => {
+        window.removeEventListener('error', handleError);
+        Element.prototype.innerHTML = originalInnerHTML;
+        Element.prototype.setAttribute = originalSetAttribute;
+      };
     };
     
-    monitorSecurity();
+    const cleanup = monitorSecurity();
+    
+    return cleanup;
   }, []);
 
   return <>{children}</>;

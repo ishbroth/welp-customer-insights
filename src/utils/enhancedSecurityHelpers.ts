@@ -7,30 +7,6 @@ import { logSecurityEvent } from './rateLimiting';
  */
 
 /**
- * Enhanced phone number validation with better security
- */
-export const isValidPhoneNumber = (phone: string): boolean => {
-  // Remove all non-digit characters
-  const cleanPhone = phone.replace(/\D/g, '');
-  
-  // Check if it's a valid length (10-15 digits)
-  if (cleanPhone.length < 10 || cleanPhone.length > 15) {
-    return false;
-  }
-  
-  // Check for common invalid patterns
-  const invalidPatterns = [
-    /^0{10,}$/, // All zeros
-    /^1{10,}$/, // All ones
-    /^(.)\1{9,}$/, // Repeated single digit
-    /^1234567890$/, // Sequential numbers
-    /^0123456789$/ // Sequential numbers starting with 0
-  ];
-  
-  return !invalidPatterns.some(pattern => pattern.test(cleanPhone));
-};
-
-/**
  * Enhanced email validation with security checks
  */
 export const isValidEmail = (email: string): boolean => {
@@ -159,4 +135,68 @@ export const validatePassword = (password: string, userType: 'business' | 'custo
   }
   
   return { isValid: true };
+};
+
+/**
+ * Enhanced input validation for forms
+ */
+export const validateFormData = (data: Record<string, any>): { isValid: boolean; errors: Record<string, string> } => {
+  const errors: Record<string, string> = {};
+  
+  // Check each field for potential security issues
+  Object.keys(data).forEach(key => {
+    const value = data[key];
+    
+    if (typeof value === 'string') {
+      // Check for SQL injection
+      if (containsSQLInjection(value)) {
+        errors[key] = 'Invalid characters detected';
+      }
+      
+      // Check for XSS attempts
+      if (value.includes('<script') || value.includes('javascript:')) {
+        errors[key] = 'Invalid content detected';
+      }
+      
+      // Check for path traversal
+      if (value.includes('../') || value.includes('..\\')) {
+        errors[key] = 'Invalid path detected';
+      }
+    }
+  });
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+/**
+ * Secure random string generation
+ */
+export const generateSecureToken = (length: number = 32): string => {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+/**
+ * Rate limiting helper
+ */
+export const checkRateLimit = (key: string, maxAttempts: number = 5, windowMs: number = 15 * 60 * 1000): boolean => {
+  const now = Date.now();
+  const attempts = JSON.parse(localStorage.getItem(`rateLimit_${key}`) || '[]');
+  
+  // Filter out old attempts
+  const recentAttempts = attempts.filter((timestamp: number) => now - timestamp < windowMs);
+  
+  if (recentAttempts.length >= maxAttempts) {
+    return false;
+  }
+  
+  // Add current attempt
+  recentAttempts.push(now);
+  localStorage.setItem(`rateLimit_${key}`, JSON.stringify(recentAttempts));
+  
+  return true;
 };
