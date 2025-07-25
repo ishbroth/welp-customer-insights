@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
@@ -187,7 +186,7 @@ const ProfilePage = () => {
                         {isBusinessAccount && !isVerified && (
                           <div className="mt-2">
                             <Button 
-                              onClick={() => navigate('/verification-request')}
+                              onClick={() => navigate('/verify-license')}
                               className="bg-green-600 hover:bg-green-700 text-white"
                               size="sm"
                             >
