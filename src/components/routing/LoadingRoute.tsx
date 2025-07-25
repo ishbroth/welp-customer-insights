@@ -10,7 +10,7 @@ interface LoadingRouteProps {
 
 const LoadingRoute = ({ children }: LoadingRouteProps) => {
   const { loading } = useAuth();
-  const { showPageLoading, isPageLoading } = useLoading();
+  const { isPageLoading, setIsPageLoading } = useLoading();
   const location = useLocation();
   const previousLocationRef = useRef<string>('');
   const hasInitiallyLoadedRef = useRef(false);
@@ -34,11 +34,18 @@ const LoadingRoute = ({ children }: LoadingRouteProps) => {
     // For all subsequent navigation, show loading if path changed
     if (hasInitiallyLoadedRef.current && previousLocationRef.current !== currentPath) {
       console.log('🚀 LoadingRoute - Route changed, triggering loading');
-      showPageLoading();
+      setIsPageLoading(true);
+      
+      // Hide loading after a short delay to prevent flashing
+      const timer = setTimeout(() => {
+        setIsPageLoading(false);
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
     
     previousLocationRef.current = currentPath;
-  }, [location.pathname, location.search, showPageLoading]);
+  }, [location.pathname, location.search, setIsPageLoading]);
   
   // Show auth loading spinner
   if (loading) {
@@ -51,7 +58,11 @@ const LoadingRoute = ({ children }: LoadingRouteProps) => {
 
   // If page loading is active, don't render children to prevent flashing
   if (isPageLoading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
   
   return <>{children}</>;

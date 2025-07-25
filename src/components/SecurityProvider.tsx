@@ -51,20 +51,23 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
       window.addEventListener('error', handleError);
       
       // Monitor for potential XSS attempts
-      const originalInnerHTML = Element.prototype.innerHTML;
+      const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML')!;
       const originalSetAttribute = Element.prototype.setAttribute;
       
-      Element.prototype.innerHTML = function(value: string) {
-        if (typeof value === 'string' && (
-          value.includes('<script') || 
-          value.includes('javascript:') ||
-          value.includes('onload=') ||
-          value.includes('onerror='))) {
-          console.warn('Potential XSS attempt blocked:', value);
-          return;
+      Object.defineProperty(Element.prototype, 'innerHTML', {
+        get: originalInnerHTML.get,
+        set: function(value: string) {
+          if (typeof value === 'string' && (
+            value.includes('<script') || 
+            value.includes('javascript:') ||
+            value.includes('onload=') ||
+            value.includes('onerror='))) {
+            console.warn('Potential XSS attempt blocked:', value);
+            return;
+          }
+          originalInnerHTML.set!.call(this, value);
         }
-        return originalInnerHTML.call(this, value);
-      };
+      });
       
       Element.prototype.setAttribute = function(name: string, value: string) {
         if (name.toLowerCase().startsWith('on') && typeof value === 'string') {
@@ -76,7 +79,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
       
       return () => {
         window.removeEventListener('error', handleError);
-        Element.prototype.innerHTML = originalInnerHTML;
+        Object.defineProperty(Element.prototype, 'innerHTML', originalInnerHTML);
         Element.prototype.setAttribute = originalSetAttribute;
       };
     };

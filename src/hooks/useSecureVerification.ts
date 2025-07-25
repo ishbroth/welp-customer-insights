@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { checkRateLimitWithLockout, logSecurityEvent } from '@/utils/rateLimiting';
-import { isValidVerificationCode, isValidPhoneNumber, containsSQLInjection, sanitizeFormInput } from '@/utils/enhancedSecurityHelpers';
+import { isValidVerificationCode, containsSQLInjection, sanitizeFormInput } from '@/utils/enhancedSecurityHelpers';
 import { toast } from '@/components/ui/sonner';
 
 export const useSecureVerification = () => {
@@ -74,8 +74,8 @@ export const useSecureVerification = () => {
       // Sanitize identifier
       const sanitizedIdentifier = sanitizeFormInput(identifier);
       
-      // Validate identifier format
-      if (type === 'phone' && !isValidPhoneNumber(sanitizedIdentifier)) {
+      // Basic validation for phone numbers (simple format check)
+      if (type === 'phone' && !/^\+?[\d\s\-\(\)]+$/.test(sanitizedIdentifier)) {
         toast.error('Please enter a valid phone number');
         return { success: false, error: 'Invalid phone number format' };
       }
