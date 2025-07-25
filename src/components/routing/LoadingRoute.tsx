@@ -10,7 +10,7 @@ interface LoadingRouteProps {
 
 const LoadingRoute = ({ children }: LoadingRouteProps) => {
   const { loading } = useAuth();
-  const { showPageLoading } = useLoading();
+  const { showPageLoading, isPageLoading } = useLoading();
   const location = useLocation();
   const previousLocationRef = useRef<string>('');
   const hasInitiallyLoadedRef = useRef(false);
@@ -47,6 +47,11 @@ const LoadingRoute = ({ children }: LoadingRouteProps) => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // If page loading is active, don't render children to prevent flashing
+  if (isPageLoading) {
+    return null;
   }
   
   return <>{children}</>;

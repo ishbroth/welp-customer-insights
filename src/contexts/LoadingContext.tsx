@@ -28,10 +28,10 @@ export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children })
       return;
     }
     
-    // Set loading state immediately
+    // Set loading state immediately and synchronously
     isLoadingRef.current = true;
     setIsPageLoading(true);
-    console.log('🔄 Loading screen shown');
+    console.log('🔄 Loading screen shown immediately');
     
     // Set timeout to hide loading after exactly 500ms
     loadingTimeoutRef.current = setTimeout(() => {
