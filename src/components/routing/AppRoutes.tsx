@@ -23,6 +23,10 @@ import CustomerVerification from "@/pages/CustomerVerification";
 import CustomerStories from "@/pages/CustomerStories";
 import SuccessStories from "@/pages/SuccessStories";
 import Verification from "@/pages/Verification";
+import About from "@/pages/About";
+import HowItWorks from "@/pages/HowItWorks";
+import FAQ from "@/pages/FAQ";
+import VerifyLicense from "@/pages/VerifyLicense";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -52,6 +56,9 @@ const AppRoutes = () => {
           <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/faq" element={<FAQ />} />
           
           <Route path="/profile" element={
             <PrivateRoute>
@@ -86,6 +93,12 @@ const AppRoutes = () => {
           <Route path="/notifications" element={
             <PrivateRoute>
               <NotificationsPage />
+            </PrivateRoute>
+          } />
+          
+          <Route path="/verify-license" element={
+            <PrivateRoute>
+              <VerifyLicense />
             </PrivateRoute>
           } />
           
