@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { checkRateLimit, logSecurityEvent } from '@/utils/rateLimiting';
-import { isValidEmail, validatePassword, sanitizeFormInput } from '@/utils/enhancedSecurityHelpers';
+import { checkRateLimitWithLockout, logSecurityEvent } from '@/utils/rateLimiting';
+import { isValidEmail, validatePassword, sanitizeFormInput, containsSQLInjection } from '@/utils/enhancedSecurityHelpers';
 import { toast } from '@/components/ui/sonner';
 
 export const useSecureAuth = () => {
@@ -21,8 +21,15 @@ export const useSecureAuth = () => {
         return { success: false, error: 'Invalid email format' };
       }
       
-      // Check rate limiting
-      const canAttempt = await checkRateLimit(sanitizedEmail, 'login', 5, 15, 30);
+      // Check for SQL injection attempts
+      if (containsSQLInjection(sanitizedEmail) || containsSQLInjection(password)) {
+        await logSecurityEvent('sql_injection_attempt', 'SQL injection detected in login attempt', undefined, { email: sanitizedEmail });
+        toast.error('Invalid input detected');
+        return { success: false, error: 'Invalid input detected' };
+      }
+      
+      // Check rate limiting with account lockout
+      const canAttempt = await checkRateLimitWithLockout(sanitizedEmail, 'login', 5, 15, 30, 10, 60);
       if (!canAttempt) {
         const errorMessage = 'Too many login attempts. Please try again later.';
         toast.error(errorMessage);
@@ -81,6 +88,14 @@ export const useSecureAuth = () => {
         return { success: false, error: 'Invalid email format' };
       }
       
+      // Check for SQL injection attempts
+      if (containsSQLInjection(sanitizedEmail) || containsSQLInjection(password) || 
+          Object.values(sanitizedUserData).some(value => typeof value === 'string' && containsSQLInjection(value))) {
+        await logSecurityEvent('sql_injection_attempt', 'SQL injection detected in signup attempt', undefined, { email: sanitizedEmail });
+        toast.error('Invalid input detected');
+        return { success: false, error: 'Invalid input detected' };
+      }
+      
       // Validate password
       const passwordValidation = validatePassword(password, userData.type || 'customer');
       if (!passwordValidation.isValid) {
@@ -88,8 +103,8 @@ export const useSecureAuth = () => {
         return { success: false, error: passwordValidation.message };
       }
       
-      // Check rate limiting
-      const canAttempt = await checkRateLimit(sanitizedEmail, 'signup', 3, 60, 60);
+      // Check rate limiting with account lockout
+      const canAttempt = await checkRateLimitWithLockout(sanitizedEmail, 'signup', 3, 60, 60, 5, 120);
       if (!canAttempt) {
         const errorMessage = 'Too many signup attempts. Please try again later.';
         toast.error(errorMessage);
@@ -139,8 +154,15 @@ export const useSecureAuth = () => {
         return { success: false, error: 'Invalid email format' };
       }
       
-      // Check rate limiting
-      const canAttempt = await checkRateLimit(sanitizedEmail, 'reset_password', 3, 60, 60);
+      // Check for SQL injection attempts
+      if (containsSQLInjection(sanitizedEmail)) {
+        await logSecurityEvent('sql_injection_attempt', 'SQL injection detected in password reset attempt', undefined, { email: sanitizedEmail });
+        toast.error('Invalid input detected');
+        return { success: false, error: 'Invalid input detected' };
+      }
+      
+      // Check rate limiting with account lockout
+      const canAttempt = await checkRateLimitWithLockout(sanitizedEmail, 'reset_password', 3, 60, 60, 5, 120);
       if (!canAttempt) {
         const errorMessage = 'Too many password reset attempts. Please try again later.';
         toast.error(errorMessage);

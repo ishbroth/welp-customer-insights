@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_lockout: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          identifier: string
+          locked_until: string
+          lockout_type: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          identifier: string
+          locked_until: string
+          lockout_type: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          identifier?: string
+          locked_until?: string
+          lockout_type?: string
+        }
+        Relationships: []
+      }
       auth_rate_limits: {
         Row: {
           attempt_type: string
@@ -895,6 +922,18 @@ export type Database = {
           p_max_attempts?: number
           p_window_minutes?: number
           p_block_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_rate_limit_with_lockout: {
+        Args: {
+          p_identifier: string
+          p_attempt_type: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+          p_block_minutes?: number
+          p_lockout_attempts?: number
+          p_lockout_duration_minutes?: number
         }
         Returns: boolean
       }

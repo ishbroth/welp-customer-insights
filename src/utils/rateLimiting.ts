@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Rate limiting utility functions
+ * Enhanced rate limiting utility functions with account lockout
  */
 
 export const checkRateLimit = async (
@@ -29,6 +29,38 @@ export const checkRateLimit = async (
     return data;
   } catch (error) {
     console.error('Rate limit check error:', error);
+    return true; // Allow on error
+  }
+};
+
+export const checkRateLimitWithLockout = async (
+  identifier: string,
+  attemptType: 'login' | 'signup' | 'reset_password' | 'verification',
+  maxAttempts: number = 5,
+  windowMinutes: number = 15,
+  blockMinutes: number = 30,
+  lockoutAttempts: number = 10,
+  lockoutDurationMinutes: number = 60
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.rpc('check_rate_limit_with_lockout', {
+      p_identifier: identifier,
+      p_attempt_type: attemptType,
+      p_max_attempts: maxAttempts,
+      p_window_minutes: windowMinutes,
+      p_block_minutes: blockMinutes,
+      p_lockout_attempts: lockoutAttempts,
+      p_lockout_duration_minutes: lockoutDurationMinutes
+    });
+
+    if (error) {
+      console.error('Rate limit with lockout check error:', error);
+      return true; // Allow on error to prevent blocking legitimate users
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Rate limit with lockout check error:', error);
     return true; // Allow on error
   }
 };
