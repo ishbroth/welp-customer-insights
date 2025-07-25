@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/auth";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { Capacitor } from '@capacitor/core';
 
 interface LoadingRouteProps {
   children: React.ReactNode;
@@ -18,16 +19,27 @@ const LoadingRoute = ({ children }: LoadingRouteProps) => {
 
   useEffect(() => {
     const currentPath = location.pathname + location.search;
+    const isNative = Capacitor.isNativePlatform();
+    
     console.log('🚀 LoadingRoute - Current path:', currentPath);
     console.log('🚀 LoadingRoute - Previous path:', previousLocationRef.current);
     console.log('🚀 LoadingRoute - Is initial mount:', isInitialMountRef.current);
+    console.log('🚀 LoadingRoute - Is native platform:', isNative);
     
-    // On very first mount, just set the initial path and skip loading
+    // On very first mount, show loading for native apps or homepage
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
       previousLocationRef.current = currentPath;
+      
+      // Show loading screen for native apps or homepage on initial load
+      if (isNative || currentPath === '/' || currentPath === '') {
+        console.log('🚀 LoadingRoute - Initial load, showing loading screen');
+        showPageLoading();
+      } else {
+        console.log('🚀 LoadingRoute - Initial mount, skipping loading');
+      }
+      
       hasInitiallyLoadedRef.current = true;
-      console.log('🚀 LoadingRoute - Initial mount, skipping loading');
       return;
     }
 
