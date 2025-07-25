@@ -22,6 +22,7 @@ import Subscription from "@/pages/Subscription";
 import CustomerVerification from "@/pages/CustomerVerification";
 import CustomerStories from "@/pages/CustomerStories";
 import SuccessStories from "@/pages/SuccessStories";
+import Verification from "@/pages/Verification";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -43,6 +44,7 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/verification" element={<Verification />} />
           <Route path="/customer-benefits" element={<CustomerBenefits />} />
           <Route path="/customer-verification" element={<CustomerVerification />} />
           <Route path="/customer-stories" element={<CustomerStories />} />
