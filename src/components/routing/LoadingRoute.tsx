@@ -14,29 +14,33 @@ const LoadingRoute = ({ children }: LoadingRouteProps) => {
   const location = useLocation();
   const previousLocationRef = useRef<string>('');
   const hasInitiallyLoadedRef = useRef(false);
+  const isInitialMountRef = useRef(true);
 
   useEffect(() => {
     const currentPath = location.pathname + location.search;
     console.log('🚀 LoadingRoute - Current path:', currentPath);
     console.log('🚀 LoadingRoute - Previous path:', previousLocationRef.current);
+    console.log('🚀 LoadingRoute - Is initial mount:', isInitialMountRef.current);
     
-    // Skip initial load
-    if (!hasInitiallyLoadedRef.current) {
-      hasInitiallyLoadedRef.current = true;
+    // On very first mount, just set the initial path and skip loading
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
       previousLocationRef.current = currentPath;
-      console.log('🚀 LoadingRoute - Skipping initial load');
+      hasInitiallyLoadedRef.current = true;
+      console.log('🚀 LoadingRoute - Initial mount, skipping loading');
       return;
     }
 
-    // Only trigger loading on actual route changes
-    if (previousLocationRef.current !== currentPath) {
-      console.log('🚀 LoadingRoute - Triggering page loading animation');
+    // For all subsequent navigation, show loading if path changed
+    if (hasInitiallyLoadedRef.current && previousLocationRef.current !== currentPath) {
+      console.log('🚀 LoadingRoute - Route changed, triggering loading');
       showPageLoading();
     }
     
     previousLocationRef.current = currentPath;
   }, [location.pathname, location.search, showPageLoading]);
   
+  // Show auth loading spinner
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

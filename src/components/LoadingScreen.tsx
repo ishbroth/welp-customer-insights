@@ -11,7 +11,7 @@ const LoadingScreen: React.FC = () => {
   if (!isPageLoading) return null;
 
   return (
-    <div className="fixed inset-0 bg-red-600 flex items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-red-600 flex items-center justify-center z-[9999] loading-screen-overlay">
       <div className="flex items-center justify-center">
         <svg
           width="200"

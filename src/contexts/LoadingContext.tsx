@@ -11,23 +11,48 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isPageLoading, setIsPageLoading] = useState(false);
-  const isPageLoadingRef = useRef(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoadingRef = useRef(false);
   
   const showPageLoading = () => {
-    if (isPageLoadingRef.current) return;
+    console.log('🔄 showPageLoading called - current state:', isLoadingRef.current);
     
-    isPageLoadingRef.current = true;
+    // Clear any existing timeout
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+    
+    // If already loading, don't start another cycle
+    if (isLoadingRef.current) {
+      console.log('🔄 Already loading, skipping');
+      return;
+    }
+    
+    // Set loading state immediately
+    isLoadingRef.current = true;
     setIsPageLoading(true);
+    console.log('🔄 Loading screen shown');
     
-    setTimeout(() => {
+    // Set timeout to hide loading after exactly 500ms
+    loadingTimeoutRef.current = setTimeout(() => {
+      console.log('🔄 Loading timeout completed, hiding loading screen');
       setIsPageLoading(false);
-      isPageLoadingRef.current = false;
-    }, 500); // Back to 500ms
+      isLoadingRef.current = false;
+      loadingTimeoutRef.current = null;
+    }, 500);
   };
   
   const hidePageLoading = () => {
+    console.log('🔄 hidePageLoading called');
+    
+    // Clear timeout if it exists
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+    
     setIsPageLoading(false);
-    isPageLoadingRef.current = false;
+    isLoadingRef.current = false;
   };
   
   return (
