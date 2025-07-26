@@ -5,6 +5,7 @@ import { useLoading } from "@/contexts/LoadingContext";
 import LoadingRoute from "./LoadingRoute";
 import PrivateRoute from "./PrivateRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // Import pages
 import Index from "@/pages/Index";
@@ -44,80 +45,83 @@ const AppRoutes = () => {
   }
 
   return (
-    <LoadingRoute>
-      <div className={isPageLoading ? 'invisible' : 'visible'}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/verification" element={<Verification />} />
-          <Route path="/customer-benefits" element={<CustomerBenefits />} />
-          <Route path="/customer-verification" element={<CustomerVerification />} />
-          <Route path="/customer-stories" element={<CustomerStories />} />
-          <Route path="/testimonials" element={<SuccessStories />} />
-          <Route path="/success-stories" element={<SuccessStories />} />
-          <Route path="/search" element={<SearchResults />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          
-          <Route path="/review/new" element={
-            <PrivateRoute>
-              <NewReview />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/profile" element={
-            <PrivateRoute>
-              <ProfilePage />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/profile/edit" element={
-            <PrivateRoute>
-              <ProfileEdit />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/profile/reviews" element={
-            <PrivateRoute>
-              <ProfileReviews />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/profile/business-reviews" element={
-            <PrivateRoute>
-              <ProfileReviews />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/profile/billing" element={
-            <PrivateRoute>
-              <BillingPage />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/notifications" element={
-            <PrivateRoute>
-              <NotificationsPage />
-            </PrivateRoute>
-          } />
-          
-          <Route path="/verify-license" element={
-            <PrivateRoute>
-              <VerifyLicense />
-            </PrivateRoute>
-          } />
-          
-          {/* Redirect any unknown routes to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </LoadingRoute>
+    <>
+      <LoadingScreen />
+      <LoadingRoute>
+        <div className={isPageLoading ? 'invisible' : 'visible'}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verification" element={<Verification />} />
+            <Route path="/customer-benefits" element={<CustomerBenefits />} />
+            <Route path="/customer-verification" element={<CustomerVerification />} />
+            <Route path="/customer-stories" element={<CustomerStories />} />
+            <Route path="/testimonials" element={<SuccessStories />} />
+            <Route path="/success-stories" element={<SuccessStories />} />
+            <Route path="/search" element={<SearchResults />} />
+            <Route path="/subscription" element={<Subscription />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            
+            <Route path="/review/new" element={
+              <PrivateRoute>
+                <NewReview />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/profile" element={
+              <PrivateRoute>
+                <ProfilePage />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/profile/edit" element={
+              <PrivateRoute>
+                <ProfileEdit />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/profile/reviews" element={
+              <PrivateRoute>
+                <ProfileReviews />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/profile/business-reviews" element={
+              <PrivateRoute>
+                <ProfileReviews />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/profile/billing" element={
+              <PrivateRoute>
+                <BillingPage />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/notifications" element={
+              <PrivateRoute>
+                <NotificationsPage />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/verify-license" element={
+              <PrivateRoute>
+                <VerifyLicense />
+              </PrivateRoute>
+            } />
+            
+            {/* Redirect any unknown routes to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </LoadingRoute>
+    </>
   );
 };
 
