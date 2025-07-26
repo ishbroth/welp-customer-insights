@@ -5,12 +5,33 @@ import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/LoadingScreen';
 import { BusinessInfoForm } from '@/components/signup/BusinessInfoForm';
 import ProfilePage from '@/pages/ProfilePage';
-import HomePage from '@/pages/HomePage';
-import SignUpPage from '@/pages/SignUpPage';
-import LoginPage from '@/pages/LoginPage';
-import EditProfilePage from '@/pages/EditProfilePage';
 import AdminVerifyBusiness from '@/pages/AdminVerifyBusiness';
 import VerificationDebug from "@/pages/VerificationDebug";
+
+// Simple placeholder components for missing pages
+const HomePage = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <h1 className="text-2xl font-bold">Welcome to Welp</h1>
+  </div>
+);
+
+const SignUpPage = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <h1 className="text-2xl font-bold">Sign Up Page</h1>
+  </div>
+);
+
+const LoginPage = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <h1 className="text-2xl font-bold">Login Page</h1>
+  </div>
+);
+
+const EditProfilePage = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <h1 className="text-2xl font-bold">Edit Profile Page</h1>
+  </div>
+);
 
 const AppRoutes = () => {
   const { currentUser, loading } = useAuth();
@@ -48,7 +69,7 @@ const AppRoutes = () => {
           businessPhone=""
           setBusinessPhone={() => {}}
           businessType=""
-          setBusinessType={() => {}}
+          setBusinessType(() => {}}
           licenseNumber=""
           setLicenseNumber={() => {}}
         /> : <Navigate to="/login" />} />
