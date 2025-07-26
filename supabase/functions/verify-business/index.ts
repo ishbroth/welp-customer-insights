@@ -24,8 +24,6 @@ serve(async (req) => {
 
   try {
     logStep("Verification function started");
-    logStep("Request method", { method: req.method });
-    logStep("Request URL", { url: req.url });
 
     // Get token from URL query parameters or request body
     const url = new URL(req.url);
@@ -35,13 +33,11 @@ serve(async (req) => {
     if (!token && req.method === "POST") {
       const body = await req.json();
       token = body.token;
-      logStep("Token from request body", { token });
     }
     
-    logStep("Token received", { token, fromUrl: !!url.searchParams.get('token') });
+    logStep("Token received", { token });
     
     if (!token) {
-      logStep("ERROR: No verification token provided");
       throw new Error("Verification token is required");
     }
 
@@ -52,36 +48,22 @@ serve(async (req) => {
     );
 
     // Find the verification request
-    logStep("Looking up verification request in database");
+    logStep("Looking up verification request");
     const { data: verificationRequest, error: findError } = await supabaseClient
       .from('verification_requests')
       .select('*')
       .eq('verification_token', token)
+      .eq('status', 'pending')
       .single();
-
-    logStep("Database query result", { 
-      found: !!verificationRequest, 
-      error: findError?.message,
-      status: verificationRequest?.status 
-    });
 
     if (findError || !verificationRequest) {
       logStep("Verification request not found", { findError });
       throw new Error("Invalid or expired verification token");
     }
 
-    if (verificationRequest.status !== 'pending') {
-      logStep("Verification request already processed", { 
-        status: verificationRequest.status,
-        verifiedAt: verificationRequest.verified_at 
-      });
-      throw new Error(`Verification request has already been ${verificationRequest.status}`);
-    }
-
     logStep("Verification request found", { 
       businessName: verificationRequest.business_name,
-      userId: verificationRequest.user_id,
-      status: verificationRequest.status
+      userId: verificationRequest.user_id 
     });
 
     // Update the verification request status
@@ -100,7 +82,7 @@ serve(async (req) => {
 
     logStep("Verification request updated to approved");
 
-    // Update the user's profile with business information
+    // Update the user's profile with business information (removed verified column reference)
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({ 
@@ -157,7 +139,7 @@ serve(async (req) => {
       // Send congratulatory email to the business owner
       try {
         const congratsEmailResponse = await resend.emails.send({
-          from: "Welp Verification <support@mywelp.com>",
+          from: "Welp Verification <onboarding@resend.dev>",
           to: [userData.user.email],
           subject: `🎉 ${verificationRequest.business_name} - Your Business is Now Verified!`,
           html: `
@@ -253,7 +235,6 @@ serve(async (req) => {
               <p><strong>Category:</strong> ${verificationRequest.business_type}</p>
               ${verificationRequest.business_subcategory ? `<p><strong>Subcategory:</strong> ${verificationRequest.business_subcategory}</p>` : ''}
               <p><strong>State:</strong> ${verificationRequest.license_state || 'Not specified'}</p>
-              <p><strong>Verification Token:</strong> ${token}</p>
             </div>
             <p>The business has been successfully verified and will now display the verified badge on their profile and reviews.</p>
             <p>A congratulatory email has been sent to the business owner.</p>
@@ -262,11 +243,7 @@ serve(async (req) => {
       </html>
     `;
 
-    logStep("Verification completed successfully", {
-      businessName: verificationRequest.business_name,
-      userId: verificationRequest.user_id,
-      token: token
-    });
+    logStep("Verification completed successfully");
 
     return new Response(successPage, {
       headers: { 
@@ -313,9 +290,6 @@ serve(async (req) => {
             <div class="error-icon">✗</div>
             <h1>Verification Error</h1>
             <p>${errorMessage}</p>
-            <p style="font-size: 14px; margin-top: 20px;">
-              If you continue to experience issues, please contact support at support@mywelp.com
-            </p>
           </div>
         </body>
       </html>

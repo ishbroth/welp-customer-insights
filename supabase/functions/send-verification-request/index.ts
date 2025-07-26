@@ -87,11 +87,9 @@ serve(async (req) => {
 
     logStep("Verification request stored", { token: verificationToken });
 
-    // Create verification URL pointing directly to the edge function
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const verificationUrl = `${supabaseUrl}/functions/v1/verify-business?token=${verificationToken}`;
-
-    logStep("Verification URL created", { verificationUrl });
+    // Create verification URL - use the function URL's origin or a default
+    const origin = req.headers.get("origin") || "https://yftvcixhifvrovwhtgtj.supabase.co";
+    const verificationUrl = `${origin}/admin/verify-business?token=${verificationToken}`;
 
     // Send email to support@mywelp.com using your verified domain
     const emailResponse = await resend.emails.send({
@@ -146,11 +144,6 @@ serve(async (req) => {
             Click the "Verify Business" button above to approve this verification request.
             This will grant the business a verified status on their profile and reviews.
           </p>
-
-          <p style="color: #999; font-size: 12px; margin-top: 30px;">
-            <strong>Verification Token:</strong> ${verificationToken}<br>
-            <strong>Direct Link:</strong> <a href="${verificationUrl}" style="color: #6c757d;">${verificationUrl}</a>
-          </p>
         </div>
       `,
     });
@@ -164,8 +157,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: "Verification request submitted successfully",
-      verificationToken: verificationToken
+      message: "Verification request submitted successfully" 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
