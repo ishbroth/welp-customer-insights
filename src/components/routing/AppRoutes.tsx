@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/LoadingScreen';
 import { BusinessInfoForm } from '@/components/signup/BusinessInfoForm';
@@ -44,7 +44,7 @@ const AppRoutes = () => {
   }, [loading]);
 
   return (
-    <Router>
+    <>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/signup" element={currentUser ? <Navigate to="/profile" /> : <SignUpPage />} />
@@ -78,7 +78,7 @@ const AppRoutes = () => {
       </Routes>
       
       {isPageLoading && <LoadingScreen />}
-    </Router>
+    </>
   );
 };
 
