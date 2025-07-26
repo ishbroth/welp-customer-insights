@@ -41,13 +41,13 @@ const BasicLicenseFields = ({ formData, onInputChange }: BasicLicenseFieldsProps
       </div>
 
       <div>
-        <Label htmlFor="primaryLicense">Primary License Number *</Label>
+        <Label htmlFor="primaryLicense">License Number/EIN *</Label>
         <Input
           id="primaryLicense"
           type="text"
           value={formData.primaryLicense}
           onChange={(e) => onInputChange("primaryLicense", e.target.value)}
-          placeholder="Enter your license number"
+          placeholder="Enter your license number or EIN"
           required
         />
       </div>

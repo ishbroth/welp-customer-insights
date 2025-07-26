@@ -1,12 +1,17 @@
-
 export const LICENSE_TYPES = [
+  "EIN",
   "Contractors",
   "Law/Legal", 
   "Liquor Licenses",
   "Medical/Dental",
   "Real Estate",
   "Vendors/Sellers"
-].sort();
+].sort((a, b) => {
+  // Keep EIN first, then sort the rest
+  if (a === "EIN") return -1;
+  if (b === "EIN") return 1;
+  return a.localeCompare(b);
+});
 
 export const BUSINESS_CATEGORIES = [
   "Automotive", "Beauty & Wellness", "Construction & Contractors", "Education", 
