@@ -87,9 +87,9 @@ serve(async (req) => {
 
     logStep("Verification request stored", { token: verificationToken });
 
-    // Create verification URL - use the function URL's origin or a default
+    // Create verification URL - use the correct route
     const origin = req.headers.get("origin") || "https://yftvcixhifvrovwhtgtj.supabase.co";
-    const verificationUrl = `${origin}/admin/verify-business?token=${verificationToken}`;
+    const verificationUrl = `${origin}/admin-verify-business?token=${verificationToken}`;
 
     // Send email to support@mywelp.com using your verified domain
     const emailResponse = await resend.emails.send({

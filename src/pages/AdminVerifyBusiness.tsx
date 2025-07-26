@@ -24,7 +24,11 @@ const AdminVerifyBusiness = () => {
         success: false,
         message: "Invalid or missing verification token"
       });
+      return;
     }
+
+    // Automatically trigger verification when page loads with token
+    handleVerification();
   }, [token]);
 
   const handleVerification = async () => {
@@ -33,6 +37,7 @@ const AdminVerifyBusiness = () => {
     setIsVerifying(true);
     
     try {
+      // Call the verify-business edge function directly
       const { data, error } = await supabase.functions.invoke('verify-business', {
         body: { token }
       });
@@ -41,11 +46,11 @@ const AdminVerifyBusiness = () => {
         throw error;
       }
 
-      // The verify-business function returns HTML, but we can assume success if no error
+      // If we get here, verification was successful
       setVerificationResult({
         success: true,
         message: "Business verified successfully!",
-        businessName: "Business" // We don't have the name from the response
+        businessName: "Business"
       });
     } catch (error: any) {
       console.error("Verification error:", error);
@@ -58,6 +63,22 @@ const AdminVerifyBusiness = () => {
     }
   };
 
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+            <CardTitle className="text-2xl">Verifying Business</CardTitle>
+            <CardDescription>Please wait while we verify the business...</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-md">
@@ -65,38 +86,18 @@ const AdminVerifyBusiness = () => {
           <div className="flex justify-center mb-4">
             {verificationResult?.success ? (
               <CheckCircle2 className="h-12 w-12 text-green-500" />
-            ) : verificationResult && !verificationResult.success ? (
-              <AlertCircle className="h-12 w-12 text-red-500" />
             ) : (
-              <CheckCircle2 className="h-12 w-12 text-blue-500" />
+              <AlertCircle className="h-12 w-12 text-red-500" />
             )}
           </div>
           <CardTitle className="text-2xl">
-            {verificationResult ? (
-              verificationResult.success ? "Verification Complete" : "Verification Failed"
-            ) : (
-              "Business Verification"
-            )}
+            {verificationResult?.success ? "Verification Complete" : "Verification Failed"}
           </CardTitle>
           <CardDescription>
-            {verificationResult ? (
-              verificationResult.message
-            ) : (
-              "Click below to verify this business"
-            )}
+            {verificationResult?.message || "Processing verification..."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!verificationResult && (
-            <Button
-              onClick={handleVerification}
-              disabled={isVerifying || !token}
-              className="w-full bg-[#ea384c] hover:bg-[#d63384]"
-            >
-              {isVerifying ? "Verifying..." : "Verify Business"}
-            </Button>
-          )}
-          
           <Button
             onClick={() => navigate('/')}
             variant="outline"
