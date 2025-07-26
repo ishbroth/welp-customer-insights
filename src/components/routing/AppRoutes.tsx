@@ -69,7 +69,7 @@ const AppRoutes = () => {
           businessPhone=""
           setBusinessPhone={() => {}}
           businessType=""
-          setBusinessType(() => {}}
+          setBusinessType={() => {}}
           licenseNumber=""
           setLicenseNumber={() => {}}
         /> : <Navigate to="/login" />} />
