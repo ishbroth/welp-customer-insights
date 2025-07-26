@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
+import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -15,14 +16,27 @@ import { useBillingData } from "@/hooks/useBillingData";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CheckCircle } from "lucide-react";
 
 const ProfilePage = () => {
   const { currentUser, isSubscribed } = useAuth();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const { isVerified } = useVerifiedStatus(currentUser?.id);
   const { subscriptionData } = useBillingData(currentUser);
   const { balance } = useCredits();
   const navigate = useNavigate();
+
+  // Check if we came from verification success
+  useEffect(() => {
+    if (location.state?.showVerificationSuccess) {
+      setShowVerificationModal(true);
+      // Clear the state to prevent showing again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleBuyCredits = async () => {
     if (!currentUser) {
@@ -277,6 +291,51 @@ const ProfilePage = () => {
         </main>
       </div>
       <Footer />
+
+      {/* Verification Success Modal */}
+      <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <CheckCircle className="h-16 w-16 text-green-500" />
+                <div className="absolute -top-1 -right-1">
+                  <VerifiedBadge size="md" />
+                </div>
+              </div>
+            </div>
+            <DialogTitle className="text-xl font-bold text-green-700">
+              🎉 Congratulations! Your Business is Now Verified!
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="text-center space-y-4">
+            <p className="text-gray-600">
+              <strong>{currentUser.name}</strong> has been successfully verified and your profile now displays the verified business badge.
+            </p>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="flex items-center justify-center mb-2">
+                <VerifiedBadge className="mr-2" />
+                <span className="font-semibold text-green-800">Verified Business Benefits</span>
+              </div>
+              <div className="text-sm text-gray-700 space-y-1">
+                <p>✅ Verified badge displayed on your profile</p>
+                <p>✅ Enhanced customer trust and credibility</p>
+                <p>✅ Access to all verified business features</p>
+                <p>✅ Improved visibility in search results</p>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={() => setShowVerificationModal(false)}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              Awesome, Let's Go!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

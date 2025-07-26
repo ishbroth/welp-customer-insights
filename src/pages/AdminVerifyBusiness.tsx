@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const AdminVerifyBusiness = () => {
   const [searchParams] = useSearchParams();
@@ -37,23 +38,66 @@ const AdminVerifyBusiness = () => {
     setIsVerifying(true);
     
     try {
+      console.log("Starting verification process...");
+      
       // Call the verify-business edge function directly
       const { data, error } = await supabase.functions.invoke('verify-business', {
         body: { token }
       });
 
       if (error) {
+        console.error("Verification error:", error);
         throw error;
       }
 
-      // If we get here, verification was successful
-      setVerificationResult({
-        success: true,
-        message: "Business verified successfully!",
-        businessName: "Business"
-      });
+      console.log("Verification function response:", data);
+
+      // Now check if the business was actually verified in the database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("No authenticated user found");
+      }
+
+      // Check business_info table to confirm verification
+      const { data: businessInfo, error: businessError } = await supabase
+        .from('business_info')
+        .select('verified, business_name')
+        .eq('id', user.id)
+        .single();
+
+      console.log("Business info after verification:", businessInfo);
+
+      if (businessError) {
+        console.error("Error checking business verification:", businessError);
+        throw new Error("Could not confirm verification status");
+      }
+
+      if (businessInfo?.verified) {
+        // Verification was successful
+        console.log("Business verification confirmed in database");
+        toast.success("🎉 Business verified successfully!");
+        
+        // Redirect to profile after a short delay to show success
+        setTimeout(() => {
+          navigate('/profile', { 
+            state: { 
+              showVerificationSuccess: true,
+              businessName: businessInfo.business_name 
+            }
+          });
+        }, 2000);
+
+        setVerificationResult({
+          success: true,
+          message: "Business verified successfully! Redirecting to your profile...",
+          businessName: businessInfo.business_name || "Business"
+        });
+      } else {
+        throw new Error("Verification completed but status not updated in database");
+      }
+
     } catch (error: any) {
-      console.error("Verification error:", error);
+      console.error("Verification failed:", error);
       setVerificationResult({
         success: false,
         message: error.message || "Failed to verify business"
@@ -72,7 +116,7 @@ const AdminVerifyBusiness = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
             <CardTitle className="text-2xl">Verifying Business</CardTitle>
-            <CardDescription>Please wait while we verify the business...</CardDescription>
+            <CardDescription>Please wait while we verify your business and update your account...</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -91,21 +135,37 @@ const AdminVerifyBusiness = () => {
             )}
           </div>
           <CardTitle className="text-2xl">
-            {verificationResult?.success ? "Verification Complete" : "Verification Failed"}
+            {verificationResult?.success ? "Verification Complete!" : "Verification Failed"}
           </CardTitle>
           <CardDescription>
             {verificationResult?.message || "Processing verification..."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button
-            onClick={() => navigate('/')}
-            variant="outline"
-            className="w-full"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Return to Home
-          </Button>
+          {verificationResult?.success ? (
+            <div className="text-center space-y-3">
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <p className="text-green-800 font-medium">
+                  🎉 Congratulations! Your business is now verified.
+                </p>
+                <p className="text-green-700 text-sm mt-1">
+                  You now have access to all verified business features and your profile displays the verified badge.
+                </p>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Redirecting to your profile...
+              </p>
+            </div>
+          ) : (
+            <Button
+              onClick={() => navigate('/profile')}
+              variant="outline"
+              className="w-full"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Go to Profile
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
