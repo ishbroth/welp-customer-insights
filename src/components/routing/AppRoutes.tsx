@@ -7,14 +7,9 @@ import { BusinessInfoForm } from '@/components/signup/BusinessInfoForm';
 import ProfilePage from '@/pages/ProfilePage';
 import AdminVerifyBusiness from '@/pages/AdminVerifyBusiness';
 import VerificationDebug from "@/pages/VerificationDebug";
+import Index from '@/pages/Index';
 
 // Simple placeholder components for missing pages
-const HomePage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <h1 className="text-2xl font-bold">Welcome to Welp</h1>
-  </div>
-);
-
 const SignUpPage = () => (
   <div className="min-h-screen flex items-center justify-center">
     <h1 className="text-2xl font-bold">Sign Up Page</h1>
@@ -46,7 +41,7 @@ const AppRoutes = () => {
   return (
     <>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Index />} />
         <Route path="/signup" element={currentUser ? <Navigate to="/profile" /> : <SignUpPage />} />
         <Route path="/login" element={currentUser ? <Navigate to="/profile" /> : <LoginPage />} />
         <Route path="/profile" element={currentUser ? <ProfilePage /> : <Navigate to="/login" />} />
