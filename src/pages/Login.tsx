@@ -25,8 +25,10 @@ const Login = () => {
 
       if (result.success) {
         toast.success("Login successful!");
-        // Redirect to profile page after successful login
-        navigate("/profile");
+        // Wait a moment to ensure auth state is updated before navigating
+        setTimeout(() => {
+          navigate("/profile");
+        }, 100);
       } else {
         toast.error(result.error || "Login failed");
       }
