@@ -15,6 +15,7 @@ export interface DuplicateCheckResponse {
   existingAddress?: string;
   matchedFields?: string[];
   allowContinue: boolean;
+  debug_info?: any;
 }
 
 export interface Profile {
