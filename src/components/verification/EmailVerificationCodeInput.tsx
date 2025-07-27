@@ -11,6 +11,10 @@ const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({
   value, 
   onChange 
 }) => {
+  const handleClearCode = () => {
+    onChange("");
+  };
+
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium text-gray-700">Verification Code</div>
@@ -30,9 +34,20 @@ const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({
           </InputOTPGroup>
         </InputOTP>
       </div>
-      <p className="text-xs text-gray-500 mt-2">
-        Enter the 6-digit code sent to your email
-      </p>
+      <div className="flex flex-col items-center space-y-1">
+        <p className="text-xs text-gray-500">
+          Enter the 6-digit code sent to your email
+        </p>
+        {value && (
+          <button
+            type="button"
+            onClick={handleClearCode}
+            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            clear code
+          </button>
+        )}
+      </div>
     </div>
   );
 };
