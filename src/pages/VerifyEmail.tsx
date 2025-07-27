@@ -3,6 +3,8 @@ import React from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import EmailVerificationCodeInput from '@/components/verification/EmailVerificationCodeInput';
 import VerifyEmailCodeButton from '@/components/verification/VerifyEmailCodeButton';
 import ResendEmailCodeButton from '@/components/verification/ResendEmailCodeButton';
@@ -77,6 +79,7 @@ const VerifyEmail: React.FC = () => {
     isResending,
     isResendDisabled,
     resendTimer,
+    verificationError,
     handleVerifyCode,
     handleResendCode
   } = useEmailVerification({
@@ -102,6 +105,13 @@ const VerifyEmail: React.FC = () => {
             value={verificationCode} 
             onChange={setVerificationCode} 
           />
+          
+          {verificationError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{verificationError}</AlertDescription>
+            </Alert>
+          )}
           
           <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="font-medium text-blue-800 mb-1">Can't find the email?</p>

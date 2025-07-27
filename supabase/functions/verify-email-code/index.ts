@@ -27,7 +27,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Check if the verification code is valid
+    // Check if the verification code is valid (but don't mark as used yet)
     const { data: verificationData, error: verificationError } = await supabaseAdmin
       .from('email_verification_codes')
       .select('*')
@@ -37,37 +37,67 @@ serve(async (req) => {
       .gte('expires_at', new Date().toISOString())
       .maybeSingle();
 
-    if (verificationError || !verificationData) {
-      console.log("Invalid or expired verification code");
+    if (verificationError) {
+      console.error("Database error checking verification code:", verificationError);
       return new Response(
         JSON.stringify({ 
           success: false, 
           isValid: false, 
-          message: "Invalid or expired verification code" 
+          message: "Database error during verification" 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Mark the code as used
-    await supabaseAdmin
-      .from('email_verification_codes')
-      .update({ used: true })
-      .eq('id', verificationData.id);
+    if (!verificationData) {
+      console.log("Invalid, expired, or already used verification code");
+      
+      // Check if code exists but is expired or used
+      const { data: existingCode } = await supabaseAdmin
+        .from('email_verification_codes')
+        .select('used, expires_at')
+        .eq('email', email)
+        .eq('code', code)
+        .maybeSingle();
+
+      let errorMessage = "Invalid or expired verification code";
+      if (existingCode) {
+        if (existingCode.used) {
+          errorMessage = "This verification code has already been used. Please request a new one.";
+        } else if (new Date(existingCode.expires_at) < new Date()) {
+          errorMessage = "This verification code has expired. Please request a new one.";
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          isValid: false, 
+          message: errorMessage 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     console.log("Email code verified successfully, processing account...");
 
     // Check if user already exists
-    const { data: existingUser, error: userCheckError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    const { data: existingUser, error: userCheckError } = await supabaseAdmin.auth.admin.listUsers();
     
     let userId: string;
     let userCreated = false;
+    let existingUserFound = false;
 
-    if (existingUser?.user && !userCheckError) {
-      // User exists, use existing user ID
-      userId = existingUser.user.id;
-      console.log("Using existing user with ID:", userId);
-    } else {
+    if (!userCheckError && existingUser?.users) {
+      const foundUser = existingUser.users.find(u => u.email === email);
+      if (foundUser) {
+        userId = foundUser.id;
+        existingUserFound = true;
+        console.log("Using existing user with ID:", userId);
+      }
+    }
+
+    if (!existingUserFound) {
       // Create new user account with admin client - email confirmed from the start
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: email,
@@ -84,7 +114,14 @@ serve(async (req) => {
 
       if (authError) {
         console.error("Error creating user:", authError);
-        throw new Error(`Failed to create user: ${authError.message}`);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            isValid: false, 
+            message: `Failed to create user: ${authError.message}` 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
       userId = authData.user.id;
@@ -114,7 +151,14 @@ serve(async (req) => {
 
     if (profileError) {
       console.error("Error creating/updating profile:", profileError);
-      throw new Error(`Failed to create/update profile: ${profileError.message}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          isValid: false, 
+          message: `Failed to create/update profile: ${profileError.message}` 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     console.log("Profile created/updated successfully");
@@ -137,10 +181,21 @@ serve(async (req) => {
 
       if (businessError) {
         console.error("Error creating/updating business info:", businessError);
-        // Don't throw here, profile creation succeeded
+        // Don't fail the entire process, just log the error
       } else {
         console.log("Business info created/updated successfully");
       }
+    }
+
+    // ONLY NOW mark the verification code as used (after successful account creation)
+    const { error: markUsedError } = await supabaseAdmin
+      .from('email_verification_codes')
+      .update({ used: true })
+      .eq('id', verificationData.id);
+
+    if (markUsedError) {
+      console.error("Error marking verification code as used:", markUsedError);
+      // Don't fail the process, just log the error
     }
 
     // Initialize regular Supabase client for sign-in

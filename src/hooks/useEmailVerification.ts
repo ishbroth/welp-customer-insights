@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { sendEmailVerificationCode, verifyEmailCode } from "@/utils/emailUtils";
 
 interface UseEmailVerificationProps {
   email: string;
@@ -43,6 +43,7 @@ export const useEmailVerification = ({
   const [isResending, setIsResending] = useState(false);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [resendTimer, setResendTimer] = useState(60);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,7 +51,10 @@ export const useEmailVerification = ({
   // Validate verification code
   useEffect(() => {
     setIsCodeValid(verificationCode.length === 6 && /^\d{6}$/.test(verificationCode));
-  }, [verificationCode]);
+    if (verificationError) {
+      setVerificationError(null);
+    }
+  }, [verificationCode, verificationError]);
 
   // Resend timer logic
   useEffect(() => {
@@ -73,15 +77,12 @@ export const useEmailVerification = ({
 
   const handleVerifyCode = async () => {
     if (!isCodeValid) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid 6-digit verification code",
-        variant: "destructive"
-      });
+      setVerificationError("Please enter a valid 6-digit verification code");
       return;
     }
 
     setIsVerifying(true);
+    setVerificationError(null);
 
     try {
       console.log("🔍 Verifying email code and creating account...");
@@ -102,21 +103,9 @@ export const useEmailVerification = ({
         licenseType
       };
 
-      const { data, error } = await supabase.functions.invoke('verify-email-code', {
-        body: {
-          email,
-          code: verificationCode,
-          accountType,
-          userData
-        }
-      });
+      const result = await verifyEmailCode(email, verificationCode, accountType, userData);
 
-      if (error) {
-        console.error("❌ Error verifying email code:", error);
-        throw error;
-      }
-
-      if (data.success && data.isValid) {
+      if (result.success && result.isValid) {
         console.log("✅ Account created successfully");
         
         toast({
@@ -129,27 +118,24 @@ export const useEmailVerification = ({
         
         // Redirect to the appropriate success page based on account type
         if (accountType === 'business') {
-          // For business accounts, redirect to email verification success page
           navigate(`/email-verification-success?email=${encodeURIComponent(email)}&type=business`);
         } else {
-          // For customer accounts, redirect to profile
           navigate("/profile", { replace: true });
         }
         
       } else {
-        toast({
-          title: "Verification Failed",
-          description: data.message || "Invalid or expired verification code",
-          variant: "destructive"
-        });
+        console.error("❌ Verification failed:", result.message);
+        setVerificationError(result.message || "Invalid or expired verification code");
+        
+        // If code is already used or expired, enable resend immediately
+        if (result.message?.includes("already been used") || result.message?.includes("expired")) {
+          setIsResendDisabled(false);
+          setResendTimer(60);
+        }
       }
     } catch (error) {
       console.error("❌ Error verifying email code:", error);
-      toast({
-        title: "Verification Error",
-        description: "Failed to verify email code. Please try again.",
-        variant: "destructive"
-      });
+      setVerificationError("Failed to verify email code. Please try again.");
     } finally {
       setIsVerifying(false);
     }
@@ -157,37 +143,25 @@ export const useEmailVerification = ({
 
   const handleResendCode = async () => {
     setIsResending(true);
+    setVerificationError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-email-verification-code', {
-        body: { email }
-      });
+      const result = await sendEmailVerificationCode({ email });
 
-      if (error) {
-        throw error;
-      }
-
-      if (data.success) {
+      if (result.success) {
         toast({
           title: "Code Sent",
           description: "A new verification code has been sent to your email.",
         });
         setIsResendDisabled(true);
         setResendTimer(60);
+        setVerificationCode(""); // Clear the current code
       } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to send verification code",
-          variant: "destructive"
-        });
+        setVerificationError(result.message || "Failed to send verification code");
       }
     } catch (error) {
       console.error("Error resending verification code:", error);
-      toast({
-        title: "Error",
-        description: "Failed to resend verification code. Please try again.",
-        variant: "destructive"
-      });
+      setVerificationError("Failed to resend verification code. Please try again.");
     } finally {
       setIsResending(false);
     }
@@ -201,6 +175,7 @@ export const useEmailVerification = ({
     isResending,
     isResendDisabled,
     resendTimer,
+    verificationError,
     handleVerifyCode,
     handleResendCode
   };
