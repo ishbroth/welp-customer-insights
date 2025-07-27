@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,10 @@ const Login = () => {
               {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline block">
+              Forgot your password?
+            </Link>
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link to="/signup" className="text-primary hover:underline">
