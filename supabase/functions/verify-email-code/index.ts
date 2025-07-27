@@ -79,36 +79,52 @@ serve(async (req) => {
     const userId = authData.user.id;
     console.log("User created successfully with ID:", userId);
 
-    // Create the user profile using the create-profile edge function
-    const profileResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/create-profile`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
-      },
-      body: JSON.stringify({
-        userId: userId,
+    // Create profile record directly using admin client
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: userId,
         name: userData.name,
+        email: email,
+        type: accountType,
         phone: userData.phone,
         address: userData.address,
         city: userData.city,
         state: userData.state,
-        zipCode: userData.zipCode,
-        type: accountType,
-        email: email,
-        verified: true, // Customer accounts are verified after email verification
-        firstName: userData.firstName,
-        lastName: userData.lastName
-      })
-    });
+        zipcode: userData.zipCode,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        verified: accountType === 'customer' // Customer accounts are verified after email verification
+      });
 
-    if (!profileResponse.ok) {
-      const profileError = await profileResponse.text();
-      console.error("Profile creation failed:", profileError);
-      throw new Error("Failed to create user profile");
+    if (profileError) {
+      console.error("Error creating profile:", profileError);
+      throw new Error(`Failed to create profile: ${profileError.message}`);
     }
 
     console.log("Profile created successfully");
+
+    // For business accounts, create business_info record
+    if (accountType === 'business') {
+      const { error: businessError } = await supabaseAdmin
+        .from('business_info')
+        .insert({
+          id: userId,
+          business_name: userData.businessName || userData.name,
+          license_number: userData.licenseNumber,
+          license_type: userData.licenseType,
+          license_state: userData.state,
+          license_status: userData.licenseVerificationResult?.verified ? 'verified' : 'pending',
+          verified: userData.licenseVerificationResult?.verified && userData.licenseVerificationResult?.isRealVerification
+        });
+
+      if (businessError) {
+        console.error("Error creating business info:", businessError);
+        // Don't throw here, profile creation succeeded
+      } else {
+        console.log("Business info created successfully");
+      }
+    }
 
     // Initialize regular Supabase client for sign-in
     const supabase = createClient(
