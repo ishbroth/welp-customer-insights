@@ -82,7 +82,7 @@ serve(async (req) => {
 
     logStep("Verification request updated to approved");
 
-    // Update the user's profile with business information (removed verified column reference)
+    // Update the user's profile with business information
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({ 
@@ -92,7 +92,8 @@ serve(async (req) => {
         address: verificationRequest.address || null,
         city: verificationRequest.city || null,
         state: verificationRequest.state || null,
-        zipcode: verificationRequest.zipcode || null
+        zipcode: verificationRequest.zipcode || null,
+        verified: true
       })
       .eq('id', verificationRequest.user_id);
 
@@ -139,7 +140,7 @@ serve(async (req) => {
       // Send congratulatory email to the business owner
       try {
         const congratsEmailResponse = await resend.emails.send({
-          from: "Welp Verification <onboarding@resend.dev>",
+          from: "Welp Verification <support@mywelp.com>",
           to: [userData.user.email],
           subject: `🎉 ${verificationRequest.business_name} - Your Business is Now Verified!`,
           html: `
@@ -182,73 +183,15 @@ serve(async (req) => {
       }
     }
 
-    // Return success page HTML
-    const successPage = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Business Verified Successfully</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              max-width: 600px; 
-              margin: 100px auto; 
-              padding: 20px;
-              background: #f8f9fa;
-            }
-            .container {
-              background: white;
-              padding: 40px;
-              border-radius: 10px;
-              text-align: center;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            .success-icon {
-              color: #28a745;
-              font-size: 48px;
-              margin-bottom: 20px;
-            }
-            h1 { color: #28a745; margin-bottom: 20px; }
-            p { color: #6c757d; line-height: 1.6; }
-            .business-name { 
-              color: #ea384c; 
-              font-weight: bold; 
-              font-size: 18px;
-              margin: 20px 0;
-            }
-            .details {
-              background: #f8f9fa;
-              padding: 20px;
-              border-radius: 5px;
-              margin: 20px 0;
-              text-align: left;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="success-icon">✓</div>
-            <h1>Business Verified Successfully!</h1>
-            <div class="business-name">${verificationRequest.business_name}</div>
-            <div class="details">
-              <p><strong>License:</strong> ${verificationRequest.primary_license}</p>
-              <p><strong>Category:</strong> ${verificationRequest.business_type}</p>
-              ${verificationRequest.business_subcategory ? `<p><strong>Subcategory:</strong> ${verificationRequest.business_subcategory}</p>` : ''}
-              <p><strong>State:</strong> ${verificationRequest.license_state || 'Not specified'}</p>
-            </div>
-            <p>The business has been successfully verified and will now display the verified badge on their profile and reviews.</p>
-            <p>A congratulatory email has been sent to the business owner.</p>
-          </div>
-        </body>
-      </html>
-    `;
-
     logStep("Verification completed successfully");
 
-    return new Response(successPage, {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Business verified successfully" 
+    }), {
       headers: { 
         ...corsHeaders, 
-        "Content-Type": "text/html" 
+        "Content-Type": "application/json" 
       },
       status: 200,
     });
@@ -256,49 +199,13 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     
-    const errorPage = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Verification Error</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              max-width: 600px; 
-              margin: 100px auto; 
-              padding: 20px;
-              background: #f8f9fa;
-            }
-            .container {
-              background: white;
-              padding: 40px;
-              border-radius: 10px;
-              text-align: center;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            .error-icon {
-              color: #dc3545;
-              font-size: 48px;
-              margin-bottom: 20px;
-            }
-            h1 { color: #dc3545; margin-bottom: 20px; }
-            p { color: #6c757d; line-height: 1.6; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="error-icon">✗</div>
-            <h1>Verification Error</h1>
-            <p>${errorMessage}</p>
-          </div>
-        </body>
-      </html>
-    `;
-
-    return new Response(errorPage, {
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      success: false 
+    }), {
       headers: { 
         ...corsHeaders, 
-        "Content-Type": "text/html" 
+        "Content-Type": "application/json" 
       },
       status: 400,
     });
