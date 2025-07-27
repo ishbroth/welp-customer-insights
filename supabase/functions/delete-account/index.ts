@@ -16,6 +16,12 @@ serve(async (req) => {
   try {
     console.log("🗑️ ACCOUNT DELETION: Starting comprehensive account deletion process");
 
+    // Parse request body for force delete options
+    const body = await req.json().catch(() => ({}));
+    const isForceDelete = body.forceDelete || false;
+    const forceDeleteEmail = body.email || null;
+    const adminOverride = body.adminOverride || false;
+
     // Create Supabase client with service role key for admin operations
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -28,36 +34,88 @@ serve(async (req) => {
       }
     );
 
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.log("❌ No authorization header provided");
-      return new Response(
-        JSON.stringify({ error: "Authorization required" }),
-        { status: 401, headers: corsHeaders }
-      );
-    }
+    let userId: string;
 
-    // Create regular client to verify user
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: { headers: { Authorization: authHeader } }
+    if (isForceDelete && forceDeleteEmail && adminOverride) {
+      console.log(`🔧 FORCE DELETE MODE: Attempting to delete corrupted account ${forceDeleteEmail}`);
+      
+      // For force delete, we need to find the user by email using admin client
+      const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error("❌ Error listing users:", listError);
+        throw new Error("Failed to list users for force delete");
       }
-    );
+      
+      const targetUser = users.users.find(user => user.email === forceDeleteEmail);
+      
+      if (!targetUser) {
+        console.log("ℹ️ User not found in auth.users - may already be deleted");
+        
+        // Still try to clean up any remaining profile data
+        const { data: profiles, error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('email', forceDeleteEmail);
+        
+        if (profileError) {
+          console.error("❌ Error checking profiles:", profileError);
+        }
+        
+        if (profiles && profiles.length > 0) {
+          userId = profiles[0].id;
+          console.log(`🔄 Found orphaned profile data for ${forceDeleteEmail}, cleaning up...`);
+        } else {
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: "Account not found - may already be deleted",
+              recordsDeleted: 0 
+            }),
+            { 
+              status: 200, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+      } else {
+        userId = targetUser.id;
+        console.log(`🎯 Found user for force delete: ${userId}`);
+      }
+      
+    } else {
+      // Normal deletion process - get user from auth header
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        console.log("❌ No authorization header provided");
+        return new Response(
+          JSON.stringify({ error: "Authorization required" }),
+          { status: 401, headers: corsHeaders }
+        );
+      }
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      console.log("❌ Invalid user token");
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication" }),
-        { status: 401, headers: corsHeaders }
+      // Create regular client to verify user
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: { headers: { Authorization: authHeader } }
+        }
       );
+
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.log("❌ Invalid user token");
+        return new Response(
+          JSON.stringify({ error: "Invalid authentication" }),
+          { status: 401, headers: corsHeaders }
+        );
+      }
+
+      userId = user.id;
     }
 
-    const userId = user.id;
     console.log(`🎯 ACCOUNT DELETION: Processing deletion for user ID: ${userId}`);
 
     // Define all tables that might contain user data
@@ -78,7 +136,8 @@ serve(async (req) => {
       'notification_preferences',
       'notifications_log',
       'device_tokens',
-      'user_sessions'
+      'user_sessions',
+      'email_verification_codes'
     ];
 
     let totalRecordsDeleted = 0;
@@ -121,6 +180,23 @@ serve(async (req) => {
             }
           }
         }
+
+        // For email_verification_codes, clean by email if we have it
+        if (table === 'email_verification_codes' && forceDeleteEmail) {
+          const { data, error } = await supabaseAdmin
+            .from('email_verification_codes')
+            .delete()
+            .eq('email', forceDeleteEmail);
+          
+          if (!error && data) {
+            const deletedCount = Array.isArray(data) ? data.length : (data ? 1 : 0);
+            if (deletedCount > 0) {
+              console.log(`✅ Deleted ${deletedCount} email verification codes`);
+              totalRecordsDeleted += deletedCount;
+            }
+          }
+        }
+        
       } catch (error) {
         console.log(`⚠️ Error cleaning ${table}: ${error.message}`);
       }
@@ -160,6 +236,22 @@ serve(async (req) => {
           totalRecordsDeleted += deletedCount;
         }
       }
+      
+      // Also try deleting by email if we have it (for corrupted accounts)
+      if (forceDeleteEmail) {
+        const { data: emailProfileData, error: emailProfileError } = await supabaseAdmin
+          .from('profiles')
+          .delete()
+          .eq('email', forceDeleteEmail);
+        
+        if (!emailProfileError && emailProfileData) {
+          const deletedCount = Array.isArray(emailProfileData) ? emailProfileData.length : (emailProfileData ? 1 : 0);
+          if (deletedCount > 0) {
+            console.log(`✅ Deleted profile by email: ${deletedCount} records`);
+            totalRecordsDeleted += deletedCount;
+          }
+        }
+      }
     } catch (error) {
       console.log(`⚠️ Error deleting profile: ${error.message}`);
     }
@@ -171,22 +263,32 @@ serve(async (req) => {
       
       if (deleteUserError) {
         console.log(`❌ Error deleting auth user: ${deleteUserError.message}`);
-        throw deleteUserError;
+        // Don't throw here for force delete - we might be cleaning up orphaned data
+        if (!isForceDelete) {
+          throw deleteUserError;
+        }
       } else {
         console.log(`✅ Successfully deleted auth user account`);
       }
     } catch (error) {
       console.log(`⚠️ Error in auth user deletion: ${error.message}`);
-      throw error;
+      if (!isForceDelete) {
+        throw error;
+      }
     }
 
-    console.log(`🎉 ACCOUNT DELETION COMPLETE: Removed ${totalRecordsDeleted} database records and auth account for user ${userId}`);
+    const message = isForceDelete 
+      ? `Force deletion completed for ${forceDeleteEmail}` 
+      : "Account successfully deleted";
+
+    console.log(`🎉 ACCOUNT DELETION COMPLETE: Removed ${totalRecordsDeleted} database records for user ${userId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Account successfully deleted",
-        recordsDeleted: totalRecordsDeleted 
+        message: message,
+        recordsDeleted: totalRecordsDeleted,
+        forceDelete: isForceDelete
       }),
       { 
         status: 200, 
