@@ -78,13 +78,15 @@ export const useAuthState = () => {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("🔐 Auth state change event:", event, "session user id:", session?.user?.id);
         setSession(session);
         
         if (session?.user) {
-          // Initialize user data immediately without setTimeout
-          await enhancedInitUserData(session.user.id, true);
+          // Defer user data initialization to prevent blocking auth state change
+          setTimeout(() => {
+            enhancedInitUserData(session.user.id, true);
+          }, 0);
         } else {
           console.log("❌ No session, clearing user data");
           setCurrentUser(null);
@@ -95,12 +97,14 @@ export const useAuthState = () => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("🔍 Initial session check:", session?.user?.id);
       setSession(session);
       if (session?.user) {
-        // Initialize user data immediately without setTimeout
-        await enhancedInitUserData(session.user.id, true);
+        // Defer user data initialization to prevent blocking initial load
+        setTimeout(() => {
+          enhancedInitUserData(session.user.id, true);
+        }, 0);
       } else {
         setLoading(false);
       }

@@ -25,10 +25,10 @@ const Login = () => {
 
       if (result.success) {
         toast.success("Login successful!");
-        // Wait a moment to ensure auth state is updated before navigating
+        // Wait a bit longer to ensure auth state is fully updated
         setTimeout(() => {
           navigate("/profile");
-        }, 100);
+        }, 200);
       } else {
         toast.error(result.error || "Login failed");
       }
