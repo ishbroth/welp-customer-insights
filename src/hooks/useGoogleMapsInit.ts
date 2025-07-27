@@ -15,20 +15,7 @@ export const useGoogleMapsInit = () => {
     const initializeGoogle = async () => {
       try {
         console.log('🗺️ Initializing Google Maps...');
-        const { data, error } = await supabase.functions.invoke('get-secret', {
-          body: { secretName: 'VITE_GOOGLE_MAPS_API_KEY' }
-        });
         
-        if (error || !data?.secret) {
-          console.log("❌ Google Maps API key not available, using regular input");
-          if (mounted) {
-            setGoogleMapsStatus('no-key');
-          }
-          return;
-        }
-
-        console.log('✅ Google Maps API key retrieved successfully');
-
         // Check if already loaded and ready
         if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
           console.log('✅ Google Maps already loaded and ready');
@@ -38,6 +25,28 @@ export const useGoogleMapsInit = () => {
           }
           return;
         }
+
+        const { data, error } = await supabase.functions.invoke('get-secret', {
+          body: { secretName: 'VITE_GOOGLE_MAPS_API_KEY' }
+        });
+        
+        if (error) {
+          console.error("❌ Error calling get-secret function:", error);
+          if (mounted) {
+            setGoogleMapsStatus('error');
+          }
+          return;
+        }
+
+        if (!data?.secret) {
+          console.log("❌ Google Maps API key not available");
+          if (mounted) {
+            setGoogleMapsStatus('no-key');
+          }
+          return;
+        }
+
+        console.log('✅ Google Maps API key retrieved successfully');
 
         console.log('🔄 Loading Google Maps script...');
         const script = document.createElement('script');
