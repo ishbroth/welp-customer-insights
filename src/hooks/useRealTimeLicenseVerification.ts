@@ -58,12 +58,16 @@ export const useRealTimeLicenseVerification = (
             title: "Verification Status",
             description: "We were unable to automatically verify your license, please submit a verification request, it's free!",
             duration: 5000,
-            action: {
-              label: "Submit Request",
-              onClick: () => {
-                window.location.href = "/verify-license";
-              }
-            }
+            action: (
+              <button
+                onClick={() => {
+                  window.location.href = "/verify-license";
+                }}
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+              >
+                Submit Request
+              </button>
+            )
           });
         }
       } catch (error) {
