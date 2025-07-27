@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -83,6 +84,13 @@ const Login = () => {
                 Create one
               </Link>
             </p>
+            <Link 
+              to="/" 
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mt-3"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to Homepage
+            </Link>
           </div>
         </CardContent>
       </Card>
