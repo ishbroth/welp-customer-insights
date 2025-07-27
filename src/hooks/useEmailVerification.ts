@@ -113,13 +113,39 @@ export const useEmailVerification = ({
           description: "Your email has been verified and account created successfully.",
         });
 
-        // Clear any stored verification data
-        localStorage.removeItem("pendingVerification");
-        
-        // Redirect to the appropriate success page based on account type
+        // For business accounts, store a flag in localStorage to show the congratulations popup
         if (accountType === 'business') {
-          navigate(`/email-verification-success?email=${encodeURIComponent(email)}&type=business`);
+          // Get the stored pending verification data to preserve license verification results
+          const pendingData = localStorage.getItem("pendingVerification");
+          if (pendingData) {
+            try {
+              const businessData = JSON.parse(pendingData);
+              // Store the verification success flag with license verification data
+              localStorage.setItem("businessVerificationSuccess", JSON.stringify({
+                businessName: businessData.businessName,
+                licenseVerificationResult: businessData.licenseVerificationResult,
+                timestamp: Date.now()
+              }));
+            } catch (error) {
+              console.error("Error processing pending verification data:", error);
+              // Store minimal success data if parsing fails
+              localStorage.setItem("businessVerificationSuccess", JSON.stringify({
+                businessName: businessName || name,
+                timestamp: Date.now()
+              }));
+            }
+          } else {
+            // Store minimal success data if no pending data exists
+            localStorage.setItem("businessVerificationSuccess", JSON.stringify({
+              businessName: businessName || name,
+              timestamp: Date.now()
+            }));
+          }
+          
+          // Navigate directly to profile for business accounts
+          navigate("/profile", { replace: true });
         } else {
+          // For customer accounts, go to profile as before
           navigate("/profile", { replace: true });
         }
         
