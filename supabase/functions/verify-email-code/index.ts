@@ -55,74 +55,91 @@ serve(async (req) => {
       .update({ used: true })
       .eq('id', verificationData.id);
 
-    console.log("Email code verified successfully, creating account...");
+    console.log("Email code verified successfully, processing account...");
 
-    // Create the user account with admin client - email confirmed from the start
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: userData.password,
-      email_confirm: true, // Mark email as confirmed since we verified the code
-      user_metadata: {
-        name: userData.name,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: userData.phone,
-        accountType: accountType
-      }
-    });
+    // Check if user already exists
+    const { data: existingUser, error: userCheckError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    
+    let userId: string;
+    let userCreated = false;
 
-    if (authError) {
-      console.error("Error creating user:", authError);
-      throw new Error(`Failed to create user: ${authError.message}`);
-    }
-
-    const userId = authData.user.id;
-    console.log("User created successfully with ID:", userId);
-
-    // Create profile record directly using admin client
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: userId,
-        name: userData.name,
+    if (existingUser?.user && !userCheckError) {
+      // User exists, use existing user ID
+      userId = existingUser.user.id;
+      console.log("Using existing user with ID:", userId);
+    } else {
+      // Create new user account with admin client - email confirmed from the start
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: email,
-        type: accountType,
-        phone: userData.phone,
-        address: userData.address,
-        city: userData.city,
-        state: userData.state,
-        zipcode: userData.zipCode,
-        first_name: userData.firstName,
-        last_name: userData.lastName,
-        verified: accountType === 'customer' // Customer accounts are verified after email verification
+        password: userData.password,
+        email_confirm: true, // Mark email as confirmed since we verified the code
+        user_metadata: {
+          name: userData.name,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone,
+          accountType: accountType
+        }
       });
 
-    if (profileError) {
-      console.error("Error creating profile:", profileError);
-      throw new Error(`Failed to create profile: ${profileError.message}`);
+      if (authError) {
+        console.error("Error creating user:", authError);
+        throw new Error(`Failed to create user: ${authError.message}`);
+      }
+
+      userId = authData.user.id;
+      userCreated = true;
+      console.log("User created successfully with ID:", userId);
     }
 
-    console.log("Profile created successfully");
+    // Create or update profile record using admin client
+    const profileData = {
+      id: userId,
+      name: userData.name,
+      email: email,
+      type: accountType,
+      phone: userData.phone,
+      address: userData.address,
+      city: userData.city,
+      state: userData.state,
+      zipcode: userData.zipCode,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      verified: accountType === 'customer' // Customer accounts are verified after email verification
+    };
 
-    // For business accounts, create business_info record
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .upsert(profileData, { onConflict: 'id' });
+
+    if (profileError) {
+      console.error("Error creating/updating profile:", profileError);
+      throw new Error(`Failed to create/update profile: ${profileError.message}`);
+    }
+
+    console.log("Profile created/updated successfully");
+
+    // For business accounts, create or update business_info record
     if (accountType === 'business') {
+      const businessData = {
+        id: userId,
+        business_name: userData.businessName || userData.name,
+        license_number: userData.licenseNumber,
+        license_type: userData.licenseType,
+        license_state: userData.state,
+        license_status: userData.licenseVerificationResult?.verified ? 'verified' : 'pending',
+        verified: userData.licenseVerificationResult?.verified && userData.licenseVerificationResult?.isRealVerification
+      };
+
       const { error: businessError } = await supabaseAdmin
         .from('business_info')
-        .insert({
-          id: userId,
-          business_name: userData.businessName || userData.name,
-          license_number: userData.licenseNumber,
-          license_type: userData.licenseType,
-          license_state: userData.state,
-          license_status: userData.licenseVerificationResult?.verified ? 'verified' : 'pending',
-          verified: userData.licenseVerificationResult?.verified && userData.licenseVerificationResult?.isRealVerification
-        });
+        .upsert(businessData, { onConflict: 'id' });
 
       if (businessError) {
-        console.error("Error creating business info:", businessError);
+        console.error("Error creating/updating business info:", businessError);
         // Don't throw here, profile creation succeeded
       } else {
-        console.log("Business info created successfully");
+        console.log("Business info created/updated successfully");
       }
     }
 
