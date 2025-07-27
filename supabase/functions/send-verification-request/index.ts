@@ -88,8 +88,8 @@ serve(async (req) => {
     logStep("Verification request stored", { token: verificationToken });
 
     // Create verification URL for the edge function
-    const origin = req.headers.get("origin") || "https://yftvcixhifvrovwhtgtj.supabase.co";
-    const verificationUrl = `${origin}/functions/v1/verify-business?token=${verificationToken}`;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const verificationUrl = `${supabaseUrl}/functions/v1/verify-business?token=${verificationToken}`;
 
     // Send email to support@mywelp.com using your verified domain
     const emailResponse = await resend.emails.send({
@@ -134,53 +134,16 @@ serve(async (req) => {
           ` : ''}
 
           <div style="text-align: center; margin: 30px 0;">
-            <button id="verifyButton" 
-                    onclick="verifyBusiness('${verificationToken}')"
-                    style="background: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px;">
+            <a href="${verificationUrl}" 
+               style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">
               Verify Business
-            </button>
+            </a>
           </div>
 
           <p style="color: #6c757d; font-size: 14px;">
             Click the "Verify Business" button above to approve this verification request.
             This will grant the business a verified status on their profile and reviews.
           </p>
-
-          <script>
-            async function verifyBusiness(token) {
-              const button = document.getElementById('verifyButton');
-              const originalText = button.textContent;
-              
-              try {
-                button.textContent = 'Verifying...';
-                button.disabled = true;
-                
-                const response = await fetch('${verificationUrl}', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ token: token })
-                });
-                
-                if (response.ok) {
-                  button.textContent = '✓ Verified';
-                  button.style.background = '#28a745';
-                  button.style.cursor = 'default';
-                } else {
-                  throw new Error('Verification failed');
-                }
-              } catch (error) {
-                button.textContent = 'Error - Try Again';
-                button.style.background = '#dc3545';
-                button.disabled = false;
-                setTimeout(() => {
-                  button.textContent = originalText;
-                  button.style.background = '#28a745';
-                }, 3000);
-              }
-            }
-          </script>
         </div>
       `,
     });

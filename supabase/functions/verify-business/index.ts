@@ -25,15 +25,9 @@ serve(async (req) => {
   try {
     logStep("Verification function started");
 
-    // Get token from URL query parameters or request body
+    // Get token from URL query parameters
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
-    
-    // If no token in URL, try to get it from request body
-    if (!token && req.method === "POST") {
-      const body = await req.json();
-      token = body.token;
-    }
+    const token = url.searchParams.get('token');
     
     logStep("Token received", { token });
     
@@ -185,13 +179,30 @@ serve(async (req) => {
 
     logStep("Verification completed successfully");
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: "Business verified successfully" 
-    }), {
+    // Return HTML response that shows verification success
+    return new Response(`
+      <html>
+        <head>
+          <title>Business Verification Complete</title>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+            .success { background: #e7f5e7; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; }
+            .check { color: #28a745; font-size: 24px; }
+          </style>
+        </head>
+        <body>
+          <div class="success">
+            <h2 class="check">✅ Business Verification Complete!</h2>
+            <p><strong>Business Name:</strong> ${verificationRequest.business_name}</p>
+            <p><strong>License Number:</strong> ${verificationRequest.primary_license}</p>
+            <p>The business owner has been notified via email and their account is now verified.</p>
+          </div>
+        </body>
+      </html>
+    `, {
       headers: { 
         ...corsHeaders, 
-        "Content-Type": "application/json" 
+        "Content-Type": "text/html" 
       },
       status: 200,
     });
@@ -199,13 +210,26 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      success: false 
-    }), {
+    return new Response(`
+      <html>
+        <head>
+          <title>Verification Error</title>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+            .error { background: #f8d7da; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>❌ Verification Failed</h2>
+            <p>Error: ${errorMessage}</p>
+          </div>
+        </body>
+      </html>
+    `, {
       headers: { 
         ...corsHeaders, 
-        "Content-Type": "application/json" 
+        "Content-Type": "text/html" 
       },
       status: 400,
     });
