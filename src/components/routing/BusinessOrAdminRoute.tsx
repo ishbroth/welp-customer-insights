@@ -1,34 +1,31 @@
 
-import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import React from 'react';
+import { useAuth } from '@/contexts/auth';
+import { Navigate } from 'react-router-dom';
 
 interface BusinessOrAdminRouteProps {
   children: React.ReactNode;
 }
 
-const BusinessOrAdminRoute = ({ children }: BusinessOrAdminRouteProps) => {
-  const { currentUser, session, loading } = useAuth();
-  
-  // Show loading while auth state is being determined
+const BusinessOrAdminRoute: React.FC<BusinessOrAdminRouteProps> = ({ children }) => {
+  const { currentUser, loading } = useAuth();
+
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
-  
-  // Redirect to login if not logged in
-  if (!session?.user) {
+
+  if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
-  
-  // Allow access if we have a session but profile is still loading
-  if (!currentUser) {
-    return <div>Loading profile...</div>;
+
+  if (currentUser.type !== 'business' && currentUser.type !== 'admin') {
+    return <Navigate to="/profile" replace />;
   }
-  
-  // Redirect if not a business owner or admin
-  if (currentUser.type === "customer") {
-    return <Navigate to="/" replace />;
-  }
-  
+
   return <>{children}</>;
 };
 

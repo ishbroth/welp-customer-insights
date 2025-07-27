@@ -31,6 +31,7 @@ import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import VerifyLicense from "@/pages/VerifyLicense";
 import NewReview from "@/pages/NewReview";
+import DebugAccount from "@/pages/DebugAccount";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -67,6 +68,7 @@ const AppRoutes = () => {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/debug-account" element={<DebugAccount />} />
             
             <Route path="/review/new" element={
               <PrivateRoute>

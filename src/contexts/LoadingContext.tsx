@@ -4,38 +4,24 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 interface LoadingContextType {
   isPageLoading: boolean;
   setIsPageLoading: (loading: boolean) => void;
-  isFormLoading: boolean;
-  setIsFormLoading: (loading: boolean) => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
-export const useLoading = () => {
-  const context = useContext(LoadingContext);
-  if (!context) {
-    throw new Error('useLoading must be used within a LoadingProvider');
-  }
-  return context;
-};
-
-interface LoadingProviderProps {
-  children: ReactNode;
-}
-
-export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) => {
+export const LoadingProvider = ({ children }: { children: ReactNode }) => {
   const [isPageLoading, setIsPageLoading] = useState(false);
-  const [isFormLoading, setIsFormLoading] = useState(false);
-
-  const value = {
-    isPageLoading,
-    setIsPageLoading,
-    isFormLoading,
-    setIsFormLoading
-  };
 
   return (
-    <LoadingContext.Provider value={value}>
+    <LoadingContext.Provider value={{ isPageLoading, setIsPageLoading }}>
       {children}
     </LoadingContext.Provider>
   );
+};
+
+export const useLoading = () => {
+  const context = useContext(LoadingContext);
+  if (context === undefined) {
+    throw new Error('useLoading must be used within a LoadingProvider');
+  }
+  return context;
 };
