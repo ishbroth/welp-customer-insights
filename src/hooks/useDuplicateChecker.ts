@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
+import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
-import { debugAnyOrphanedData } from "@/utils/debugOrphanedData";
 
 interface UseDuplicateCheckerProps {
   businessEmail: string;
@@ -25,62 +24,111 @@ export const useDuplicateChecker = ({
   const [emailExists, setEmailExists] = useState(false);
   const [phoneExists, setPhoneExists] = useState(false);
 
-  // Enhanced duplicate checking with debug logging
+  // Immediate email duplicate check
   useEffect(() => {
-    if (!businessEmail || !businessPhone || !businessName) return;
+    if (!businessEmail || !businessEmail.includes('@')) {
+      setEmailExists(false);
+      if (duplicateResult?.duplicateType === 'email') {
+        setDuplicateResult(null);
+        setShowDuplicateDialog(false);
+        onDuplicateFound?.(false);
+      }
+      return;
+    }
     
     const timeoutId = setTimeout(async () => {
-      console.log("🔍 COMPREHENSIVE DUPLICATE CHECK WITH DEBUG");
-      console.log("Checking:", { businessEmail, businessPhone, businessName, businessAddress });
+      console.log("🔍 CHECKING EMAIL DUPLICATE");
+      console.log("Checking email:", businessEmail);
       
       setIsCheckingDuplicates(true);
       
       try {
-        // CRITICAL: Add debug logging before duplicate check
-        const debugInfo = await debugAnyOrphanedData(businessPhone);
-        console.log("🔍 DEBUG: Orphaned data check results:", debugInfo);
+        const exists = await checkEmailExistsViaEdgeFunction(businessEmail, 'business');
+        console.log("Email exists result:", exists);
         
-        const result = await checkDuplicatesViaEdgeFunction(
-          businessEmail, 
-          businessPhone, 
-          businessName, 
-          businessAddress, 
-          'business'
-        );
+        setEmailExists(exists);
         
-        console.log("🔍 Duplicate check result:", result);
-        
-        if (result.isDuplicate) {
+        if (exists) {
+          const result: DuplicateCheckResult = {
+            isDuplicate: true,
+            duplicateType: 'email',
+            existingEmail: businessEmail,
+            allowContinue: false
+          };
           setDuplicateResult(result);
           setShowDuplicateDialog(true);
-          
-          // Set specific flags based on duplicate type
-          if (result.duplicateType === 'email') {
-            setEmailExists(true);
-            setPhoneExists(false);
-          } else if (result.duplicateType === 'phone') {
-            setEmailExists(false);
-            setPhoneExists(true);
-          }
-          
           onDuplicateFound?.(true);
         } else {
-          setDuplicateResult(null);
-          setShowDuplicateDialog(false);
-          setEmailExists(false);
-          setPhoneExists(false);
-          onDuplicateFound?.(false);
+          // Clear email-related duplicate result
+          if (duplicateResult?.duplicateType === 'email') {
+            setDuplicateResult(null);
+            setShowDuplicateDialog(false);
+            onDuplicateFound?.(false);
+          }
         }
       } catch (error) {
-        console.error("Error in duplicate check:", error);
-        onDuplicateFound?.(false);
+        console.error("Error checking email duplicate:", error);
+        setEmailExists(false);
       } finally {
         setIsCheckingDuplicates(false);
       }
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [businessEmail, businessPhone, businessName, businessAddress, onDuplicateFound]);
+  }, [businessEmail, duplicateResult?.duplicateType, onDuplicateFound]);
+
+  // Immediate phone duplicate check
+  useEffect(() => {
+    if (!businessPhone || businessPhone.replace(/\D/g, '').length < 10) {
+      setPhoneExists(false);
+      if (duplicateResult?.duplicateType === 'phone') {
+        setDuplicateResult(null);
+        setShowDuplicateDialog(false);
+        onDuplicateFound?.(false);
+      }
+      return;
+    }
+    
+    const timeoutId = setTimeout(async () => {
+      console.log("🔍 CHECKING PHONE DUPLICATE");
+      console.log("Checking phone:", businessPhone);
+      
+      setIsCheckingDuplicates(true);
+      
+      try {
+        const exists = await checkPhoneExistsViaEdgeFunction(businessPhone, 'business');
+        console.log("Phone exists result:", exists);
+        
+        setPhoneExists(exists);
+        
+        if (exists) {
+          const result: DuplicateCheckResult = {
+            isDuplicate: true,
+            duplicateType: 'phone',
+            existingPhone: businessPhone,
+            allowContinue: false
+          };
+          setDuplicateResult(result);
+          setShowDuplicateDialog(true);
+          onDuplicateFound?.(true);
+        } else {
+          // Clear phone-related duplicate result
+          if (duplicateResult?.duplicateType === 'phone') {
+            setDuplicateResult(null);
+            setShowDuplicateDialog(false);
+            onDuplicateFound?.(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking phone duplicate:", error);
+        setPhoneExists(false);
+      } finally {
+        setIsCheckingDuplicates(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [businessPhone, duplicateResult?.duplicateType, onDuplicateFound]);
 
   const handleDialogClose = () => {
     setShowDuplicateDialog(false);
