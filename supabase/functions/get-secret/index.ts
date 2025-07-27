@@ -1,73 +1,84 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { applySecurityHeaders } from "../_shared/security.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Allowlist of permitted environment variables
-const ALLOWED_SECRETS = [
-  'STRIPE_SECRET_KEY',
-  'TWILIO_ACCOUNT_SID',
-  'TWILIO_AUTH_TOKEN',
-  'TWILIO_PHONE_NUMBER',
-  'RESEND_API_KEY',
-  'VITE_GOOGLE_MAPS_API_KEY',
-  'FCM_SERVER_KEY',
-  'AWS_ACCESS_KEY_ID',
-  'AWS_SECRET_ACCESS_KEY',
-  'AWS_REGION',
-  'AWS_SNS_ORIGINATION_NUMBER'
-];
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-serve(async (req) => {
-  if (req.method !== 'POST') {
-    return applySecurityHeaders(new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
-    ));
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { secretName } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
-    // Validate input
-    if (!secretName || typeof secretName !== 'string') {
-      return applySecurityHeaders(new Response(
-        JSON.stringify({ error: 'Invalid secret name' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      ));
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { secretName } = await req.json()
+    
+    if (!secretName) {
+      return new Response(
+        JSON.stringify({ error: 'Secret name is required' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
-    
-    // Check if secret is in allowlist
-    if (!ALLOWED_SECRETS.includes(secretName)) {
-      console.warn(`Attempt to access non-allowed secret: ${secretName}`);
-      return applySecurityHeaders(new Response(
-        JSON.stringify({ error: 'Secret not allowed' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      ));
-    }
-    
-    // Get the secret value
-    const secretValue = Deno.env.get(secretName);
-    
-    if (!secretValue) {
-      return applySecurityHeaders(new Response(
+
+    console.log(`Retrieving secret: ${secretName}`)
+
+    // Get the secret from Supabase Vault
+    const { data, error } = await supabase
+      .from('vault.secrets')
+      .select('secret')
+      .eq('name', secretName)
+      .single()
+
+    if (error) {
+      console.error('Error retrieving secret:', error)
+      return new Response(
         JSON.stringify({ error: 'Secret not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      ));
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
+
+    if (!data?.secret) {
+      console.log('Secret not found in vault')
+      return new Response(
+        JSON.stringify({ error: 'Secret not found' }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    console.log('Secret retrieved successfully')
     
-    // Log access for security monitoring
-    console.log(`Secret accessed: ${secretName} at ${new Date().toISOString()}`);
-    
-    return applySecurityHeaders(new Response(
-      JSON.stringify({ value: secretValue }),
-      { headers: { 'Content-Type': 'application/json' } }
-    ));
-    
+    return new Response(
+      JSON.stringify({ secret: data.secret }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+
   } catch (error) {
-    console.error('Get secret error:', error);
-    return applySecurityHeaders(new Response(
+    console.error('Error in get-secret function:', error)
+    return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    ));
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
-});
+})
