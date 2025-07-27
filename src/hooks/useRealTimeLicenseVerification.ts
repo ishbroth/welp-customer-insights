@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { toast } from "@/hooks/use-toast";
 
 export const useRealTimeLicenseVerification = (
   licenseNumber: string,
@@ -50,6 +51,30 @@ export const useRealTimeLicenseVerification = (
         
         setVerificationResult(result);
         setIsVerified(result.verified && result.isRealVerification);
+
+        // Show toast for verification failure
+        if (!result.verified) {
+          toast({
+            title: "Verification Status",
+            description: (
+              <div>
+                We were unable to automatically verify your license, please submit a{" "}
+                <a 
+                  href="/verify-license" 
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = "/verify-license";
+                  }}
+                >
+                  verification request
+                </a>
+                , it's free!
+              </div>
+            ),
+            duration: 5000,
+          });
+        }
       } catch (error) {
         console.error("❌ Real-time license verification error:", error);
         setVerificationResult({
