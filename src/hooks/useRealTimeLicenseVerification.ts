@@ -56,23 +56,14 @@ export const useRealTimeLicenseVerification = (
         if (!result.verified) {
           toast({
             title: "Verification Status",
-            description: (
-              <div>
-                We were unable to automatically verify your license, please submit a{" "}
-                <a 
-                  href="/verify-license" 
-                  className="text-blue-600 hover:text-blue-800 underline font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.location.href = "/verify-license";
-                  }}
-                >
-                  verification request
-                </a>
-                , it's free!
-              </div>
-            ),
+            description: "We were unable to automatically verify your license, please submit a verification request, it's free!",
             duration: 5000,
+            action: {
+              label: "Submit Request",
+              onClick: () => {
+                window.location.href = "/verify-license";
+              }
+            }
           });
         }
       } catch (error) {
