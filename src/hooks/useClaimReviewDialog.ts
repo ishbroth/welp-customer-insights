@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
+export const useClaimReviewDialog = (businessId?: string) => {
   // Fetch comprehensive business profile data
   const { data: fullBusinessProfile, isLoading } = useQuery({
     queryKey: ['fullBusinessProfile', businessId],
@@ -69,7 +69,7 @@ export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
       console.log("Full business profile fetched for claim dialog:", combinedData);
       return combinedData;
     },
-    enabled: !!businessId && open,
+    enabled: !!businessId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });

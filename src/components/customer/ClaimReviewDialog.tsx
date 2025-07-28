@@ -44,7 +44,7 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const { fullBusinessProfile, isLoading, hasData } = useClaimReviewDialog(businessId, open);
+  const { fullBusinessProfile, isLoading } = useClaimReviewDialog(businessId);
 
   const handleConfirm = () => {
     onConfirm();
@@ -71,9 +71,9 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   console.log('ClaimReviewDialog: Rendering with data:', {
     businessId,
     fullBusinessProfile: fullBusinessProfile ? 'loaded' : 'not loaded',
-    hasData,
-    isLoading,
     businessName,
+    displayData: displayData ? 'found' : 'not found',
+    isLoading,
     open
   });
 
