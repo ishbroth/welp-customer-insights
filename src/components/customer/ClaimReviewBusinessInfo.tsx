@@ -37,25 +37,6 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
   displayData,
   fullBusinessProfile,
 }) => {
-  // Check if we have comprehensive business information to display
-  const hasBusinessInfo = displayData?.name || 
-                         displayData?.phone || 
-                         displayData?.address || 
-                         displayData?.city || 
-                         displayData?.state ||
-                         displayData?.zipcode ||
-                         (fullBusinessProfile?.business_info && fullBusinessProfile.business_info.website);
-
-  if (!hasBusinessInfo) {
-    return (
-      <div className="bg-gray-50 p-4 rounded-md">
-        <p className="text-sm text-gray-600 italic">
-          Business information is not available for this review.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-gray-50 p-4 rounded-md space-y-3">
       <div className="flex items-center space-x-3">
@@ -79,43 +60,44 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
         </div>
       </div>
       
-      <div className="space-y-2 ml-15">
+      <div className="space-y-2">
         {/* License Information */}
         {fullBusinessProfile?.business_info?.license_type && (
           <div>
-            <span className="font-medium">License Type: </span>
-            <span>{fullBusinessProfile.business_info.license_type}</span>
+            <span className="font-medium text-sm">License Type: </span>
+            <span className="text-sm">{fullBusinessProfile.business_info.license_type}</span>
           </div>
         )}
         {fullBusinessProfile?.business_info?.license_number && (
           <div>
-            <span className="font-medium">License #: </span>
-            <span>{fullBusinessProfile.business_info.license_number}</span>
+            <span className="font-medium text-sm">License #: </span>
+            <span className="text-sm">{fullBusinessProfile.business_info.license_number}</span>
           </div>
         )}
         {fullBusinessProfile?.business_info?.license_state && (
           <div>
-            <span className="font-medium">License State: </span>
-            <span>{fullBusinessProfile.business_info.license_state}</span>
+            <span className="font-medium text-sm">License State: </span>
+            <span className="text-sm">{fullBusinessProfile.business_info.license_state}</span>
           </div>
         )}
         
+        {/* Contact Information */}
         {displayData?.phone && (
           <div>
-            <span className="font-medium">Phone: </span>
-            <span>{displayData.phone}</span>
+            <span className="font-medium text-sm">Phone: </span>
+            <span className="text-sm">{displayData.phone}</span>
           </div>
         )}
         {displayData?.address && (
           <div>
-            <span className="font-medium">Address: </span>
-            <span>{displayData.address}</span>
+            <span className="font-medium text-sm">Address: </span>
+            <span className="text-sm">{displayData.address}</span>
           </div>
         )}
         {(displayData?.city || displayData?.state || displayData?.zipcode) && (
           <div>
-            <span className="font-medium">Location: </span>
-            <span>
+            <span className="font-medium text-sm">Location: </span>
+            <span className="text-sm">
               {displayData.city}
               {displayData.city && displayData.state ? ", " : ""}
               {displayData.state} {displayData.zipcode}
@@ -124,8 +106,15 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
         )}
         {fullBusinessProfile?.business_info?.website && (
           <div>
-            <span className="font-medium">Website: </span>
-            <span className="text-blue-600">{fullBusinessProfile.business_info.website}</span>
+            <span className="font-medium text-sm">Website: </span>
+            <a 
+              href={fullBusinessProfile.business_info.website} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              {fullBusinessProfile.business_info.website}
+            </a>
           </div>
         )}
       </div>
