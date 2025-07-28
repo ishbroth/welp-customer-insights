@@ -117,7 +117,8 @@ export const useProfileReviewsMatching = () => {
               business_profile: review.profiles,
               reviewerName: review.profiles?.name || 'Business',
               reviewerAvatar: review.profiles?.avatar || '',
-              reviewerVerified: review.business_info?.verified || false
+              reviewerVerified: review.business_info?.verified || false,
+              customerId: review.customer_id // This will be the current user's ID for claimed reviews
             },
             matchType: 'claimed' as const,
             matchScore: 100,
@@ -135,7 +136,8 @@ export const useProfileReviewsMatching = () => {
             business_profile: review.profiles,
             reviewerName: review.profiles?.name || 'Business', 
             reviewerAvatar: review.profiles?.avatar || '',
-            reviewerVerified: review.business_info?.verified || false
+            reviewerVerified: review.business_info?.verified || false,
+            customerId: review.customer_id // This will be null for unclaimed reviews
           },
           matchType: matchResult.matchType,
           matchScore: matchResult.matchScore,
