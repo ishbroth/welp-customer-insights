@@ -23,6 +23,8 @@ const Login = () => {
 
     console.log("🔍 Setting up auth listener for login navigation");
     
+    let navigationTimeout: NodeJS.Timeout;
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("🔐 Auth state change during login:", event, "session user:", session?.user?.id);
@@ -30,13 +32,41 @@ const Login = () => {
         if (event === 'SIGNED_IN' && session?.user) {
           console.log("✅ User signed in, navigating to profile");
           setWaitingForAuth(false);
+          clearTimeout(navigationTimeout);
           navigate("/profile");
         }
       }
     );
 
+    // Also check for existing session immediately
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        console.log("✅ Found existing session, navigating to profile");
+        setWaitingForAuth(false);
+        clearTimeout(navigationTimeout);
+        navigate("/profile");
+      }
+    };
+
+    // Check immediately and then after a short delay
+    checkExistingSession();
+    setTimeout(checkExistingSession, 100);
+
+    // Timeout fallback to prevent getting stuck
+    navigationTimeout = setTimeout(() => {
+      console.log("⚠️ Navigation timeout, checking session one more time");
+      checkExistingSession().then(() => {
+        // If still no session after timeout, reset the state
+        setWaitingForAuth(false);
+        setLoading(false);
+        toast.error("Login timeout. Please try again.");
+      });
+    }, 5000);
+
     return () => {
       subscription.unsubscribe();
+      clearTimeout(navigationTimeout);
     };
   }, [waitingForAuth, navigate]);
 
