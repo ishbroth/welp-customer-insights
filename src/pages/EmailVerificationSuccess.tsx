@@ -11,7 +11,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 const EmailVerificationSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, currentUser, loading } = useAuth();
   
   const accountType = searchParams.get('type') || 'customer';
   const userEmail = searchParams.get('email') || '';
@@ -21,7 +21,8 @@ const EmailVerificationSuccess = () => {
   
   const [isVerified, setIsVerified] = useState(false);
   const [verificationDetails, setVerificationDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [profileNavigationReady, setProfileNavigationReady] = useState(false);
 
   // Check verification status for business accounts
   useEffect(() => {
@@ -49,7 +50,7 @@ const EmailVerificationSuccess = () => {
           console.error("Error checking verification status:", error);
         }
       }
-      setLoading(false);
+      setIsCheckingAuth(false);
     };
 
     // Check stored verification data from localStorage
@@ -76,19 +77,45 @@ const EmailVerificationSuccess = () => {
     if (session?.user?.id) {
       checkVerificationStatus();
     } else {
-      setLoading(false);
+      setIsCheckingAuth(false);
     }
   }, [session, accountType, licenseType]);
 
+  // Monitor auth state and determine when profile navigation is ready
+  useEffect(() => {
+    if (!loading && session?.user && currentUser) {
+      setProfileNavigationReady(true);
+    }
+  }, [loading, session, currentUser]);
+
   const handleContinueToProfile = () => {
-    navigate('/profile');
+    // If auth is ready, navigate immediately
+    if (profileNavigationReady) {
+      navigate('/profile');
+    } else {
+      // If not ready, wait for auth state and then navigate
+      console.log("Waiting for auth state to be ready...");
+      const checkAuthInterval = setInterval(() => {
+        if (session?.user && currentUser && !loading) {
+          clearInterval(checkAuthInterval);
+          navigate('/profile');
+        }
+      }, 500);
+      
+      // Clear interval after 10 seconds to prevent infinite waiting
+      setTimeout(() => {
+        clearInterval(checkAuthInterval);
+        console.log("Auth state timeout, navigating anyway");
+        navigate('/profile');
+      }, 10000);
+    }
   };
 
   const handleRequestVerification = () => {
     navigate('/verify-license');
   };
 
-  if (loading) {
+  if (loading || isCheckingAuth) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-100">
         <div className="container mx-auto flex-grow flex items-center justify-center px-4">
@@ -174,8 +201,9 @@ const EmailVerificationSuccess = () => {
               <Button 
                 onClick={handleContinueToProfile}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
+                disabled={!profileNavigationReady && !session?.user}
               >
-                Continue to My Profile
+                {profileNavigationReady ? 'Continue to My Profile' : 'Preparing Profile...'}
               </Button>
               
               {accountType === 'business' && !isVerified && (
