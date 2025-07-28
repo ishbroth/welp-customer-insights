@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
 import EnhancedReviewContent from "./EnhancedReviewContent";
-import ClaimReviewDialog from "./ClaimReviewDialog";
-import SimpleClaimConfirmDialog from "./SimpleClaimConfirmDialog";
 import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
@@ -59,7 +57,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { balance, useCredits: useCreditsFn } = useCredits();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
-  const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
   
   // Use persistent review access check instead of local state
@@ -82,8 +79,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   });
 
   const {
-    showClaimDialog,
-    setShowClaimDialog,
     reactions,
     businessProfile,
     isReviewAuthor,
@@ -92,8 +87,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isCustomerUser,
     finalBusinessAvatar,
     handlePurchaseClick,
-    handleClaimClick,
-    handleClaimCancel,
     handleReactionToggle,
     handleBusinessNameClick,
   } = useEnhancedCustomerReviewCard({
@@ -185,13 +178,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   const businessDisplayName = enhancedBusinessInfo.name;
 
-  // Handle simple claim confirmation
-  const handleSimpleClaimClick = () => {
-    setShowSimpleClaimDialog(true);
-  };
-
-  const handleSimpleClaimConfirm = async () => {
-    console.log('🎯 Starting claim process for review:', review.id);
+  // Handle direct claim without dialog
+  const handleDirectClaimClick = async () => {
+    console.log('🎯 Starting direct claim process for review:', review.id);
     const success = await claimReview(review.id);
     
     if (success) {
@@ -199,7 +188,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
       
       // Update local state immediately for instant UI feedback
       setLocalIsClaimedState(true);
-      setShowSimpleClaimDialog(false);
       
       // Call the parent refresh function after a short delay to ensure database is updated
       if (onClaimSuccess) {
@@ -211,10 +199,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     } else {
       console.log('🎯 Claim failed, not updating UI state');
     }
-  };
-
-  const handleSimpleClaimCancel = () => {
-    setShowSimpleClaimDialog(false);
   };
 
   // Enhanced customer info to show claimed status and include avatar
@@ -267,7 +251,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           detailedMatches={review.detailedMatches}
           isNewReview={review.isNewReview}
           isClaimingReview={isClaimingReview}
-          onClaimClick={handleSimpleClaimClick}
+          onClaimClick={handleDirectClaimClick}
           isReviewClaimed={isReviewActuallyClaimed}
         />
       )}
@@ -308,7 +292,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         isUnlocked={isReviewActuallyUnlocked}
         creditBalance={balance}
         onPurchaseClick={handlePurchaseClick}
-        onClaimClick={handleSimpleClaimClick}
+        onClaimClick={handleDirectClaimClick}
         onReactionToggle={handleReactionToggle}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
@@ -320,37 +304,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         <div></div>
         {canReport && <ReportReviewButton reviewId={review.id} />}
       </div>
-
-      <ClaimReviewDialog 
-        open={showClaimDialog}
-        onOpenChange={setShowClaimDialog}
-        reviewData={{
-          customerName: review.customerName,
-          customerPhone: review.customer_phone,
-          customerAddress: review.customer_address,
-          customerCity: review.customer_city,
-          customerZipcode: review.customer_zipcode,
-        }}
-        businessData={{
-          name: businessDisplayName,
-          avatar: finalBusinessAvatar,
-          phone: businessProfile?.phone,
-          address: businessProfile?.address,
-          city: businessProfile?.city,
-          state: businessProfile?.state,
-          zipcode: businessProfile?.zipcode,
-        }}
-        businessId={review.reviewerId}
-        onConfirm={handleClaimClick}
-        onCancel={handleClaimCancel}
-      />
-
-      <SimpleClaimConfirmDialog
-        open={showSimpleClaimDialog}
-        onOpenChange={setShowSimpleClaimDialog}
-        onConfirm={handleSimpleClaimConfirm}
-        isLoading={isClaimingReview}
-      />
     </div>
   );
 };
