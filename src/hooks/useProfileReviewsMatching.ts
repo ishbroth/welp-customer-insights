@@ -134,10 +134,10 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: review.customer_id, // CRITICAL: Map customer_id to customerId (will be null for unclaimed)
+            customerId: review.customer_id, // CRITICAL: This will be null for unclaimed reviews
             customerName: review.customer_name,
             customer_phone: review.customer_phone,
-            isClaimed: false // Only set to true if explicitly claimed by current user
+            isClaimed: false // Only true if explicitly claimed by current user
           },
           matchType,
           matchScore: matchResult.score,
