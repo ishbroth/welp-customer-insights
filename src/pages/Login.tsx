@@ -13,7 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, currentUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,20 +24,8 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        toast.success("Login successful!");
-        
-        // Wait for currentUser to be populated before navigating
-        const checkAuthState = () => {
-          if (currentUser) {
-            navigate("/profile");
-          } else {
-            // Check again in 50ms if currentUser is still null
-            setTimeout(checkAuthState, 50);
-          }
-        };
-        
-        // Start checking for auth state
-        setTimeout(checkAuthState, 100);
+        // Navigate immediately on successful login without toast
+        navigate("/profile");
       } else {
         toast.error(result.error || "Login failed");
       }
