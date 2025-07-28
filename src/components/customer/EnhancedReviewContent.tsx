@@ -27,6 +27,7 @@ interface EnhancedReviewContentProps {
   onReactionToggle: (reviewId: string, reactionType: string) => void;
   onSubmitResponse?: (content: string) => Promise<boolean>;
   onDeleteResponse?: (responseId: string) => void;
+  onSubscribeClick: () => void;
 }
 
 const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
@@ -50,6 +51,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   onReactionToggle,
   onSubmitResponse,
   onDeleteResponse,
+  onSubscribeClick,
 }) => {
   // CRITICAL: Log what we're about to render
   console.log('EnhancedReviewContent: RENDERING DECISIONS:', {
@@ -126,16 +128,28 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
     <div>
       <p className="text-gray-700">{getFirstThreeLetters(content)}</p>
       <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center text-gray-600">
-            <Lock className="h-4 w-4 mr-2" />
-            <span>Unlock full review for $3</span>
-          </div>
-          <Button 
-            onClick={onPurchaseClick}
+        <div className="flex items-center text-gray-600 mb-2">
+          <Lock className="h-4 w-4 mr-2" />
+          <span className="text-sm">Full review locked</span>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">
+          Subscribe or purchase one-time access to view the complete review
+        </p>
+        <div className="flex gap-2">
+          <Button
             size="sm"
+            variant="outline"
+            onClick={onPurchaseClick}
+            className="flex-1"
           >
-            Purchase
+            Unlock Review ($3)
+          </Button>
+          <Button
+            size="sm"
+            onClick={onSubscribeClick}
+            className="flex-1"
+          >
+            Subscribe
           </Button>
         </div>
       </div>

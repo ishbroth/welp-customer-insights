@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
 import EnhancedReviewContent from "./EnhancedReviewContent";
@@ -50,6 +50,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   onReactionToggle,
   onClaimSuccess,
 }) => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
@@ -93,6 +94,11 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     onPurchase,
     onReactionToggle,
   });
+
+  // Handle subscribe button click to go to customer benefits page
+  const handleSubscribeClick = () => {
+    navigate('/customer-benefits');
+  };
 
   console.log('🎯 Business Profile Debug:', {
     businessProfile: businessProfile ? 'found' : 'not found',
@@ -275,6 +281,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onReactionToggle={handleReactionToggle}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
+        onSubscribeClick={handleSubscribeClick}
       />
 
       {/* Show simple claim link for unclaimed reviews */}
