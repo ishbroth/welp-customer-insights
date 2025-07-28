@@ -4,7 +4,7 @@ import { Eye, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewReactions from "@/components/ReviewReactions";
 import CustomerReviewResponse from "./CustomerReviewResponse";
-import { getFirstThreeWords } from "./enhancedReviewCardUtils";
+import { getFirstThreeLetters } from "./enhancedReviewCardUtils";
 
 interface EnhancedReviewContentProps {
   content: string;
@@ -124,7 +124,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
 
   return (
     <div>
-      <p className="text-gray-700">{getFirstThreeWords(content)}</p>
+      <p className="text-gray-700">{getFirstThreeLetters(content)}</p>
       <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center text-gray-600">

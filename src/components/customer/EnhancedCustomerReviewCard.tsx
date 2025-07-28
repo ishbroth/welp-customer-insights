@@ -1,16 +1,19 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
 import EnhancedReviewContent from "./EnhancedReviewContent";
 import ClaimReviewDialog from "./ClaimReviewDialog";
+import SimpleClaimConfirmDialog from "./SimpleClaimConfirmDialog";
 import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
+import { useReviewClaiming } from "@/hooks/useReviewClaiming";
 import { useAuth } from "@/contexts/auth";
 import { useCustomerReviewCardHeader } from "./hooks/useCustomerReviewCardHeader";
 import CustomerReviewCardHeader from "./CustomerReviewCardHeader";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface DetailedMatch {
   field: string;
@@ -46,6 +49,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   onClaimSuccess,
 }) => {
   const { currentUser } = useAuth();
+  const { claimReview, isClaimingReview } = useReviewClaiming();
+  const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   
   // CRITICAL: Use ONLY the database customerId to determine if review is claimed
   // NEVER use matchType, matchScore, or any other derived field
@@ -72,10 +77,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerUser,
     finalBusinessAvatar,
-    isClaimingReview,
     handlePurchaseClick,
     handleClaimClick,
-    handleClaimConfirm: originalHandleClaimConfirm,
     handleClaimCancel,
     handleReactionToggle,
     handleBusinessNameClick,
@@ -99,18 +102,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
       finalVerificationStatus: review.reviewerVerified || businessProfile?.verified
     }
   });
-
-  // Enhanced claim confirm handler that calls the success callback
-  const handleClaimConfirm = async () => {
-    try {
-      const success = await originalHandleClaimConfirm();
-      if (success && onClaimSuccess) {
-        onClaimSuccess();
-      }
-    } catch (error) {
-      console.error('Error claiming review:', error);
-    }
-  };
 
   // CRITICAL: Use the permission system with the ACTUAL claim status from database
   const {
@@ -161,6 +152,31 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   const businessDisplayName = enhancedBusinessInfo.name;
 
+  // Handle simple claim confirmation
+  const handleSimpleClaimClick = () => {
+    setShowSimpleClaimDialog(true);
+  };
+
+  const handleSimpleClaimConfirm = async () => {
+    const success = await claimReview(review.id);
+    if (success) {
+      setShowSimpleClaimDialog(false);
+      if (onClaimSuccess) {
+        onClaimSuccess();
+      }
+    }
+  };
+
+  const handleSimpleClaimCancel = () => {
+    setShowSimpleClaimDialog(false);
+  };
+
+  // Enhanced customer info to show claimed status
+  const enhancedCustomerInfo = {
+    ...customerInfo,
+    isClaimed: isReviewActuallyClaimed
+  };
+
   console.log('🎯 Final Render Decisions:', {
     reviewId: review.id,
     isReviewActuallyClaimed,
@@ -192,14 +208,23 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         />
       )}
       
-      <CustomerReviewCardHeader
-        businessInfo={enhancedBusinessInfo}
-        customerInfo={customerInfo}
-        reviewDate={review.date}
-        shouldBusinessNameBeClickable={isUnlocked || hasSubscription}
-        onBusinessNameClick={handleBusinessNameClick}
-        onCustomerClick={handleCustomerClick}
-      />
+      <div className="flex justify-between mb-4">
+        <CustomerReviewCardHeader
+          businessInfo={enhancedBusinessInfo}
+          customerInfo={enhancedCustomerInfo}
+          reviewDate={review.date}
+          shouldBusinessNameBeClickable={isUnlocked || hasSubscription}
+          onBusinessNameClick={handleBusinessNameClick}
+          onCustomerClick={handleCustomerClick}
+        />
+        
+        {/* Show claimed badge next to customer name if review is claimed */}
+        {isReviewActuallyClaimed && (
+          <div className="flex items-center">
+            <VerifiedBadge size="sm" />
+          </div>
+        )}
+      </div>
 
       <EnhancedReviewContent
         content={review.content}
@@ -223,6 +248,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
       />
+
+      {/* Show simple claim link for unclaimed reviews */}
+      {!isReviewActuallyClaimed && isCustomerUser && (
+        <div className="mt-4 text-center">
+          <button
+            onClick={handleSimpleClaimClick}
+            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors text-sm"
+          >
+            Claim this review
+          </button>
+        </div>
+      )}
 
       <div className="flex justify-between items-center mt-4">
         <div></div>
@@ -249,8 +286,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           zipcode: businessProfile?.zipcode,
         }}
         businessId={review.reviewerId}
-        onConfirm={handleClaimConfirm}
+        onConfirm={handleClaimClick}
         onCancel={handleClaimCancel}
+      />
+
+      <SimpleClaimConfirmDialog
+        open={showSimpleClaimDialog}
+        onOpenChange={setShowSimpleClaimDialog}
+        onConfirm={handleSimpleClaimConfirm}
+        isLoading={isClaimingReview}
       />
     </div>
   );

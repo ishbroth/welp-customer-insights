@@ -64,9 +64,9 @@ export const useReviewPermissions = ({
       return result;
     };
 
-    // Should show full review: if has access OR review is claimed by current user
+    // CRITICAL: Customer must pay to see full reviews - no exception for claimed reviews
     const shouldShowFullReview = () => {
-      const result = hasAccess || (isCustomerUser && isReviewClaimed && isCustomerBeingReviewed);
+      const result = hasAccess;
       console.log('🔐 shouldShowFullReview =', result);
       return result;
     };

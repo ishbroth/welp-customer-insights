@@ -15,8 +15,6 @@ export const getCustomerInitials = (customerName?: string) => {
   return "C";
 };
 
-export const getFirstThreeWords = (text: string): string => {
-  const words = text.split(' ');
-  const firstThree = words.slice(0, 3).join(' ');
-  return `${firstThree}${words.length > 3 ? '...' : ''}`;
+export const getFirstThreeLetters = (text: string): string => {
+  return text.substring(0, 3) + '...';
 };
