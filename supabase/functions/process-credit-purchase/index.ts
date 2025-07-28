@@ -41,23 +41,63 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { sessionId } = await req.json();
-    if (!sessionId) throw new Error("Session ID is required");
-
+    const { sessionId, chargeId } = await req.json();
+    
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
-    // Retrieve the checkout session
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    logStep("Retrieved checkout session", { sessionId, status: session.payment_status });
+    let creditQuantity = 1;
+    let sessionOrChargeId = sessionId;
+    
+    if (sessionId) {
+      // Handle checkout session
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      logStep("Retrieved checkout session", { sessionId, status: session.payment_status });
 
-    if (session.payment_status !== 'paid') {
-      throw new Error("Payment not completed");
+      if (session.payment_status !== 'paid') {
+        throw new Error("Payment not completed");
+      }
+
+      // Get the line items to determine how many credits were purchased
+      const lineItems = await stripe.checkout.sessions.listLineItems(sessionId);
+      creditQuantity = lineItems.data[0]?.quantity || 1;
+      logStep("Determined credit quantity from session", { creditQuantity });
+    } else if (chargeId) {
+      // Handle direct charge ID (for existing transactions)
+      const charge = await stripe.charges.retrieve(chargeId);
+      logStep("Retrieved charge", { chargeId, status: charge.status, amount: charge.amount });
+      
+      if (charge.status !== 'succeeded') {
+        throw new Error("Charge not successful");
+      }
+      
+      // Calculate credits based on amount (300 cents = $3 = 1 credit)
+      creditQuantity = Math.floor(charge.amount / 300);
+      sessionOrChargeId = chargeId;
+      logStep("Determined credit quantity from charge", { creditQuantity, amount: charge.amount });
+    } else {
+      throw new Error("Either sessionId or chargeId is required");
     }
 
-    // Get the line items to determine how many credits were purchased
-    const lineItems = await stripe.checkout.sessions.listLineItems(sessionId);
-    const creditQuantity = lineItems.data[0]?.quantity || 1;
-    logStep("Determined credit quantity", { creditQuantity });
+    // Check if we've already processed this transaction
+    const { data: existingTransaction } = await supabaseClient
+      .from('credit_transactions')
+      .select('id')
+      .eq('stripe_session_id', sessionOrChargeId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingTransaction) {
+      logStep("Transaction already processed", { transactionId: existingTransaction.id });
+      return new Response(JSON.stringify({ 
+        success: true, 
+        credits: creditQuantity,
+        message: `Credits already applied for this transaction`,
+        alreadyProcessed: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     // Update user credits using the database function
     const { error: creditError } = await supabaseClient.rpc('update_user_credits', {
@@ -65,7 +105,7 @@ serve(async (req) => {
       p_amount: creditQuantity,
       p_type: 'purchase',
       p_description: `Purchased ${creditQuantity} credits`,
-      p_stripe_session_id: sessionId
+      p_stripe_session_id: sessionOrChargeId
     });
 
     if (creditError) {

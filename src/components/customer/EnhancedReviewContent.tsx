@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Eye, Lock } from "lucide-react";
+import { Eye, Lock, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewReactions from "@/components/ReviewReactions";
 import CustomerReviewResponse from "./CustomerReviewResponse";
@@ -22,12 +22,14 @@ interface EnhancedReviewContentProps {
   responses: any[];
   hasSubscription: boolean;
   isUnlocked: boolean;
+  creditBalance: number;
   onPurchaseClick: () => void;
   onClaimClick: () => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
   onSubmitResponse?: (content: string) => Promise<boolean>;
   onDeleteResponse?: (responseId: string) => void;
   onSubscribeClick: () => void;
+  onUseCreditClick: () => void;
 }
 
 const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
@@ -46,12 +48,14 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   responses,
   hasSubscription,
   isUnlocked,
+  creditBalance,
   onPurchaseClick,
   onClaimClick,
   onReactionToggle,
   onSubmitResponse,
   onDeleteResponse,
   onSubscribeClick,
+  onUseCreditClick,
 }) => {
   // CRITICAL: Log what we're about to render
   console.log('EnhancedReviewContent: RENDERING DECISIONS:', {
@@ -61,6 +65,9 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
     shouldShowClaimButton,
     shouldShowRespondButton,
     canRespond,
+    creditBalance,
+    hasSubscription,
+    isUnlocked,
     willShowClaimButton: shouldShowClaimButton,
     willShowResponseComponent: shouldShowRespondButton,
     isReviewClaimed: !!customerId
@@ -133,17 +140,31 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           <span className="text-sm">Full review locked</span>
         </div>
         <p className="text-xs text-gray-500 mb-3">
-          Subscribe or purchase one-time access to view the complete review
+          {creditBalance > 0 
+            ? "Use a credit to unlock this review, or subscribe for unlimited access"
+            : "Purchase credits or subscribe to view the complete review"
+          }
         </p>
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onPurchaseClick}
-            className="flex-1"
-          >
-            Unlock Review ($3)
-          </Button>
+          {creditBalance > 0 ? (
+            <Button
+              size="sm"
+              onClick={onUseCreditClick}
+              className="flex-1"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Use 1 Credit
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onPurchaseClick}
+              className="flex-1"
+            >
+              Buy Credits ($3 each)
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={onSubscribeClick}

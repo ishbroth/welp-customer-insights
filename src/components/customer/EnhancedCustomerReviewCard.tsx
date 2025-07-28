@@ -12,9 +12,11 @@ import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
 import { useReviewClaiming } from "@/hooks/useReviewClaiming";
 import { useAuth } from "@/contexts/auth";
+import { useCredits } from "@/hooks/useCredits";
 import { useCustomerReviewCardHeader } from "./hooks/useCustomerReviewCardHeader";
 import CustomerReviewCardHeader from "./CustomerReviewCardHeader";
 import { Star } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 interface DetailedMatch {
   field: string;
@@ -53,12 +55,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { balance, useCredits } = useCredits();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
+  const [localIsUnlockedState, setLocalIsUnlockedState] = useState(isUnlocked);
   
   // Use local state for immediate UI updates, fallback to original review state
   const isReviewActuallyClaimed = localIsClaimedState || review.isClaimed === true;
+  const isReviewActuallyUnlocked = localIsUnlockedState || isUnlocked;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
@@ -66,6 +71,10 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     originalIsClaimed: review.isClaimed,
     localIsClaimedState,
     isReviewActuallyClaimed,
+    localIsUnlockedState,
+    isReviewActuallyUnlocked,
+    creditBalance: balance,
+    hasSubscription,
     matchType: review.matchType,
     matchScore: review.matchScore,
     currentUserId: currentUser?.id,
@@ -88,7 +97,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     handleBusinessNameClick,
   } = useEnhancedCustomerReviewCard({
     review,
-    isUnlocked,
+    isUnlocked: isReviewActuallyUnlocked,
     hasSubscription,
     onPurchase,
     onReactionToggle,
@@ -97,6 +106,20 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Handle subscribe button click to go to customer benefits page
   const handleSubscribeClick = () => {
     navigate('/customer-benefits');
+  };
+
+  // Handle credit usage
+  const handleUseCreditClick = async () => {
+    if (balance < 1) {
+      toast.error("Insufficient credits");
+      return;
+    }
+
+    const success = await useCredits(1, `Unlocked review ${review.id}`);
+    if (success) {
+      setLocalIsUnlockedState(true);
+      toast.success("Review unlocked using 1 credit!");
+    }
   };
 
   console.log('🎯 Business Profile Debug:', {
@@ -126,7 +149,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isReviewAuthor,
     isReviewClaimed: isReviewActuallyClaimed,
     hasSubscription,
-    isUnlocked,
+    isUnlocked: isReviewActuallyUnlocked,
   });
 
   // Use the customer response management hook
@@ -209,17 +232,20 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     ));
   };
 
-  const canReport = hasSubscription || isUnlocked;
+  const canReport = hasSubscription || isReviewActuallyUnlocked;
 
   console.log('🎯 Final Render Decisions:', {
     reviewId: review.id,
     isReviewActuallyClaimed,
+    isReviewActuallyUnlocked,
     shouldShowClaimButton: shouldShowClaimButton(),
     shouldShowRespondButton: shouldShowRespondButton(),
+    shouldShowFullReview: shouldShowFullReview(),
     businessVerified: finalBusinessVerified,
     businessName: businessDisplayName,
     matchType: review.matchType,
-    canReport
+    canReport,
+    creditBalance: balance
   });
 
   return (
@@ -243,7 +269,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           businessInfo={enhancedBusinessInfo}
           customerInfo={enhancedCustomerInfo}
           reviewDate={review.date}
-          shouldBusinessNameBeClickable={isUnlocked || hasSubscription}
+          shouldBusinessNameBeClickable={isReviewActuallyUnlocked || hasSubscription}
           onBusinessNameClick={handleBusinessNameClick}
           onCustomerClick={handleCustomerClick}
         />
@@ -271,13 +297,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reactions={reactions}
         responses={responses}
         hasSubscription={hasSubscription}
-        isUnlocked={isUnlocked}
+        isUnlocked={isReviewActuallyUnlocked}
+        creditBalance={balance}
         onPurchaseClick={handlePurchaseClick}
         onClaimClick={handleSimpleClaimClick}
         onReactionToggle={handleReactionToggle}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
         onSubscribeClick={handleSubscribeClick}
+        onUseCreditClick={handleUseCreditClick}
       />
 
       <div className="flex justify-between items-center mt-4">

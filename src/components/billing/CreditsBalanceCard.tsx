@@ -7,7 +7,7 @@ import { useBillingData } from "@/hooks/useBillingData";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 const CreditsBalanceCard = () => {
@@ -15,6 +15,7 @@ const CreditsBalanceCard = () => {
   const { currentUser } = useAuth();
   const { subscriptionData } = useBillingData(currentUser);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isProcessingExisting, setIsProcessingExisting] = useState(false);
 
   const isSubscribed = subscriptionData?.subscribed || false;
 
@@ -58,6 +59,41 @@ const CreditsBalanceCard = () => {
 
     handleCreditPurchaseSuccess();
   }, [searchParams, setSearchParams, loadCreditsData]);
+
+  const handleProcessExistingTransaction = async () => {
+    if (!currentUser) {
+      toast.error("Please log in to process transaction");
+      return;
+    }
+
+    setIsProcessingExisting(true);
+    try {
+      console.log("Processing existing transaction for user:", currentUser.id);
+      
+      // Process the existing $3 charge (ch_3RpubKF1tU4YZkYC0wtGDtOr)
+      const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
+        body: { chargeId: "ch_3RpubKF1tU4YZkYC0wtGDtOr" }
+      });
+
+      if (error) {
+        console.error("Error processing existing transaction:", error);
+        toast.error("Failed to process existing transaction");
+      } else {
+        console.log("Existing transaction processed successfully:", data);
+        if (data.alreadyProcessed) {
+          toast.info("This transaction has already been processed");
+        } else {
+          toast.success(data.message || "Credits applied successfully!");
+        }
+        await loadCreditsData(); // Refresh credits data
+      }
+    } catch (error) {
+      console.error("Error processing existing transaction:", error);
+      toast.error("Failed to process existing transaction");
+    } finally {
+      setIsProcessingExisting(false);
+    }
+  };
 
   const handleBuyCredits = async () => {
     console.log("🔥 Buy Credits button clicked!");
@@ -153,6 +189,21 @@ const CreditsBalanceCard = () => {
             {isSubscribed && (
               <div className="mt-2 text-sm text-green-600">
                 ✓ Premium subscription active - unlimited access included
+              </div>
+            )}
+            {balance === 0 && !isSubscribed && (
+              <div className="mt-3 border-t pt-3">
+                <p className="text-sm text-orange-600 mb-2">
+                  Need to process your previous $3 payment?
+                </p>
+                <Button 
+                  onClick={handleProcessExistingTransaction}
+                  disabled={isProcessingExisting}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isProcessingExisting ? "Processing..." : "Apply Previous Payment"}
+                </Button>
               </div>
             )}
           </div>
