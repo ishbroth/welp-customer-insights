@@ -1,110 +1,229 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import ProfileSidebar from "@/components/ProfileSidebar";
-import WelcomeSection from "@/components/profile/WelcomeSection";
-import ProfileStats from "@/components/profile/ProfileStats";
-import BusinessVerificationSuccessPopup from "@/components/profile/BusinessVerificationSuccessPopup";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Building, 
+  Edit,
+  Calendar,
+  Award,
+  Star
+} from "lucide-react";
+import { formatPhoneNumber } from "@/utils/phoneUtils";
+import { format } from "date-fns";
 
-const Profile = () => {
-  const { currentUser } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [verificationSuccessData, setVerificationSuccessData] = useState<any>(null);
-  const { toast } = useToast();
+const Profile: React.FC = () => {
+  const { currentUser, loading } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check for business verification success on mount with improved detection
   useEffect(() => {
-    const checkForBusinessVerificationSuccess = () => {
-      console.log("🔍 Checking for business verification success...");
-      
-      const businessVerificationSuccess = localStorage.getItem("businessVerificationSuccess");
-      console.log("📊 Raw localStorage data:", businessVerificationSuccess);
-      
-      if (businessVerificationSuccess) {
-        try {
-          const successData = JSON.parse(businessVerificationSuccess);
-          console.log("📋 Parsed success data:", successData);
-          
-          // Check if the data is recent (within last 10 minutes) to avoid showing old popups
-          const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
-          if (successData.timestamp && successData.timestamp > tenMinutesAgo) {
-            console.log("✅ Business verification success data is recent, showing popup");
-            setVerificationSuccessData(successData);
-            setShowSuccessPopup(true);
-          } else {
-            console.log("⏰ Business verification success data is too old, skipping popup");
-          }
-          
-          // Clean up the stored data
-          localStorage.removeItem("businessVerificationSuccess");
-          localStorage.removeItem("pendingVerification"); // Also clean up pending verification data
-        } catch (error) {
-          console.error("❌ Error parsing business verification success data:", error);
-          localStorage.removeItem("businessVerificationSuccess");
-        }
-      } else {
-        console.log("📭 No business verification success data found");
-      }
-    };
-
-    // Check immediately if currentUser is already available
-    if (currentUser) {
-      checkForBusinessVerificationSuccess();
+    if (!loading) {
+      setIsLoading(false);
     }
+  }, [loading]);
 
-    // Also check after a small delay to handle async loading
-    const timeoutId = setTimeout(checkForBusinessVerificationSuccess, 500);
-    
-    return () => clearTimeout(timeoutId);
-  }, [currentUser]);
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      navigate("/login");
+    }
+  }, [currentUser, loading, navigate]);
 
-  const handleCloseSuccessPopup = () => {
-    console.log("🔄 Closing business verification success popup");
-    setShowSuccessPopup(false);
-    setVerificationSuccessData(null);
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  if (!currentUser) {
+  if (isLoading || loading) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ea384c]"></div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
+  if (!currentUser) {
+    return null;
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const isBusinessUser = currentUser.type === 'business' || currentUser.type === 'admin';
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow flex">
-        <ProfileSidebar isOpen={sidebarOpen} toggle={toggleSidebar} />
-        <div className="flex-grow p-8 md:ml-0">
-          <WelcomeSection />
-          <ProfileStats />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/profile/edit")}
+              className="flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Edit Profile
+            </Button>
+          </div>
         </div>
-      </main>
-      <Footer />
-      
-      {/* Business Verification Success Popup */}
-      {showSuccessPopup && verificationSuccessData && (
-        <BusinessVerificationSuccessPopup
-          isOpen={showSuccessPopup}
-          onClose={handleCloseSuccessPopup}
-          businessName={verificationSuccessData.businessName}
-          licenseVerificationResult={verificationSuccessData.licenseVerificationResult}
-        />
-      )}
+      </div>
+
+      {/* Profile Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Overview */}
+          <Card className="lg:col-span-1">
+            <CardHeader className="text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={currentUser.avatar_url} alt={currentUser.name} />
+                  <AvatarFallback className="text-lg">
+                    {getInitials(currentUser.name)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="space-y-2">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {currentUser.name}
+                  </h2>
+                  
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Badge variant="outline">
+                      {currentUser.type === 'business' ? 'Business' : 
+                       currentUser.type === 'admin' ? 'Admin' : 'Customer'}
+                    </Badge>
+                    
+                    {currentUser.verified && (
+                      <Badge className="bg-green-100 text-green-800 border-green-300">
+                        <Award className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Profile Details */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-medium">{currentUser.email}</p>
+                  </div>
+                </div>
+                
+                {currentUser.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Phone</p>
+                      <p className="font-medium">{formatPhoneNumber(currentUser.phone)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Address Information */}
+              {(currentUser.address || currentUser.city || currentUser.state || currentUser.zip_code) && (
+                <>
+                  <Separator />
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-4 w-4 text-gray-500 mt-1" />
+                    <div>
+                      <p className="text-sm text-gray-500">Address</p>
+                      <div className="font-medium">
+                        {currentUser.address && <p>{currentUser.address}</p>}
+                        {(currentUser.city || currentUser.state || currentUser.zip_code) && (
+                          <p>
+                            {currentUser.city}
+                            {currentUser.city && currentUser.state && ", "}
+                            {currentUser.state} {currentUser.zip_code}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Business Information */}
+              {isBusinessUser && (
+                <>
+                  <Separator />
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-gray-500" />
+                      <h3 className="font-medium">Business Information</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                      {currentUser.business_name && (
+                        <div>
+                          <p className="text-sm text-gray-500">Business Name</p>
+                          <p className="font-medium">{currentUser.business_name}</p>
+                        </div>
+                      )}
+                      
+                      {currentUser.license_number && (
+                        <div>
+                          <p className="text-sm text-gray-500">License Number</p>
+                          <p className="font-medium">{currentUser.license_number}</p>
+                        </div>
+                      )}
+                      
+                      {currentUser.license_type && (
+                        <div>
+                          <p className="text-sm text-gray-500">License Type</p>
+                          <p className="font-medium capitalize">{currentUser.license_type}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Account Information */}
+              <Separator />
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Member Since</p>
+                  <p className="font-medium">
+                    {format(new Date(currentUser.created_at), 'MMMM d, yyyy')}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

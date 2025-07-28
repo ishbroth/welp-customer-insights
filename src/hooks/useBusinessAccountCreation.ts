@@ -66,7 +66,7 @@ export const useBusinessAccountCreation = () => {
         };
       }
 
-      // Store business data for verification step including license verification result
+      // Store business data for verification step
       const businessData = {
         businessName,
         businessEmail,

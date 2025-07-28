@@ -113,47 +113,13 @@ export const useEmailVerification = ({
           description: "Your email has been verified and account created successfully.",
         });
 
-        // For business accounts, store the verification success flag BEFORE navigation
-        if (accountType === 'business') {
-          console.log("📊 Processing business verification success data...");
-          
-          // Get the stored pending verification data to preserve license verification results
-          const pendingData = localStorage.getItem("pendingVerification");
-          let licenseVerificationResult = null;
-          
-          if (pendingData) {
-            try {
-              const businessData = JSON.parse(pendingData);
-              licenseVerificationResult = businessData.licenseVerificationResult;
-              console.log("📋 Found license verification result:", licenseVerificationResult);
-            } catch (error) {
-              console.error("❌ Error parsing pending verification data:", error);
-            }
-          }
-          
-          // Store the verification success flag with license verification data
-          const successData = {
-            businessName: businessName || name,
-            licenseVerificationResult: licenseVerificationResult || {
-              verified: false,
-              message: "Verification not completed during signup",
-              isRealVerification: false
-            },
-            timestamp: Date.now()
-          };
-          
-          console.log("💾 Storing business verification success data:", successData);
-          localStorage.setItem("businessVerificationSuccess", JSON.stringify(successData));
-          
-          // Add a small delay to ensure localStorage is written before navigation
-          setTimeout(() => {
-            console.log("🚀 Navigating to profile page...");
-            navigate("/profile", { replace: true });
-          }, 100);
-        } else {
-          // For customer accounts, go to profile as before
-          navigate("/profile", { replace: true });
-        }
+        // Clear any stored verification data
+        localStorage.removeItem("pendingVerification");
+        localStorage.removeItem("businessVerificationSuccess");
+
+        // Navigate to profile for all account types
+        console.log("🚀 Navigating to profile page...");
+        navigate("/profile", { replace: true });
         
       } else {
         console.error("❌ Verification failed:", result.message);
