@@ -39,7 +39,7 @@ const SimpleClaimConfirmDialog: React.FC<SimpleClaimConfirmDialogProps> = ({
         
         <div className="py-4">
           <p className="text-gray-600">
-            Are you sure you want to claim this review as being about you?
+            You must claim this review to be able to respond.
           </p>
         </div>
 
