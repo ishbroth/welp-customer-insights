@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -56,19 +55,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   const [isExplicitlyClaimed, setIsExplicitlyClaimed] = useState(review.isExplicitlyClaimed || false);
   
-  // CRITICAL: Check if review is actually claimed using the database customer_id field
-  const isReviewActuallyClaimed = !!review.customerId;
+  // CRITICAL FIX: Check if review is actually claimed using ONLY the customerId field
+  // This should be null for unclaimed reviews after our fix above
+  const isReviewActuallyClaimed = review.customerId !== null && review.customerId !== undefined;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
-    database_customerId: review.customerId,
+    customerId: review.customerId,
+    customer_id: review.customer_id,
     matchType: review.matchType,
     matchScore: review.matchScore,
     isExplicitlyClaimed,
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
     isCustomerBeingReviewed: review.customerId === currentUser?.id,
-    IMPORTANT_NOTE: 'isReviewActuallyClaimed is true when customer_id exists in database'
+    IMPORTANT_NOTE: 'Fixed to check only customerId field consistently'
   });
 
   const {

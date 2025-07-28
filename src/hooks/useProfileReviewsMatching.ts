@@ -43,6 +43,14 @@ export const useProfileReviewsMatching = () => {
       // AND it matches the current user's ID
       const isExplicitlyClaimed = review.customer_id && review.customer_id === currentUser?.id;
       
+      console.log("🎯 Review claim status check:", {
+        reviewId: review.id,
+        database_customer_id: review.customer_id,
+        currentUserId: currentUser?.id,
+        isExplicitlyClaimed,
+        customer_name: review.customer_name
+      });
+      
       if (isExplicitlyClaimed) {
         console.log("🎯 Review explicitly claimed by current user:", review.id);
         return {
@@ -51,7 +59,8 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: review.customer_id // Keep the actual database value ONLY for claimed reviews
+            customerId: review.customer_id, // Keep the actual database value ONLY for claimed reviews
+            customer_id: review.customer_id // Keep database field for consistency
           },
           matchType: 'claimed' as const,
           matchScore: 100,
@@ -75,8 +84,9 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            // CRITICAL: Do NOT set customerId for unclaimed reviews - leave it undefined
-            customerId: undefined // Explicitly undefined for unclaimed reviews
+            // CRITICAL FIX: Explicitly null out both fields for unclaimed reviews
+            customerId: null, // Frontend field - null for unclaimed
+            customer_id: null, // Database field - null for unclaimed to prevent confusion
           },
           matchType,
           matchScore: matchResult.score,

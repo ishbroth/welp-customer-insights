@@ -26,12 +26,26 @@ export const useReviewMatching = () => {
     const userFullName = userProfile?.name || 
       `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim();
 
-    // Name matching with fuzzy logic (highest priority)
+    console.log('🎯 checkReviewMatch: Checking match for:', {
+      reviewId: review.id,
+      reviewCustomerName: review.customer_name,
+      userFullName,
+      userProfile: userProfile?.name || 'constructed name'
+    });
+
+    // Name matching with fuzzy logic (INCREASED PRIORITY - was 40, now 50 for exact matches)
     if (review.customer_name && userFullName) {
       const similarity = calculateStringSimilarity(review.customer_name, userFullName);
       
+      console.log('🎯 Name similarity check:', {
+        reviewName: review.customer_name,
+        userName: userFullName,
+        similarity: similarity,
+        isExactMatch: similarity >= 0.9
+      });
+      
       if (similarity >= 0.9) {
-        score += 40;
+        score += 50; // INCREASED from 40 to 50 to ensure exact matches qualify
         reasons.push('Exact name match');
         detailedMatches.push({
           field: 'Name',
@@ -41,7 +55,7 @@ export const useReviewMatching = () => {
           matchType: 'exact'
         });
       } else if (similarity >= 0.7) {
-        score += 25;
+        score += 30; // INCREASED from 25 to 30 for partial matches
         reasons.push('Partial name match');
         detailedMatches.push({
           field: 'Name',
@@ -128,6 +142,14 @@ export const useReviewMatching = () => {
     }
 
     const percentageScore = Math.min(100, Math.round(score));
+    
+    console.log('🎯 Final match result:', {
+      reviewId: review.id,
+      score: percentageScore,
+      reasons,
+      detailedMatches: detailedMatches.length
+    });
+    
     return { score: percentageScore, reasons, detailedMatches };
   };
 
