@@ -171,10 +171,11 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     setShowSimpleClaimDialog(false);
   };
 
-  // Enhanced customer info to show claimed status
+  // Enhanced customer info to show claimed status and include avatar
   const enhancedCustomerInfo = {
     ...customerInfo,
-    isClaimed: isReviewActuallyClaimed
+    isClaimed: isReviewActuallyClaimed,
+    avatar: review.customerAvatar || '' // Add the missing avatar property
   };
 
   console.log('🎯 Final Render Decisions:', {
