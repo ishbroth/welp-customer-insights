@@ -33,7 +33,7 @@ interface EnhancedCustomerReviewCardProps {
     detailedMatches?: DetailedMatch[];
     isNewReview?: boolean;
     customer_phone?: string;
-    isExplicitlyClaimed?: boolean; // New field to track explicit claims
+    isExplicitlyClaimed?: boolean;
   };
   isUnlocked: boolean;
   hasSubscription: boolean;
@@ -58,7 +58,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   
   // CRITICAL: Only consider a review claimed if it was explicitly claimed by the user
   // NOT just because it matches their profile information
-  const isReviewActuallyClaimed = isExplicitlyClaimed;
+  const isReviewActuallyClaimed = isExplicitlyClaimed || !!review.customerId;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
@@ -69,7 +69,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
     isCustomerBeingReviewed: review.customerId === currentUser?.id,
-    IMPORTANT_NOTE: 'isReviewActuallyClaimed is ONLY true when explicitly claimed by user action'
+    IMPORTANT_NOTE: 'isReviewActuallyClaimed is true when explicitly claimed OR has customer_id in database'
   });
 
   const {
@@ -113,7 +113,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   });
 
-  // CRITICAL: Use the permission system with the ACTUAL claim status (explicit claims only)
+  // CRITICAL: Use the permission system with the ACTUAL claim status
   const {
     canReact,
     canRespond,
@@ -125,7 +125,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: isReviewActuallyClaimed, // Use explicit claim status
+    isReviewClaimed: isReviewActuallyClaimed,
     hasSubscription,
     isUnlocked,
   });
@@ -168,13 +168,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   };
 
   const handleSimpleClaimConfirm = async () => {
+    console.log('🎯 Starting claim process for review:', review.id);
     const success = await claimReview(review.id);
+    
     if (success) {
-      setIsExplicitlyClaimed(true); // Mark as explicitly claimed
+      console.log('🎯 Claim successful! Updating UI state...');
+      setIsExplicitlyClaimed(true); // Update local state immediately
       setShowSimpleClaimDialog(false);
+      
+      // Trigger parent component refresh
       if (onClaimSuccess) {
+        console.log('🎯 Calling onClaimSuccess to refresh parent data...');
         onClaimSuccess();
       }
+    } else {
+      console.log('🎯 Claim failed, not updating UI state');
     }
   };
 
@@ -194,7 +202,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`h-4 w-4 text-gray-300`} // All stars are grayed out in preview
+        className={`h-4 w-4 text-gray-300`}
       />
     ));
   };
@@ -229,7 +237,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           detailedMatches={review.detailedMatches}
           isNewReview={review.isNewReview}
           isClaimingReview={isClaimingReview}
-          onClaimClick={handleClaimClick}
+          onClaimClick={handleSimpleClaimClick}
           isReviewClaimed={isReviewActuallyClaimed}
         />
       )}
@@ -277,7 +285,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         hasSubscription={hasSubscription}
         isUnlocked={isUnlocked}
         onPurchaseClick={handlePurchaseClick}
-        onClaimClick={handleClaimClick}
+        onClaimClick={handleSimpleClaimClick}
         onReactionToggle={handleReactionToggle}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}

@@ -43,9 +43,20 @@ export const useProfileReviewsActions = (
 
   // Handle successful claim with proper data refresh
   const handleClaimSuccess = () => {
-    console.log('Review claimed successfully, refreshing data...');
+    console.log('🎯 Review claimed successfully in useProfileReviewsActions');
+    
+    // Show success toast
+    toast({
+      title: "Review claimed successfully",
+      description: "This review has been added to your profile.",
+    });
+    
+    // Trigger data refresh
     if (onRefresh) {
-      onRefresh(); // Call the refresh function passed from parent
+      console.log('🎯 Calling onRefresh to trigger data refresh...');
+      onRefresh();
+    } else {
+      console.log('🎯 No onRefresh function provided');
     }
   };
 
