@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import EmailVerificationCodeInput from '@/components/verification/EmailVerificationCodeInput';
 import VerifyEmailCodeButton from '@/components/verification/VerifyEmailCodeButton';
 import ResendEmailCodeButton from '@/components/verification/ResendEmailCodeButton';
@@ -104,12 +104,22 @@ const VerifyEmail: React.FC = () => {
           <EmailVerificationCodeInput 
             value={verificationCode} 
             onChange={setVerificationCode} 
+            disabled={isVerifying}
           />
           
           {verificationError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>{verificationError}</AlertDescription>
+            </Alert>
+          )}
+          
+          {isVerifying && (
+            <Alert>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <AlertDescription>
+                Setting up your account... This may take a moment.
+              </AlertDescription>
             </Alert>
           )}
           
@@ -129,6 +139,7 @@ const VerifyEmail: React.FC = () => {
           <Button 
             variant="outline" 
             onClick={() => navigate('/signup')}
+            disabled={isVerifying}
           >
             Back to Signup
           </Button>
@@ -136,7 +147,7 @@ const VerifyEmail: React.FC = () => {
           <ResendEmailCodeButton 
             onClick={handleResendCode} 
             isLoading={isResending} 
-            disabled={isResendDisabled} 
+            disabled={isResendDisabled || isVerifying} 
             timer={resendTimer}
           />
         </CardFooter>

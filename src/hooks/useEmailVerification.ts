@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
 import { sendEmailVerificationCode, verifyEmailCode } from "@/utils/emailUtils";
 
 interface UseEmailVerificationProps {
@@ -44,9 +45,20 @@ export const useEmailVerification = ({
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [resendTimer, setResendTimer] = useState(60);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [waitingForAuth, setWaitingForAuth] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser, session } = useAuth();
+
+  // Watch for auth state changes after successful verification
+  useEffect(() => {
+    if (waitingForAuth && currentUser && session) {
+      console.log("🎉 Auth state updated, navigating to profile");
+      setWaitingForAuth(false);
+      navigate("/profile", { replace: true });
+    }
+  }, [waitingForAuth, currentUser, session, navigate]);
 
   // Validate verification code
   useEffect(() => {
@@ -117,9 +129,18 @@ export const useEmailVerification = ({
         localStorage.removeItem("pendingVerification");
         localStorage.removeItem("businessVerificationSuccess");
 
-        // Navigate to profile for all account types
-        console.log("🚀 Navigating to profile page...");
-        navigate("/profile", { replace: true });
+        // Set waiting state and let the useEffect handle navigation
+        console.log("⏳ Waiting for auth state to update...");
+        setWaitingForAuth(true);
+        
+        // Add a timeout fallback in case auth state doesn't update
+        setTimeout(() => {
+          if (waitingForAuth) {
+            console.log("🚀 Fallback navigation to profile");
+            setWaitingForAuth(false);
+            navigate("/profile", { replace: true });
+          }
+        }, 3000);
         
       } else {
         console.error("❌ Verification failed:", result.message);
@@ -169,7 +190,7 @@ export const useEmailVerification = ({
     verificationCode,
     setVerificationCode,
     isCodeValid,
-    isVerifying,
+    isVerifying: isVerifying || waitingForAuth,
     isResending,
     isResendDisabled,
     resendTimer,
