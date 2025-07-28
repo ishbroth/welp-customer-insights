@@ -24,11 +24,23 @@ const BusinessVerificationSuccessPopup = ({
 }: BusinessVerificationSuccessPopupProps) => {
   const navigate = useNavigate();
 
+  console.log("🎉 BusinessVerificationSuccessPopup rendered with:", {
+    isOpen,
+    businessName,
+    licenseVerificationResult
+  });
+
   const isLicenseVerified = licenseVerificationResult?.verified && licenseVerificationResult?.isRealVerification;
 
   const handleVerifyLicense = () => {
+    console.log("🔄 Redirecting to license verification page");
     onClose();
     navigate('/verify-license');
+  };
+
+  const handleContinue = () => {
+    console.log("🚀 Continuing to profile");
+    onClose();
   };
 
   return (
@@ -65,7 +77,7 @@ const BusinessVerificationSuccessPopup = ({
                 <span className="font-medium text-blue-800">Ready to Verify Your License?</span>
               </div>
               <p className="text-sm text-blue-700 mb-3">
-                Complete your profile by verifying your business license. It's free and only takes a few minutes!
+                {licenseVerificationResult?.message || "Complete your profile by verifying your business license. It's free and only takes a few minutes!"}
               </p>
               <Button 
                 onClick={handleVerifyLicense}
@@ -80,7 +92,7 @@ const BusinessVerificationSuccessPopup = ({
           <div className="pt-4 border-t">
             <Button 
               variant="outline" 
-              onClick={onClose}
+              onClick={handleContinue}
               className="w-full"
             >
               {isLicenseVerified ? "Continue to Profile" : "I'll Do This Later"}

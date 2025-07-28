@@ -61,7 +61,7 @@ export const useBusinessAccountCreation = () => {
         // Continue with signup even if verification fails
         licenseVerificationResult = {
           verified: false,
-          message: "Verification unavailable",
+          message: "Verification unavailable during signup",
           isRealVerification: false
         };
       }
@@ -80,6 +80,8 @@ export const useBusinessAccountCreation = () => {
         businessType,
         licenseVerificationResult
       };
+      
+      console.log("💾 Storing pending verification data:", businessData);
       localStorage.setItem("pendingVerification", JSON.stringify(businessData));
 
       // Send email verification code

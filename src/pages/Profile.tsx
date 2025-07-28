@@ -16,29 +16,54 @@ const Profile = () => {
   const [verificationSuccessData, setVerificationSuccessData] = useState<any>(null);
   const { toast } = useToast();
 
-  // Check for business verification success on mount
+  // Check for business verification success on mount with improved detection
   useEffect(() => {
-    const businessVerificationSuccess = localStorage.getItem("businessVerificationSuccess");
-    if (businessVerificationSuccess) {
-      try {
-        const successData = JSON.parse(businessVerificationSuccess);
-        // Check if the data is recent (within last 5 minutes) to avoid showing old popups
-        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-        if (successData.timestamp && successData.timestamp > fiveMinutesAgo) {
-          setVerificationSuccessData(successData);
-          setShowSuccessPopup(true);
+    const checkForBusinessVerificationSuccess = () => {
+      console.log("🔍 Checking for business verification success...");
+      
+      const businessVerificationSuccess = localStorage.getItem("businessVerificationSuccess");
+      console.log("📊 Raw localStorage data:", businessVerificationSuccess);
+      
+      if (businessVerificationSuccess) {
+        try {
+          const successData = JSON.parse(businessVerificationSuccess);
+          console.log("📋 Parsed success data:", successData);
+          
+          // Check if the data is recent (within last 10 minutes) to avoid showing old popups
+          const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+          if (successData.timestamp && successData.timestamp > tenMinutesAgo) {
+            console.log("✅ Business verification success data is recent, showing popup");
+            setVerificationSuccessData(successData);
+            setShowSuccessPopup(true);
+          } else {
+            console.log("⏰ Business verification success data is too old, skipping popup");
+          }
+          
+          // Clean up the stored data
+          localStorage.removeItem("businessVerificationSuccess");
+          localStorage.removeItem("pendingVerification"); // Also clean up pending verification data
+        } catch (error) {
+          console.error("❌ Error parsing business verification success data:", error);
+          localStorage.removeItem("businessVerificationSuccess");
         }
-        // Clean up the stored data
-        localStorage.removeItem("businessVerificationSuccess");
-        localStorage.removeItem("pendingVerification"); // Also clean up pending verification data
-      } catch (error) {
-        console.error("Error parsing business verification success data:", error);
-        localStorage.removeItem("businessVerificationSuccess");
+      } else {
+        console.log("📭 No business verification success data found");
       }
+    };
+
+    // Check immediately if currentUser is already available
+    if (currentUser) {
+      checkForBusinessVerificationSuccess();
     }
-  }, []);
+
+    // Also check after a small delay to handle async loading
+    const timeoutId = setTimeout(checkForBusinessVerificationSuccess, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [currentUser]);
 
   const handleCloseSuccessPopup = () => {
+    console.log("🔄 Closing business verification success popup");
     setShowSuccessPopup(false);
     setVerificationSuccessData(null);
   };
