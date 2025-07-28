@@ -6,50 +6,72 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, currentUser, session, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Handle navigation when auth state changes
+  useEffect(() => {
+    console.log("🔍 Auth state:", { 
+      loading, 
+      hasSession: !!session, 
+      hasCurrentUser: !!currentUser,
+      userId: currentUser?.id 
+    });
+
+    // Only navigate if we're not loading and have both session and user
+    if (!loading && session && currentUser) {
+      console.log("✅ Auth complete, navigating to profile");
+      navigate("/profile");
+    }
+  }, [loading, session, currentUser, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent double submission
-    if (loading) return;
+    if (isSubmitting) return;
     
-    setLoading(true);
+    setIsSubmitting(true);
+    console.log("🔐 Starting login process");
 
     try {
       const result = await login(email, password);
 
       if (result.success) {
-        console.log("🔐 Login successful, checking for session");
-        
-        // Check for session immediately after successful login
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          console.log("✅ Session found, navigating to profile");
-          navigate("/profile");
-        } else {
-          console.log("⚠️ No session found after successful login");
-          toast.error("Login successful but session not found. Please try again.");
-        }
+        console.log("🔐 Login call successful");
+        // Don't navigate here - let the useEffect handle it based on auth state
+        toast.success("Login successful!");
       } else {
-        // Only show error, don't clear fields
+        console.error("❌ Login failed:", result.error);
         toast.error(result.error || "Login failed");
+        setIsSubmitting(false);
       }
     } catch (error) {
+      console.error("❌ Login error:", error);
       toast.error("An unexpected error occurred");
-    } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  // Show loading spinner if auth is loading or we're submitting
+  if (loading || isSubmitting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-gray-600">
+            {isSubmitting ? "Signing you in..." : "Loading..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -71,7 +93,6 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email"
-                disabled={loading}
                 autoComplete="email"
               />
             </div>
@@ -84,12 +105,11 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
-                disabled={loading}
                 autoComplete="current-password"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+            <Button type="submit" className="w-full">
+              Sign In
             </Button>
           </form>
           <div className="mt-4 text-center space-y-2">
