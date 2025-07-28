@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
@@ -13,8 +14,31 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, session } = useAuth();
+  const [waitingForAuth, setWaitingForAuth] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!waitingForAuth) return;
+
+    console.log("🔍 Setting up auth listener for login navigation");
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("🔐 Auth state change during login:", event, "session user:", session?.user?.id);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log("✅ User signed in, navigating to profile");
+          setWaitingForAuth(false);
+          navigate("/profile");
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [waitingForAuth, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,20 +52,8 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        // Check if session is already available (immediate) or wait for it
-        if (session?.user) {
-          navigate("/profile");
-        } else {
-          // Wait for session to be set by auth state listener
-          const checkSessionAndNavigate = () => {
-            if (session?.user) {
-              navigate("/profile");
-            } else {
-              setTimeout(checkSessionAndNavigate, 50);
-            }
-          };
-          setTimeout(checkSessionAndNavigate, 10);
-        }
+        console.log("🔐 Login successful, setting up auth listener");
+        setWaitingForAuth(true);
       } else {
         // Only show error, don't clear fields
         toast.error(result.error || "Login failed");
@@ -73,7 +85,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email"
-                disabled={loading}
+                disabled={loading || waitingForAuth}
                 autoComplete="email"
               />
             </div>
@@ -86,12 +98,12 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
-                disabled={loading}
+                disabled={loading || waitingForAuth}
                 autoComplete="current-password"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+            <Button type="submit" className="w-full" disabled={loading || waitingForAuth}>
+              {loading ? "Signing In..." : waitingForAuth ? "Redirecting..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center space-y-2">
