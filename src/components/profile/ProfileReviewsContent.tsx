@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -88,8 +87,7 @@ const ProfileReviewsContent = ({
     <div className="space-y-6">
       {isCustomerUser && (
         <ProfileReviewsSections 
-          claimedCount={claimedReviews.length}
-          unclaimedCount={unclaimedReviews.length}
+          totalMatchedReviews={sortedReviews.length}
         />
       )}
 
