@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -49,16 +48,16 @@ export const useEmailVerification = ({
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { currentUser, session } = useAuth();
+  const { session } = useAuth();
 
-  // Watch for auth state changes after successful verification
+  // Watch for session changes after successful verification - only wait for session, not currentUser
   useEffect(() => {
-    if (waitingForAuth && currentUser && session) {
-      console.log("🎉 Auth state updated, navigating to profile");
+    if (waitingForAuth && session) {
+      console.log("🎉 Session available, navigating to profile");
       setWaitingForAuth(false);
       navigate("/profile", { replace: true });
     }
-  }, [waitingForAuth, currentUser, session, navigate]);
+  }, [waitingForAuth, session, navigate]);
 
   // Validate verification code
   useEffect(() => {
@@ -130,17 +129,17 @@ export const useEmailVerification = ({
         localStorage.removeItem("businessVerificationSuccess");
 
         // Set waiting state and let the useEffect handle navigation
-        console.log("⏳ Waiting for auth state to update...");
+        console.log("⏳ Waiting for session to update...");
         setWaitingForAuth(true);
         
-        // Add a timeout fallback in case auth state doesn't update
+        // Reduced timeout to 1 second since we're only waiting for session
         setTimeout(() => {
           if (waitingForAuth) {
-            console.log("🚀 Fallback navigation to profile");
+            console.log("🚀 Fallback navigation to profile (session timeout)");
             setWaitingForAuth(false);
             navigate("/profile", { replace: true });
           }
-        }, 3000);
+        }, 1000);
         
       } else {
         console.error("❌ Verification failed:", result.message);
