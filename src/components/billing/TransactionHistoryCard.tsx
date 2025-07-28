@@ -3,6 +3,8 @@ import { RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useCredits } from "@/hooks/useCredits";
+import { useAuth } from "@/contexts/auth";
 
 interface Transaction {
   id: string;
@@ -25,6 +27,8 @@ const TransactionHistoryCard = ({
   hasStripeCustomer
 }: TransactionHistoryCardProps) => {
   const [showAll, setShowAll] = useState(false);
+  const { currentUser } = useAuth();
+  const { transactions: creditTransactions } = useCredits();
   
   const formatCurrency = (amount: number, currency: string = 'usd') => {
     return new Intl.NumberFormat('en-US', {
@@ -33,19 +37,50 @@ const TransactionHistoryCard = ({
     }).format(amount / 100);
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString();
+  const formatDate = (timestamp: number | string) => {
+    const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
+    return date.toLocaleDateString();
   };
 
+  // Combine Stripe transactions with credit transactions
+  const combinedTransactions = [
+    // Credit transactions (these should take precedence for display)
+    ...creditTransactions.map(ct => ({
+      id: ct.id,
+      amount: Math.abs(ct.amount) * 100, // Convert to cents for consistency
+      currency: 'usd',
+      status: 'succeeded',
+      created: new Date(ct.created_at).getTime() / 1000,
+      description: ct.description || (ct.type === 'purchase' ? 'Credit Purchase' : 'Credit Usage'),
+      isCredit: true,
+      stripeSessionId: ct.stripe_session_id
+    })),
+    // Stripe transactions (but filter out those that have been processed as credit purchases)
+    ...transactions.filter(t => {
+      // Filter out transactions that have already been processed as credit purchases
+      const hasMatchingCreditTransaction = creditTransactions.some(ct => 
+        ct.stripe_session_id && (
+          ct.stripe_session_id.includes(t.id) || 
+          t.description?.includes('Credit') ||
+          (t.amount === 300 && ct.type === 'purchase') // $3 transactions that are credit purchases
+        )
+      );
+      return !hasMatchingCreditTransaction;
+    }).map(t => ({
+      ...t,
+      isCredit: false
+    }))
+  ].sort((a, b) => b.created - a.created); // Sort by date, newest first
+
   // Show only first 3 transactions by default, up to 24 when expanded
-  const displayedTransactions = showAll ? transactions.slice(0, 24) : transactions.slice(0, 3);
-  const hasMoreTransactions = transactions.length > 3;
+  const displayedTransactions = showAll ? combinedTransactions.slice(0, 24) : combinedTransactions.slice(0, 3);
+  const hasMoreTransactions = combinedTransactions.length > 3;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Transaction History</CardTitle>
-        <CardDescription>Your recent payments and charges</CardDescription>
+        <CardDescription>Your recent payments and credit transactions</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoadingData ? (
@@ -53,7 +88,7 @@ const TransactionHistoryCard = ({
             <RefreshCw className="h-6 w-6 animate-spin mr-2" />
             Loading transaction history...
           </div>
-        ) : transactions.length > 0 ? (
+        ) : combinedTransactions.length > 0 ? (
           <div className="space-y-4">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -72,7 +107,7 @@ const TransactionHistoryCard = ({
                         {formatDate(transaction.created)}
                       </td>
                       <td className="py-3 text-sm">
-                        {transaction.description || "Subscription Payment"}
+                        {transaction.description || "Payment"}
                       </td>
                       <td className="py-3 text-sm">
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
@@ -108,7 +143,7 @@ const TransactionHistoryCard = ({
                     </>
                   ) : (
                     <>
-                      Show All ({transactions.length > 24 ? '24' : transactions.length} transactions)
+                      Show All ({combinedTransactions.length > 24 ? '24' : combinedTransactions.length} transactions)
                       <ChevronDown className="h-4 w-4" />
                     </>
                   )}
