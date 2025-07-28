@@ -44,17 +44,28 @@ const TransactionHistoryCard = ({
 
   // Combine Stripe transactions with credit transactions
   const combinedTransactions = [
-    // Credit transactions (these should take precedence for display)
-    ...creditTransactions.map(ct => ({
-      id: ct.id,
-      amount: Math.abs(ct.amount) * 100, // Convert to cents for consistency
-      currency: 'usd',
-      status: 'succeeded',
-      created: new Date(ct.created_at).getTime() / 1000,
-      description: ct.description || (ct.type === 'purchase' ? 'Credit Purchase' : 'Credit Usage'),
-      isCredit: true,
-      stripeSessionId: ct.stripe_session_id
-    })),
+    // Credit transactions - find the matching Stripe transaction for the correct amount
+    ...creditTransactions.map(ct => {
+      // Find the matching Stripe transaction by session ID or charge ID
+      const matchingStripeTransaction = transactions.find(t => 
+        ct.stripe_session_id && (
+          ct.stripe_session_id.includes(t.id) || 
+          t.id.includes(ct.stripe_session_id) ||
+          (t.amount === 300 && ct.type === 'purchase') // $3 transactions
+        )
+      );
+      
+      return {
+        id: ct.id,
+        amount: matchingStripeTransaction ? matchingStripeTransaction.amount : ct.amount * 100, // Use Stripe amount if available
+        currency: 'usd',
+        status: 'succeeded',
+        created: new Date(ct.created_at).getTime() / 1000,
+        description: ct.description || (ct.type === 'purchase' ? 'Credit Purchase' : 'Credit Usage'),
+        isCredit: true,
+        stripeSessionId: ct.stripe_session_id
+      };
+    }),
     // Stripe transactions (but filter out those that have been processed as credit purchases)
     ...transactions.filter(t => {
       // Filter out transactions that have already been processed as credit purchases
