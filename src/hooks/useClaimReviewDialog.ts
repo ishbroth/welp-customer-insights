@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
   // Fetch comprehensive business profile data
-  const { data: fullBusinessProfile } = useQuery({
+  const { data: fullBusinessProfile, isLoading } = useQuery({
     queryKey: ['fullBusinessProfile', businessId],
     queryFn: async () => {
       if (!businessId) return null;
@@ -35,6 +35,11 @@ export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
         return null;
       }
 
+      if (!profileData) {
+        console.log("No business profile found for ID:", businessId);
+        return null;
+      }
+
       // Then get the business info data
       const { data: businessInfoData, error: businessInfoError } = await supabase
         .from('business_info')
@@ -58,14 +63,20 @@ export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
       // Combine the data
       const combinedData = {
         ...profileData,
-        business_info: businessInfoData
+        business_info: businessInfoData || {}
       };
       
-      console.log("Full business profile fetched:", combinedData);
+      console.log("Full business profile fetched for claim dialog:", combinedData);
       return combinedData;
     },
     enabled: !!businessId && open,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
-  return { fullBusinessProfile };
+  return { 
+    fullBusinessProfile, 
+    isLoading,
+    hasData: !!fullBusinessProfile 
+  };
 };

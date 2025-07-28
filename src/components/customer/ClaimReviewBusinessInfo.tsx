@@ -2,6 +2,7 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getBusinessInitials } from "./enhancedReviewCardUtils";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 
 interface BusinessProfile {
   id?: string;
@@ -43,6 +44,7 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
   const businessData = fullBusinessProfile || displayData;
   const finalBusinessName = businessData?.business_info?.business_name || businessData?.name || businessName;
   const finalBusinessAvatar = businessData?.avatar || businessAvatar;
+  const isVerified = businessData?.verified || businessData?.business_info?.verified || false;
 
   console.log('ClaimReviewBusinessInfo: Rendering with data:', {
     businessName,
@@ -50,7 +52,9 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
     businessData: businessData ? 'found' : 'not found',
     hasBusinessInfo: businessData?.business_info ? 'yes' : 'no',
     licenseType: businessData?.business_info?.license_type,
-    website: businessData?.business_info?.website
+    website: businessData?.business_info?.website,
+    category: businessData?.business_info?.business_category,
+    isVerified
   });
 
   return (
@@ -65,8 +69,11 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
             </AvatarFallback>
           )}
         </Avatar>
-        <div>
-          <h3 className="font-semibold text-lg">{finalBusinessName}</h3>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-lg">{finalBusinessName}</h3>
+            {isVerified && <VerifiedBadge size="sm" />}
+          </div>
           {businessData?.business_info?.business_category && (
             <p className="text-sm text-gray-600">{businessData.business_info.business_category}</p>
           )}
@@ -131,6 +138,14 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
             >
               {businessData.business_info.website}
             </a>
+          </div>
+        )}
+        
+        {/* Business Bio */}
+        {businessData?.bio && (
+          <div>
+            <span className="font-medium text-sm">About: </span>
+            <p className="text-sm text-gray-700 mt-1">{businessData.bio}</p>
           </div>
         )}
       </div>
