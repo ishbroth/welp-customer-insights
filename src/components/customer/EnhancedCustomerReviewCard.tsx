@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -222,12 +221,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     avatar: review.customerAvatar || ''
   };
 
-  // Render stars for preview
+  // Render stars - show actual rating if unlocked, grayed out if locked
   const renderStars = (rating: number) => {
+    const shouldShowRating = isReviewActuallyUnlocked || hasSubscription;
+    
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`h-4 w-4 text-gray-300`}
+        className={`h-4 w-4 ${
+          shouldShowRating && index < rating
+            ? 'text-yellow-400 fill-current'
+            : 'text-gray-300'
+        }`}
       />
     ));
   };
