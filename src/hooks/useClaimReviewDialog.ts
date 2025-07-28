@@ -11,7 +11,8 @@ export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
       
       console.log("Fetching full business profile for claim dialog:", businessId);
       
-      const { data, error } = await supabase
+      // First get the profile data
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -23,24 +24,45 @@ export const useClaimReviewDialog = (businessId?: string, open?: boolean) => {
           state,
           zipcode,
           bio,
-          business_info:business_info(
-            business_name,
-            website,
-            business_category,
-            business_subcategory
-          )
+          verified
         `)
         .eq('id', businessId)
         .eq('type', 'business')
         .maybeSingle();
       
-      if (error) {
-        console.error("Error fetching full business profile:", error);
+      if (profileError) {
+        console.error("Error fetching business profile:", profileError);
         return null;
       }
+
+      // Then get the business info data
+      const { data: businessInfoData, error: businessInfoError } = await supabase
+        .from('business_info')
+        .select(`
+          business_name,
+          website,
+          business_category,
+          business_subcategory,
+          license_type,
+          license_number,
+          license_state,
+          verified
+        `)
+        .eq('id', businessId)
+        .maybeSingle();
+
+      if (businessInfoError) {
+        console.error("Error fetching business info:", businessInfoError);
+      }
+
+      // Combine the data
+      const combinedData = {
+        ...profileData,
+        business_info: businessInfoData
+      };
       
-      console.log("Full business profile fetched:", data);
-      return data;
+      console.log("Full business profile fetched:", combinedData);
+      return combinedData;
     },
     enabled: !!businessId && open,
   });

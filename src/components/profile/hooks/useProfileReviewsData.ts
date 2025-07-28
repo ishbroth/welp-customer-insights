@@ -9,6 +9,10 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
 
   // Update local reviews when customerReviews prop changes
   useEffect(() => {
+    console.log('🎯 useProfileReviewsData: Updating local reviews with new data', {
+      newReviewsCount: customerReviews.length,
+      claimedCount: customerReviews.filter(r => r.isClaimed).length
+    });
     setLocalReviews(customerReviews);
   }, [customerReviews]);
 
@@ -17,9 +21,17 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
   let sortedReviews: any[] = [];
 
   if (isCustomerUser) {
-    // FIXED: Use ONLY database customer_id for actual claim status
-    claimedReviews = localReviews.filter(review => !!review.customerId);
-    unclaimedReviews = localReviews.filter(review => !review.customerId);
+    // Use the isClaimed property to determine claim status
+    claimedReviews = localReviews.filter(review => review.isClaimed === true);
+    unclaimedReviews = localReviews.filter(review => review.isClaimed !== true);
+
+    console.log('🎯 useProfileReviewsData: Review categorization', {
+      totalReviews: localReviews.length,
+      claimedReviews: claimedReviews.length,
+      unclaimedReviews: unclaimedReviews.length,
+      claimedIds: claimedReviews.map(r => r.id),
+      unclaimedIds: unclaimedReviews.map(r => r.id)
+    });
 
     // Sort unclaimed reviews by match quality first, then claimed reviews
     const sortedUnclaimed = unclaimedReviews.sort((a, b) => {

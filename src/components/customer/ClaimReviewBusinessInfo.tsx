@@ -13,6 +13,7 @@ interface BusinessProfile {
   state?: string;
   zipcode?: string;
   bio?: string;
+  verified?: boolean;
   business_info?: {
     business_name?: string;
     website?: string;
@@ -21,6 +22,7 @@ interface BusinessProfile {
     license_type?: string;
     license_number?: string;
     license_state?: string;
+    verified?: boolean;
   };
 }
 
@@ -37,83 +39,97 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
   displayData,
   fullBusinessProfile,
 }) => {
+  // Use the most complete data source available
+  const businessData = fullBusinessProfile || displayData;
+  const finalBusinessName = businessData?.business_info?.business_name || businessData?.name || businessName;
+  const finalBusinessAvatar = businessData?.avatar || businessAvatar;
+
+  console.log('ClaimReviewBusinessInfo: Rendering with data:', {
+    businessName,
+    finalBusinessName,
+    businessData: businessData ? 'found' : 'not found',
+    hasBusinessInfo: businessData?.business_info ? 'yes' : 'no',
+    licenseType: businessData?.business_info?.license_type,
+    website: businessData?.business_info?.website
+  });
+
   return (
-    <div className="bg-gray-50 p-4 rounded-md space-y-3">
+    <div className="bg-gray-50 p-4 rounded-md space-y-4">
       <div className="flex items-center space-x-3">
         <Avatar className="h-12 w-12">
-          {businessAvatar ? (
-            <AvatarImage src={businessAvatar} alt={businessName} />
+          {finalBusinessAvatar ? (
+            <AvatarImage src={finalBusinessAvatar} alt={finalBusinessName} />
           ) : (
             <AvatarFallback className="bg-blue-100 text-blue-800">
-              {getBusinessInitials(businessName)}
+              {getBusinessInitials(finalBusinessName)}
             </AvatarFallback>
           )}
         </Avatar>
         <div>
-          <h3 className="font-semibold text-lg">{businessName}</h3>
-          {fullBusinessProfile?.business_info?.business_category && (
-            <p className="text-sm text-gray-600">{fullBusinessProfile.business_info.business_category}</p>
+          <h3 className="font-semibold text-lg">{finalBusinessName}</h3>
+          {businessData?.business_info?.business_category && (
+            <p className="text-sm text-gray-600">{businessData.business_info.business_category}</p>
           )}
-          {fullBusinessProfile?.business_info?.business_subcategory && (
-            <p className="text-sm text-gray-500">{fullBusinessProfile.business_info.business_subcategory}</p>
+          {businessData?.business_info?.business_subcategory && (
+            <p className="text-sm text-gray-500">{businessData.business_info.business_subcategory}</p>
           )}
         </div>
       </div>
       
       <div className="space-y-2">
         {/* License Information */}
-        {fullBusinessProfile?.business_info?.license_type && (
+        {businessData?.business_info?.license_type && (
           <div>
             <span className="font-medium text-sm">License Type: </span>
-            <span className="text-sm">{fullBusinessProfile.business_info.license_type}</span>
+            <span className="text-sm">{businessData.business_info.license_type}</span>
           </div>
         )}
-        {fullBusinessProfile?.business_info?.license_number && (
+        {businessData?.business_info?.license_number && (
           <div>
             <span className="font-medium text-sm">License #: </span>
-            <span className="text-sm">{fullBusinessProfile.business_info.license_number}</span>
+            <span className="text-sm">{businessData.business_info.license_number}</span>
           </div>
         )}
-        {fullBusinessProfile?.business_info?.license_state && (
+        {businessData?.business_info?.license_state && (
           <div>
             <span className="font-medium text-sm">License State: </span>
-            <span className="text-sm">{fullBusinessProfile.business_info.license_state}</span>
+            <span className="text-sm">{businessData.business_info.license_state}</span>
           </div>
         )}
         
         {/* Contact Information */}
-        {displayData?.phone && (
+        {businessData?.phone && (
           <div>
             <span className="font-medium text-sm">Phone: </span>
-            <span className="text-sm">{displayData.phone}</span>
+            <span className="text-sm">{businessData.phone}</span>
           </div>
         )}
-        {displayData?.address && (
+        {businessData?.address && (
           <div>
             <span className="font-medium text-sm">Address: </span>
-            <span className="text-sm">{displayData.address}</span>
+            <span className="text-sm">{businessData.address}</span>
           </div>
         )}
-        {(displayData?.city || displayData?.state || displayData?.zipcode) && (
+        {(businessData?.city || businessData?.state || businessData?.zipcode) && (
           <div>
             <span className="font-medium text-sm">Location: </span>
             <span className="text-sm">
-              {displayData.city}
-              {displayData.city && displayData.state ? ", " : ""}
-              {displayData.state} {displayData.zipcode}
+              {businessData.city}
+              {businessData.city && businessData.state ? ", " : ""}
+              {businessData.state} {businessData.zipcode}
             </span>
           </div>
         )}
-        {fullBusinessProfile?.business_info?.website && (
+        {businessData?.business_info?.website && (
           <div>
             <span className="font-medium text-sm">Website: </span>
             <a 
-              href={fullBusinessProfile.business_info.website} 
+              href={businessData.business_info.website.startsWith('http') ? businessData.business_info.website : `https://${businessData.business_info.website}`}
               target="_blank" 
               rel="noopener noreferrer"
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
-              {fullBusinessProfile.business_info.website}
+              {businessData.business_info.website}
             </a>
           </div>
         )}

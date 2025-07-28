@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -54,21 +55,20 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { currentUser } = useAuth();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
-  const [isExplicitlyClaimed, setIsExplicitlyClaimed] = useState(review.isClaimed || false);
+  const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
   
-  // Use the isClaimed property from the review data to determine claim status
-  const isReviewActuallyClaimed = review.isClaimed === true;
+  // Use local state for immediate UI updates, fallback to original review state
+  const isReviewActuallyClaimed = localIsClaimedState || review.isClaimed === true;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
     customerId: review.customerId,
-    isClaimed: review.isClaimed,
+    originalIsClaimed: review.isClaimed,
+    localIsClaimedState,
+    isReviewActuallyClaimed,
     matchType: review.matchType,
     matchScore: review.matchScore,
-    isExplicitlyClaimed,
-    isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
-    IMPORTANT_NOTE: 'Using isClaimed property to determine claim status'
   });
 
   const {
@@ -170,13 +170,18 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     const success = await claimReview(review.id);
     
     if (success) {
-      console.log('🎯 Claim successful! Updating UI state...');
-      setIsExplicitlyClaimed(true);
+      console.log('🎯 Claim successful! Updating UI state immediately...');
+      
+      // Update local state immediately for instant UI feedback
+      setLocalIsClaimedState(true);
       setShowSimpleClaimDialog(false);
       
+      // Call the parent refresh function after a short delay to ensure database is updated
       if (onClaimSuccess) {
         console.log('🎯 Calling onClaimSuccess to refresh parent data...');
-        onClaimSuccess();
+        setTimeout(() => {
+          onClaimSuccess();
+        }, 100);
       }
     } else {
       console.log('🎯 Claim failed, not updating UI state');
