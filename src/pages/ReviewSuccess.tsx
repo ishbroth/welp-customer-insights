@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -11,7 +12,7 @@ const ReviewSuccess = () => {
   
   // Determine the home link based on user type
   const homeLink = currentUser?.type === "business" || currentUser?.type === "admin" 
-    ? "/profile" 
+    ? "/profile/reviews" // Fixed: Business users should go to their customer reviews page
     : "/";
   
   return (
