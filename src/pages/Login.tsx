@@ -28,8 +28,10 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        // Navigate immediately on successful login
-        navigate("/profile");
+        // Add a small delay to ensure auth state has updated before navigation
+        setTimeout(() => {
+          navigate("/profile");
+        }, 100);
       } else {
         // Only show error, don't clear fields
         toast.error(result.error || "Login failed");
