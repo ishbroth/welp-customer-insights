@@ -39,11 +39,12 @@ export const useProfileReviewsMatching = () => {
         return null; // Skip reviews written by the current user
       }
 
-      // Check if this review is already claimed by the current user
-      const isAlreadyClaimed = review.customer_id === currentUser?.id;
+      // CRITICAL FIX: Only consider a review "claimed" if it was explicitly claimed
+      // Check if customer_id is set AND it matches the current user
+      const isExplicitlyClaimed = review.customer_id === currentUser?.id;
       
-      if (isAlreadyClaimed) {
-        console.log("🎯 Review already claimed by current user:", review.id);
+      if (isExplicitlyClaimed) {
+        console.log("🎯 Review explicitly claimed by current user:", review.id);
         return {
           review: {
             ...review,
@@ -72,7 +73,9 @@ export const useProfileReviewsMatching = () => {
             ...review,
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
-            reviewerVerified: review.profiles?.verified || false
+            reviewerVerified: review.profiles?.verified || false,
+            // CRITICAL: Do NOT set customerId here - only set it when explicitly claimed
+            customerId: review.customer_id // Use the actual database value
           },
           matchType,
           matchScore: matchResult.score,
