@@ -75,7 +75,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isReviewActuallyClaimed,
     matchType: review.matchType,
     matchScore: review.matchScore,
-    reviewCustomerName: review.customer_name,
+    reviewCustomerName: review.customerName,
     reviewCustomerPhone: review.customer_phone,
   });
 
