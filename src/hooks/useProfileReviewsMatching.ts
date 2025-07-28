@@ -70,7 +70,7 @@ export const useProfileReviewsMatching = () => {
         return null;
       }
 
-      // Check if review is explicitly claimed in database
+      // CRITICAL FIX: Check if review is explicitly claimed by current user
       const isExplicitlyClaimed = review.customer_id === currentUser?.id;
       
       console.log("🔍 REVIEW CLAIM CHECK:", {
@@ -132,8 +132,8 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: null,
-            isClaimed: false
+            customerId: review.customer_id, // Keep the actual database value
+            isClaimed: false // Only set to true if explicitly claimed by current user
           },
           matchType,
           matchScore: matchResult.score,

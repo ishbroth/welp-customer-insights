@@ -57,25 +57,25 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { balance, useCredits: useCreditsFn } = useCredits();
   const { claimReview, unclaimReview, isClaimingReview } = useReviewClaiming();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
-  const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
+  const [localIsClaimedState, setLocalIsClaimedState] = useState(false);
   
   // Use persistent review access check instead of local state
   const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isUnlocked;
-  const isReviewActuallyClaimed = localIsClaimedState || review.isClaimed === true || !!review.customerId;
+  
+  // CRITICAL FIX: Only consider a review claimed if it's actually claimed by the current user
+  // Check if the review's customer_id matches the current user's ID
+  const isReviewActuallyClaimed = review.customerId === currentUser?.id || localIsClaimedState;
 
-  console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
+  console.log('🎯 EnhancedCustomerReviewCard: CRITICAL CLAIM STATUS DEBUG', {
     reviewId: review.id,
-    customerId: review.customerId,
+    reviewCustomerId: review.customerId,
+    currentUserId: currentUser?.id,
+    isClaimedByCurrentUser: review.customerId === currentUser?.id,
     originalIsClaimed: review.isClaimed,
     localIsClaimedState,
     isReviewActuallyClaimed,
-    isReviewActuallyUnlocked,
-    isUnlockedViaPersistence: isReviewUnlocked(review.id),
-    creditBalance: balance,
-    hasSubscription,
     matchType: review.matchType,
     matchScore: review.matchScore,
-    currentUserId: currentUser?.id,
   });
 
   const {
