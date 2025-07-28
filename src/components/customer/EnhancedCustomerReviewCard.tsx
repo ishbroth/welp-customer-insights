@@ -61,22 +61,22 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Use persistent review access check instead of local state
   const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isUnlocked;
   
-  // CRITICAL FIX: Only consider a review claimed if it's actually claimed by the current user
-  // Check if the review's customer_id matches the current user's ID
-  const isReviewActuallyClaimed = review.customerId === currentUser?.id || localIsClaimedState;
+  // CRITICAL FIX: The ONLY way a review should be considered "claimed" is if
+  // the review's customer_id field matches the current user's ID
+  const isReviewActuallyClaimed = review.customerId === currentUser?.id;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL CLAIM STATUS DEBUG', {
     reviewId: review.id,
     reviewCustomerId: review.customerId,
     currentUserId: currentUser?.id,
     isClaimedByCurrentUser: review.customerId === currentUser?.id,
-    originalIsClaimed: review.isClaimed,
-    localIsClaimedState,
-    isReviewActuallyClaimed,
     matchType: review.matchType,
     matchScore: review.matchScore,
     reviewCustomerName: review.customerName,
     reviewCustomerPhone: review.customer_phone,
+    DATABASE_CLAIM_STATUS: isReviewActuallyClaimed,
+    SHOULD_SHOW_AS_CLAIMED: isReviewActuallyClaimed,
+    SHOULD_SHOW_MATCH_INFO: !isReviewActuallyClaimed
   });
 
   const {
@@ -98,12 +98,10 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     onReactionToggle,
   });
 
-  // Handle subscribe button click to go to customer benefits page
   const handleSubscribeClick = () => {
     navigate('/customer-benefits');
   };
 
-  // Handle credit usage with persistent access
   const handleUseCreditClick = async () => {
     if (balance < 1) {
       toast.error("Insufficient credits");
@@ -112,7 +110,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
     const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
     if (success) {
-      // Add to persistent access immediately
       addUnlockedReview(review.id);
       toast.success("Review unlocked using 1 credit!");
     }
@@ -261,12 +258,16 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     businessName: businessDisplayName,
     matchType: review.matchType,
     canReport,
-    creditBalance: balance
+    creditBalance: balance,
+    CRITICAL_DISPLAY_DECISION: {
+      willShowMatchInfo: !isReviewActuallyClaimed,
+      willShowClaimedStatus: isReviewActuallyClaimed
+    }
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* Show match info ONLY for unclaimed reviews */}
+      {/* CRITICAL: Show match info ONLY for unclaimed reviews */}
       {!isReviewActuallyClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType || 'potential'}
