@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -76,6 +75,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isReviewActuallyClaimed,
     matchType: review.matchType,
     matchScore: review.matchScore,
+    reviewCustomerName: review.customer_name,
+    reviewCustomerPhone: review.customer_phone,
   });
 
   const {

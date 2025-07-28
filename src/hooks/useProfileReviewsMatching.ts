@@ -115,8 +115,8 @@ export const useProfileReviewsMatching = () => {
         }
       });
       
-      // Only consider it a match if the score is above a threshold
-      if (matchResult.score >= 50) {
+      // Show both high quality matches AND potential matches (lowered threshold)
+      if (matchResult.score >= 30) {
         const matchType = matchResult.score >= 80 ? 'high_quality' : 'potential';
         
         console.log("✅ MATCH FOUND:", {
