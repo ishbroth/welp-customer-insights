@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
@@ -7,7 +7,6 @@ import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
-import { useReviewClaiming } from "@/hooks/useReviewClaiming";
 import { useAuth } from "@/contexts/auth";
 import { useCredits } from "@/hooks/useCredits";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
@@ -27,20 +26,17 @@ interface DetailedMatch {
 interface EnhancedCustomerReviewCardProps {
   review: Review & {
     customerAvatar?: string;
-    matchType?: 'claimed' | 'high_quality' | 'potential';
+    matchType?: 'high_quality' | 'potential';
     matchReasons?: string[];
     matchScore?: number;
     detailedMatches?: DetailedMatch[];
     isNewReview?: boolean;
     customer_phone?: string;
-    isExplicitlyClaimed?: boolean;
-    isClaimed?: boolean;
   };
   isUnlocked: boolean;
   hasSubscription: boolean;
   onPurchase: (reviewId: string) => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
-  onClaimSuccess?: () => void;
 }
 
 const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
@@ -49,35 +45,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   hasSubscription,
   onPurchase,
   onReactionToggle,
-  onClaimSuccess,
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { balance, useCredits: useCreditsFn } = useCredits();
-  const { claimReview, unclaimReview, isClaimingReview } = useReviewClaiming();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
-  const [localIsClaimedState, setLocalIsClaimedState] = useState(false);
   
   // Use persistent review access check instead of local state
   const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isUnlocked;
-  
-  // CRITICAL FIX: The ONLY way a review should be considered "claimed" is if
-  // the review's customer_id field matches the current user's ID
-  const isReviewActuallyClaimed = review.customerId === currentUser?.id;
-
-  console.log('🎯 EnhancedCustomerReviewCard: CRITICAL CLAIM STATUS DEBUG', {
-    reviewId: review.id,
-    reviewCustomerId: review.customerId,
-    currentUserId: currentUser?.id,
-    isClaimedByCurrentUser: review.customerId === currentUser?.id,
-    matchType: review.matchType,
-    matchScore: review.matchScore,
-    reviewCustomerName: review.customerName,
-    reviewCustomerPhone: review.customer_phone,
-    DATABASE_CLAIM_STATUS: isReviewActuallyClaimed,
-    SHOULD_SHOW_AS_CLAIMED: isReviewActuallyClaimed,
-    SHOULD_SHOW_MATCH_INFO: !isReviewActuallyClaimed
-  });
 
   const {
     reactions,
@@ -115,32 +90,17 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
-  console.log('🎯 Business Profile Debug:', {
-    businessProfile: businessProfile ? 'found' : 'not found',
-    businessName: businessProfile?.name,
-    businessVerified: businessProfile?.verified,
-    reviewerVerified: review.reviewerVerified,
-    finalBusinessAvatar: finalBusinessAvatar ? 'present' : 'missing',
-    CRITICAL_VERIFICATION_CHECK: {
-      fromBusinessProfile: businessProfile?.verified,
-      fromReviewData: review.reviewerVerified,
-      finalVerificationStatus: review.reviewerVerified || businessProfile?.verified
-    }
-  });
-
-  // Use the permission system with the ACTUAL claim status
+  // Use the permission system
   const {
     canReact,
     canRespond,
     shouldShowFullReview,
-    shouldShowClaimButton,
     shouldShowRespondButton,
   } = useReviewPermissions({
     isCustomerUser,
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: isReviewActuallyClaimed,
     hasSubscription,
     isUnlocked: isReviewActuallyUnlocked,
   });
@@ -164,7 +124,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     review,
     businessProfile,
     finalBusinessAvatar,
-    isReviewActuallyClaimed,
+    false, // No claiming system
     currentUser
   );
 
@@ -176,56 +136,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   const businessDisplayName = enhancedBusinessInfo.name;
 
-  // Handle direct claim without dialog
-  const handleDirectClaimClick = async () => {
-    console.log('🎯 Starting direct claim process for review:', review.id);
-    const success = await claimReview(review.id);
-    
-    if (success) {
-      console.log('🎯 Claim successful! Updating UI state immediately...');
-      
-      // Update local state immediately for instant UI feedback
-      setLocalIsClaimedState(true);
-      
-      // Call the parent refresh function after a short delay to ensure database is updated
-      if (onClaimSuccess) {
-        console.log('🎯 Calling onClaimSuccess to refresh parent data...');
-        setTimeout(() => {
-          onClaimSuccess();
-        }, 100);
-      }
-    } else {
-      console.log('🎯 Claim failed, not updating UI state');
-    }
-  };
-
-  // Handle direct unclaim
-  const handleDirectUnclaimClick = async () => {
-    console.log('🎯 Starting direct unclaim process for review:', review.id);
-    const success = await unclaimReview(review.id);
-    
-    if (success) {
-      console.log('🎯 Unclaim successful! Updating UI state immediately...');
-      
-      // Update local state immediately for instant UI feedback
-      setLocalIsClaimedState(false);
-      
-      // Call the parent refresh function after a short delay to ensure database is updated
-      if (onClaimSuccess) {
-        console.log('🎯 Calling onClaimSuccess to refresh parent data...');
-        setTimeout(() => {
-          onClaimSuccess();
-        }, 100);
-      }
-    } else {
-      console.log('🎯 Unclaim failed, not updating UI state');
-    }
-  };
-
-  // Enhanced customer info to show claimed status and include avatar
+  // Enhanced customer info without claimed status
   const enhancedCustomerInfo = {
     ...customerInfo,
-    isClaimed: isReviewActuallyClaimed,
     avatar: review.customerAvatar || ''
   };
 
@@ -247,39 +160,19 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   const canReport = hasSubscription || isReviewActuallyUnlocked;
 
-  console.log('🎯 Final Render Decisions:', {
-    reviewId: review.id,
-    isReviewActuallyClaimed,
-    isReviewActuallyUnlocked,
-    shouldShowClaimButton: shouldShowClaimButton(),
-    shouldShowRespondButton: shouldShowRespondButton(),
-    shouldShowFullReview: shouldShowFullReview(),
-    businessVerified: finalBusinessVerified,
-    businessName: businessDisplayName,
-    matchType: review.matchType,
-    canReport,
-    creditBalance: balance,
-    CRITICAL_DISPLAY_DECISION: {
-      willShowMatchInfo: !isReviewActuallyClaimed,
-      willShowClaimedStatus: isReviewActuallyClaimed
-    }
-  });
-
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* CRITICAL: Show match info ONLY for unclaimed reviews */}
-      {!isReviewActuallyClaimed && (
-        <ReviewMatchInfo
-          matchType={review.matchType || 'potential'}
-          matchReasons={review.matchReasons || ['Potential match found']}
-          matchScore={review.matchScore || 0}
-          detailedMatches={review.detailedMatches}
-          isNewReview={review.isNewReview}
-          isClaimingReview={isClaimingReview}
-          onClaimClick={handleDirectClaimClick}
-          isReviewClaimed={isReviewActuallyClaimed}
-        />
-      )}
+      {/* Show match info for all reviews */}
+      <ReviewMatchInfo
+        matchType={review.matchType || 'potential'}
+        matchReasons={review.matchReasons || ['Potential match found']}
+        matchScore={review.matchScore || 0}
+        detailedMatches={review.detailedMatches}
+        isNewReview={review.isNewReview}
+        isClaimingReview={false}
+        onClaimClick={() => {}}
+        isReviewClaimed={false}
+      />
       
       <div className="flex justify-between mb-4">
         <CustomerReviewCardHeader
@@ -304,7 +197,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
         canRespond={canRespond()}
-        shouldShowClaimButton={shouldShowClaimButton()}
+        shouldShowClaimButton={false}
         shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
         customerId={review.customerId}
@@ -317,15 +210,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         isUnlocked={isReviewActuallyUnlocked}
         creditBalance={balance}
         onPurchaseClick={handlePurchaseClick}
-        onClaimClick={handleDirectClaimClick}
-        onUnclaimClick={handleDirectUnclaimClick}
+        onClaimClick={() => {}}
+        onUnclaimClick={() => {}}
         onReactionToggle={(reactionType: string) => handleReactionToggle(review.id, reactionType)}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
         onSubscribeClick={handleSubscribeClick}
         onUseCreditClick={handleUseCreditClick}
-        isReviewClaimed={isReviewActuallyClaimed}
-        isClaimingReview={isClaimingReview}
+        isReviewClaimed={false}
+        isClaimingReview={false}
       />
 
       <div className="flex justify-between items-center mt-4">

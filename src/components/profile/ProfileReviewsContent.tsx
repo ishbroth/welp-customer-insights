@@ -112,7 +112,6 @@ const ProfileReviewsContent = ({
               onPurchase={handlePurchaseReview}
               onReactionToggle={handleReactionToggle}
               hasSubscription={hasSubscription}
-              onClaimSuccess={handleClaimSuccess}
             />
           );
         }
