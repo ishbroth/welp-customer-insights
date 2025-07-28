@@ -55,7 +55,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { balance, useCredits } = useCredits();
+  const { balance, useCredits: useCreditsFn } = useCredits();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
@@ -115,7 +115,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
       return;
     }
 
-    const success = await useCredits(1, `Unlocked review ${review.id}`);
+    const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
     if (success) {
       setLocalIsUnlockedState(true);
       toast.success("Review unlocked using 1 credit!");
