@@ -77,7 +77,7 @@ const BusinessVerificationSuccessPopup = ({
                 <span className="font-medium text-blue-800">Ready to Verify Your License?</span>
               </div>
               <p className="text-sm text-blue-700 mb-3">
-                {licenseVerificationResult?.message || "Complete your profile by verifying your business license. It's free and only takes a few minutes!"}
+                Complete your profile by verifying your business license. It's free and only takes a few minutes!
               </p>
               <Button 
                 onClick={handleVerifyLicense}
