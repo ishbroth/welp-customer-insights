@@ -14,61 +14,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [waitingForAuth, setWaitingForAuth] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!waitingForAuth) return;
-
-    console.log("🔍 Setting up auth listener for login navigation");
-    
-    let navigationTimeout: NodeJS.Timeout;
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("🔐 Auth state change during login:", event, "session user:", session?.user?.id);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log("✅ User signed in, navigating to profile");
-          setWaitingForAuth(false);
-          clearTimeout(navigationTimeout);
-          navigate("/profile");
-        }
-      }
-    );
-
-    // Also check for existing session immediately
-    const checkExistingSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        console.log("✅ Found existing session, navigating to profile");
-        setWaitingForAuth(false);
-        clearTimeout(navigationTimeout);
-        navigate("/profile");
-      }
-    };
-
-    // Check immediately and then after a short delay
-    checkExistingSession();
-    setTimeout(checkExistingSession, 100);
-
-    // Timeout fallback to prevent getting stuck
-    navigationTimeout = setTimeout(() => {
-      console.log("⚠️ Navigation timeout, checking session one more time");
-      checkExistingSession().then(() => {
-        // If still no session after timeout, reset the state
-        setWaitingForAuth(false);
-        setLoading(false);
-        toast.error("Login timeout. Please try again.");
-      });
-    }, 5000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(navigationTimeout);
-    };
-  }, [waitingForAuth, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,8 +29,17 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        console.log("🔐 Login successful, setting up auth listener");
-        setWaitingForAuth(true);
+        console.log("🔐 Login successful, checking for session");
+        
+        // Check for session immediately after successful login
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          console.log("✅ Session found, navigating to profile");
+          navigate("/profile");
+        } else {
+          console.log("⚠️ No session found after successful login");
+          toast.error("Login successful but session not found. Please try again.");
+        }
       } else {
         // Only show error, don't clear fields
         toast.error(result.error || "Login failed");
@@ -115,7 +71,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email"
-                disabled={loading || waitingForAuth}
+                disabled={loading}
                 autoComplete="email"
               />
             </div>
@@ -128,12 +84,12 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
-                disabled={loading || waitingForAuth}
+                disabled={loading}
                 autoComplete="current-password"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading || waitingForAuth}>
-              {loading ? "Signing In..." : waitingForAuth ? "Redirecting..." : "Sign In"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center space-y-2">
