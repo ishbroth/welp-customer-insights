@@ -59,12 +59,11 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   // Use full profile data if available, otherwise fall back to businessData
   const displayData = fullBusinessProfile || businessData;
   
-  // Handle business name - fullBusinessProfile has business_info, businessData doesn't
-  const businessName = (fullBusinessProfile?.business_info && 'business_name' in fullBusinessProfile.business_info) 
-                      ? String(fullBusinessProfile.business_info.business_name)
-                      : fullBusinessProfile?.name || 
-                        businessData?.name || 
-                        'Business';
+  // Handle business name - prioritize business_info.business_name, then profile name, then businessData name
+  const businessName = fullBusinessProfile?.business_info?.business_name ||
+                      fullBusinessProfile?.name || 
+                      businessData?.name || 
+                      'Business';
   
   const businessAvatar = displayData?.avatar || '';
 
@@ -72,6 +71,9 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
     businessId,
     fullBusinessProfile: fullBusinessProfile ? 'loaded' : 'not loaded',
     businessName,
+    businessInfoName: fullBusinessProfile?.business_info?.business_name,
+    profileName: fullBusinessProfile?.name,
+    businessDataName: businessData?.name,
     displayData: displayData ? 'found' : 'not found',
     isLoading,
     open
