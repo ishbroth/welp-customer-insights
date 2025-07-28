@@ -18,15 +18,20 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) return;
+    
     setLoading(true);
 
     try {
       const result = await login(email, password);
 
       if (result.success) {
-        // Navigate immediately on successful login without toast
+        // Navigate immediately on successful login
         navigate("/profile");
       } else {
+        // Only show error, don't clear fields
         toast.error(result.error || "Login failed");
       }
     } catch (error) {
@@ -56,6 +61,8 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email"
+                disabled={loading}
+                autoComplete="email"
               />
             </div>
             <div>
@@ -67,6 +74,8 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
+                disabled={loading}
+                autoComplete="current-password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
