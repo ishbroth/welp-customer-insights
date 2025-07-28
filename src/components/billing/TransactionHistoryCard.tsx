@@ -42,46 +42,55 @@ const TransactionHistoryCard = ({
     return date.toLocaleDateString();
   };
 
-  // Combine Stripe transactions with credit transactions
-  const combinedTransactions = [
-    // Credit transactions - find the matching Stripe transaction for the correct amount
-    ...creditTransactions.map(ct => {
-      // Find the matching Stripe transaction by session ID or charge ID
-      const matchingStripeTransaction = transactions.find(t => 
-        ct.stripe_session_id && (
-          ct.stripe_session_id.includes(t.id) || 
-          t.id.includes(ct.stripe_session_id) ||
-          (t.amount === 300 && ct.type === 'purchase') // $3 transactions
-        )
-      );
-      
-      return {
-        id: ct.id,
-        amount: matchingStripeTransaction ? matchingStripeTransaction.amount : ct.amount * 100, // Use Stripe amount if available
-        currency: 'usd',
-        status: 'succeeded',
-        created: new Date(ct.created_at).getTime() / 1000,
-        description: ct.description || (ct.type === 'purchase' ? 'Credit Purchase' : 'Credit Usage'),
-        isCredit: true,
-        stripeSessionId: ct.stripe_session_id
-      };
-    }),
-    // Stripe transactions (but filter out those that have been processed as credit purchases)
-    ...transactions.filter(t => {
-      // Filter out transactions that have already been processed as credit purchases
-      const hasMatchingCreditTransaction = creditTransactions.some(ct => 
-        ct.stripe_session_id && (
-          ct.stripe_session_id.includes(t.id) || 
-          t.description?.includes('Credit') ||
-          (t.amount === 300 && ct.type === 'purchase') // $3 transactions that are credit purchases
-        )
-      );
-      return !hasMatchingCreditTransaction;
-    }).map(t => ({
-      ...t,
-      isCredit: false
-    }))
-  ].sort((a, b) => b.created - a.created); // Sort by date, newest first
+  const getTransactionDescription = (stripeTransaction: Transaction, creditTransaction?: any) => {
+    const amount = stripeTransaction.amount;
+    
+    // Legacy payment - $250 one-time payment
+    if (amount === 25000) {
+      return "Legacy Plan - Lifetime Access";
+    }
+    
+    // Subscription payment - $11.99 recurring
+    if (amount === 1199) {
+      return "Premium Subscription";
+    }
+    
+    // Credit purchase - multiples of $3 (300 cents)
+    if (amount % 300 === 0) {
+      const credits = amount / 300;
+      return `Credit Purchase - ${credits} credit${credits > 1 ? 's' : ''}`;
+    }
+    
+    // Fallback to original description or credit transaction description
+    if (creditTransaction?.description) {
+      return creditTransaction.description;
+    }
+    
+    return stripeTransaction.description || "Payment";
+  };
+
+  // Create a comprehensive transaction list
+  const combinedTransactions = transactions.map(stripeTransaction => {
+    // Find matching credit transaction if it exists
+    const matchingCreditTransaction = creditTransactions.find(ct => 
+      ct.stripe_session_id && (
+        ct.stripe_session_id === stripeTransaction.id ||
+        stripeTransaction.id.includes(ct.stripe_session_id) ||
+        ct.stripe_session_id.includes(stripeTransaction.id)
+      )
+    );
+
+    return {
+      id: stripeTransaction.id,
+      amount: stripeTransaction.amount, // Always use the actual Stripe charge amount
+      currency: stripeTransaction.currency,
+      status: stripeTransaction.status,
+      created: stripeTransaction.created,
+      description: getTransactionDescription(stripeTransaction, matchingCreditTransaction),
+      isCredit: !!matchingCreditTransaction,
+      stripeSessionId: matchingCreditTransaction?.stripe_session_id
+    };
+  }).sort((a, b) => b.created - a.created); // Sort by date, newest first
 
   // Show only first 3 transactions by default, up to 24 when expanded
   const displayedTransactions = showAll ? combinedTransactions.slice(0, 24) : combinedTransactions.slice(0, 3);
@@ -118,7 +127,7 @@ const TransactionHistoryCard = ({
                         {formatDate(transaction.created)}
                       </td>
                       <td className="py-3 text-sm">
-                        {transaction.description || "Payment"}
+                        {transaction.description}
                       </td>
                       <td className="py-3 text-sm">
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
