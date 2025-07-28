@@ -23,11 +23,12 @@ interface EnhancedReviewContentProps {
   hasSubscription: boolean;
   isUnlocked: boolean;
   creditBalance: number;
+  currentUser?: any;
   onPurchaseClick: () => void;
   onClaimClick: () => void;
   onUnclaimClick: () => void;
   onReactionToggle: (reactionType: string) => void;
-  onSubmitResponse: (content: string) => void;
+  onSubmitResponse: (content: string) => Promise<boolean>;
   onDeleteResponse: (responseId: string) => void;
   onSubscribeClick: () => void;
   onUseCreditClick: () => void;
@@ -52,6 +53,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   hasSubscription,
   isUnlocked,
   creditBalance,
+  currentUser,
   onPurchaseClick,
   onClaimClick,
   onUnclaimClick,
@@ -69,9 +71,11 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
     return text.substring(0, 50) + '...';
   };
 
-  const handleResponseSubmit = (content: string) => {
-    onSubmitResponse(content);
-    setShowResponseForm(false);
+  const handleResponseSubmit = async (content: string) => {
+    const success = await onSubmitResponse(content);
+    if (success) {
+      setShowResponseForm(false);
+    }
   };
 
   return (
@@ -149,29 +153,33 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           reviewerName={reviewerName}
           finalBusinessAvatar={finalBusinessAvatar}
           reviewerId={reviewerId}
+          currentUser={currentUser}
         />
       )}
 
-      {/* Response Form - only show if can respond */}
-      {canRespond && (
+      {/* Response Form - only show if can respond and not currently showing form */}
+      {canRespond && !showResponseForm && (
         <div className="mt-4">
-          {!showResponseForm ? (
-            <Button
-              onClick={() => setShowResponseForm(true)}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <span>Respond to this review</span>
-            </Button>
-          ) : (
-            <ResponseForm
-              onSubmit={handleResponseSubmit}
-              onCancel={() => setShowResponseForm(false)}
-              reviewId={reviewId}
-              reviewerName={reviewerName}
-            />
-          )}
+          <Button
+            onClick={() => setShowResponseForm(true)}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <span>Respond to this review</span>
+          </Button>
+        </div>
+      )}
+      
+      {/* Response Form when active */}
+      {showResponseForm && (
+        <div className="mt-4">
+          <ResponseForm
+            onSubmit={handleResponseSubmit}
+            onCancel={() => setShowResponseForm(false)}
+            reviewId={reviewId}
+            reviewerName={reviewerName}
+          />
         </div>
       )}
 

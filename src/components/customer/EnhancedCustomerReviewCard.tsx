@@ -196,7 +196,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
-        canRespond={canRespond()}
+        canRespond={canRespond() && canCustomerRespond()}
         shouldShowClaimButton={false}
         shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
@@ -209,11 +209,15 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         hasSubscription={hasSubscription}
         isUnlocked={isReviewActuallyUnlocked}
         creditBalance={balance}
+        currentUser={currentUser}
         onPurchaseClick={handlePurchaseClick}
         onClaimClick={() => {}}
         onUnclaimClick={() => {}}
         onReactionToggle={(reactionType: string) => handleReactionToggle(review.id, reactionType)}
-        onSubmitResponse={handleSubmitResponse}
+        onSubmitResponse={async (content: string) => {
+          const success = await handleSubmitResponse(content);
+          return success || false;
+        }}
         onDeleteResponse={handleDeleteResponse}
         onSubscribeClick={handleSubscribeClick}
         onUseCreditClick={handleUseCreditClick}

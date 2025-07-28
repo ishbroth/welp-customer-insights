@@ -156,9 +156,12 @@ export const useCustomerResponseManagement = (
 
   const canCustomerRespond = (): boolean => {
     if (!currentUser || currentUser.type !== 'customer') return false;
-    if (responses.length === 0) return false;
+    
+    // If no responses yet, customer can respond to the review
+    if (responses.length === 0) return true;
     
     const lastResponse = responses[responses.length - 1];
+    // Customer can respond if the last response was from the business (review author)
     return lastResponse.authorId === reviewAuthorId;
   };
 

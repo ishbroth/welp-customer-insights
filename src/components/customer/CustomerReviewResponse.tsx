@@ -75,7 +75,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
     lastResponseBy: responses.length > 0 ? responses[responses.length - 1]?.authorId : 'none'
   });
 
-  const handleSubmitResponse = async (responseText: string) => {
+  const handleSubmitResponse = async (responseText: string): Promise<boolean> => {
     // Check conversation flow first
     if (!canRespond || !isMyTurn) {
       toast({
@@ -83,7 +83,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
         description: "Please wait for the other party to respond first.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     // Enhanced permission check for responses
@@ -107,7 +107,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
           variant: "destructive"
         });
       }
-      return;
+      return false;
     }
 
     setIsSubmitting(true);
@@ -149,6 +149,8 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
           description: "Your response has been added successfully!"
         });
       }
+      
+      return true;
     } catch (error) {
       console.error('Error submitting response:', error);
       toast({
@@ -156,6 +158,7 @@ const CustomerReviewResponse: React.FC<CustomerReviewResponseProps> = ({
         description: "Failed to submit response. Please try again.",
         variant: "destructive"
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }

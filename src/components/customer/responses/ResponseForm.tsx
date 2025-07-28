@@ -4,23 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 interface ResponseFormProps {
-  onSubmit: (content: string) => Promise<void>;
-  isSubmitting: boolean;
-  canSubmit: boolean;
+  onSubmit: (content: string) => Promise<boolean>;
+  onCancel?: () => void;
+  reviewId?: string;
+  reviewerName?: string;
+  isSubmitting?: boolean;
+  canSubmit?: boolean;
 }
 
 const ResponseForm: React.FC<ResponseFormProps> = ({
   onSubmit,
-  isSubmitting,
-  canSubmit
+  onCancel,
+  reviewId,
+  reviewerName,
+  isSubmitting = false,
+  canSubmit = true
 }) => {
   const [responseText, setResponseText] = useState("");
 
   const handleSubmit = async () => {
     if (!responseText.trim()) return;
     
-    await onSubmit(responseText);
-    setResponseText("");
+    const success = await onSubmit(responseText);
+    if (success) {
+      setResponseText("");
+    }
   };
 
   if (!canSubmit) {
@@ -36,7 +44,17 @@ const ResponseForm: React.FC<ResponseFormProps> = ({
         className="w-full mb-3 min-h-[100px]"
         maxLength={1500}
       />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button 
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+        )}
         <Button 
           onClick={handleSubmit}
           disabled={isSubmitting || !responseText.trim()}
