@@ -21,14 +21,86 @@ export const useCustomerResponseManagement = (
 ) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
-  const [responses, setResponses] = useState<Response[]>(initialResponses);
+  const [responses, setResponses] = useState<Response[]>([]);
   const { archivedResponse, clearArchivedResponse } = useArchivedResponses(reviewId);
 
-  // Update responses when prop changes
+  // Fetch fresh responses from database
+  const fetchResponses = async () => {
+    if (!reviewId) return;
+    
+    try {
+      const { data: responseData, error: responseError } = await supabase
+        .from('responses')
+        .select('id, author_id, content, created_at')
+        .eq('review_id', reviewId)
+        .order('created_at', { ascending: true });
+
+      if (responseError) {
+        console.error('Error fetching responses:', responseError);
+        return;
+      }
+
+      if (!responseData || responseData.length === 0) {
+        setResponses([]);
+        return;
+      }
+
+      // Get author information
+      const authorIds = responseData.map(r => r.author_id).filter(Boolean);
+      
+      if (authorIds.length === 0) {
+        setResponses([]);
+        return;
+      }
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, name, first_name, last_name, type')
+        .in('id', authorIds);
+
+      if (profileError) {
+        console.error('Error fetching profiles:', profileError);
+        return;
+      }
+
+      // Format responses with author names
+      const formattedResponses = responseData.map((resp: any) => {
+        const profile = profileData?.find(p => p.id === resp.author_id);
+        
+        let authorName = 'User';
+        
+        if (profile) {
+          if (profile.name && profile.name.trim()) {
+            authorName = profile.name;
+          } else if (profile.first_name || profile.last_name) {
+            const firstName = profile.first_name || '';
+            const lastName = profile.last_name || '';
+            authorName = `${firstName} ${lastName}`.trim();
+          } else if (profile.type) {
+            authorName = profile.type === 'business' ? 'Business' : 'Customer';
+          }
+        }
+
+        return {
+          id: resp.id,
+          authorId: resp.author_id || '',
+          authorName,
+          content: resp.content,
+          createdAt: resp.created_at
+        };
+      });
+
+      const validResponses = getValidCustomerResponses(formattedResponses);
+      setResponses(validResponses);
+    } catch (error) {
+      console.error('Error fetching responses:', error);
+    }
+  };
+
+  // Initial load and when dependencies change
   useEffect(() => {
-    const validResponses = getValidCustomerResponses(initialResponses);
-    setResponses(validResponses);
-  }, [initialResponses, reviewId, currentUser]);
+    fetchResponses();
+  }, [reviewId, currentUser]);
 
   // Filter responses to only show valid conversation chains
   const getValidCustomerResponses = (allResponses: Response[]): Response[] => {
@@ -102,7 +174,8 @@ export const useCustomerResponseManagement = (
         createdAt: data.created_at
       };
 
-      setResponses(prev => [...prev, newResponseObj]);
+      // Refresh responses from database to get the latest data
+      await fetchResponses();
       clearArchivedResponse();
 
       if (onResponseSubmitted) {
@@ -170,6 +243,7 @@ export const useCustomerResponseManagement = (
     archivedResponse,
     handleSubmitResponse,
     handleDeleteResponse,
-    canCustomerRespond
+    canCustomerRespond,
+    refetchResponses: fetchResponses
   };
 };
