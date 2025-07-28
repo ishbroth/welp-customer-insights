@@ -1,5 +1,7 @@
 
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface EmptyReviewsMessageProps {
   type: "customer" | "business";
@@ -22,6 +24,15 @@ const EmptyReviewsMessage = ({ type }: EmptyReviewsMessageProps) => {
           : "Start reviewing your customers to build trust in the community."
         }
       </p>
+      
+      {!isCustomer && (
+        <Link to="/review/new">
+          <Button className="bg-[#ea384c] hover:bg-[#d63384] text-white mb-4">
+            Write Your First Review
+          </Button>
+        </Link>
+      )}
+      
       {isCustomer && (
         <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
           <p className="font-medium mb-1">Reviews may be linked to you by:</p>
