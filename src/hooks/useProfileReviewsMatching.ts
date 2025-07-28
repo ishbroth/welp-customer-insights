@@ -51,7 +51,7 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: review.customer_id // Keep the actual database value
+            customerId: review.customer_id // Keep the actual database value ONLY for claimed reviews
           },
           matchType: 'claimed' as const,
           matchScore: 100,
@@ -75,8 +75,8 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            // CRITICAL: Do NOT set customerId for unclaimed reviews - leave it as null/undefined
-            customerId: undefined // Explicitly set to undefined for unclaimed reviews
+            // CRITICAL: Do NOT set customerId for unclaimed reviews - leave it undefined
+            customerId: undefined // Explicitly undefined for unclaimed reviews
           },
           matchType,
           matchScore: matchResult.score,

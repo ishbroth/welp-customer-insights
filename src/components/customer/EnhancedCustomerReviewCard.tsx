@@ -14,7 +14,6 @@ import { useReviewClaiming } from "@/hooks/useReviewClaiming";
 import { useAuth } from "@/contexts/auth";
 import { useCustomerReviewCardHeader } from "./hooks/useCustomerReviewCardHeader";
 import CustomerReviewCardHeader from "./CustomerReviewCardHeader";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Star } from "lucide-react";
 
 interface DetailedMatch {
@@ -251,13 +250,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           onBusinessNameClick={handleBusinessNameClick}
           onCustomerClick={handleCustomerClick}
         />
-        
-        {/* Show claimed badge next to customer name if review is claimed - SINGLE BADGE */}
-        {isReviewActuallyClaimed && (
-          <div className="flex items-center">
-            <VerifiedBadge size="sm" />
-          </div>
-        )}
       </div>
 
       {/* Rating stars - always show grayed out in preview */}
