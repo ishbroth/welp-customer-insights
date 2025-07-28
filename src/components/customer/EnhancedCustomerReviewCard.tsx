@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/auth";
 import { useCustomerReviewCardHeader } from "./hooks/useCustomerReviewCardHeader";
 import CustomerReviewCardHeader from "./CustomerReviewCardHeader";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { Star } from "lucide-react";
 
 interface DetailedMatch {
   field: string;
@@ -32,6 +33,7 @@ interface EnhancedCustomerReviewCardProps {
     detailedMatches?: DetailedMatch[];
     isNewReview?: boolean;
     customer_phone?: string;
+    isExplicitlyClaimed?: boolean; // New field to track explicit claims
   };
   isUnlocked: boolean;
   hasSubscription: boolean;
@@ -51,20 +53,22 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { currentUser } = useAuth();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
+  const [isExplicitlyClaimed, setIsExplicitlyClaimed] = useState(review.isExplicitlyClaimed || false);
   
-  // CRITICAL: Use ONLY the database customerId to determine if review is claimed
-  // NEVER use matchType, matchScore, or any other derived field
-  const isReviewActuallyClaimed = !!review.customerId;
+  // CRITICAL: Only consider a review claimed if it was explicitly claimed by the user
+  // NOT just because it matches their profile information
+  const isReviewActuallyClaimed = isExplicitlyClaimed;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
     database_customerId: review.customerId,
     matchType: review.matchType,
     matchScore: review.matchScore,
+    isExplicitlyClaimed,
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
     isCustomerBeingReviewed: review.customerId === currentUser?.id,
-    IMPORTANT_NOTE: 'isReviewActuallyClaimed is ONLY based on database customerId field'
+    IMPORTANT_NOTE: 'isReviewActuallyClaimed is ONLY true when explicitly claimed by user action'
   });
 
   const {
@@ -103,7 +107,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   });
 
-  // CRITICAL: Use the permission system with the ACTUAL claim status from database
+  // CRITICAL: Use the permission system with the ACTUAL claim status (explicit claims only)
   const {
     canReact,
     canRespond,
@@ -115,7 +119,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isBusinessUser,
     isCustomerBeingReviewed,
     isReviewAuthor,
-    isReviewClaimed: isReviewActuallyClaimed, // Use ACTUAL claim status from database
+    isReviewClaimed: isReviewActuallyClaimed, // Use explicit claim status
     hasSubscription,
     isUnlocked,
   });
@@ -160,6 +164,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const handleSimpleClaimConfirm = async () => {
     const success = await claimReview(review.id);
     if (success) {
+      setIsExplicitlyClaimed(true); // Mark as explicitly claimed
       setShowSimpleClaimDialog(false);
       if (onClaimSuccess) {
         onClaimSuccess();
@@ -175,8 +180,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const enhancedCustomerInfo = {
     ...customerInfo,
     isClaimed: isReviewActuallyClaimed,
-    avatar: review.customerAvatar || '' // Add the missing avatar property
+    avatar: review.customerAvatar || ''
   };
+
+  // Render stars for preview
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <Star
+        key={index}
+        className={`h-4 w-4 text-gray-300`} // All stars are grayed out in preview
+      />
+    ));
+  };
+
+  // Check if user has access to report (subscription or paid access)
+  const canReport = hasSubscription || isUnlocked;
 
   console.log('🎯 Final Render Decisions:', {
     reviewId: review.id,
@@ -186,6 +204,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     businessVerified: finalBusinessVerified,
     businessName: businessDisplayName,
     matchType: review.matchType,
+    canReport,
     CRITICAL_VERIFICATION_FLOW: {
       reviewerVerified: review.reviewerVerified,
       businessProfileVerified: businessProfile?.verified,
@@ -227,6 +246,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         )}
       </div>
 
+      {/* Rating stars - always show grayed out in preview */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="flex">{renderStars(review.rating)}</div>
+        <span className="text-sm text-gray-500">
+          {new Date(review.date).toLocaleDateString()}
+        </span>
+      </div>
+
       <EnhancedReviewContent
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
@@ -264,7 +291,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
       <div className="flex justify-between items-center mt-4">
         <div></div>
-        <ReportReviewButton reviewId={review.id} />
+        {/* Only show report button if user has subscription or paid access */}
+        {canReport && <ReportReviewButton reviewId={review.id} />}
       </div>
 
       <ClaimReviewDialog 
