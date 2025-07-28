@@ -41,9 +41,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   isOneTimeUnlocked,
 }) => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
 
-  const isUnlocked = hasSubscription || isOneTimeUnlocked;
+  // Use subscription status from auth context instead of props
+  const isUnlocked = isSubscribed || isOneTimeUnlocked;
   const canViewFullContent = isUnlocked;
 
   // Use the customer info system
@@ -212,32 +213,28 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 <p className="text-xs text-gray-500 mb-3">
                   Subscribe or purchase one-time access to view the complete review
                 </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleOneTimeAccess}
+                    className="flex-1"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    Unlock Review ($3)
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSubscriptionAccess}
+                    className="flex-1"
+                  >
+                    Subscribe for Unlimited Access
+                  </Button>
+                </div>
               </div>
             </div>
           )}
         </div>
-
-        {/* Action buttons for locked content */}
-        {!canViewFullContent && (
-          <div className="flex gap-2 pt-2 border-t">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleOneTimeAccess}
-              className="flex-1"
-            >
-              <MessageCircle className="h-4 w-4 mr-1" />
-              Unlock Review ($3)
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSubscriptionAccess}
-              className="flex-1"
-            >
-              Subscribe for Unlimited Access
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
