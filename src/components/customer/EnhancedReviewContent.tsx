@@ -97,51 +97,36 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
                 </p>
                 
                 <div className="space-y-3">
-                  {/* Claim Button - only show if not claimed and should show claim button */}
-                  {!isReviewClaimed && shouldShowClaimButton && (
-                    <Button
-                      onClick={onClaimClick}
-                      disabled={isClaimingReview}
-                      className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
-                    >
-                      <UserCheck className="h-4 w-4" />
-                      {isClaimingReview ? "Claiming..." : "Claim This Review"}
-                    </Button>
-                  )}
-                  
-                  {/* Subscription Option */}
-                  <Button
-                    onClick={onSubscribeClick}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Crown className="h-4 w-4" />
-                    Subscribe for Unlimited Access
-                  </Button>
-                  
-                  {/* Credit Option */}
-                  <Button
-                    onClick={onUseCreditClick}
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                    disabled={creditBalance < 1}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Use 1 Credit to Unlock
-                    <span className="text-xs text-gray-500">
-                      (Balance: {creditBalance})
-                    </span>
-                  </Button>
-                  
-                  {/* One-time Purchase Option */}
-                  <Button
-                    onClick={onPurchaseClick}
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    One-time Purchase ($3)
-                  </Button>
-                </div>
+                   {/* Credit/Purchase Option */}
+                   {creditBalance > 0 ? (
+                     <Button
+                       onClick={onUseCreditClick}
+                       variant="outline"
+                       className="w-full flex items-center justify-center gap-2"
+                     >
+                       <CreditCard className="h-4 w-4" />
+                       Unlock with 1 Credit
+                     </Button>
+                   ) : (
+                     <Button
+                       onClick={onPurchaseClick}
+                       variant="outline"
+                       className="w-full flex items-center justify-center gap-2"
+                     >
+                       <CreditCard className="h-4 w-4" />
+                       Unlock Review ($3)
+                     </Button>
+                   )}
+                   
+                   {/* Subscription Option */}
+                   <Button
+                     onClick={onSubscribeClick}
+                     className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
+                   >
+                     <Crown className="h-4 w-4" />
+                     Subscribe Now
+                   </Button>
+                 </div>
               </CardContent>
             </Card>
           </div>
