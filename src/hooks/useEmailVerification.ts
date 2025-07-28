@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { sendEmailVerificationCode, verifyEmailCode } from "@/utils/emailUtils";
 
 interface UseEmailVerificationProps {
@@ -108,6 +109,15 @@ export const useEmailVerification = ({
 
       if (result.success && result.isValid) {
         console.log("✅ Account created successfully");
+        
+        // If the edge function returned session data, set it in Supabase auth
+        if (result.session) {
+          console.log("🔐 Setting session from edge function response");
+          await supabase.auth.setSession({
+            access_token: result.session.access_token,
+            refresh_token: result.session.refresh_token
+          });
+        }
         
         toast({
           title: "Account Created!",

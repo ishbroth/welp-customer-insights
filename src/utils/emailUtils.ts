@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmailVerificationRequest {
@@ -56,6 +57,8 @@ export const verifyEmailCode = async (
   isValid: boolean;
   message: string;
   userData?: any;
+  session?: any;
+  user?: any;
 }> => {
   try {
     console.log(`🔍 Verifying email code for: ${email}`);
