@@ -8,7 +8,7 @@ export const useProfileReviewsMatching = () => {
   const categorizeReviews = async (currentUser: any) => {
     console.log("🔍 Categorizing reviews for user:", currentUser?.id);
     
-    // Fetch all reviews with business profile information
+    // Fetch all reviews with business profile information and responses
     const { data: allReviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -18,17 +18,67 @@ export const useProfileReviewsMatching = () => {
           avatar,
           verified,
           type
+        ),
+        responses(
+          id,
+          content,
+          created_at,
+          author_id
         )
       `)
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
+
 
     if (error) {
       console.error("❌ Error fetching reviews:", error);
       return [];
     }
 
-    const reviewMatches = (allReviews || []).map(review => {
+    // Process and enrich responses with author names for each review
+    const enrichedReviews = await Promise.all((allReviews || []).map(async (review) => {
+      if (review.responses && review.responses.length > 0) {
+        // Get author profiles for responses
+        const authorIds = review.responses.map((r: any) => r.author_id).filter(Boolean);
+        
+        if (authorIds.length > 0) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, name, first_name, last_name, type')
+            .in('id', authorIds);
+
+          // Enrich responses with author names
+          review.responses = review.responses.map((resp: any) => {
+            const profile = profileData?.find(p => p.id === resp.author_id);
+            
+            let authorName = 'User';
+            if (profile) {
+              if (profile.name && profile.name.trim()) {
+                authorName = profile.name;
+              } else if (profile.first_name || profile.last_name) {
+                const firstName = profile.first_name || '';
+                const lastName = profile.last_name || '';
+                authorName = `${firstName} ${lastName}`.trim();
+              } else if (profile.type) {
+                authorName = profile.type === 'business' ? 'Business' : 'Customer';
+              }
+            }
+
+            return {
+              id: resp.id,
+              content: resp.content,
+              created_at: resp.created_at,
+              author_id: resp.author_id,
+              authorName
+            };
+          });
+        }
+      }
+      
+      return review;
+    }));
+
+    const reviewMatches = (enrichedReviews || []).map(review => {
       // Skip reviews written BY the current user
       if (review.business_id === currentUser?.id) {
         return null;
