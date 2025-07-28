@@ -1,10 +1,11 @@
 
-import React from "react";
-import { Eye, Lock, CreditCard } from "lucide-react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import ReviewReactions from "@/components/ReviewReactions";
-import CustomerReviewResponse from "./CustomerReviewResponse";
-import { getFirstThreeLetters } from "./enhancedReviewCardUtils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Star, Lock, CreditCard, Crown, CheckCircle, UserCheck, UserX } from "lucide-react";
+import ReviewReactions from "./ReviewReactions";
+import ResponsesList from "./ResponsesList";
+import ResponseForm from "./ResponseForm";
 
 interface EnhancedReviewContentProps {
   content: string;
@@ -17,7 +18,7 @@ interface EnhancedReviewContentProps {
   customerId?: string;
   reviewerId: string;
   reviewerName: string;
-  finalBusinessAvatar: string;
+  finalBusinessAvatar?: string;
   reactions: any;
   responses: any[];
   hasSubscription: boolean;
@@ -25,11 +26,14 @@ interface EnhancedReviewContentProps {
   creditBalance: number;
   onPurchaseClick: () => void;
   onClaimClick: () => void;
-  onReactionToggle: (reviewId: string, reactionType: string) => void;
-  onSubmitResponse?: (content: string) => Promise<boolean>;
-  onDeleteResponse?: (responseId: string) => void;
+  onUnclaimClick: () => void;
+  onReactionToggle: (reactionType: string) => void;
+  onSubmitResponse: (content: string) => void;
+  onDeleteResponse: (responseId: string) => void;
   onSubscribeClick: () => void;
   onUseCreditClick: () => void;
+  isReviewClaimed: boolean;
+  isClaimingReview: boolean;
 }
 
 const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
@@ -51,141 +55,153 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   creditBalance,
   onPurchaseClick,
   onClaimClick,
+  onUnclaimClick,
   onReactionToggle,
   onSubmitResponse,
   onDeleteResponse,
   onSubscribeClick,
   onUseCreditClick,
+  isReviewClaimed,
+  isClaimingReview,
 }) => {
-  // CRITICAL: Log what we're about to render
-  console.log('EnhancedReviewContent: RENDERING DECISIONS:', {
-    reviewId,
-    customerId,
-    shouldShowFullReview,
-    shouldShowClaimButton,
-    shouldShowRespondButton,
-    canRespond,
-    creditBalance,
-    hasSubscription,
-    isUnlocked,
-    willShowClaimButton: shouldShowClaimButton,
-    willShowResponseComponent: shouldShowRespondButton,
-    isReviewClaimed: !!customerId
-  });
+  const [showResponseForm, setShowResponseForm] = useState(false);
 
-  if (shouldShowFullReview) {
-    return (
-      <div>
-        <p className="text-gray-700">{content}</p>
-        <div className="mt-2 text-sm text-green-600 flex items-center">
-          <Eye className="h-4 w-4 mr-1" />
-          Full review unlocked
-        </div>
-        
-        {canReact && (
-          <div className="mt-4 border-t pt-3">
-            <div className="text-sm text-gray-500 mb-1">React to this review:</div>
-            <ReviewReactions 
-              reviewId={reviewId}
-              customerId={customerId}
-              businessId={reviewerId}
-              businessName={reviewerName}
-              businessAvatar={finalBusinessAvatar}
-              reactions={reactions}
-              onReactionToggle={onReactionToggle}
-            />
-          </div>
-        )}
-        
-        {/* CRITICAL: Only show response component if review is claimed AND user is the one who claimed it */}
-        {shouldShowRespondButton && (
-          <CustomerReviewResponse 
-            reviewId={reviewId}
-            responses={responses || []}
-            hasSubscription={hasSubscription}
-            isOneTimeUnlocked={isUnlocked && !hasSubscription}
-            hideReplyOption={false}
-            onResponseSubmitted={(response) => {
-              console.log('Response submitted in EnhancedReviewContent:', response);
-            }}
-            reviewAuthorId={reviewerId}
-            onSubmitResponse={onSubmitResponse}
-            onDeleteResponse={onDeleteResponse}
-          />
-        )}
-        
-        {/* CRITICAL: Show claim button for unclaimed reviews */}
-        {shouldShowClaimButton && (
-          <div className="mt-4 flex justify-end">
-            <p className="text-sm text-gray-500">
-              To respond, you must <button 
-                onClick={onClaimClick}
-                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-              >
-                claim this review
-              </button>.
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const getPreviewText = (text: string) => {
+    return text.substring(0, 50) + '...';
+  };
+
+  const handleResponseSubmit = (content: string) => {
+    onSubmitResponse(content);
+    setShowResponseForm(false);
+  };
 
   return (
-    <div>
-      <p className="text-gray-700">{getFirstThreeLetters(content)}</p>
-      <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-        <div className="flex items-center text-gray-600 mb-2">
-          <Lock className="h-4 w-4 mr-2" />
-          <span className="text-sm">Full review locked</span>
-        </div>
-        <p className="text-xs text-gray-500 mb-3">
-          {creditBalance > 0 
-            ? "Use a credit to unlock this review, or subscribe for unlimited access"
-            : "Purchase credits or subscribe to view the complete review"
-          }
-        </p>
-        <div className="flex gap-2">
-          {creditBalance > 0 ? (
+    <div className="space-y-4">
+      {/* Review Content */}
+      <div>
+        {shouldShowFullReview ? (
+          <p className="text-gray-700 leading-relaxed">{content}</p>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-gray-700 leading-relaxed">{getPreviewText(content)}</p>
+            
+            {/* Access Options Card */}
+            <Card className="bg-gray-50 border-gray-200">
+              <CardContent className="p-4">
+                <div className="flex items-center text-gray-600 mb-3">
+                  <Lock className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">Full review content locked</span>
+                </div>
+                
+                <p className="text-xs text-gray-500 mb-4">
+                  Choose an option to unlock this review and view the complete content
+                </p>
+                
+                <div className="space-y-3">
+                  {/* Claim Button - only show if not claimed and should show claim button */}
+                  {!isReviewClaimed && shouldShowClaimButton && (
+                    <Button
+                      onClick={onClaimClick}
+                      disabled={isClaimingReview}
+                      className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+                    >
+                      <UserCheck className="h-4 w-4" />
+                      {isClaimingReview ? "Claiming..." : "Claim This Review"}
+                    </Button>
+                  )}
+                  
+                  {/* Subscription Option */}
+                  <Button
+                    onClick={onSubscribeClick}
+                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Crown className="h-4 w-4" />
+                    Subscribe for Unlimited Access
+                  </Button>
+                  
+                  {/* Credit Option */}
+                  <Button
+                    onClick={onUseCreditClick}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                    disabled={creditBalance < 1}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Use 1 Credit to Unlock
+                    <span className="text-xs text-gray-500">
+                      (Balance: {creditBalance})
+                    </span>
+                  </Button>
+                  
+                  {/* One-time Purchase Option */}
+                  <Button
+                    onClick={onPurchaseClick}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    One-time Purchase ($3)
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Reactions - only show if can react */}
+      {canReact && (
+        <ReviewReactions
+          reactions={reactions}
+          onReactionToggle={onReactionToggle}
+        />
+      )}
+
+      {/* Responses Section */}
+      {responses.length > 0 && (
+        <ResponsesList
+          responses={responses}
+          onDeleteResponse={onDeleteResponse}
+          reviewerName={reviewerName}
+          finalBusinessAvatar={finalBusinessAvatar}
+          reviewerId={reviewerId}
+        />
+      )}
+
+      {/* Response Form - only show if can respond */}
+      {canRespond && (
+        <div className="mt-4">
+          {!showResponseForm ? (
             <Button
+              onClick={() => setShowResponseForm(true)}
+              variant="outline"
               size="sm"
-              onClick={onUseCreditClick}
-              className="flex-1"
+              className="flex items-center gap-2"
             >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Use 1 Credit
+              <span>Respond to this review</span>
             </Button>
           ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onPurchaseClick}
-              className="flex-1"
-            >
-              Buy Credits ($3 each)
-            </Button>
+            <ResponseForm
+              onSubmit={handleResponseSubmit}
+              onCancel={() => setShowResponseForm(false)}
+              reviewId={reviewId}
+              reviewerName={reviewerName}
+            />
           )}
-          <Button
-            size="sm"
-            onClick={onSubscribeClick}
-            className="flex-1"
-          >
-            Subscribe
-          </Button>
         </div>
-      </div>
-      
-      {/* CRITICAL: Show claim button for unclaimed reviews even when locked */}
-      {shouldShowClaimButton && (
-        <div className="mt-4 flex justify-end">
-          <p className="text-sm text-gray-500">
-            To respond, you must <button 
-              onClick={onClaimClick}
-              className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-            >
-              claim this review
-            </button>.
-          </p>
+      )}
+
+      {/* Unclaim Option - only show if review is claimed by current user */}
+      {isReviewClaimed && shouldShowFullReview && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={onUnclaimClick}
+            disabled={isClaimingReview}
+            className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+          >
+            <UserX className="h-4 w-4" />
+            {isClaimingReview ? "Processing..." : "Un-claim this review"}
+          </button>
         </div>
       )}
     </div>

@@ -122,8 +122,81 @@ export const useReviewClaiming = () => {
     }
   };
 
+  const unclaimReview = async (reviewId: string) => {
+    if (!currentUser) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to unclaim this review.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    setIsClaimingReview(true);
+
+    try {
+      console.log('Attempting to unclaim review:', reviewId, 'for user:', currentUser.id);
+      
+      // Check if review is claimed by current user
+      const { data: existingReview, error: checkError } = await supabase
+        .from('reviews')
+        .select('id, customer_id')
+        .eq('id', reviewId)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking review status:', checkError);
+        throw checkError;
+      }
+
+      if (existingReview.customer_id !== currentUser.id) {
+        toast({
+          title: "Cannot unclaim review",
+          description: "You can only unclaim reviews that you have claimed.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Unclaim the review
+      const { error: updateError } = await supabase
+        .from('reviews')
+        .update({
+          customer_id: null,
+          claimed_at: null,
+          claimed_by: null
+        })
+        .eq('id', reviewId)
+        .eq('customer_id', currentUser.id); // Only update if claimed by current user
+
+      if (updateError) {
+        console.error('Error unclaiming review:', updateError);
+        throw updateError;
+      }
+
+      toast({
+        title: "Review unclaimed successfully",
+        description: "This review has been removed from your profile.",
+      });
+
+      console.log('Review unclaimed successfully');
+      return true;
+    } catch (error) {
+      console.error('Error unclaiming review:', error);
+      toast({
+        title: "Error unclaiming review",
+        description: "There was an error unclaiming this review. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsClaimingReview(false);
+    }
+  };
+
   return {
     claimReview,
+    unclaimReview,
     isClaimingReview
   };
 };

@@ -55,13 +55,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { balance, useCredits: useCreditsFn } = useCredits();
-  const { claimReview, isClaimingReview } = useReviewClaiming();
+  const { claimReview, unclaimReview, isClaimingReview } = useReviewClaiming();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
   const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
   
   // Use persistent review access check instead of local state
   const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isUnlocked;
-  const isReviewActuallyClaimed = localIsClaimedState || review.isClaimed === true;
+  const isReviewActuallyClaimed = localIsClaimedState || review.isClaimed === true || !!review.customerId;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
@@ -201,6 +201,29 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
+  // Handle direct unclaim
+  const handleDirectUnclaimClick = async () => {
+    console.log('🎯 Starting direct unclaim process for review:', review.id);
+    const success = await unclaimReview(review.id);
+    
+    if (success) {
+      console.log('🎯 Unclaim successful! Updating UI state immediately...');
+      
+      // Update local state immediately for instant UI feedback
+      setLocalIsClaimedState(false);
+      
+      // Call the parent refresh function after a short delay to ensure database is updated
+      if (onClaimSuccess) {
+        console.log('🎯 Calling onClaimSuccess to refresh parent data...');
+        setTimeout(() => {
+          onClaimSuccess();
+        }, 100);
+      }
+    } else {
+      console.log('🎯 Unclaim failed, not updating UI state');
+    }
+  };
+
   // Enhanced customer info to show claimed status and include avatar
   const enhancedCustomerInfo = {
     ...customerInfo,
@@ -293,11 +316,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         creditBalance={balance}
         onPurchaseClick={handlePurchaseClick}
         onClaimClick={handleDirectClaimClick}
+        onUnclaimClick={handleDirectUnclaimClick}
         onReactionToggle={handleReactionToggle}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
         onSubscribeClick={handleSubscribeClick}
         onUseCreditClick={handleUseCreditClick}
+        isReviewClaimed={isReviewActuallyClaimed}
+        isClaimingReview={isClaimingReview}
       />
 
       <div className="flex justify-between items-center mt-4">
