@@ -111,12 +111,12 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
         {shouldShowClaimButton && (
           <div className="mt-4 flex justify-end">
             <p className="text-sm text-gray-500">
-              To respond to this review, <button 
+              To respond, you must <button 
                 onClick={onClaimClick}
                 className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
               >
                 claim this review
-              </button>!
+              </button>.
             </p>
           </div>
         )}
@@ -158,12 +158,12 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
       {shouldShowClaimButton && (
         <div className="mt-4 flex justify-end">
           <p className="text-sm text-gray-500">
-            To respond to this review, <button 
+            To respond, you must <button 
               onClick={onClaimClick}
               className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
             >
               claim this review
-            </button>!
+            </button>.
           </p>
         </div>
       )}

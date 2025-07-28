@@ -284,18 +284,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onSubscribeClick={handleSubscribeClick}
       />
 
-      {/* Show simple claim link for unclaimed reviews */}
-      {!isReviewActuallyClaimed && isCustomerUser && (
-        <div className="mt-4 text-center">
-          <button
-            onClick={handleSimpleClaimClick}
-            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors text-sm"
-          >
-            Claim this review
-          </button>
-        </div>
-      )}
-
       <div className="flex justify-between items-center mt-4">
         <div></div>
         {/* Only show report button if user has subscription or paid access */}
