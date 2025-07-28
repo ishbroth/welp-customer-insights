@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -12,6 +13,7 @@ import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManage
 import { useReviewClaiming } from "@/hooks/useReviewClaiming";
 import { useAuth } from "@/contexts/auth";
 import { useCredits } from "@/hooks/useCredits";
+import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { useCustomerReviewCardHeader } from "./hooks/useCustomerReviewCardHeader";
 import CustomerReviewCardHeader from "./CustomerReviewCardHeader";
 import { Star } from "lucide-react";
@@ -56,13 +58,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { currentUser } = useAuth();
   const { balance, useCredits: useCreditsFn } = useCredits();
   const { claimReview, isClaimingReview } = useReviewClaiming();
+  const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   const [localIsClaimedState, setLocalIsClaimedState] = useState(review.isClaimed || false);
-  const [localIsUnlockedState, setLocalIsUnlockedState] = useState(isUnlocked);
   
-  // Use local state for immediate UI updates, fallback to original review state
+  // Use persistent review access check instead of local state
+  const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isUnlocked;
   const isReviewActuallyClaimed = localIsClaimedState || review.isClaimed === true;
-  const isReviewActuallyUnlocked = localIsUnlockedState || isUnlocked;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
@@ -70,8 +72,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     originalIsClaimed: review.isClaimed,
     localIsClaimedState,
     isReviewActuallyClaimed,
-    localIsUnlockedState,
     isReviewActuallyUnlocked,
+    isUnlockedViaPersistence: isReviewUnlocked(review.id),
     creditBalance: balance,
     hasSubscription,
     matchType: review.matchType,
@@ -107,7 +109,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     navigate('/customer-benefits');
   };
 
-  // Handle credit usage
+  // Handle credit usage with persistent access
   const handleUseCreditClick = async () => {
     if (balance < 1) {
       toast.error("Insufficient credits");
@@ -116,7 +118,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
     const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
     if (success) {
-      setLocalIsUnlockedState(true);
+      // Add to persistent access immediately
+      addUnlockedReview(review.id);
       toast.success("Review unlocked using 1 credit!");
     }
   };

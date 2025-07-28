@@ -15,7 +15,16 @@ This document serves as a reference for the credit system implementation to prev
   - `processSuccessfulPurchase(sessionId)` - Handle successful Stripe purchases
   - `loadCreditsData()` - Refresh credit data
 
-### 2. Transaction History Display (`TransactionHistoryCard.tsx`)
+### 2. Review Access Hook (`useReviewAccess.ts`)
+- Manages persistent review access after credit usage
+- Queries credit_transactions table to determine unlocked reviews
+- Provides lifetime access to reviews purchased with credits
+- Key functions:
+  - `isReviewUnlocked(reviewId)` - Check if review is unlocked
+  - `addUnlockedReview(reviewId)` - Add review to unlocked set
+  - `refreshAccess()` - Refresh access data from database
+
+### 3. Transaction History Display (`TransactionHistoryCard.tsx`)
 - Shows accurate Stripe charge amounts
 - Properly categorizes transactions:
   - Credit purchases: Multiples of $3 (300 cents)
@@ -23,13 +32,32 @@ This document serves as a reference for the credit system implementation to prev
   - Legacy plan: $250 (25000 cents)
 - Always displays actual Stripe amount, not converted credit amounts
 
-### 3. Credit Usage in Reviews
+### 4. Credit Usage in Reviews
 - EnhancedCustomerReviewCard supports credit-based unlocking
-- `handleUseCreditClick()` properly updates local state
+- `handleUseCreditClick()` updates persistent access via useReviewAccess
 - Star ratings are revealed when reviews are unlocked via credits
 - Toast notifications confirm successful credit usage
+- Access persists across page refreshes and sessions
 
 ## Critical Implementation Details
+
+### Persistent Review Access Logic
+```typescript
+const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
+
+const handleUseCreditClick = async () => {
+  if (balance < 1) {
+    toast.error("Insufficient credits");
+    return;
+  }
+
+  const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
+  if (success) {
+    addUnlockedReview(review.id);
+    toast.success("Review unlocked using 1 credit!");
+  }
+};
+```
 
 ### Transaction Display Logic
 ```typescript
@@ -66,7 +94,7 @@ const handleUseCreditClick = async () => {
 
   const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
   if (success) {
-    setLocalIsUnlockedState(true);
+    addUnlockedReview(review.id);
     toast.success("Review unlocked using 1 credit!");
   }
 };
@@ -101,10 +129,14 @@ const renderStars = (rating: number) => {
 3. Transaction history accuracy
 4. Star rating reveal on unlock
 5. Subscription vs credit differentiation
+6. Persistent access across page refreshes
+7. Persistent access across browser sessions
 
 ## Important Notes
 - Always use actual Stripe amounts in transaction display
-- Local state updates provide immediate UI feedback
+- Credit usage provides immediate UI feedback via addUnlockedReview
 - Credit balance checks prevent overdraft
 - Toast notifications confirm all actions
 - Star ratings are revealed with review content
+- Review access persists indefinitely after credit usage
+- Access is tracked via credit_transactions table with "Unlocked review {reviewId}" format
