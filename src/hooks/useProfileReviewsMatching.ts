@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useReviewMatching } from "@/hooks/useReviewMatching";
-import { doesReviewMatchUser } from "@/utils/reviewMatching";
 
 export const useProfileReviewsMatching = () => {
   const { checkReviewMatch } = useReviewMatching();
@@ -31,17 +30,25 @@ export const useProfileReviewsMatching = () => {
     }
 
     console.log("🎯 Found reviews:", allReviews?.length || 0);
+    
+    // Log which reviews are actually claimed in the database
+    const claimedReviews = allReviews?.filter(review => review.customer_id) || [];
+    console.log("🎯 Reviews claimed in database:", claimedReviews.map(r => ({
+      id: r.id,
+      customer_name: r.customer_name,
+      customer_id: r.customer_id,
+      claimed_at: r.claimed_at
+    })));
 
     const reviewMatches = (allReviews || []).map(review => {
-      // CRITICAL FIX: Don't process reviews written BY the current user as potential matches
+      // Skip reviews written BY the current user
       if (review.business_id === currentUser?.id) {
         console.log("🎯 Skipping review written by current user:", review.id);
-        return null; // Skip reviews written by the current user
+        return null;
       }
 
-      // CRITICAL FIX: Only consider a review "claimed" if customer_id is explicitly set in database
-      // AND it matches the current user's ID
-      const isExplicitlyClaimed = review.customer_id && review.customer_id === currentUser?.id;
+      // Check if review is explicitly claimed in database
+      const isExplicitlyClaimed = review.customer_id === currentUser?.id;
       
       console.log("🎯 Review claim status check:", {
         reviewId: review.id,
@@ -59,8 +66,8 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: review.customer_id, // Keep the actual database value ONLY for claimed reviews
-            customer_id: review.customer_id // Keep database field for consistency
+            customerId: review.customer_id, // Keep the actual database value for claimed reviews
+            isClaimed: true
           },
           matchType: 'claimed' as const,
           matchScore: 100,
@@ -84,9 +91,8 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            // CRITICAL FIX: Explicitly null out both fields for unclaimed reviews
-            customerId: null, // Frontend field - null for unclaimed
-            customer_id: null, // Database field - null for unclaimed to prevent confusion
+            customerId: null, // Explicitly null for unclaimed reviews
+            isClaimed: false // Explicitly false for unclaimed reviews
           },
           matchType,
           matchScore: matchResult.score,

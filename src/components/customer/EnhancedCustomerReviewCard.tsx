@@ -33,6 +33,7 @@ interface EnhancedCustomerReviewCardProps {
     isNewReview?: boolean;
     customer_phone?: string;
     isExplicitlyClaimed?: boolean;
+    isClaimed?: boolean;
   };
   isUnlocked: boolean;
   hasSubscription: boolean;
@@ -53,23 +54,21 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const { currentUser } = useAuth();
   const { claimReview, isClaimingReview } = useReviewClaiming();
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
-  const [isExplicitlyClaimed, setIsExplicitlyClaimed] = useState(review.isExplicitlyClaimed || false);
+  const [isExplicitlyClaimed, setIsExplicitlyClaimed] = useState(review.isClaimed || false);
   
-  // CRITICAL FIX: Check if review is actually claimed using ONLY the customerId field
-  // This should be null for unclaimed reviews after our fix above
-  const isReviewActuallyClaimed = review.customerId !== null && review.customerId !== undefined;
+  // Use the isClaimed property from the review data to determine claim status
+  const isReviewActuallyClaimed = review.isClaimed === true;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
     customerId: review.customerId,
-    customer_id: review.customer_id,
+    isClaimed: review.isClaimed,
     matchType: review.matchType,
     matchScore: review.matchScore,
     isExplicitlyClaimed,
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
-    isCustomerBeingReviewed: review.customerId === currentUser?.id,
-    IMPORTANT_NOTE: 'Fixed to check only customerId field consistently'
+    IMPORTANT_NOTE: 'Using isClaimed property to determine claim status'
   });
 
   const {
@@ -113,7 +112,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   });
 
-  // CRITICAL: Use the permission system with the ACTUAL claim status
+  // Use the permission system with the ACTUAL claim status
   const {
     canReact,
     canRespond,
@@ -153,7 +152,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     currentUser
   );
 
-  // CRITICAL: Use review.reviewerVerified (from matching logic) as the authoritative verification status
   const finalBusinessVerified = review.reviewerVerified || businessProfile?.verified || false;
   const enhancedBusinessInfo = {
     ...businessInfo,
@@ -173,10 +171,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     
     if (success) {
       console.log('🎯 Claim successful! Updating UI state...');
-      setIsExplicitlyClaimed(true); // Update local state immediately
+      setIsExplicitlyClaimed(true);
       setShowSimpleClaimDialog(false);
       
-      // Trigger parent component refresh
       if (onClaimSuccess) {
         console.log('🎯 Calling onClaimSuccess to refresh parent data...');
         onClaimSuccess();
@@ -207,7 +204,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     ));
   };
 
-  // Check if user has access to report (subscription or paid access)
   const canReport = hasSubscription || isUnlocked;
 
   console.log('🎯 Final Render Decisions:', {
@@ -218,17 +214,12 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     businessVerified: finalBusinessVerified,
     businessName: businessDisplayName,
     matchType: review.matchType,
-    canReport,
-    CRITICAL_VERIFICATION_FLOW: {
-      reviewerVerified: review.reviewerVerified,
-      businessProfileVerified: businessProfile?.verified,
-      finalBusinessVerified
-    }
+    canReport
   });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* CRITICAL: Show match info ONLY for unclaimed reviews */}
+      {/* Show match info ONLY for unclaimed reviews */}
       {!isReviewActuallyClaimed && (
         <ReviewMatchInfo
           matchType={review.matchType || 'potential'}
@@ -253,7 +244,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         />
       </div>
 
-      {/* Rating stars - always show grayed out in preview */}
       <div className="flex items-center gap-2 mb-4">
         <div className="flex">{renderStars(review.rating)}</div>
         <span className="text-sm text-gray-500">
@@ -287,7 +277,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
       <div className="flex justify-between items-center mt-4">
         <div></div>
-        {/* Only show report button if user has subscription or paid access */}
         {canReport && <ReportReviewButton reviewId={review.id} />}
       </div>
 
