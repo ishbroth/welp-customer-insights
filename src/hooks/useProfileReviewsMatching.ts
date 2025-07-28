@@ -90,7 +90,9 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: review.customer_id,
+            customerId: review.customer_id, // CRITICAL: Map customer_id to customerId
+            customerName: review.customer_name,
+            customer_phone: review.customer_phone,
             isClaimed: true
           },
           matchType: 'claimed' as const,
@@ -132,7 +134,9 @@ export const useProfileReviewsMatching = () => {
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
-            customerId: review.customer_id, // Keep the actual database value
+            customerId: review.customer_id, // CRITICAL: Map customer_id to customerId (will be null for unclaimed)
+            customerName: review.customer_name,
+            customer_phone: review.customer_phone,
             isClaimed: false // Only set to true if explicitly claimed by current user
           },
           matchType,
@@ -151,7 +155,12 @@ export const useProfileReviewsMatching = () => {
       claimedCount: reviewMatches.filter(m => m.matchType === 'claimed').length,
       highQualityCount: reviewMatches.filter(m => m.matchType === 'high_quality').length,
       potentialCount: reviewMatches.filter(m => m.matchType === 'potential').length,
-      reviewIds: reviewMatches.map(m => m.review.id)
+      reviewIds: reviewMatches.map(m => m.review.id),
+      CRITICAL_CUSTOMER_IDS: reviewMatches.map(m => ({
+        reviewId: m.review.id,
+        customerId: m.review.customerId,
+        shouldShowAsClaimed: m.review.customerId === currentUser?.id
+      }))
     });
     
     return reviewMatches;
