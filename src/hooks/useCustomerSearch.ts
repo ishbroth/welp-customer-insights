@@ -37,7 +37,8 @@ export const useCustomerSearch = () => {
     console.log("Has search params:", hasSearchParams);
     
     if (!hasSearchParams) {
-      console.log("No search parameters, skipping search");
+      console.log("No search parameters, clearing customers and skipping search");
+      setCustomers([]);
       setIsLoading(false);
       return;
     }
