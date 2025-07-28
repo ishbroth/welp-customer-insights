@@ -19,7 +19,6 @@ import {
   Star
 } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneUtils";
-import { format } from "date-fns";
 
 const Profile: React.FC = () => {
   const { currentUser, loading } = useAuth();
@@ -91,7 +90,7 @@ const Profile: React.FC = () => {
             <CardHeader className="text-center">
               <div className="flex flex-col items-center space-y-4">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={currentUser.avatar_url} alt={currentUser.name} />
+                  <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
                   <AvatarFallback className="text-lg">
                     {getInitials(currentUser.name)}
                   </AvatarFallback>
@@ -108,7 +107,7 @@ const Profile: React.FC = () => {
                        currentUser.type === 'admin' ? 'Admin' : 'Customer'}
                     </Badge>
                     
-                    {currentUser.verified && (
+                    {currentUser.businessInfo?.verified && (
                       <Badge className="bg-green-100 text-green-800 border-green-300">
                         <Award className="h-3 w-3 mr-1" />
                         Verified
@@ -151,7 +150,7 @@ const Profile: React.FC = () => {
               </div>
 
               {/* Address Information */}
-              {(currentUser.address || currentUser.city || currentUser.state || currentUser.zip_code) && (
+              {(currentUser.address || currentUser.city || currentUser.state || currentUser.zipCode) && (
                 <>
                   <Separator />
                   <div className="flex items-start gap-3">
@@ -160,11 +159,11 @@ const Profile: React.FC = () => {
                       <p className="text-sm text-gray-500">Address</p>
                       <div className="font-medium">
                         {currentUser.address && <p>{currentUser.address}</p>}
-                        {(currentUser.city || currentUser.state || currentUser.zip_code) && (
+                        {(currentUser.city || currentUser.state || currentUser.zipCode) && (
                           <p>
                             {currentUser.city}
                             {currentUser.city && currentUser.state && ", "}
-                            {currentUser.state} {currentUser.zip_code}
+                            {currentUser.state} {currentUser.zipCode}
                           </p>
                         )}
                       </div>
@@ -174,7 +173,7 @@ const Profile: React.FC = () => {
               )}
 
               {/* Business Information */}
-              {isBusinessUser && (
+              {isBusinessUser && currentUser.businessInfo && (
                 <>
                   <Separator />
                   <div className="space-y-4">
@@ -184,24 +183,24 @@ const Profile: React.FC = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
-                      {currentUser.business_name && (
+                      {currentUser.businessInfo.business_name && (
                         <div>
                           <p className="text-sm text-gray-500">Business Name</p>
-                          <p className="font-medium">{currentUser.business_name}</p>
+                          <p className="font-medium">{currentUser.businessInfo.business_name}</p>
                         </div>
                       )}
                       
-                      {currentUser.license_number && (
+                      {currentUser.businessInfo.license_number && (
                         <div>
                           <p className="text-sm text-gray-500">License Number</p>
-                          <p className="font-medium">{currentUser.license_number}</p>
+                          <p className="font-medium">{currentUser.businessInfo.license_number}</p>
                         </div>
                       )}
                       
-                      {currentUser.license_type && (
+                      {currentUser.businessInfo.license_type && (
                         <div>
                           <p className="text-sm text-gray-500">License Type</p>
-                          <p className="font-medium capitalize">{currentUser.license_type}</p>
+                          <p className="font-medium capitalize">{currentUser.businessInfo.license_type}</p>
                         </div>
                       )}
                     </div>
@@ -216,7 +215,11 @@ const Profile: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-500">Member Since</p>
                   <p className="font-medium">
-                    {format(new Date(currentUser.created_at), 'MMMM d, yyyy')}
+                    {new Date().toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
                   </p>
                 </div>
               </div>
