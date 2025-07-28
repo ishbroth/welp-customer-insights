@@ -13,7 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,10 +28,18 @@ const Login = () => {
       const result = await login(email, password);
 
       if (result.success) {
-        // Add a small delay to ensure auth state has updated before navigation
-        setTimeout(() => {
-          navigate("/profile");
-        }, 100);
+        // Wait for auth state to update by checking currentUser
+        const checkAuthAndNavigate = () => {
+          if (currentUser) {
+            navigate("/profile");
+          } else {
+            // If user isn't set yet, wait a bit and check again
+            setTimeout(checkAuthAndNavigate, 50);
+          }
+        };
+        
+        // Start checking for auth state update
+        setTimeout(checkAuthAndNavigate, 10);
       } else {
         // Only show error, don't clear fields
         toast.error(result.error || "Login failed");
