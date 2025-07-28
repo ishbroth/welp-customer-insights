@@ -5,11 +5,13 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 interface EmailVerificationCodeInputProps {
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({ 
   value, 
-  onChange 
+  onChange,
+  disabled = false
 }) => {
   const handleClearCode = () => {
     onChange("");
@@ -23,6 +25,7 @@ const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({
           value={value}
           onChange={onChange}
           maxLength={6}
+          disabled={disabled}
         >
           <InputOTPGroup>
             <InputOTPSlot index={0} />
@@ -38,7 +41,7 @@ const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({
         <p className="text-xs text-gray-500">
           Enter the 6-digit code sent to your email
         </p>
-        {value && (
+        {value && !disabled && (
           <button
             type="button"
             onClick={handleClearCode}
