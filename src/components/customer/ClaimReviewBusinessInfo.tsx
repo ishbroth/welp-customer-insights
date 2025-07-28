@@ -18,6 +18,9 @@ interface BusinessProfile {
     website?: string;
     business_category?: string;
     business_subcategory?: string;
+    license_type?: string;
+    license_number?: string;
+    license_state?: string;
   };
 }
 
@@ -70,10 +73,33 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
           {fullBusinessProfile?.business_info?.business_category && (
             <p className="text-sm text-gray-600">{fullBusinessProfile.business_info.business_category}</p>
           )}
+          {fullBusinessProfile?.business_info?.business_subcategory && (
+            <p className="text-sm text-gray-500">{fullBusinessProfile.business_info.business_subcategory}</p>
+          )}
         </div>
       </div>
       
       <div className="space-y-2 ml-15">
+        {/* License Information */}
+        {fullBusinessProfile?.business_info?.license_type && (
+          <div>
+            <span className="font-medium">License Type: </span>
+            <span>{fullBusinessProfile.business_info.license_type}</span>
+          </div>
+        )}
+        {fullBusinessProfile?.business_info?.license_number && (
+          <div>
+            <span className="font-medium">License #: </span>
+            <span>{fullBusinessProfile.business_info.license_number}</span>
+          </div>
+        )}
+        {fullBusinessProfile?.business_info?.license_state && (
+          <div>
+            <span className="font-medium">License State: </span>
+            <span>{fullBusinessProfile.business_info.license_state}</span>
+          </div>
+        )}
+        
         {displayData?.phone && (
           <div>
             <span className="font-medium">Phone: </span>
@@ -100,12 +126,6 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
           <div>
             <span className="font-medium">Website: </span>
             <span className="text-blue-600">{fullBusinessProfile.business_info.website}</span>
-          </div>
-        )}
-        {fullBusinessProfile?.bio && (
-          <div>
-            <span className="font-medium">About: </span>
-            <span>{fullBusinessProfile.bio}</span>
           </div>
         )}
       </div>
