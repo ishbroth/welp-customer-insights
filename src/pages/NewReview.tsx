@@ -8,9 +8,11 @@ import ContentRejectionDialog from "@/components/moderation/ContentRejectionDial
 import DuplicateReviewHandler from "@/components/reviews/DuplicateReviewHandler";
 import ReviewForm from "@/components/reviews/ReviewForm";
 import UploadProgressDialog from "@/components/reviews/UploadProgressDialog";
+import SelfReviewWarning from "@/components/reviews/SelfReviewWarning";
 import { useReviewFormState } from "@/hooks/useReviewFormState";
 import { useReviewSubmission } from "@/hooks/useReviewSubmission";
 import { useDuplicateReviewCheck } from "@/hooks/useDuplicateReviewCheck";
+import { useSelfReviewCheck } from "@/hooks/useSelfReviewCheck";
 
 const NewReview = () => {
   const [searchParams] = useSearchParams();
@@ -24,11 +26,15 @@ const NewReview = () => {
     uploadProgress
   } = useReviewSubmission(formState.isEditing, formState.reviewId);
   const { checkForDuplicateReview, isChecking } = useDuplicateReviewCheck();
+  const { isSelfReview, isCheckingPhone } = useSelfReviewCheck(formState.customerPhone);
 
-  // Removed the redundant useEffect - useReviewFormState already handles URL parameter initialization
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for self-review first
+    if (isSelfReview) {
+      return; // Block submission if it's a self-review
+    }
     
     // Skip duplicate check if we're editing an existing review
     if (!formState.isEditing) {
@@ -76,36 +82,41 @@ const NewReview = () => {
             {formState.isLoading ? (
               <div className="text-center py-10">Loading...</div>
             ) : (
-              <ReviewForm
-                isEditing={formState.isEditing}
-                isSubmitting={isSubmitting}
-                isChecking={isChecking}
-                onSubmit={handleSubmit}
-                customer={formState.customer}
-                isNewCustomer={formState.isNewCustomer}
-                customerFirstName={formState.customerFirstName}
-                setCustomerFirstName={formState.setCustomerFirstName}
-                customerLastName={formState.customerLastName}
-                setCustomerLastName={formState.setCustomerLastName}
-                customerPhone={formState.customerPhone}
-                setCustomerPhone={formState.setCustomerPhone}
-                customerAddress={formState.customerAddress}
-                setCustomerAddress={formState.setCustomerAddress}
-                customerCity={formState.customerCity}
-                setCustomerCity={formState.setCustomerCity}
-                customerState={formState.customerState}
-                setCustomerState={formState.setCustomerState}
-                customerZipCode={formState.customerZipCode}
-                setCustomerZipCode={formState.setCustomerZipCode}
-                rating={formState.rating}
-                setRating={formState.setRating}
-                hoverRating={formState.hoverRating}
-                setHoverRating={formState.setHoverRating}
-                comment={formState.comment}
-                setComment={formState.setComment}
-                photos={formState.photos}
-                setPhotos={formState.setPhotos}
-              />
+              <>
+                {/* Self-Review Warning */}
+                {isSelfReview && <SelfReviewWarning />}
+                
+                <ReviewForm
+                  isEditing={formState.isEditing}
+                  isSubmitting={isSubmitting || isSelfReview}
+                  isChecking={isChecking || isCheckingPhone}
+                  onSubmit={handleSubmit}
+                  customer={formState.customer}
+                  isNewCustomer={formState.isNewCustomer}
+                  customerFirstName={formState.customerFirstName}
+                  setCustomerFirstName={formState.setCustomerFirstName}
+                  customerLastName={formState.customerLastName}
+                  setCustomerLastName={formState.setCustomerLastName}
+                  customerPhone={formState.customerPhone}
+                  setCustomerPhone={formState.setCustomerPhone}
+                  customerAddress={formState.customerAddress}
+                  setCustomerAddress={formState.setCustomerAddress}
+                  customerCity={formState.customerCity}
+                  setCustomerCity={formState.setCustomerCity}
+                  customerState={formState.customerState}
+                  setCustomerState={formState.setCustomerState}
+                  customerZipCode={formState.customerZipCode}
+                  setCustomerZipCode={formState.setCustomerZipCode}
+                  rating={formState.rating}
+                  setRating={formState.setRating}
+                  hoverRating={formState.hoverRating}
+                  setHoverRating={formState.setHoverRating}
+                  comment={formState.comment}
+                  setComment={formState.setComment}
+                  photos={formState.photos}
+                  setPhotos={formState.setPhotos}
+                />
+              </>
             )}
           </Card>
         </div>
