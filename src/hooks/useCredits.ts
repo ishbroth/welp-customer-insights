@@ -70,31 +70,31 @@ export const useCredits = () => {
     }
   };
 
-  const processSuccessfulPurchase = async (creditAmount: number, sessionId?: string) => {
+  const processSuccessfulPurchase = async (sessionId: string) => {
     if (!currentUser) return;
 
     try {
-      console.log("Processing credit purchase:", { creditAmount, sessionId });
+      console.log("Processing successful credit purchase:", { sessionId });
       
-      // Call the database function to update credits
-      const { error } = await supabase.rpc('update_user_credits', {
-        p_user_id: currentUser.id,
-        p_amount: creditAmount,
-        p_type: 'purchase',
-        p_description: `Purchased ${creditAmount} credits`,
-        p_stripe_session_id: sessionId
+      // Call the process-credit-purchase function
+      const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
+        body: { sessionId }
       });
 
       if (error) {
-        console.error("Error updating credits:", error);
-        toast.error("Failed to update credit balance");
-      } else {
-        toast.success(`Successfully purchased ${creditAmount} credits!`);
-        await loadCreditsData(); // Reload data
+        console.error("Error processing credit purchase:", error);
+        toast.error("Failed to process credit purchase");
+        return false;
       }
+
+      console.log("Credit purchase processed successfully:", data);
+      toast.success(data.message || "Credits purchased successfully!");
+      await loadCreditsData(); // Reload data
+      return true;
     } catch (error) {
       console.error("Error in processSuccessfulPurchase:", error);
       toast.error("Failed to process credit purchase");
+      return false;
     }
   };
 

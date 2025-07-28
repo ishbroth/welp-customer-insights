@@ -7,13 +7,57 @@ import { useBillingData } from "@/hooks/useBillingData";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const CreditsBalanceCard = () => {
-  const { balance, isLoading, loadCreditsData } = useCredits();
+  const { balance, isLoading, loadCreditsData, processSuccessfulPurchase } = useCredits();
   const { currentUser } = useAuth();
   const { subscriptionData } = useBillingData(currentUser);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const isSubscribed = subscriptionData?.subscribed || false;
+
+  // Handle successful credit purchase from URL parameters
+  useEffect(() => {
+    const handleCreditPurchaseSuccess = async () => {
+      const success = searchParams.get("success");
+      const credits = searchParams.get("credits");
+      const sessionId = searchParams.get("session_id");
+
+      if (success === "true" && credits === "true" && sessionId) {
+        console.log("Processing successful credit purchase", { sessionId });
+        
+        try {
+          // Process the successful purchase
+          const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
+            body: { sessionId }
+          });
+
+          if (error) {
+            console.error("Error processing credit purchase:", error);
+            toast.error("Failed to process credit purchase");
+          } else {
+            console.log("Credit purchase processed successfully:", data);
+            toast.success(data.message || "Credits purchased successfully!");
+            await loadCreditsData(); // Refresh credits data
+          }
+        } catch (error) {
+          console.error("Error processing credit purchase:", error);
+          toast.error("Failed to process credit purchase");
+        }
+
+        // Clean up URL parameters
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete("success");
+        newSearchParams.delete("credits");
+        newSearchParams.delete("session_id");
+        setSearchParams(newSearchParams);
+      }
+    };
+
+    handleCreditPurchaseSuccess();
+  }, [searchParams, setSearchParams, loadCreditsData]);
 
   const handleBuyCredits = async () => {
     console.log("🔥 Buy Credits button clicked!");
@@ -32,7 +76,7 @@ const CreditsBalanceCard = () => {
     try {
       console.log("📞 About to call create-credit-payment function...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
-        body: {} // Remove the specific credit amount and total cost parameters
+        body: {}
       });
 
       console.log("🔍 Function response:", { data, error });
@@ -45,13 +89,9 @@ const CreditsBalanceCard = () => {
 
       if (data?.url) {
         console.log("🚀 Opening Stripe checkout URL:", data.url);
-        const newWindow = window.open(data.url, '_blank');
+        window.open(data.url, '_blank');
         
-        if (newWindow) {
-          toast.success("Stripe checkout opened in new tab!");
-        } else {
-          toast.error("Popup blocked. Please allow popups and try again.");
-        }
+        toast.success("Stripe checkout opened in new tab!");
       } else {
         console.error("❌ No URL returned from payment session");
         console.error("Full response data:", data);

@@ -80,9 +80,10 @@ serve(async (req) => {
     const successParams = new URLSearchParams();
     successParams.append("credits", "true");
     successParams.append("success", "true");
+    successParams.append("session_id", "{CHECKOUT_SESSION_ID}");
     
     const successUrl = `${origin}/profile/billing?${successParams.toString()}`;
-    const cancelUrl = `${origin}/buy-credits?canceled=true`;
+    const cancelUrl = `${origin}/profile/billing?canceled=true`;
     
     // Create a one-time payment checkout session for credits with quantity adjustment enabled
     const session = await stripe.checkout.sessions.create({
@@ -105,7 +106,7 @@ serve(async (req) => {
           }
         },
       ],
-      mode: "payment",
+      mode: "payment", // This is crucial - one-time payment, not subscription
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {

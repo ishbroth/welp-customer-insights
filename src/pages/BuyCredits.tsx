@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,11 +20,53 @@ const BuyCredits = () => {
   const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { balance } = useCredits();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { balance, loadCreditsData } = useCredits();
   const { subscriptionData } = useBillingData(currentUser);
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
   const isSubscribed = subscriptionData?.subscribed || false;
+
+  // Handle successful credit purchase from URL parameters
+  useEffect(() => {
+    const handleCreditPurchaseSuccess = async () => {
+      const success = searchParams.get("success");
+      const credits = searchParams.get("credits");
+      const sessionId = searchParams.get("session_id");
+
+      if (success === "true" && credits === "true" && sessionId) {
+        console.log("Processing successful credit purchase", { sessionId });
+        
+        try {
+          // Process the successful purchase
+          const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
+            body: { sessionId }
+          });
+
+          if (error) {
+            console.error("Error processing credit purchase:", error);
+            toast.error("Failed to process credit purchase");
+          } else {
+            console.log("Credit purchase processed successfully:", data);
+            toast.success(data.message || "Credits purchased successfully!");
+            await loadCreditsData(); // Refresh credits data
+          }
+        } catch (error) {
+          console.error("Error processing credit purchase:", error);
+          toast.error("Failed to process credit purchase");
+        }
+
+        // Clean up URL parameters
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete("success");
+        newSearchParams.delete("credits");
+        newSearchParams.delete("session_id");
+        setSearchParams(newSearchParams);
+      }
+    };
+
+    handleCreditPurchaseSuccess();
+  }, [searchParams, setSearchParams, loadCreditsData]);
 
   // Check if user is authenticated, if not redirect to login
   useEffect(() => {
@@ -85,13 +127,9 @@ const BuyCredits = () => {
 
       if (data?.url) {
         console.log("🚀 Opening Stripe checkout URL:", data.url);
-        const newWindow = window.open(data.url, '_blank');
+        window.open(data.url, '_blank');
         
-        if (newWindow) {
-          toast.success("Stripe checkout opened in new tab!");
-        } else {
-          toast.error("Popup blocked. Please allow popups and try again.");
-        }
+        toast.success("Stripe checkout opened in new tab!");
       } else {
         console.error("❌ No checkout URL received from function");
         console.error("Full response data:", data);
