@@ -2,7 +2,6 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { getBusinessInitials, getCustomerInitials } from "./enhancedReviewCardUtils";
 
 interface BusinessInfo {
   name: string;
@@ -22,7 +21,7 @@ interface CustomerReviewCardHeaderProps {
   reviewDate: string;
   shouldBusinessNameBeClickable: boolean;
   onBusinessNameClick: () => void;
-  onCustomerClick?: () => void;
+  onCustomerClick: () => void;
 }
 
 const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
@@ -33,58 +32,72 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
   onBusinessNameClick,
   onCustomerClick,
 }) => {
+  const getInitials = (name: string) => {
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "U";
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   return (
-    <div className="flex items-center space-x-3 flex-1">
-      {/* Business Avatar */}
-      <Avatar className="h-10 w-10">
-        <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
-        <AvatarFallback className="bg-blue-100 text-blue-800">
-          {getBusinessInitials(businessInfo.name)}
-        </AvatarFallback>
-      </Avatar>
-      
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          {shouldBusinessNameBeClickable ? (
+    <div className="flex items-start justify-between w-full">
+      {/* Business side (left) */}
+      <div className="flex items-center space-x-3">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
+          <AvatarFallback className="bg-blue-100 text-blue-800">
+            {getInitials(businessInfo.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="flex items-center gap-2">
             <h3 
-              className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-              onClick={onBusinessNameClick}
+              className={`font-semibold ${shouldBusinessNameBeClickable ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
+              onClick={shouldBusinessNameBeClickable ? onBusinessNameClick : undefined}
             >
               {businessInfo.name}
             </h3>
-          ) : (
-            <h3 className="font-semibold">{businessInfo.name}</h3>
-          )}
-          {businessInfo.verified && <VerifiedBadge size="sm" />}
-        </div>
-        <p className="text-sm text-gray-500">
-          {new Date(reviewDate).toLocaleDateString()}
-        </p>
-      </div>
-      
-      {/* Customer info on the right */}
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-500">About:</span>
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-            <AvatarFallback className="bg-green-100 text-green-800 text-xs">
-              {getCustomerInitials(customerInfo.name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex items-center gap-1">
-            {onCustomerClick ? (
-              <button
-                onClick={onCustomerClick}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-              >
-                {customerInfo.name}
-              </button>
-            ) : (
-              <span className="text-sm font-medium">{customerInfo.name}</span>
-            )}
-            {customerInfo.isClaimed && <VerifiedBadge size="sm" />}
+            {businessInfo.verified && <VerifiedBadge size="sm" />}
           </div>
+          <p className="text-sm text-gray-500">Business</p>
+        </div>
+      </div>
+
+      {/* Customer side (right) */}
+      <div className="flex items-center space-x-2">
+        <Avatar 
+          className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={onCustomerClick}
+        >
+          <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+          <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+            {getInitials(customerInfo.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="flex items-center gap-2">
+            <h4 
+              className="font-medium text-sm cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={onCustomerClick}
+            >
+              {customerInfo.name}
+            </h4>
+            {/* Only show verified badge for customers if the review is claimed */}
+            {customerInfo.isClaimed && <VerifiedBadge size="xs" />}
+          </div>
+          <p className="text-xs text-gray-500">
+            {formatDate(reviewDate)}
+          </p>
         </div>
       </div>
     </div>

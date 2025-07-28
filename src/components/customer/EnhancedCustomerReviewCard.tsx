@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
@@ -56,9 +57,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const [showSimpleClaimDialog, setShowSimpleClaimDialog] = useState(false);
   const [isExplicitlyClaimed, setIsExplicitlyClaimed] = useState(review.isExplicitlyClaimed || false);
   
-  // CRITICAL: Only consider a review claimed if it was explicitly claimed by the user
-  // NOT just because it matches their profile information
-  const isReviewActuallyClaimed = isExplicitlyClaimed || !!review.customerId;
+  // CRITICAL: Check if review is actually claimed using the database customer_id field
+  const isReviewActuallyClaimed = !!review.customerId;
 
   console.log('🎯 EnhancedCustomerReviewCard: CRITICAL DEBUG', {
     reviewId: review.id,
@@ -69,7 +69,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isReviewActuallyClaimed,
     currentUserId: currentUser?.id,
     isCustomerBeingReviewed: review.customerId === currentUser?.id,
-    IMPORTANT_NOTE: 'isReviewActuallyClaimed is true when explicitly claimed OR has customer_id in database'
+    IMPORTANT_NOTE: 'isReviewActuallyClaimed is true when customer_id exists in database'
   });
 
   const {
@@ -252,7 +252,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           onCustomerClick={handleCustomerClick}
         />
         
-        {/* Show claimed badge next to customer name if review is claimed */}
+        {/* Show claimed badge next to customer name if review is claimed - SINGLE BADGE */}
         {isReviewActuallyClaimed && (
           <div className="flex items-center">
             <VerifiedBadge size="sm" />
