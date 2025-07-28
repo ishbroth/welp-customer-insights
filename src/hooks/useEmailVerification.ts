@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -44,20 +45,9 @@ export const useEmailVerification = ({
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [resendTimer, setResendTimer] = useState(60);
   const [verificationError, setVerificationError] = useState<string | null>(null);
-  const [waitingForAuth, setWaitingForAuth] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session } = useAuth();
-
-  // Watch for session changes after successful verification - only wait for session, not currentUser
-  useEffect(() => {
-    if (waitingForAuth && session) {
-      console.log("🎉 Session available, navigating to profile");
-      setWaitingForAuth(false);
-      navigate("/profile", { replace: true });
-    }
-  }, [waitingForAuth, session, navigate]);
 
   // Validate verification code
   useEffect(() => {
@@ -128,18 +118,17 @@ export const useEmailVerification = ({
         localStorage.removeItem("pendingVerification");
         localStorage.removeItem("businessVerificationSuccess");
 
-        // Set waiting state and let the useEffect handle navigation
-        console.log("⏳ Waiting for session to update...");
-        setWaitingForAuth(true);
-        
-        // Reduced timeout to 1 second since we're only waiting for session
-        setTimeout(() => {
-          if (waitingForAuth) {
-            console.log("🚀 Fallback navigation to profile (session timeout)");
-            setWaitingForAuth(false);
-            navigate("/profile", { replace: true });
-          }
-        }, 1000);
+        // Navigate to email verification success page with user data
+        const params = new URLSearchParams({
+          email,
+          type: accountType,
+          businessName: businessName || name,
+          ...(licenseNumber && { licenseNumber }),
+          ...(licenseType && { licenseType })
+        });
+
+        console.log("🚀 Navigating to email verification success page");
+        navigate(`/email-verification-success?${params.toString()}`, { replace: true });
         
       } else {
         console.error("❌ Verification failed:", result.message);
@@ -189,7 +178,7 @@ export const useEmailVerification = ({
     verificationCode,
     setVerificationCode,
     isCodeValid,
-    isVerifying: isVerifying || waitingForAuth,
+    isVerifying,
     isResending,
     isResendDisabled,
     resendTimer,

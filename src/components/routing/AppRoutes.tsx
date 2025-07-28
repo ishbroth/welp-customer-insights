@@ -12,6 +12,7 @@ import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import VerifyEmail from "@/pages/VerifyEmail";
+import EmailVerificationSuccess from "@/pages/EmailVerificationSuccess";
 import BillingPage from "@/pages/BillingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ProfileEdit from "@/pages/ProfileEdit";
@@ -55,6 +56,7 @@ const AppRoutes = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/email-verification-success" element={<EmailVerificationSuccess />} />
             <Route path="/verification" element={<Verification />} />
             <Route path="/customer-benefits" element={<CustomerBenefits />} />
             <Route path="/customer-verification" element={<CustomerVerification />} />
