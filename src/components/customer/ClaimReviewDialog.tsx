@@ -58,8 +58,14 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
 
   // Use full profile data if available, otherwise fall back to businessData
   const displayData = fullBusinessProfile || businessData;
-  const businessName = displayData?.business_info?.business_name || displayData?.name || businessData?.name || 'Business';
-  const businessAvatar = displayData?.avatar || businessData?.avatar || '';
+  
+  // Handle business name - fullBusinessProfile has business_info, businessData doesn't
+  const businessName = fullBusinessProfile?.business_info?.business_name || 
+                      fullBusinessProfile?.name || 
+                      businessData?.name || 
+                      'Business';
+  
+  const businessAvatar = displayData?.avatar || '';
 
   console.log('ClaimReviewDialog: Rendering with data:', {
     businessId,
