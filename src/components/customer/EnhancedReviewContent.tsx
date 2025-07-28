@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Lock, CreditCard, Crown, CheckCircle, UserCheck, UserX } from "lucide-react";
-import ReviewReactions from "./ReviewReactions";
-import ResponsesList from "./ResponsesList";
-import ResponseForm from "./ResponseForm";
+import ReviewReactions from "@/components/customer/ReviewReactions";
+import ResponsesList from "@/components/customer/ResponsesList";
+import ResponseForm from "@/components/customer/ResponseForm";
 
 interface EnhancedReviewContentProps {
   content: string;

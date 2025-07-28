@@ -317,7 +317,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onPurchaseClick={handlePurchaseClick}
         onClaimClick={handleDirectClaimClick}
         onUnclaimClick={handleDirectUnclaimClick}
-        onReactionToggle={handleReactionToggle}
+        onReactionToggle={(reactionType: string) => handleReactionToggle(review.id, reactionType)}
         onSubmitResponse={handleSubmitResponse}
         onDeleteResponse={handleDeleteResponse}
         onSubscribeClick={handleSubscribeClick}
