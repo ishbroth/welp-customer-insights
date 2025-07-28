@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { verifyBusinessId } from "@/utils/businessVerification";
-import { toast } from "@/hooks/use-toast";
 
 export const useRealTimeLicenseVerification = (
   licenseNumber: string,
@@ -52,14 +51,7 @@ export const useRealTimeLicenseVerification = (
         setVerificationResult(result);
         setIsVerified(result.verified && result.isRealVerification);
 
-        // Show toast for verification failure
-        if (!result.verified) {
-          toast({
-            title: "Verification Status",
-            description: "We were unable to automatically verify your license, please submit a verification request, it's free!",
-            duration: 5000,
-          });
-        }
+        // Removed toast notification - UI feedback is already provided below the input field
       } catch (error) {
         console.error("❌ Real-time license verification error:", error);
         setVerificationResult({
