@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { Star, MessageCircle } from "lucide-react";
+import { Star, MessageCircle, Lock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,7 +46,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const isUnlocked = hasSubscription || isOneTimeUnlocked;
   const canViewFullContent = isUnlocked;
 
-  // Use the new customer info system
+  // Use the customer info system
   const customerInfo = useCustomerInfo({
     customer_name: review.customerName,
     customer_phone: review.customer_phone,
@@ -59,7 +59,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const handleBusinessNameClick = () => {
     if (!canViewFullContent) return;
     
-    // Navigate to business profile
     navigate(`/business-profile/${review.reviewerId}`, {
       state: { 
         readOnly: true,
@@ -72,7 +71,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const handleCustomerNameClick = () => {
     if (!customerInfo.isClaimed || !canViewFullContent) return;
     
-    // Navigate to customer profile
     navigate(`/customer-profile/${review.customerId}`, {
       state: { 
         readOnly: true,
@@ -100,7 +98,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   const handleOneTimeAccess = () => {
     if (!currentUser) {
-      // Store the review ID and access type for post-login redirect
       sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
         reviewId: review.id,
         accessType: 'one-time'
@@ -109,13 +106,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       return;
     }
     
-    // User is logged in, redirect to one-time payment
     navigate(`/subscription?reviewId=${review.id}&type=one-time`);
   };
 
   const handleSubscriptionAccess = () => {
     if (!currentUser) {
-      // Store the review ID and access type for post-login redirect
       sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
         reviewId: review.id,
         accessType: 'subscription'
@@ -124,14 +119,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       return;
     }
     
-    // User is logged in, redirect to subscription
     navigate('/subscription');
   };
 
-  console.log('ReviewCard: Customer info:', {
-    reviewId: review.id,
-    customerInfo
-  });
+  // Get first few words for preview
+  const getPreviewText = (text: string) => {
+    const words = text.split(' ');
+    return words.slice(0, 6).join(' ') + (words.length > 6 ? '...' : '');
+  };
 
   return (
     <Card className="mb-4">
@@ -165,7 +160,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </div>
           </div>
 
-          {/* Customer info - right side using new component */}
+          {/* Customer info - right side */}
           <div className="text-right">
             <CustomerInfoDisplay
               customerInfo={customerInfo}
@@ -206,10 +201,18 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             <p className="text-gray-700 leading-relaxed">{review.content}</p>
           ) : (
             <div className="relative">
-              <p className="text-gray-400 leading-relaxed blur-sm select-none">
-                {review.content.substring(0, 100)}...
+              <p className="text-gray-700 leading-relaxed">
+                {getPreviewText(review.content)}
               </p>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white"></div>
+              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                <div className="flex items-center text-gray-600 mb-2">
+                  <Lock className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Full review locked</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Subscribe or purchase one-time access to view the complete review
+                </p>
+              </div>
             </div>
           )}
         </div>
