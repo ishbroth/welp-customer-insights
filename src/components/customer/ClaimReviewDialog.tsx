@@ -61,7 +61,7 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   
   // Handle business name - fullBusinessProfile has business_info, businessData doesn't
   const businessName = (fullBusinessProfile?.business_info && 'business_name' in fullBusinessProfile.business_info) 
-                      ? fullBusinessProfile.business_info.business_name
+                      ? String(fullBusinessProfile.business_info.business_name)
                       : fullBusinessProfile?.name || 
                         businessData?.name || 
                         'Business';
