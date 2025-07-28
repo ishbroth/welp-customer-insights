@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -123,10 +122,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     navigate('/subscription');
   };
 
-  // Get first few words for preview
+  // Get first three letters for preview (not words)
   const getPreviewText = (text: string) => {
-    const words = text.split(' ');
-    return words.slice(0, 6).join(' ') + (words.length > 6 ? '...' : '');
+    return text.substring(0, 3) + '...';
   };
 
   return (
@@ -180,16 +178,18 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 <Star
                   key={i}
                   className={`h-4 w-4 ${
-                    i < review.rating
+                    canViewFullContent && i < review.rating
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-gray-300"
                   }`}
                 />
               ))}
             </div>
-            <span className="text-sm text-gray-600">
-              {review.rating}/5
-            </span>
+            {canViewFullContent && (
+              <span className="text-sm text-gray-600">
+                {review.rating}/5
+              </span>
+            )}
           </div>
           <span className="text-sm text-gray-500">
             {formatDate(review.date)}

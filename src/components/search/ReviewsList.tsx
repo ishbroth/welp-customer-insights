@@ -20,9 +20,13 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
       {reviews.map((review, index) => (
         <ReviewCard
           key={`review-${review.id || index}`}
-          review={review}
+          review={{
+            ...review,
+            // Map customer_name to customerName for proper display
+            customerName: review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer'
+          }}
           hasSubscription={hasFullAccess(customerData.id)}
-          isOneTimeUnlocked={false} // For now, we'll set this to false - this would need proper implementation
+          isOneTimeUnlocked={false}
         />
       ))}
     </div>
