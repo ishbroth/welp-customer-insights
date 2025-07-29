@@ -145,6 +145,16 @@ export const useBusinessReviews = () => {
     console.log("🗑️ Attempting to delete review:", reviewId);
     console.log("Current user:", currentUser?.id);
     
+    if (!currentUser) {
+      console.error("❌ No current user found, cannot delete review");
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete reviews.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       // Soft delete the review by setting deleted_at
       const { data, error } = await supabase

@@ -45,6 +45,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   const handleConfirmDelete = () => {
+    console.log("🔥 BusinessReviewCard handleConfirmDelete called with reviewId:", review.id);
+    console.log("🔥 onDelete function:", onDelete);
     onDelete(review.id);
     setShowDeleteDialog(false);
   };
