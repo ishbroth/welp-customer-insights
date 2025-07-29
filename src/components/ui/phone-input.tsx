@@ -1,6 +1,6 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { formatPhoneNumber } from "@/utils/phoneFormatter"
 
 interface PhoneInputProps extends Omit<React.ComponentProps<"input">, 'onChange'> {
   onChange?: (value: string) => void;
@@ -8,40 +8,16 @@ interface PhoneInputProps extends Omit<React.ComponentProps<"input">, 'onChange'
 
 const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ className, onChange, value, ...props }, ref) => {
-    const formatPhoneNumber = (value: string) => {
-      console.log("formatPhoneNumber input:", value);
-      // Remove all non-digits
-      const phoneNumber = value.replace(/\D/g, '');
-      console.log("phoneNumber after cleaning:", phoneNumber);
-      
-      // Format as (XXX) XXX-XXXX
-      let formatted = '';
-      if (phoneNumber.length >= 6) {
-        formatted = `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
-      } else if (phoneNumber.length >= 3) {
-        formatted = `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-      } else if (phoneNumber.length > 0) {
-        formatted = `(${phoneNumber}`;
-      } else {
-        formatted = phoneNumber;
-      }
-      console.log("formatted result:", formatted);
-      return formatted;
-    };
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("handleChange called with:", e.target.value);
       const inputValue = e.target.value;
       const formatted = formatPhoneNumber(inputValue);
       
-      console.log("calling onChange with formatted value:", formatted);
       // Call the original onChange if provided
       onChange?.(formatted);
     };
 
     // Format the initial value if provided
     const formattedValue = value ? formatPhoneNumber(value.toString()) : value;
-    console.log("rendering with value:", formattedValue);
 
     return (
       <input
