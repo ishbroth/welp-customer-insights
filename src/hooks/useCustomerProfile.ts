@@ -56,35 +56,9 @@ export const useCustomerProfile = (customerId: string | undefined) => {
         
         setCustomerProfile(profileData);
         
-        // Get reviews for this customer
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .from('reviews')
-          .select(`
-            id, 
-            rating, 
-            content, 
-            created_at,
-            business_id,
-            profiles!business_id(name)
-          `)
-          .eq('customer_id', customerId)
-          .order('created_at', { ascending: false });
-          
-        if (reviewsError) {
-          throw reviewsError;
-        }
-        
-        // Format the reviews data
-        const formattedReviews = reviewsData ? reviewsData.map(review => ({
-          id: review.id,
-          rating: review.rating,
-          content: review.content,
-          date: review.created_at,
-          reviewerId: review.business_id,
-          reviewerName: review.profiles?.name || "Anonymous Business"
-        })) : [];
-        
-        setCustomerReviews(formattedReviews);
+        // Since customer_id was removed, we can't fetch customer-specific reviews
+        // This functionality would need to be redesigned if needed
+        setCustomerReviews([]);
         
       } catch (error: any) {
         console.error("Error fetching customer profile:", error);
