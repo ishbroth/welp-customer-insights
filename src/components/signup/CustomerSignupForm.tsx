@@ -10,6 +10,7 @@ import VerifyEmailCodeButton from "@/components/verification/VerifyEmailCodeButt
 import ResendEmailCodeButton from "@/components/verification/ResendEmailCodeButton";
 import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
 import { DuplicateCustomerDialog } from "./DuplicateCustomerDialog";
+import { CustomerAddressSection } from "./CustomerAddressSection";
 import { sendEmailVerificationCode } from "@/utils/emailUtils";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
 
@@ -82,6 +83,15 @@ const CustomerSignupForm = () => {
       toast({
         title: "Phone Number Required",
         description: "Phone number is required for account verification.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!address || !city || !state || !zipCode) {
+      toast({
+        title: "Address Required",
+        description: "Please fill in all address fields (street, city, state, and zip code).",
         variant: "destructive"
       });
       return;
@@ -256,55 +266,16 @@ const CustomerSignupForm = () => {
           />
         </div>
 
-        <div>
-          <Label htmlFor="address">Address</Label>
-          <Input
-            id="address"
-            type="text"
-            placeholder="123 Main St"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="welp-input"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              type="text"
-              placeholder="New York"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="welp-input"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="state">State</Label>
-            <Input
-              id="state"
-              type="text"
-              placeholder="NY"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="welp-input"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="zipCode">Zip Code</Label>
-            <Input
-              id="zipCode"
-              type="text"
-              placeholder="10001"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              className="welp-input"
-            />
-          </div>
-        </div>
+        <CustomerAddressSection
+          street={address}
+          setStreet={setAddress}
+          city={city}
+          setCity={setCity}
+          state={state}
+          setState={setState}
+          zipCode={zipCode}
+          setZipCode={setZipCode}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
