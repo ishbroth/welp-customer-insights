@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerDuplicateCheck } from "@/hooks/useCustomerDuplicateCheck";
@@ -245,12 +246,11 @@ const CustomerSignupForm = () => {
 
         <div>
           <Label htmlFor="phone">Phone Number *</Label>
-          <Input
+          <PhoneInput
             id="phone"
-            type="tel"
             placeholder="(555) 123-4567"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(value) => setPhone(value)}
             className="welp-input"
             required
           />
