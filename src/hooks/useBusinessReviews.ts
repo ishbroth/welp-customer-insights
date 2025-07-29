@@ -113,11 +113,7 @@ export const useBusinessReviews = () => {
         zipCode: review.customer_zipcode || "",
         // Store phone in a custom field since Review interface doesn't have it
         phone: review.customer_phone || "",
-        reactions: { 
-          like: ['user1', 'user2'], // Sample data to show counts
-          funny: ['user3'], 
-          ohNo: [] 
-        },
+        reactions: { like: [], funny: [], ohNo: [] }, // Will be replaced by useReactionPersistence
         responses: review.responses || []
       }));
 
