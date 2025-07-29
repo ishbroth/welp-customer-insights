@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Review } from "@/types";
+import { useReviewAssociation } from "@/hooks/useReviewAssociation";
 
 export const useProfileReviewsActions = (
   currentUser: any,
@@ -11,6 +12,7 @@ export const useProfileReviewsActions = (
 ) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createAssociation } = useReviewAssociation();
 
   const handlePurchaseReview = (reviewId: string) => {
     toast({
@@ -41,9 +43,14 @@ export const useProfileReviewsActions = (
     console.log('Delete review:', reviewId);
   };
 
-  // Handle successful claim with proper data refresh
-  const handleClaimSuccess = () => {
+  // Handle successful claim with proper data refresh and create association
+  const handleClaimSuccess = async (reviewId: string) => {
     console.log('🎯 Review claimed successfully in useProfileReviewsActions');
+    
+    // Create the permanent association
+    if (currentUser?.id) {
+      await createAssociation(currentUser.id, reviewId, 'responded');
+    }
     
     // Show success toast
     toast({
@@ -60,12 +67,25 @@ export const useProfileReviewsActions = (
     }
   };
 
+  // Handle successful purchase and create association
+  const handlePurchaseSuccess = async (reviewId: string) => {
+    if (currentUser?.id) {
+      await createAssociation(currentUser.id, reviewId, 'purchased');
+      
+      // Trigger data refresh
+      if (onRefresh) {
+        onRefresh();
+      }
+    }
+  };
+
   return {
     handlePurchaseReview,
     handleReactionToggle,
     handleEditReview,
     handleDeleteReview,
     handleClaimSuccess,
+    handlePurchaseSuccess,
     isReviewUnlocked
   };
 };

@@ -33,20 +33,21 @@ export const useProfileReviewsFetching = () => {
       
       // If user is a customer, use the new matching logic
       if (currentUser.type === "customer") {
-        const reviewMatches = await categorizeReviews(currentUser);
+        const reviewsData = await categorizeReviews(currentUser);
         
-        // Sort reviews: claimed first, then high quality, then potential matches
-        const sortedMatches = reviewMatches.sort((a, b) => {
-          if (a.matchType === 'claimed' && b.matchType !== 'claimed') return -1;
-          if (a.matchType !== 'claimed' && b.matchType === 'claimed') return 1;
-          if (a.matchType === 'high_quality' && b.matchType === 'potential') return -1;
-          if (a.matchType === 'potential' && b.matchType === 'high_quality') return 1;
-          return b.matchScore - a.matchScore;
-        });
+        // Handle both old array format and new object format for backward compatibility
+        let allMatches: any[] = [];
+        if (Array.isArray(reviewsData)) {
+          // Old format - array of matches
+          allMatches = reviewsData;
+        } else {
+          // New format - object with separate arrays
+          allMatches = [...(reviewsData.permanentReviews || []), ...(reviewsData.potentialMatches || [])];
+        }
 
         // Fetch business profiles for each review
         const reviewsWithProfiles = await Promise.all(
-          sortedMatches.map(async (match) => {
+          allMatches.map(async (match) => {
             const review = match.review;
             let businessProfile = null;
 
@@ -69,7 +70,8 @@ export const useProfileReviewsFetching = () => {
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
-              isClaimed: match.matchType === 'claimed'
+              isClaimed: match.matchType === 'claimed',
+              isPermanent: !Array.isArray(reviewsData) && reviewsData.permanentReviews?.some(pr => pr.review.id === review.id) || false
             };
           })
         );
