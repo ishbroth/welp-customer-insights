@@ -79,7 +79,6 @@ export const submitReviewToDatabase = async (
 
   const supabaseReviewData = {
     business_id: businessId,
-    customer_id: customerId,
     rating: reviewData.rating,
     content: reviewData.comment,
     customer_name: fullName,
