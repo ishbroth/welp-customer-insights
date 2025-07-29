@@ -116,12 +116,9 @@ const ProfileReviewsContent = ({
               <div className="border-b pb-2">
                 <h3 className="text-lg font-semibold text-primary">Potential Matches</h3>
                 <p className="text-sm text-muted-foreground">
-                  Reviews that might be about you ({potentialMatches.length})
+                  Purchase access or subscribe to respond to these reviews and link them to your profile. ({potentialMatches.length})
                 </p>
               </div>
-              <ProfileReviewsSections 
-                totalMatchedReviews={potentialMatches.length}
-              />
               {potentialMatches.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
                 <EnhancedCustomerReviewCard
                   key={review.id}
