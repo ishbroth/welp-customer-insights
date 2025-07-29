@@ -134,6 +134,11 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
     console.log('Response submitted:', newResponse);
   };
 
+  const handleSubmitResponse = async (content: string): Promise<boolean> => {
+    // This will use the default submission logic in CustomerReviewResponse
+    return true;
+  };
+
   const handleBusinessNameClick = () => {
     // Only allow navigation if user is subscribed or has unlocked this review
     if (isSubscribed || isUnlocked) {
@@ -244,6 +249,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
             hideReplyOption={false}
             onResponseSubmitted={handleResponseSubmitted}
+            onSubmitResponse={handleSubmitResponse}
             reviewAuthorId={review.reviewerId}
           />
         </div>
