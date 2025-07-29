@@ -37,9 +37,6 @@ export const useProfileReviewsActions = (
     navigate(`/edit-review/${review.id}`);
   };
 
-  const handleDeleteReview = (reviewId: string) => {
-    console.log('Delete review:', reviewId);
-  };
 
   // Handle successful claim with proper data refresh
   const handleClaimSuccess = () => {
@@ -64,7 +61,6 @@ export const useProfileReviewsActions = (
     handlePurchaseReview,
     handleReactionToggle,
     handleEditReview,
-    handleDeleteReview,
     handleClaimSuccess,
     isReviewUnlocked
   };

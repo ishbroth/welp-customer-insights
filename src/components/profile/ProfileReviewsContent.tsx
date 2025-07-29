@@ -9,6 +9,7 @@ import ReviewPagination from "@/components/reviews/ReviewPagination";
 import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
 
 import { useSessionTracking } from "@/hooks/useSessionTracking";
+import { useBusinessReviews } from "@/hooks/useBusinessReviews";
 import { useProfileReviewsData } from "./hooks/useProfileReviewsData";
 import { useProfileReviewsActions } from "./hooks/useProfileReviewsActions";
 import ProfileReviewsSections from "./ProfileReviewsSections";
@@ -29,6 +30,7 @@ const ProfileReviewsContent = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { markReviewAsShown } = useSessionTracking();
+  const { deleteReview } = useBusinessReviews();
 
   const { 
     localReviews, 
@@ -43,7 +45,6 @@ const ProfileReviewsContent = ({
     handlePurchaseReview,
     handleReactionToggle,
     handleEditReview,
-    handleDeleteReview,
     handleClaimSuccess,
     isReviewUnlocked
   } = useProfileReviewsActions(currentUser, hasSubscription, hasOneTimeAccess, onRefresh);
@@ -99,7 +100,7 @@ const ProfileReviewsContent = ({
               review={review}
               hasSubscription={hasSubscription}
               onEdit={handleEditReview}
-              onDelete={handleDeleteReview}
+              onDelete={deleteReview}
               onReactionToggle={handleReactionToggle}
             />
           );
