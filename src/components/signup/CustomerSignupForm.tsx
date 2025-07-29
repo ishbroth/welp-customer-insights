@@ -361,6 +361,7 @@ const CustomerSignupForm = () => {
         onClose={() => setShowDuplicateDialog(false)}
         onContinue={handleContinueWithDuplicate}
         duplicateResult={duplicateResult}
+        onClearDuplicate={() => setDuplicateResult(null)}
       />
     </>
   );

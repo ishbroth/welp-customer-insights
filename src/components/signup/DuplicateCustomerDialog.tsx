@@ -17,17 +17,20 @@ interface DuplicateCustomerDialogProps {
   onClose: () => void;
   onContinue: () => void;
   duplicateResult: DuplicateCheckResult | null;
+  onClearDuplicate?: () => void;
 }
 
 export const DuplicateCustomerDialog = ({
   isOpen,
   onClose,
   onContinue,
-  duplicateResult
+  duplicateResult,
+  onClearDuplicate
 }: DuplicateCustomerDialogProps) => {
   if (!duplicateResult) return null;
 
   const handleSignIn = () => {
+    onClose(); // Close dialog first
     window.location.href = '/login';
   };
 
@@ -43,7 +46,10 @@ export const DuplicateCustomerDialog = ({
         <AlertDialogFooter>
           {!duplicateResult.allowContinue ? (
             <>
-              <AlertDialogCancel onClick={onClose}>
+              <AlertDialogCancel onClick={() => {
+                onClose();
+                onClearDuplicate?.();
+              }}>
                 Use Different Email
               </AlertDialogCancel>
               <AlertDialogAction onClick={handleSignIn}>
