@@ -7,21 +7,19 @@ export const formatPhoneNumber = (phone: string | undefined | null): string => {
   
   // Decode URL-encoded characters first
   const decoded = decodeURIComponent(phone);
-  console.log("📱 Formatting phone - input:", phone, "decoded:", decoded);
   
   // Remove all non-digits
   const cleaned = decoded.replace(/\D/g, '');
-  console.log("📱 Cleaned digits:", cleaned);
   
-  // Only format if we have a 10-digit number
-  if (cleaned.length === 10) {
-    const formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-    console.log("📱 Formatted result:", formatted);
-    return formatted;
+  // Format progressively as user types
+  if (cleaned.length >= 6) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+  } else if (cleaned.length >= 3) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+  } else if (cleaned.length > 0) {
+    return `(${cleaned}`;
   }
   
-  // Return cleaned version if not 10 digits
-  console.log("📱 Not 10 digits, returning cleaned:", cleaned);
   return cleaned;
 };
 

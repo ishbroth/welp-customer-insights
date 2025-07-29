@@ -50,7 +50,7 @@ export const DuplicateCustomerDialog = ({
                 onClose();
                 onClearDuplicate?.();
               }}>
-                Use Different Email
+                Change Entry
               </AlertDialogCancel>
               <AlertDialogAction onClick={handleSignIn}>
                 Sign In Instead
