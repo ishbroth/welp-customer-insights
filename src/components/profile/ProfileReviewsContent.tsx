@@ -30,7 +30,7 @@ const ProfileReviewsContent = ({
   const [currentPage, setCurrentPage] = useState(1);
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { markReviewAsShown } = useSessionTracking();
-  const { deleteReview } = useBusinessReviews();
+  const { deleteReview } = useBusinessReviews(onRefresh);
 
   const { 
     localReviews, 

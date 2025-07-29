@@ -5,7 +5,7 @@ import { Review } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useBusinessReviews = () => {
+export const useBusinessReviews = (onRefresh?: () => void) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const [workingReviews, setWorkingReviews] = useState<Review[]>([]);
@@ -132,13 +132,18 @@ export const useBusinessReviews = () => {
         throw new Error(data?.error || "Failed to delete review");
       }
 
-      // Remove from local state immediately since it's been hard deleted
-      setWorkingReviews(prev => prev.filter(review => review.id !== reviewId));
-      
-      toast({
-        title: "Review deleted",
-        description: "Your review and all associated data have been permanently deleted.",
-      });
+    // Remove from local state immediately since it's been hard deleted
+    setWorkingReviews(prev => prev.filter(review => review.id !== reviewId));
+    
+    toast({
+      title: "Review deleted",
+      description: "Your review and all associated data have been permanently deleted.",
+    });
+    
+    // Trigger data refresh if callback provided
+    if (onRefresh) {
+      onRefresh();
+    }
       
     } catch (error) {
       console.error("Error deleting review:", error);
