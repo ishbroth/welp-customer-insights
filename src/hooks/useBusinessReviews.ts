@@ -103,7 +103,7 @@ export const useBusinessReviews = () => {
   };
 
   const deleteReview = async (reviewId: string) => {
-    console.log("🗑️ Attempting to delete review:", reviewId);
+    console.log("🗑️ Attempting to hard delete review:", reviewId);
     console.log("Current user:", currentUser?.id);
     
     if (!currentUser) {
@@ -117,29 +117,27 @@ export const useBusinessReviews = () => {
     }
     
     try {
-      // Soft delete the review by setting deleted_at
-      const { data, error } = await supabase
-        .from('reviews')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', reviewId)
-        .eq('business_id', currentUser?.id) // Ensure only business owner can delete
-        .select();
+      // Call the edge function to perform hard delete
+      const { data, error } = await supabase.functions.invoke('delete-review', {
+        body: { reviewId }
+      });
 
-      console.log("Delete result:", { data, error });
+      console.log("Delete edge function result:", { data, error });
 
       if (error) {
         throw error;
       }
 
-      if (!data || data.length === 0) {
-        throw new Error("Review not found or you don't have permission to delete it");
+      if (!data?.success) {
+        throw new Error(data?.error || "Failed to delete review");
       }
 
+      // Remove from local state immediately since it's been hard deleted
       setWorkingReviews(prev => prev.filter(review => review.id !== reviewId));
       
       toast({
         title: "Review deleted",
-        description: "Your review has been successfully deleted.",
+        description: "Your review and all associated data have been permanently deleted.",
       });
       
     } catch (error) {
