@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import StarRating from "@/components/StarRating";
 import ReviewReactions from "@/components/ReviewReactions";
-import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useAuth } from "@/contexts/auth";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
@@ -114,15 +114,6 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
                     />
                   </div>
 
-                  {/* Customer review responses component */}
-                  <CustomerReviewResponse 
-                    reviewId={review.id}
-                    responses={review.responses || []}
-                    hasSubscription={isSubscribed}
-                    isOneTimeUnlocked={hasOneTimeAccess(review.id)}
-                    hideReplyOption={!isSubscribed}
-                    reviewAuthorId={review.reviewerId}
-                  />
                 </div>
               );
             };

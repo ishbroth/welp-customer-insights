@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
-import CustomerReviewResponse from "@/components/customer/CustomerReviewResponse";
+
 import { useReactionPersistence } from "@/hooks/useReactionPersistence";
 import { useAuth } from "@/contexts/auth";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
@@ -238,16 +238,6 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             </div>
           )}
           
-          {/* Customer review responses component with proper conversation flow */}
-          <CustomerReviewResponse 
-            reviewId={review.id}
-            responses={review.responses || []}
-            hasSubscription={hasSubscription}
-            isOneTimeUnlocked={isUnlocked && !hasSubscription}
-            hideReplyOption={false}
-            onResponseSubmitted={handleResponseSubmitted}
-            reviewAuthorId={review.reviewerId}
-          />
         </div>
       ) : (
         <div>

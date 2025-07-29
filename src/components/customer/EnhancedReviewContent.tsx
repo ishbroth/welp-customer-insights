@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Lock, CreditCard, Crown, CheckCircle, UserCheck, UserX } from "lucide-react";
 import ReviewReactions from "@/components/customer/ReviewReactions";
-import ResponsesList from "@/components/customer/ResponsesList";
-import ResponseForm from "@/components/customer/ResponseForm";
 
 interface EnhancedReviewContentProps {
   content: string;
@@ -145,43 +143,6 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
         />
       )}
 
-      {/* Responses Section */}
-      {responses.length > 0 && (
-        <ResponsesList
-          responses={responses}
-          onDeleteResponse={onDeleteResponse}
-          reviewerName={reviewerName}
-          finalBusinessAvatar={finalBusinessAvatar}
-          reviewerId={reviewerId}
-          currentUser={currentUser}
-        />
-      )}
-
-      {/* Response Form - only show if can respond and not currently showing form */}
-      {canRespond && !showResponseForm && (
-        <div className="mt-4">
-          <Button
-            onClick={() => setShowResponseForm(true)}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <span>Respond to this review</span>
-          </Button>
-        </div>
-      )}
-      
-      {/* Response Form when active */}
-      {showResponseForm && (
-        <div className="mt-4">
-          <ResponseForm
-            onSubmit={handleResponseSubmit}
-            onCancel={() => setShowResponseForm(false)}
-            reviewId={reviewId}
-            reviewerName={reviewerName}
-          />
-        </div>
-      )}
 
       {/* Unclaim Option - only show if review is claimed by current user */}
       {isReviewClaimed && shouldShowFullReview && (

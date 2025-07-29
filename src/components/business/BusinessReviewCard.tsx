@@ -6,7 +6,7 @@ import StarRating from "@/components/StarRating";
 import BusinessReviewCardContent from "./BusinessReviewCardContent";
 import BusinessReviewCardPhotos from "./BusinessReviewCardPhotos";
 import BusinessReviewCardReactions from "./BusinessReviewCardReactions";
-import BusinessReviewCardResponses from "./BusinessReviewCardResponses";
+
 import BusinessReviewCardActions from "./BusinessReviewCardActions";
 import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { useBusinessReviewCardLogic } from "./useBusinessReviewCardLogic";
@@ -170,10 +170,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           onReactionToggle={onReactionToggle}
         />
 
-        <BusinessReviewCardResponses 
-          review={review}
-          hasSubscription={hasSubscription}
-        />
       </div>
 
       <ReviewDeleteDialog 

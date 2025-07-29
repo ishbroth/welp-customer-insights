@@ -25,8 +25,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
       rating,
       content,
       created_at,
-      business_id,
-      customer_id
+      business_id
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 

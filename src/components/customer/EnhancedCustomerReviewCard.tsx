@@ -6,7 +6,7 @@ import EnhancedReviewContent from "./EnhancedReviewContent";
 import ReportReviewButton from "./ReportReviewButton";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
-import { useCustomerResponseManagement } from "@/hooks/useCustomerResponseManagement";
+
 import { useAuth } from "@/contexts/auth";
 import { useCredits } from "@/hooks/useCredits";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
@@ -105,20 +105,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     isUnlocked: isReviewActuallyUnlocked,
   });
 
-  // Use the customer response management hook
-  const {
-    responses,
-    handleSubmitResponse,
-    handleDeleteResponse,
-    canCustomerRespond
-  } = useCustomerResponseManagement(
-    review.id,
-    review.responses || [],
-    review.reviewerId,
-    (newResponse) => {
-      console.log('New response submitted:', newResponse);
-    }
-  );
 
   const { businessInfo, customerInfo, handleCustomerClick } = useCustomerReviewCardHeader(
     review,
@@ -196,7 +182,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         content={review.content}
         shouldShowFullReview={shouldShowFullReview()}
         canReact={canReact()}
-        canRespond={canRespond() && canCustomerRespond()}
+        canRespond={false}
         shouldShowClaimButton={false}
         shouldShowRespondButton={shouldShowRespondButton()}
         reviewId={review.id}
@@ -205,7 +191,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reviewerName={businessDisplayName}
         finalBusinessAvatar={finalBusinessAvatar}
         reactions={reactions}
-        responses={responses}
+        responses={[]}
         hasSubscription={hasSubscription}
         isUnlocked={isReviewActuallyUnlocked}
         creditBalance={balance}
@@ -214,11 +200,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onClaimClick={() => {}}
         onUnclaimClick={() => {}}
         onReactionToggle={(reactionType: string) => handleReactionToggle(review.id, reactionType)}
-        onSubmitResponse={async (content: string) => {
-          const success = await handleSubmitResponse(content);
-          return success || false;
-        }}
-        onDeleteResponse={handleDeleteResponse}
+        onSubmitResponse={async () => false}
+        onDeleteResponse={() => {}}
         onSubscribeClick={handleSubscribeClick}
         onUseCreditClick={handleUseCreditClick}
         isReviewClaimed={false}

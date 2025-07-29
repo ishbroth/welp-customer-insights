@@ -65,7 +65,7 @@ export const useProfileReviewsFetching = () => {
               // Ensure we have the business avatar from profile
               reviewerAvatar: businessProfile?.avatar || '',
               reviewerName: businessProfile?.name || review.customer_name || 'Business',
-              responses: review.responses || [],
+              responses: [],
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
@@ -90,7 +90,6 @@ export const useProfileReviewsFetching = () => {
           .from('reviews')
           .select(`
             id,
-            customer_id,
             customer_name,
             customer_address,
             customer_city,
@@ -98,7 +97,8 @@ export const useProfileReviewsFetching = () => {
             customer_phone,
             rating,
             content,
-            created_at
+            created_at,
+            business_id
           `)
           .eq('business_id', currentUser.id)
           .order('created_at', { ascending: false });
@@ -110,7 +110,16 @@ export const useProfileReviewsFetching = () => {
 
         // Add business profile data to business reviews
         const reviewsWithBusinessProfile = (businessReviews || []).map(review => ({
-          ...review,
+          id: review.id,
+          rating: review.rating,
+          content: review.content,
+          created_at: review.created_at,
+          customer_name: review.customer_name,
+          customer_address: review.customer_address,
+          customer_city: review.customer_city,
+          customer_zipcode: review.customer_zipcode,
+          customer_phone: review.customer_phone,
+          business_id: review.business_id,
           reviewerAvatar: currentUser.avatar || '',
           reviewerName: currentUser.name || 'Business',
           business_profile: {

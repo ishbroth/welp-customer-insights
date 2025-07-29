@@ -25,7 +25,6 @@ export const useBusinessReviews = () => {
           rating,
           content,
           created_at,
-          customer_id,
           customer_name,
           customer_address,
           customer_city,
@@ -42,59 +41,8 @@ export const useBusinessReviews = () => {
 
       console.log("BusinessReviews: Found reviews:", reviewsData?.length || 0);
 
-      // Fetch responses for each review
-      const reviewsWithResponses = await Promise.all(
-        (reviewsData || []).map(async (review) => {
-          let responses = [];
-
-          try {
-            const { data: responseData, error: responseError } = await supabase
-              .from('responses')
-              .select('id, author_id, content, created_at')
-              .eq('review_id', review.id)
-              .order('created_at', { ascending: true });
-
-            if (!responseError && responseData && responseData.length > 0) {
-              console.log(`BusinessReviews: Found ${responseData.length} responses for review ${review.id}`);
-              
-              // Get author information for each response
-              const authorIds = responseData.map(r => r.author_id).filter(Boolean);
-              
-              if (authorIds.length > 0) {
-                const { data: profileData, error: profileError } = await supabase
-                  .from('profiles')
-                  .select('id, name, first_name, last_name')
-                  .in('id', authorIds);
-
-                if (!profileError && profileData) {
-                  responses = responseData.map((resp: any) => {
-                    const profile = profileData.find(p => p.id === resp.author_id);
-                    const authorName = profile?.name || 
-                                     (profile?.first_name && profile?.last_name 
-                                       ? `${profile.first_name} ${profile.last_name}` 
-                                       : 'Customer');
-
-                    return {
-                      id: resp.id,
-                      authorId: resp.author_id || '',
-                      authorName,
-                      content: resp.content,
-                      createdAt: resp.created_at
-                    };
-                  });
-                }
-              }
-            }
-          } catch (error) {
-            console.error(`Error fetching responses for review ${review.id}:`, error);
-          }
-
-          return {
-            ...review,
-            responses: responses
-          };
-        })
-      );
+      // No responses in this simplified version
+      const reviewsWithResponses = reviewsData || [];
 
       // Format reviews data to match Review type
       const formattedReviews = reviewsWithResponses.map(review => ({
@@ -102,7 +50,7 @@ export const useBusinessReviews = () => {
         reviewerId: currentUser.id,
         reviewerName: currentUser.name || "Anonymous Business",
         reviewerAvatar: currentUser.avatar,
-        customerId: review.customer_id || '',
+        customerId: '',
         customerName: review.customer_name || "Anonymous Customer",
         rating: review.rating,
         content: review.content,
@@ -114,7 +62,7 @@ export const useBusinessReviews = () => {
         // Store phone in a custom field since Review interface doesn't have it
         phone: review.customer_phone || "",
         reactions: { like: [], funny: [], useful: [], ohNo: [] },
-        responses: review.responses || []
+        responses: []
       }));
 
       setWorkingReviews(formattedReviews);

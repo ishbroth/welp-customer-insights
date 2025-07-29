@@ -639,13 +639,10 @@ export type Database = {
       reviews: {
         Row: {
           business_id: string | null
-          claimed_at: string | null
-          claimed_by: string | null
           content: string
           created_at: string
           customer_address: string | null
           customer_city: string | null
-          customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
           customer_zipcode: string | null
@@ -656,13 +653,10 @@ export type Database = {
         }
         Insert: {
           business_id?: string | null
-          claimed_at?: string | null
-          claimed_by?: string | null
           content: string
           created_at?: string
           customer_address?: string | null
           customer_city?: string | null
-          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_zipcode?: string | null
@@ -673,13 +667,10 @@ export type Database = {
         }
         Update: {
           business_id?: string | null
-          claimed_at?: string | null
-          claimed_by?: string | null
           content?: string
           created_at?: string
           customer_address?: string | null
           customer_city?: string | null
-          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           customer_zipcode?: string | null
@@ -692,13 +683,6 @@ export type Database = {
           {
             foreignKeyName: "reviews_business_id_fkey"
             columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_customer_id_fkey"
-            columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

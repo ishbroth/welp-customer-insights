@@ -7,7 +7,7 @@ import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
-import { useSimplifiedResponses } from "@/hooks/useSimplifiedResponses";
+
 import { useSessionTracking } from "@/hooks/useSessionTracking";
 import { useProfileReviewsData } from "./hooks/useProfileReviewsData";
 import { useProfileReviewsActions } from "./hooks/useProfileReviewsActions";
@@ -130,23 +130,12 @@ const ProfileReviewsContent = ({
   );
 };
 
-// Wrapper component for BusinessReviewCard that uses simplified responses
+// Wrapper component for BusinessReviewCard
 const BusinessReviewCardWrapper = ({ review, ...props }: any) => {
-  const reviewWithBusinessInfo = {
-    ...review,
-    reviewerId: review.reviewerId || review.business_id,
-    reviewerName: review.reviewerName || review.business_profile?.name || 'Business'
-  };
-
-  const { data: simplifiedResponses } = useSimplifiedResponses(reviewWithBusinessInfo);
-  
   return (
     <BusinessReviewCard
       {...props}
-      review={{
-        ...review,
-        responses: simplifiedResponses || []
-      }}
+      review={review}
     />
   );
 };
