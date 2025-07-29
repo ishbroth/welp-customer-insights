@@ -25,8 +25,9 @@ const BusinessReviewsList = ({
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3);
 
   const handleEditReview = (review: Review) => {
-    // Navigate to edit page - this would be implemented elsewhere
-    console.log('Edit review:', review.id);
+    // The edit functionality is now handled directly in BusinessReviewCard
+    // This function is no longer needed as each card handles its own edit
+    console.log('Edit review handled by BusinessReviewCard:', review.id);
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
