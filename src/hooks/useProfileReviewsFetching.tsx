@@ -61,7 +61,7 @@ export const useProfileReviewsFetching = () => {
               // Ensure we have the business avatar from profile
               reviewerAvatar: businessProfile?.avatar || '',
               reviewerName: businessProfile?.name || review.customer_name || 'Business',
-              responses: [],
+              responses: review.responses || [],
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
