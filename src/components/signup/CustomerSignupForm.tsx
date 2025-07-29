@@ -36,7 +36,8 @@ const CustomerSignupForm = () => {
     isChecking,
     phoneExists,
     emailExistsCheck,
-    setDuplicateResult
+    setDuplicateResult,
+    handleDismissDuplicate
   } = useCustomerDuplicateCheck(email, phone, firstName, lastName);
 
   // Email verification hook
@@ -361,7 +362,7 @@ const CustomerSignupForm = () => {
         onClose={() => setShowDuplicateDialog(false)}
         onContinue={handleContinueWithDuplicate}
         duplicateResult={duplicateResult}
-        onClearDuplicate={() => setDuplicateResult(null)}
+        onClearDuplicate={handleDismissDuplicate}
       />
     </>
   );

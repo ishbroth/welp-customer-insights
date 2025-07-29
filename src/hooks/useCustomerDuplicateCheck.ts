@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction, checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
@@ -9,6 +8,7 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
   const [isChecking, setIsChecking] = useState(false);
   const [phoneExists, setPhoneExists] = useState(false);
   const [emailExistsCheck, setEmailExistsCheck] = useState(false);
+  const [dismissedDuplicates, setDismissedDuplicates] = useState<Set<string>>(new Set());
 
   // Check phone immediately when it changes using edge function
   useEffect(() => {
@@ -30,7 +30,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
               allowContinue: false
             };
             setDuplicateResult(result);
-            setShowDuplicateDialog(true);
+            
+            // Only show dialog if not previously dismissed
+            if (!dismissedDuplicates.has(phone)) {
+              setShowDuplicateDialog(true);
+            }
           } else {
             // Clear duplicate result if phone doesn't exist and current duplicate is phone-related
             if (duplicateResult?.duplicateType === 'phone') {
@@ -55,10 +59,22 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [phone, duplicateResult?.duplicateType]);
+  }, [phone, duplicateResult?.duplicateType, dismissedDuplicates]);
 
   // Check email immediately when it changes using edge function
   useEffect(() => {
+    // Clear dismissed duplicates when email changes to allow new checks
+    if (email) {
+      setDismissedDuplicates(prev => {
+        const newSet = new Set(prev);
+        // Remove any previously dismissed email duplicates when email changes
+        Array.from(newSet).forEach(key => {
+          if (key.includes('@')) newSet.delete(key);
+        });
+        return newSet;
+      });
+    }
+
     const timeoutId = setTimeout(async () => {
       if (email && email.includes('@')) {
         console.log("=== CUSTOMER EMAIL CHECK VIA EDGE FUNCTION ===");
@@ -77,7 +93,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
               allowContinue: false
             };
             setDuplicateResult(result);
-            setShowDuplicateDialog(true);
+            
+            // Only show dialog if not previously dismissed
+            if (!dismissedDuplicates.has(email)) {
+              setShowDuplicateDialog(true);
+            }
           } else {
             // Clear duplicate result if email doesn't exist and current duplicate is email-related
             if (duplicateResult?.duplicateType === 'email') {
@@ -102,7 +122,7 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [email, duplicateResult?.duplicateType]);
+  }, [email, duplicateResult?.duplicateType, dismissedDuplicates]);
 
   // Enhanced duplicate checking specifically for customer accounts using edge function
   useEffect(() => {
@@ -119,7 +139,12 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
         
         if (result.isDuplicate && !phoneExists && !emailExistsCheck) {
           setDuplicateResult(result);
-          setShowDuplicateDialog(true);
+          
+          // Only show dialog if not previously dismissed
+          const dismissKey = `${email}-${phone}`;
+          if (!dismissedDuplicates.has(dismissKey)) {
+            setShowDuplicateDialog(true);
+          }
         } else if (!result.isDuplicate && !phoneExists && !emailExistsCheck) {
           // Clear duplicate result if comprehensive check finds no duplicates
           setDuplicateResult(null);
@@ -134,7 +159,21 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     }, 1000); // 1 second delay
 
     return () => clearTimeout(timeoutId);
-  }, [email, phone, firstName, lastName, phoneExists, emailExistsCheck]);
+  }, [email, phone, firstName, lastName, phoneExists, emailExistsCheck, dismissedDuplicates]);
+
+  const handleDismissDuplicate = () => {
+    if (duplicateResult?.existingEmail) {
+      setDismissedDuplicates(prev => new Set(prev).add(duplicateResult.existingEmail!));
+    }
+    if (duplicateResult?.existingPhone) {
+      setDismissedDuplicates(prev => new Set(prev).add(duplicateResult.existingPhone!));
+    }
+    // Add combination key for comprehensive checks
+    const dismissKey = `${email}-${phone}`;
+    setDismissedDuplicates(prev => new Set(prev).add(dismissKey));
+    
+    setShowDuplicateDialog(false);
+  };
 
   return {
     duplicateResult,
@@ -143,6 +182,7 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     isChecking,
     phoneExists,
     emailExistsCheck,
-    setDuplicateResult
+    setDuplicateResult,
+    handleDismissDuplicate
   };
 };
