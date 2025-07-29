@@ -9,14 +9,17 @@ import { useProfileReviewsMatching } from "./useProfileReviewsMatching.ts";
 
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const [customerReviews, setCustomerReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { categorizeReviews } = useProfileReviewsMatching();
 
   const fetchCustomerReviews = async () => {
-    if (!currentUser) {
-      setIsLoading(false);
+    // Don't fetch if auth is still loading or user is not available
+    if (authLoading || !currentUser) {
+      console.log("⏳ Skipping review fetch - auth loading:", authLoading, "currentUser:", !!currentUser);
+      setIsLoading(authLoading);
       return;
     }
 
@@ -24,6 +27,7 @@ export const useProfileReviewsFetching = () => {
     
     try {
       console.log("=== FETCHING REVIEWS FOR USER ===");
+      console.log("Auth loading:", authLoading);
       console.log("User type:", currentUser.type);
       console.log("User ID:", currentUser.id);
       
@@ -129,9 +133,39 @@ export const useProfileReviewsFetching = () => {
     }
   };
 
+  // Enhanced useEffect with proper authentication state handling
   useEffect(() => {
-    fetchCustomerReviews();
-  }, [currentUser]);
+    console.log("🔄 useEffect triggered - authLoading:", authLoading, "currentUser:", !!currentUser, "isInitialized:", isInitialized);
+    
+    // Case 1: Auth is still loading - wait
+    if (authLoading) {
+      console.log("⏳ Auth still loading, waiting...");
+      setIsLoading(true);
+      return;
+    }
+    
+    // Case 2: Auth completed but no user - clear data and stop loading
+    if (!authLoading && !currentUser) {
+      console.log("❌ No user found after auth completion");
+      setCustomerReviews([]);
+      setIsLoading(false);
+      setIsInitialized(true);
+      return;
+    }
+    
+    // Case 3: User is available and auth is complete
+    if (!authLoading && currentUser) {
+      console.log("✅ User available, fetching reviews");
+      // Only fetch if we haven't initialized yet, or if the user has changed
+      if (!isInitialized) {
+        setIsInitialized(true);
+        fetchCustomerReviews();
+      } else {
+        // User changed, fetch again
+        fetchCustomerReviews();
+      }
+    }
+  }, [currentUser, authLoading]);
 
   return { customerReviews, isLoading, fetchCustomerReviews };
 };
