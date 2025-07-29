@@ -10,7 +10,8 @@ import { useProfileReviewsMatching } from "./useProfileReviewsMatching.ts";
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
   const { currentUser, loading: authLoading } = useAuth();
-  const [customerReviews, setCustomerReviews] = useState<any[]>([]);
+  const [permanentReviews, setPermanentReviews] = useState<any[]>([]);
+  const [potentialMatches, setPotentialMatches] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const { categorizeReviews } = useProfileReviewsMatching();
@@ -35,23 +36,16 @@ export const useProfileReviewsFetching = () => {
       if (currentUser.type === "customer") {
         const reviewsData = await categorizeReviews(currentUser);
         
-        // Handle both old array format and new object format for backward compatibility
-        let allMatches: any[] = [];
-        if (Array.isArray(reviewsData)) {
-          // Old format - array of matches
-          allMatches = reviewsData;
-        } else {
-          // New format - object with separate arrays
-          allMatches = [...(reviewsData.permanentReviews || []), ...(reviewsData.potentialMatches || [])];
-        }
-
-        // Fetch business profiles for each review
-        const reviewsWithProfiles = await Promise.all(
-          allMatches.map(async (match) => {
+        // Handle the structure properly - check if it's the new object format
+        const permanentReviewsArray = (reviewsData as any).permanentReviews || [];
+        const potentialMatchesArray = (reviewsData as any).potentialMatches || [];
+        
+        // Process permanent reviews
+        const processedPermanentReviews = await Promise.all(
+          permanentReviewsArray.map(async (match) => {
             const review = match.review;
             let businessProfile = null;
 
-            // Fetch business profile if business_id exists
             if (review.business_id) {
               try {
                 businessProfile = await fetchBusinessProfile(review.business_id);
@@ -63,7 +57,6 @@ export const useProfileReviewsFetching = () => {
             return {
               ...review,
               business_profile: businessProfile,
-              // Ensure we have the business avatar from profile
               reviewerAvatar: businessProfile?.avatar || '',
               reviewerName: businessProfile?.name || review.customer_name || 'Business',
               responses: review.responses || [],
@@ -71,19 +64,52 @@ export const useProfileReviewsFetching = () => {
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
               isClaimed: match.matchType === 'claimed',
-              isPermanent: !Array.isArray(reviewsData) && reviewsData.permanentReviews?.some(pr => pr.review.id === review.id) || false
+              isPermanent: true
+            };
+          })
+        );
+
+        // Process potential matches
+        const processedPotentialMatches = await Promise.all(
+          potentialMatchesArray.map(async (match) => {
+            const review = match.review;
+            let businessProfile = null;
+
+            if (review.business_id) {
+              try {
+                businessProfile = await fetchBusinessProfile(review.business_id);
+              } catch (error) {
+                console.error(`Error fetching business profile for ${review.business_id}:`, error);
+              }
+            }
+
+            return {
+              ...review,
+              business_profile: businessProfile,
+              reviewerAvatar: businessProfile?.avatar || '',
+              reviewerName: businessProfile?.name || review.customer_name || 'Business',
+              responses: review.responses || [],
+              matchType: match.matchType,
+              matchScore: match.matchScore,
+              matchReasons: match.matchReasons,
+              isClaimed: false,
+              isPermanent: false
             };
           })
         );
 
         // Format the reviews data
-        const formattedReviews = reviewsWithProfiles.map(review => 
+        const formattedPermanentReviews = processedPermanentReviews.map(review => 
+          formatReview(review, currentUser)
+        );
+        const formattedPotentialMatches = processedPotentialMatches.map(review => 
           formatReview(review, currentUser)
         );
 
-        setCustomerReviews(formattedReviews);
+        setPermanentReviews(formattedPermanentReviews);
+        setPotentialMatches(formattedPotentialMatches);
         console.log("=== REVIEW FETCH COMPLETE ===");
-        console.log("Formatted reviews:", formattedReviews);
+        console.log("Permanent reviews:", formattedPermanentReviews.length, "Potential matches:", formattedPotentialMatches.length);
       } else {
         // For business users, use existing logic from the old file
         console.log("Fetching reviews for business account...");
@@ -121,7 +147,9 @@ export const useProfileReviewsFetching = () => {
           }
         }));
 
-        setCustomerReviews(reviewsWithBusinessProfile);
+        // For business users, all reviews go to potential matches (keeping existing behavior)
+        setPermanentReviews([]);
+        setPotentialMatches(reviewsWithBusinessProfile);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -149,7 +177,8 @@ export const useProfileReviewsFetching = () => {
     // Case 2: Auth completed but no user - clear data and stop loading
     if (!authLoading && !currentUser) {
       console.log("❌ No user found after auth completion");
-      setCustomerReviews([]);
+      setPermanentReviews([]);
+      setPotentialMatches([]);
       setIsLoading(false);
       setIsInitialized(true);
       return;
@@ -169,5 +198,5 @@ export const useProfileReviewsFetching = () => {
     }
   }, [currentUser, authLoading]);
 
-  return { customerReviews, isLoading, fetchCustomerReviews };
+  return { permanentReviews, potentialMatches, isLoading, fetchCustomerReviews };
 };

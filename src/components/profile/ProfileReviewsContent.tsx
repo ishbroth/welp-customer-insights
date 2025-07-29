@@ -14,14 +14,16 @@ import { useProfileReviewsActions } from "./hooks/useProfileReviewsActions";
 import ProfileReviewsSections from "./ProfileReviewsSections";
 
 interface ProfileReviewsContentProps {
-  customerReviews: Review[];
+  permanentReviews: Review[];
+  potentialMatches: Review[];
   isLoading: boolean;
   hasSubscription: boolean;
   onRefresh?: () => void;
 }
 
 const ProfileReviewsContent = ({ 
-  customerReviews, 
+  permanentReviews, 
+  potentialMatches,
   isLoading, 
   hasSubscription,
   onRefresh
@@ -30,14 +32,11 @@ const ProfileReviewsContent = ({
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { markReviewAsShown } = useSessionTracking();
 
-  const { 
-    localReviews, 
-    claimedReviews, 
-    unclaimedReviews, 
-    sortedReviews,
-    isCustomerUser,
-    isBusinessUser
-  } = useProfileReviewsData(customerReviews, currentUser);
+  const isCustomerUser = currentUser?.type === "customer";
+  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
+  
+  // For business users, all reviews go to potential matches
+  const allReviews = isBusinessUser ? potentialMatches : [...permanentReviews, ...potentialMatches];
 
   const {
     handlePurchaseReview,
@@ -49,25 +48,20 @@ const ProfileReviewsContent = ({
     isReviewUnlocked
   } = useProfileReviewsActions(currentUser, hasSubscription, hasOneTimeAccess, onRefresh);
 
-  // Separate permanent reviews from potential matches for customer users
-  const permanentReviews = isCustomerUser ? 
-    sortedReviews.filter((review: any) => review.isPermanent || review.isClaimed) : [];
-  const potentialMatches = isCustomerUser ? 
-    sortedReviews.filter((review: any) => !review.isPermanent && !review.isClaimed) : sortedReviews;
-
   // Mark new reviews as shown
   useEffect(() => {
-    customerReviews.forEach(review => {
+    allReviews.forEach(review => {
       const reviewAny = review as any;
       if (reviewAny.isNewReview) {
         markReviewAsShown(review.id);
       }
     });
-  }, [customerReviews, markReviewAsShown]);
+  }, [allReviews, markReviewAsShown]);
 
-  // Pagination settings
+  // Pagination settings - only for potential matches section
   const reviewsPerPage = 5;
-  const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
+  const paginationReviews = isCustomerUser ? potentialMatches : allReviews;
+  const totalPages = Math.ceil(paginationReviews.length / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
 
@@ -86,7 +80,7 @@ const ProfileReviewsContent = ({
     );
   }
 
-  if (sortedReviews.length === 0) {
+  if (permanentReviews.length === 0 && potentialMatches.length === 0) {
     return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
 
@@ -149,7 +143,7 @@ const ProfileReviewsContent = ({
       ) : (
         // Business user view - unchanged
         <>
-          {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
+          {potentialMatches.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
             <BusinessReviewCardWrapper
               key={review.id}
               review={review}
@@ -163,10 +157,10 @@ const ProfileReviewsContent = ({
       )}
       
       {/* Pagination only for potential matches section for customers, all reviews for business */}
-      {(isCustomerUser ? potentialMatches.length : sortedReviews.length) > reviewsPerPage && (
+      {paginationReviews.length > reviewsPerPage && (
         <ReviewPagination 
           currentPage={currentPage}
-          totalPages={isCustomerUser ? Math.ceil(potentialMatches.length / reviewsPerPage) : totalPages}
+          totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
       )}
