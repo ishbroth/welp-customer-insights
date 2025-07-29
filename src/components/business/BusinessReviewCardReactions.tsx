@@ -3,7 +3,6 @@ import React from "react";
 import ReviewReactions from "@/components/ReviewReactions";
 import { Review } from "@/types";
 import { useAuth } from "@/contexts/auth";
-import { useReactionPersistence } from "@/hooks/useReactionPersistence";
 
 interface BusinessReviewCardReactionsProps {
   review: Review;
@@ -15,17 +14,6 @@ const BusinessReviewCardReactions: React.FC<BusinessReviewCardReactionsProps> = 
   onReactionToggle,
 }) => {
   const { currentUser } = useAuth();
-  
-  // Use the same reaction persistence system as customer reviews
-  const { reactions, toggleReaction } = useReactionPersistence(
-    review.id,
-    review.reactions || { like: [], funny: [], ohNo: [] }
-  );
-
-  const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    toggleReaction(reactionType as keyof typeof reactions);
-    onReactionToggle(reviewId, reactionType);
-  };
   
   // Don't show reactions if the current user is the author of the review
   if (!currentUser || currentUser.id === review.reviewerId) {
@@ -41,8 +29,8 @@ const BusinessReviewCardReactions: React.FC<BusinessReviewCardReactionsProps> = 
         businessId={review.reviewerId}
         businessName={review.reviewerName}
         businessAvatar={review.reviewerAvatar}
-        reactions={reactions}
-        onReactionToggle={handleReactionToggle}
+        reactions={review.reactions || { like: [], funny: [], ohNo: [] }}
+        onReactionToggle={onReactionToggle}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
@@ -8,6 +8,7 @@ import BusinessReviewCardPhotos from "./BusinessReviewCardPhotos";
 import BusinessReviewCardReactions from "./BusinessReviewCardReactions";
 import BusinessReviewCardResponses from "./BusinessReviewCardResponses";
 import BusinessReviewCardActions from "./BusinessReviewCardActions";
+import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { useBusinessReviewCardLogic } from "./useBusinessReviewCardLogic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
@@ -16,6 +17,7 @@ interface BusinessReviewCardProps {
   review: Review;
   hasSubscription: boolean;
   onEdit: (review: Review) => void;
+  onDelete: (reviewId: string) => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
 }
 
@@ -23,8 +25,10 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   review,
   hasSubscription,
   onEdit,
+  onDelete,
   onReactionToggle,
 }) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { handleCustomerClick, formatDate, getCustomerInitials } = useBusinessReviewCardLogic(review);
   const navigate = useNavigate();
 
@@ -36,6 +40,16 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     return "U";
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    console.log("🔥 BusinessReviewCard handleConfirmDelete called with reviewId:", review.id);
+    console.log("🔥 onDelete function:", onDelete);
+    onDelete(review.id);
+    setShowDeleteDialog(false);
+  };
 
   const handleEditClick = () => {
     console.log("=== EDIT REVIEW DEBUG ===");
@@ -145,9 +159,10 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
         <BusinessReviewCardPhotos reviewId={review.id} />
 
-        {/* Edit actions */}
+        {/* Move edit/delete actions here, right after the main review content */}
         <BusinessReviewCardActions 
           onEdit={handleEditClick}
+          handleDeleteClick={handleDeleteClick}
         />
 
         <BusinessReviewCardReactions 
@@ -160,6 +175,12 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           hasSubscription={hasSubscription}
         />
       </div>
+
+      <ReviewDeleteDialog 
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 };

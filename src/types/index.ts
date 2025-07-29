@@ -54,7 +54,6 @@ export interface Review {
     like: string[];
     funny: string[];
     ohNo: string[];
-    useful?: string[]; // Keep for backward compatibility but not used in UI
   };
   responses?: ReviewResponse[];
 }

@@ -14,16 +14,14 @@ import { useProfileReviewsActions } from "./hooks/useProfileReviewsActions";
 import ProfileReviewsSections from "./ProfileReviewsSections";
 
 interface ProfileReviewsContentProps {
-  permanentReviews: Review[];
-  potentialMatches: Review[];
+  customerReviews: Review[];
   isLoading: boolean;
   hasSubscription: boolean;
   onRefresh?: () => void;
 }
 
 const ProfileReviewsContent = ({ 
-  permanentReviews, 
-  potentialMatches,
+  customerReviews, 
   isLoading, 
   hasSubscription,
   onRefresh
@@ -32,11 +30,14 @@ const ProfileReviewsContent = ({
   const { currentUser, hasOneTimeAccess } = useAuth();
   const { markReviewAsShown } = useSessionTracking();
 
-  const isCustomerUser = currentUser?.type === "customer";
-  const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
-  
-  // For business users, all reviews go to potential matches
-  const allReviews = isBusinessUser ? potentialMatches : [...permanentReviews, ...potentialMatches];
+  const { 
+    localReviews, 
+    claimedReviews, 
+    unclaimedReviews, 
+    sortedReviews,
+    isCustomerUser,
+    isBusinessUser
+  } = useProfileReviewsData(customerReviews, currentUser);
 
   const {
     handlePurchaseReview,
@@ -44,24 +45,22 @@ const ProfileReviewsContent = ({
     handleEditReview,
     handleDeleteReview,
     handleClaimSuccess,
-    handlePurchaseSuccess,
     isReviewUnlocked
   } = useProfileReviewsActions(currentUser, hasSubscription, hasOneTimeAccess, onRefresh);
 
   // Mark new reviews as shown
   useEffect(() => {
-    allReviews.forEach(review => {
+    customerReviews.forEach(review => {
       const reviewAny = review as any;
       if (reviewAny.isNewReview) {
         markReviewAsShown(review.id);
       }
     });
-  }, [allReviews, markReviewAsShown]);
+  }, [customerReviews, markReviewAsShown]);
 
-  // Pagination settings - only for potential matches section
+  // Pagination settings
   const reviewsPerPage = 5;
-  const paginationReviews = isCustomerUser ? potentialMatches : allReviews;
-  const totalPages = Math.ceil(paginationReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
 
@@ -80,67 +79,21 @@ const ProfileReviewsContent = ({
     );
   }
 
-  if (permanentReviews.length === 0 && potentialMatches.length === 0) {
+  if (sortedReviews.length === 0) {
     return <EmptyReviewsMessage type={currentUser?.type === "customer" ? "customer" : "business"} />;
   }
 
   return (
     <div className="space-y-6">
-      {isCustomerUser ? (
-        <>
-          {/* Permanent Reviews Section - Always visible at top */}
-          {permanentReviews.length > 0 && (
-            <div className="space-y-4">
-              <div className="border-b pb-2">
-                <h3 className="text-lg font-semibold text-primary">Your Reviews</h3>
-                <p className="text-sm text-muted-foreground">
-                  Reviews you've purchased or responded to ({permanentReviews.length})
-                </p>
-              </div>
-              {permanentReviews.map((review) => (
-                <EnhancedCustomerReviewCard
-                  key={review.id}
-                  review={review as any}
-                  isUnlocked={true} // Permanent reviews are always unlocked
-                  onPurchase={handlePurchaseReview}
-                  onReactionToggle={handleReactionToggle}
-                  hasSubscription={hasSubscription}
-                />
-              ))}
-            </div>
-          )}
+      {isCustomerUser && (
+        <ProfileReviewsSections 
+          totalMatchedReviews={sortedReviews.length}
+        />
+      )}
 
-          {/* Potential Matches Section */}
-          {potentialMatches.length > 0 && (
-            <div className="space-y-4">
-              <div className="border-b pb-2">
-                <h3 className="text-lg font-semibold text-primary">Potential Matches</h3>
-                <p className="text-sm text-muted-foreground">
-                  Purchase access or subscribe to respond to these reviews and link them to your profile. ({potentialMatches.length})
-                </p>
-              </div>
-              {potentialMatches.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
-                <EnhancedCustomerReviewCard
-                  key={review.id}
-                  review={review as any}
-                  isUnlocked={isReviewUnlocked(review.id)}
-                  onPurchase={handlePurchaseReview}
-                  onReactionToggle={handleReactionToggle}
-                  hasSubscription={hasSubscription}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Show empty message only if no reviews at all */}
-          {permanentReviews.length === 0 && potentialMatches.length === 0 && (
-            <EmptyReviewsMessage type="customer" />
-          )}
-        </>
-      ) : (
-        // Business user view - unchanged
-        <>
-          {potentialMatches.slice(indexOfFirstReview, indexOfLastReview).map((review) => (
+      {sortedReviews.slice(indexOfFirstReview, indexOfLastReview).map((review) => {        
+        if (isBusinessUser) {
+          return (
             <BusinessReviewCardWrapper
               key={review.id}
               review={review}
@@ -149,12 +102,24 @@ const ProfileReviewsContent = ({
               onDelete={handleDeleteReview}
               onReactionToggle={handleReactionToggle}
             />
-          ))}
-        </>
-      )}
+          );
+        } else if (isCustomerUser) {
+          return (
+            <EnhancedCustomerReviewCard
+              key={review.id}
+              review={review as any}
+              isUnlocked={isReviewUnlocked(review.id)}
+              onPurchase={handlePurchaseReview}
+              onReactionToggle={handleReactionToggle}
+              hasSubscription={hasSubscription}
+            />
+          );
+        }
+        
+        return null;
+      })}
       
-      {/* Pagination only for potential matches section for customers, all reviews for business */}
-      {paginationReviews.length > reviewsPerPage && (
+      {totalPages > 1 && (
         <ReviewPagination 
           currentPage={currentPage}
           totalPages={totalPages}

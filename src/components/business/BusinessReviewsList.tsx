@@ -11,12 +11,14 @@ interface BusinessReviewsListProps {
   setReviews: (reviews: Review[]) => void;
   hasSubscription: boolean;
   isLoading: boolean;
+  onDeleteReview: (reviewId: string) => void;
 }
 
 const BusinessReviewsList = ({ 
   reviews, 
   hasSubscription, 
-  isLoading
+  isLoading,
+  onDeleteReview 
 }: BusinessReviewsListProps) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
 
@@ -48,6 +50,7 @@ const BusinessReviewsList = ({
           review={review}
           hasSubscription={hasSubscription}
           onEdit={handleEditReview}
+          onDelete={onDeleteReview}
           onReactionToggle={handleReactionToggle}
         />
       ))}

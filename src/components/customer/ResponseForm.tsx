@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 interface ResponseFormProps {
-  onSubmit: (content: string) => Promise<boolean>;
+  onSubmit: (content: string) => void;
   onCancel: () => void;
   reviewId: string;
   reviewerName: string;
@@ -18,13 +18,11 @@ const ResponseForm: React.FC<ResponseFormProps> = ({
 }) => {
   const [content, setContent] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (content.trim()) {
-      const success = await onSubmit(content);
-      if (success) {
-        setContent("");
-      }
+      onSubmit(content);
+      setContent("");
     }
   };
 

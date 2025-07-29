@@ -10,8 +10,7 @@ import { useProfileReviewsMatching } from "./useProfileReviewsMatching.ts";
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
   const { currentUser, loading: authLoading } = useAuth();
-  const [permanentReviews, setPermanentReviews] = useState<any[]>([]);
-  const [potentialMatches, setPotentialMatches] = useState<any[]>([]);
+  const [customerReviews, setCustomerReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const { categorizeReviews } = useProfileReviewsMatching();
@@ -34,18 +33,24 @@ export const useProfileReviewsFetching = () => {
       
       // If user is a customer, use the new matching logic
       if (currentUser.type === "customer") {
-        const reviewsData = await categorizeReviews(currentUser);
+        const reviewMatches = await categorizeReviews(currentUser);
         
-        // Handle the structure properly - check if it's the new object format
-        const permanentReviewsArray = (reviewsData as any).permanentReviews || [];
-        const potentialMatchesArray = (reviewsData as any).potentialMatches || [];
-        
-        // Process permanent reviews
-        const processedPermanentReviews = await Promise.all(
-          permanentReviewsArray.map(async (match) => {
+        // Sort reviews: claimed first, then high quality, then potential matches
+        const sortedMatches = reviewMatches.sort((a, b) => {
+          if (a.matchType === 'claimed' && b.matchType !== 'claimed') return -1;
+          if (a.matchType !== 'claimed' && b.matchType === 'claimed') return 1;
+          if (a.matchType === 'high_quality' && b.matchType === 'potential') return -1;
+          if (a.matchType === 'potential' && b.matchType === 'high_quality') return 1;
+          return b.matchScore - a.matchScore;
+        });
+
+        // Fetch business profiles for each review
+        const reviewsWithProfiles = await Promise.all(
+          sortedMatches.map(async (match) => {
             const review = match.review;
             let businessProfile = null;
 
+            // Fetch business profile if business_id exists
             if (review.business_id) {
               try {
                 businessProfile = await fetchBusinessProfile(review.business_id);
@@ -57,59 +62,26 @@ export const useProfileReviewsFetching = () => {
             return {
               ...review,
               business_profile: businessProfile,
+              // Ensure we have the business avatar from profile
               reviewerAvatar: businessProfile?.avatar || '',
               reviewerName: businessProfile?.name || review.customer_name || 'Business',
               responses: review.responses || [],
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
-              isClaimed: match.matchType === 'claimed',
-              isPermanent: true
-            };
-          })
-        );
-
-        // Process potential matches
-        const processedPotentialMatches = await Promise.all(
-          potentialMatchesArray.map(async (match) => {
-            const review = match.review;
-            let businessProfile = null;
-
-            if (review.business_id) {
-              try {
-                businessProfile = await fetchBusinessProfile(review.business_id);
-              } catch (error) {
-                console.error(`Error fetching business profile for ${review.business_id}:`, error);
-              }
-            }
-
-            return {
-              ...review,
-              business_profile: businessProfile,
-              reviewerAvatar: businessProfile?.avatar || '',
-              reviewerName: businessProfile?.name || review.customer_name || 'Business',
-              responses: review.responses || [],
-              matchType: match.matchType,
-              matchScore: match.matchScore,
-              matchReasons: match.matchReasons,
-              isClaimed: false,
-              isPermanent: false
+              isClaimed: match.matchType === 'claimed'
             };
           })
         );
 
         // Format the reviews data
-        const formattedPermanentReviews = processedPermanentReviews.map(review => 
-          formatReview(review, currentUser)
-        );
-        const formattedPotentialMatches = processedPotentialMatches.map(review => 
+        const formattedReviews = reviewsWithProfiles.map(review => 
           formatReview(review, currentUser)
         );
 
-        setPermanentReviews(formattedPermanentReviews);
-        setPotentialMatches(formattedPotentialMatches);
+        setCustomerReviews(formattedReviews);
         console.log("=== REVIEW FETCH COMPLETE ===");
-        console.log("Permanent reviews:", formattedPermanentReviews.length, "Potential matches:", formattedPotentialMatches.length);
+        console.log("Formatted reviews:", formattedReviews);
       } else {
         // For business users, use existing logic from the old file
         console.log("Fetching reviews for business account...");
@@ -147,9 +119,7 @@ export const useProfileReviewsFetching = () => {
           }
         }));
 
-        // For business users, all reviews go to potential matches (keeping existing behavior)
-        setPermanentReviews([]);
-        setPotentialMatches(reviewsWithBusinessProfile);
+        setCustomerReviews(reviewsWithBusinessProfile);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -177,8 +147,7 @@ export const useProfileReviewsFetching = () => {
     // Case 2: Auth completed but no user - clear data and stop loading
     if (!authLoading && !currentUser) {
       console.log("❌ No user found after auth completion");
-      setPermanentReviews([]);
-      setPotentialMatches([]);
+      setCustomerReviews([]);
       setIsLoading(false);
       setIsInitialized(true);
       return;
@@ -198,5 +167,5 @@ export const useProfileReviewsFetching = () => {
     }
   }, [currentUser, authLoading]);
 
-  return { permanentReviews, potentialMatches, isLoading, fetchCustomerReviews };
+  return { customerReviews, isLoading, fetchCustomerReviews };
 };

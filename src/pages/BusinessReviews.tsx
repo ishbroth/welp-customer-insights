@@ -24,7 +24,8 @@ const BusinessReviews = () => {
     workingReviews,
     setWorkingReviews,
     isLoading,
-    fetchBusinessReviews
+    fetchBusinessReviews,
+    deleteReview
   } = useBusinessReviews();
   
   // Update local state when subscription changes
@@ -55,6 +56,7 @@ const BusinessReviews = () => {
               setReviews={setWorkingReviews}
               hasSubscription={hasSubscription}
               isLoading={isLoading}
+              onDeleteReview={deleteReview}
             />
           </div>
         </main>

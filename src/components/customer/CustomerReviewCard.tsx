@@ -26,9 +26,11 @@ interface CustomerReviewCardProps {
   onReactionToggle: (reviewId: string, reactionType: string) => void;
 }
 
-// Helper function to extract the first three letters of a text for locked reviews
-const getFirstThreeLetters = (text: string): string => {
-  return text.substring(0, 3) + '...';
+// Helper function to extract the first three words of a text
+const getFirstThreeWords = (text: string): string => {
+  const words = text.split(' ');
+  const firstThree = words.slice(0, 3).join(' ');
+  return `${firstThree}${words.length > 3 ? '...' : ''}`;
 };
 
 const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
@@ -132,11 +134,6 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   const handleResponseSubmitted = (newResponse: any) => {
     // Handle response submission if needed
     console.log('Response submitted:', newResponse);
-  };
-
-  const handleSubmitResponse = async (content: string): Promise<boolean> => {
-    // This will use the default submission logic in CustomerReviewResponse
-    return true;
   };
 
   const handleBusinessNameClick = () => {
@@ -249,13 +246,12 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             isOneTimeUnlocked={isUnlocked && !hasSubscription}
             hideReplyOption={false}
             onResponseSubmitted={handleResponseSubmitted}
-            onSubmitResponse={handleSubmitResponse}
             reviewAuthorId={review.reviewerId}
           />
         </div>
       ) : (
         <div>
-          <p className="text-gray-700">{getFirstThreeLetters(review.content)}</p>
+          <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div className="flex gap-2">
               <Button 

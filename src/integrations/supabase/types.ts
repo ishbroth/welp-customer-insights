@@ -223,30 +223,6 @@ export type Database = {
           },
         ]
       }
-      customer_review_associations: {
-        Row: {
-          association_type: string
-          created_at: string
-          customer_id: string
-          id: string
-          review_id: string
-        }
-        Insert: {
-          association_type: string
-          created_at?: string
-          customer_id: string
-          id?: string
-          review_id: string
-        }
-        Update: {
-          association_type?: string
-          created_at?: string
-          customer_id?: string
-          id?: string
-          review_id?: string
-        }
-        Relationships: []
-      }
       device_tokens: {
         Row: {
           created_at: string
