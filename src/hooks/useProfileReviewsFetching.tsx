@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { fetchBusinessProfile } from "@/services/businessProfileService";
 import { formatReview } from "@/utils/reviewFormatter";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfileReviewsMatching } from "./useProfileReviewsMatching";
+import { useProfileReviewsMatching } from "./useProfileReviewsMatching.ts";
 
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
