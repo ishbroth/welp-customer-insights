@@ -10,11 +10,15 @@ export const checkPhoneDuplicates = async (
   console.log("Input phone:", phone);
   console.log("Account type:", accountType);
 
+  // Normalize phone number - remove all non-digits
+  const normalizedPhone = phone.replace(/\D/g, '');
+  console.log("Normalized phone for comparison:", normalizedPhone);
+
   // Check for phone duplicates WITHIN the specified account type only
   const { data: phoneProfile, error: phoneError } = await supabaseAdmin
     .from('profiles')
     .select('id, email, name, type, phone, address')
-    .eq('phone', phone)
+    .eq('phone', normalizedPhone)
     .eq('type', accountType)
     .maybeSingle();
 
@@ -25,7 +29,7 @@ export const checkPhoneDuplicates = async (
     return {
       isDuplicate: true,
       duplicateType: 'phone',
-      existingPhone: phone,
+      existingPhone: normalizedPhone,
       allowContinue: false // Block phone duplicates within same account type
     };
   }
