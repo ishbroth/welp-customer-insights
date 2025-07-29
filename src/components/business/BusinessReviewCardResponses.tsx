@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Review } from "@/types";
 import { useBusinessResponseConversation } from "@/hooks/useBusinessResponseConversation";
 import { useArchivedResponses } from "@/hooks/useArchivedResponses";
+import { useCleanupDuplicates } from "@/hooks/responses/useCleanupDuplicates";
 import ResponseItem from "./responses/ResponseItem";
 import ResponseForm from "./responses/ResponseForm";
 
@@ -19,6 +20,7 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { archivedResponse } = useArchivedResponses(review.id);
+  const { removeDuplicateResponses } = useCleanupDuplicates();
 
   const {
     responses,
@@ -33,10 +35,17 @@ const BusinessReviewCardResponses: React.FC<BusinessReviewCardResponsesProps> = 
   // Force refresh responses when component mounts or review changes
   useEffect(() => {
     console.log(`🔄 BusinessReviewCardResponses mounted for review ${review.id}`);
-    if (refetchResponses) {
-      refetchResponses();
-    }
-  }, [review.id, refetchResponses]);
+    
+    const loadAndCleanup = async () => {
+      if (refetchResponses) {
+        await refetchResponses();
+        // Check for and clean up any duplicate responses
+        await removeDuplicateResponses(review.id);
+      }
+    };
+    
+    loadAndCleanup();
+  }, [review.id, refetchResponses, removeDuplicateResponses]);
 
   const onSubmitResponse = async (content: string) => {
     setIsSubmitting(true);

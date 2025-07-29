@@ -96,6 +96,30 @@ export const useCustomerResponseManagement = (
   const handleSubmitResponse = async (content: string) => {
     if (!currentUser || !content.trim()) return;
 
+    // Check if user can respond (prevent consecutive responses)
+    if (!canCustomerRespond()) {
+      toast({
+        title: "Cannot respond",
+        description: "Please wait for the business to respond before sending another message.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Additional check: prevent consecutive responses from the same user
+    const lastTwoResponses = responses.slice(-2);
+    const hasConsecutiveResponses = lastTwoResponses.length >= 2 && 
+      lastTwoResponses.every(r => r.authorId === currentUser.id);
+    
+    if (hasConsecutiveResponses) {
+      toast({
+        title: "Cannot respond",
+        description: "Please wait for the business to respond before sending another message.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       const { data, error } = await supabase
         .from('responses')

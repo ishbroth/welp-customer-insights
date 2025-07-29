@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 
@@ -16,6 +15,44 @@ export const useConversationFlow = ({
   const { currentUser } = useAuth();
 
   const conversationStatus = useMemo(() => {
+    console.log('useConversationFlow: Analyzing conversation flow:', {
+      responsesCount: responses?.length || 0,
+      currentUserId: currentUser?.id,
+      customerId,
+      reviewerId,
+      hasValidIds: !!(customerId && reviewerId)
+    });
+
+    // If there's no current user, they can't respond
+    if (!currentUser) {
+      return {
+        canRespond: false,
+        isMyTurn: false
+      };
+    }
+
+    // If we don't have valid customer and reviewer IDs, prevent responses
+    if (!customerId || !reviewerId) {
+      console.log('❌ Missing customer or reviewer ID, preventing responses');
+      return {
+        canRespond: false,
+        isMyTurn: false
+      };
+    }
+
+    // Determine participation
+    const isCustomerInConversation = currentUser.id === customerId;
+    const isBusinessInConversation = currentUser.id === reviewerId;
+    const canParticipate = isCustomerInConversation || isBusinessInConversation;
+
+    // If user can't participate, they can't respond
+    if (!canParticipate) {
+      return {
+        canRespond: false,
+        isMyTurn: false
+      };
+    }
+
     // If no responses exist, anyone can start the conversation
     if (!responses || responses.length === 0) {
       return {
@@ -28,20 +65,11 @@ export const useConversationFlow = ({
     const lastResponse = responses[responses.length - 1];
     const lastResponseAuthorId = lastResponse?.authorId;
 
-    console.log('useConversationFlow: Analyzing conversation flow:', {
-      responsesCount: responses.length,
-      lastResponseAuthorId,
-      currentUserId: currentUser?.id,
-      customerId,
-      reviewerId,
-      lastResponse
-    });
-
-    // If there's no current user, they can't respond
-    if (!currentUser) {
+    if (!lastResponseAuthorId) {
+      console.log('⚠️ Last response has no author ID');
       return {
-        canRespond: false,
-        isMyTurn: false
+        canRespond: true,
+        isMyTurn: true
       };
     }
 
@@ -49,12 +77,15 @@ export const useConversationFlow = ({
     // If the last response was NOT from the current user, then it's their turn
     const isMyTurn = lastResponseAuthorId !== currentUser.id;
     
-    // They can respond if it's their turn AND they are either the customer or the business owner
-    const isCustomerInConversation = currentUser.id === customerId;
-    const isBusinessInConversation = currentUser.id === reviewerId;
-    const canParticipate = isCustomerInConversation || isBusinessInConversation;
+    // Additional check: prevent multiple consecutive responses from the same user
+    // Count recent responses from the current user
+    const recentUserResponses = responses.filter(r => r.authorId === currentUser.id);
+    const lastTwoResponses = responses.slice(-2);
+    const hasConsecutiveResponses = lastTwoResponses.length >= 2 && 
+      lastTwoResponses.every(r => r.authorId === currentUser.id);
     
-    const canRespond = isMyTurn && canParticipate;
+    // Don't allow response if user just sent consecutive responses
+    const canRespond = isMyTurn && !hasConsecutiveResponses;
 
     console.log('useConversationFlow: Conversation status:', {
       isMyTurn,
@@ -62,7 +93,10 @@ export const useConversationFlow = ({
       canRespond,
       isCustomerInConversation,
       isBusinessInConversation,
-      lastResponseWasFromMe: lastResponseAuthorId === currentUser.id
+      lastResponseWasFromMe: lastResponseAuthorId === currentUser.id,
+      hasConsecutiveResponses: hasConsecutiveResponses || false,
+      recentUserResponsesCount: recentUserResponses?.length || 0,
+      lastResponseAuthorId
     });
 
     return {

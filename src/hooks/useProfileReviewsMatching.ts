@@ -94,6 +94,9 @@ export const useProfileReviewsMatching = () => {
         return {
           review: {
             ...review,
+            // Map database fields to the expected Review interface format
+            reviewerId: review.business_id || '',
+            customerId: review.customer_id || '',
             reviewerName: review.profiles?.name || 'Business',
             reviewerAvatar: review.profiles?.avatar || '',
             reviewerVerified: review.profiles?.verified || false,
