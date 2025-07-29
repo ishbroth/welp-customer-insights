@@ -21,9 +21,9 @@ const ReviewDeleteDialog = ({ open, onOpenChange, onConfirm }: ReviewDeleteDialo
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Response</AlertDialogTitle>
+          <AlertDialogTitle>Delete Review</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete this response? This action cannot be undone.
+            Are you sure you want to delete this review? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

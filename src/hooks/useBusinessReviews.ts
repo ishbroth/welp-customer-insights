@@ -142,15 +142,26 @@ export const useBusinessReviews = () => {
   };
 
   const deleteReview = async (reviewId: string) => {
+    console.log("🗑️ Attempting to delete review:", reviewId);
+    console.log("Current user:", currentUser?.id);
+    
     try {
       // Soft delete the review by setting deleted_at
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('reviews')
         .update({ deleted_at: new Date().toISOString() })
-        .eq('id', reviewId);
+        .eq('id', reviewId)
+        .eq('business_id', currentUser?.id) // Ensure only business owner can delete
+        .select();
+
+      console.log("Delete result:", { data, error });
 
       if (error) {
         throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("Review not found or you don't have permission to delete it");
       }
 
       setWorkingReviews(prev => prev.filter(review => review.id !== reviewId));
@@ -164,7 +175,7 @@ export const useBusinessReviews = () => {
       console.error("Error deleting review:", error);
       toast({
         title: "Error",
-        description: "There was an error deleting the review. Please try again.",
+        description: `There was an error deleting the review: ${error.message}`,
         variant: "destructive"
       });
     }
