@@ -76,7 +76,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     console.log("Navigation params:", Object.fromEntries(params));
     console.log("Full URL:", `/new-review?${params.toString()}`);
     
-    navigate(`/new-review?${params.toString()}`, {
+    navigate(`/review/new?${params.toString()}`, {
       state: { reviewData }
     });
   };
