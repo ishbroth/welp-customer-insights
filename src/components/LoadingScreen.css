@@ -31,26 +31,26 @@
 }
 
 .arm-right {
-  animation: clockwise-highlight 0.5s ease-in-out;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0s;
 }
 
 .arm-bottom-right {
-  animation: clockwise-highlight 0.5s ease-in-out;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.1s;
 }
 
 .arm-bottom-left {
-  animation: clockwise-highlight 0.5s ease-in-out;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.2s;
 }
 
 .arm-top-left {
-  animation: clockwise-highlight 0.5s ease-in-out;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.3s;
 }
 
 .period {
-  animation: clockwise-highlight 0.5s ease-in-out;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.4s;
 }
