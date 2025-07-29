@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { useReviewAssociation } from "./useReviewAssociation";
 
 interface ReviewAccessState {
   unlockedReviews: Set<string>;
@@ -10,6 +11,7 @@ interface ReviewAccessState {
 
 export const useReviewAccess = () => {
   const { currentUser } = useAuth();
+  const { createAssociation } = useReviewAssociation();
   const [accessState, setAccessState] = useState<ReviewAccessState>({
     unlockedReviews: new Set(),
     isLoading: true
@@ -65,11 +67,17 @@ export const useReviewAccess = () => {
     return accessState.unlockedReviews.has(reviewId);
   };
 
-  const addUnlockedReview = (reviewId: string) => {
+  const addUnlockedReview = async (reviewId: string) => {
     setAccessState(prev => ({
       ...prev,
       unlockedReviews: new Set([...prev.unlockedReviews, reviewId])
     }));
+    
+    // Create permanent association when review is unlocked
+    if (currentUser?.id) {
+      console.log('🎯 Creating permanent association for unlocked review:', reviewId);
+      await createAssociation(currentUser.id, reviewId, 'purchased');
+    }
   };
 
   const refreshAccess = async () => {
