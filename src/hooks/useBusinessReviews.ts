@@ -40,30 +40,43 @@ export const useBusinessReviews = () => {
       }
 
       console.log("BusinessReviews: Found reviews:", reviewsData?.length || 0);
+      console.log("BusinessReviews: Raw data sample:", reviewsData?.[0]);
 
       // No responses in this simplified version
       const reviewsWithResponses = reviewsData || [];
 
       // Format reviews data to match Review type
-      const formattedReviews = reviewsWithResponses.map(review => ({
-        id: review.id,
-        reviewerId: currentUser.id,
-        reviewerName: currentUser.name || "Anonymous Business",
-        reviewerAvatar: currentUser.avatar,
-        customerId: '',
-        customerName: review.customer_name || "Anonymous Customer",
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at,
-        // Map database fields correctly to Review interface
-        address: review.customer_address || "",
-        city: review.customer_city || "",
-        zipCode: review.customer_zipcode || "",
-        // Store phone in a custom field since Review interface doesn't have it
-        phone: review.customer_phone || "",
-        reactions: { like: [], funny: [], useful: [], ohNo: [] },
-        responses: []
-      }));
+      const formattedReviews = reviewsWithResponses.map(review => {
+        console.log("BusinessReviews: Processing review:", {
+          id: review.id,
+          customer_name: review.customer_name,
+          created_at: review.created_at,
+          raw_review: review
+        });
+        
+        return {
+          id: review.id,
+          reviewerId: currentUser.id,
+          reviewerName: currentUser.name || "Anonymous Business",
+          reviewerAvatar: currentUser.avatar,
+          customerId: '', // No longer using customer_id
+          customerName: review.customer_name || "Anonymous Customer",
+          rating: review.rating,
+          content: review.content,
+          date: review.created_at, // Keep original ISO format
+          // Map database fields correctly to Review interface
+          address: review.customer_address || "",
+          city: review.customer_city || "",
+          zipCode: review.customer_zipcode || "",
+          // Store additional customer fields for compatibility
+          customer_address: review.customer_address || "",
+          customer_city: review.customer_city || "",
+          customer_zipcode: review.customer_zipcode || "",
+          customer_phone: review.customer_phone || "",
+          reactions: { like: [], funny: [], useful: [], ohNo: [] },
+          responses: []
+        };
+      });
 
       setWorkingReviews(formattedReviews);
       

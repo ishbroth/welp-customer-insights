@@ -18,12 +18,32 @@ export const useBusinessReviewCardLogic = (review: Review) => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    console.log("formatDate input:", dateString);
+    if (!dateString) {
+      console.log("formatDate: No date string provided");
+      return "Invalid date";
+    }
+    
+    try {
+      const date = new Date(dateString);
+      console.log("formatDate parsed date:", date);
+      
+      if (isNaN(date.getTime())) {
+        console.log("formatDate: Invalid date object");
+        return "Invalid date";
+      }
+      
+      const formatted = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      console.log("formatDate result:", formatted);
+      return formatted;
+    } catch (error) {
+      console.error("formatDate error:", error);
+      return "Invalid date";
+    }
   };
 
   const getCustomerInitials = () => {
