@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,10 +19,14 @@ import {
   Star
 } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneUtils";
+import { processPaymentRefund } from "@/services/subscriptionService";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile: React.FC = () => {
   const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +40,60 @@ const Profile: React.FC = () => {
       navigate("/login");
     }
   }, [currentUser, loading, navigate]);
+
+  // Handle payment success and process refunds
+  useEffect(() => {
+    const handlePaymentSuccess = async () => {
+      const subscribed = searchParams.get('subscribed');
+      const legacy = searchParams.get('legacy');
+      const sessionId = searchParams.get('session_id');
+      
+      if ((subscribed === 'true' || legacy === 'true') && currentUser) {
+        try {
+          if (sessionId) {
+            // Process refund if session_id is available
+            const refundResult = await processPaymentRefund(sessionId);
+            
+            if (refundResult.success && refundResult.creditsConsumed > 0) {
+              toast({
+                title: "Payment Processed Successfully!",
+                description: refundResult.message,
+              });
+            } else {
+              toast({
+                title: "Payment Processed Successfully!",
+                description: legacy === 'true' 
+                  ? "Your legacy plan is now active with lifetime access!"
+                  : "Your subscription is now active!",
+              });
+            }
+          } else {
+            // Fallback for when session_id is not available
+            toast({
+              title: "Payment Processed Successfully!",
+              description: legacy === 'true' 
+                ? "Your legacy plan is now active with lifetime access!"
+                : "Your subscription is now active!",
+            });
+          }
+        } catch (error) {
+          console.error("Error processing payment refund:", error);
+          toast({
+            title: "Payment Successful",
+            description: "Your payment was processed, but there was an issue with credit refunds. Please contact support if needed.",
+            variant: "destructive"
+          });
+        }
+        
+        // Clear the search params
+        setSearchParams({});
+      }
+    };
+
+    if (!loading && currentUser) {
+      handlePaymentSuccess();
+    }
+  }, [searchParams, currentUser, loading, toast, setSearchParams]);
 
   if (isLoading || loading) {
     return (

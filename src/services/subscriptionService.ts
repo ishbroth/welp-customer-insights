@@ -24,6 +24,26 @@ export const openCustomerPortal = async () => {
   }
 };
 
+export const processPaymentRefund = async (sessionId: string) => {
+  try {
+    console.log("Processing payment refund for session:", sessionId);
+    
+    const { data, error } = await supabase.functions.invoke("process-payment-refund", {
+      body: { sessionId }
+    });
+    
+    if (error) {
+      console.error("Error processing payment refund:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Failed to process payment refund:", error);
+    throw error;
+  }
+};
+
 export const handleSubscription = async (
   setIsProcessing: (processing: boolean) => void,
   setIsSubscribed: (subscribed: boolean) => void,
@@ -70,13 +90,13 @@ export const handleSubscription = async (
       
       if (newWindow) {
         const creditValue = creditBalance * 3;
-        const discountMessage = creditBalance > 0 
-          ? ` Your ${creditBalance} credit${creditBalance === 1 ? '' : 's'} ($${creditValue}) ${creditValue >= 11.99 ? 'will cover this month' : 'have been applied as a discount'}.`
+        const refundMessage = creditBalance > 0 
+          ? ` After payment, you'll receive a $${Math.min(creditValue, 11.99).toFixed(2)} refund for your ${creditBalance} credit${creditBalance === 1 ? '' : 's'}.`
           : '';
         
         toast({
           title: "Checkout Opened",
-          description: `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${discountMessage}`,
+          description: `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${refundMessage}`,
         });
       } else {
         toast({
