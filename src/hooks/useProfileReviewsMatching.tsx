@@ -74,8 +74,8 @@ export const useProfileReviewsMatching = () => {
     console.log("Excluding claimed review IDs (claimed by others):", claimedReviewIds);
     
     try {
-      // Get all reviews from database with proper business profile data
-      const { data: allReviews, error } = await supabase
+      // Build query to exclude claimed reviews at database level
+      let query = supabase
         .from('reviews')
         .select(`
           id,
@@ -92,6 +92,14 @@ export const useProfileReviewsMatching = () => {
           profiles!business_id(id, name, avatar, verified)
         `)
         .order('created_at', { ascending: false });
+
+      // Filter out claimed reviews at database level if we have any
+      if (claimedReviewIds.length > 0) {
+        query = query.not('id', 'in', `(${claimedReviewIds.map(id => `"${id}"`).join(',')})`);
+        console.log(`🔍 Database query excluding ${claimedReviewIds.length} claimed review IDs`);
+      }
+
+      const { data: allReviews, error } = await query;
 
       if (error) {
         console.error("Error fetching reviews:", error);
@@ -145,15 +153,9 @@ export const useProfileReviewsMatching = () => {
         };
       });
 
-      // Filter out low-quality matches and reviews claimed by OTHER users
+      // Filter out low-quality matches (claimed reviews already excluded at DB level)
       const filteredReviews = categorizedReviews
         .filter(item => {
-          // Exclude reviews claimed by other users (but keep reviews claimed by current user)
-          if (claimedReviewIds.includes(item.review.id)) {
-            console.log(`🚫 Excluding review ${item.review.id} - claimed by another user`);
-            return false;
-          }
-          
           // Keep high-quality matches and potential matches above threshold
           return item.matchType === 'claimed' || 
                  item.matchType === 'high_quality' || 
