@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Review } from "@/types";
+import { useReviewAccess } from "@/hooks/useReviewAccess";
 
 export const useProfileReviewsActions = (
   currentUser: any,
@@ -11,6 +12,7 @@ export const useProfileReviewsActions = (
 ) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isReviewUnlocked: isCreditUnlocked } = useReviewAccess();
 
   const handlePurchaseReview = (reviewId: string) => {
     toast({
@@ -23,7 +25,10 @@ export const useProfileReviewsActions = (
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
-    return hasOneTimeAccess(reviewId) || hasSubscription;
+    // Only allow access if user has subscription OR has specifically unlocked this review with credits
+    const hasAccess = hasSubscription || isCreditUnlocked(reviewId);
+    console.log(`🔒 Review ${reviewId} access check:`, { hasSubscription, isCreditUnlocked: isCreditUnlocked(reviewId), hasAccess });
+    return hasAccess;
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {

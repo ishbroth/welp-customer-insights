@@ -30,9 +30,16 @@ interface CustomerReview {
 interface CustomerReviewsSectionProps {
   customerReviews: CustomerReview[];
   isLoading: boolean;
+  hasSubscription?: boolean;
+  isReviewUnlocked?: (reviewId: string) => boolean;
 }
 
-const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsSectionProps) => {
+const CustomerReviewsSection = ({ 
+  customerReviews, 
+  isLoading, 
+  hasSubscription = false,
+  isReviewUnlocked = () => false 
+}: CustomerReviewsSectionProps) => {
   const { isSubscribed, hasOneTimeAccess } = useAuth();
 
   const getBusinessInitials = (name: string) => {
@@ -95,9 +102,37 @@ const CustomerReviewsSection = ({ customerReviews, isLoading }: CustomerReviewsS
                     </div>
                   </div>
 
-                  {/* Review content */}
+                  {/* Review content - with access control */}
                   <div className="mb-4">
-                    <p className="text-gray-700 whitespace-pre-line">{review.content}</p>
+                    {(hasSubscription || isSubscribed || isReviewUnlocked(review.id)) ? (
+                      <p className="text-gray-700 whitespace-pre-line">{review.content}</p>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-gray-700 whitespace-pre-line">
+                          {review.content.substring(0, 50)}...
+                        </p>
+                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+                          <div className="flex items-center text-gray-600 mb-2">
+                            <span className="text-sm font-medium">🔒 Full review content locked</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-3">
+                            Subscribe or use credits to view the complete review
+                          </p>
+                          <div className="flex gap-2">
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                              <Link to="/customer-benefits" className="flex items-center gap-1">
+                                Subscribe Now
+                              </Link>
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <Link to="/credits" className="flex items-center gap-1">
+                                Buy Credits
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Reactions section */}
