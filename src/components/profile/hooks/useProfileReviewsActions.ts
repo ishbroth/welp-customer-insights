@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Review } from "@/types";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useProfileReviewsActions = (
   currentUser: any,
@@ -14,14 +15,41 @@ export const useProfileReviewsActions = (
   const navigate = useNavigate();
   const { isReviewUnlocked: isCreditUnlocked } = useReviewAccess();
 
-  const handlePurchaseReview = (reviewId: string) => {
-    toast({
-      title: "Purchase initiated",
-      description: "Processing payment for review access...",
-      duration: 2000,
-    });
-    
-    navigate(`/one-time-review?customerId=${currentUser?.id}&reviewId=${reviewId}`);
+  const handlePurchaseReview = async (reviewId: string) => {
+    if (!currentUser) {
+      sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
+        reviewId: reviewId,
+        accessType: 'one-time'
+      }));
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-credit-payment');
+      
+      if (error) {
+        console.error('Error creating payment session:', error);
+        toast({
+          title: "Payment Error",
+          description: "Failed to initiate payment. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (data?.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error calling payment function:', error);
+      toast({
+        title: "Payment Error", 
+        description: "Failed to initiate payment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const isReviewUnlocked = (reviewId: string): boolean => {
