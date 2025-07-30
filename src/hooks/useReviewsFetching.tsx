@@ -1,8 +1,27 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+
+interface Review {
+  id: string;
+  rating: number;
+  content: string;
+  created_at: string;
+  business_id: string;
+  customer_name?: string;
+  customer_phone?: string;
+}
+
+interface FormattedReview {
+  id: string;
+  rating: number;
+  content: string;
+  date: string;
+  reviewerId: string;
+  reviewerName: string;
+  reviewerAvatar: string;
+}
 
 export const useReviewsFetching = (
   customerId: string,
@@ -11,7 +30,7 @@ export const useReviewsFetching = (
 ) => {
   const { toast } = useToast();
   const { currentUser, isSubscribed } = useAuth();
-  const [processedReviews, setProcessedReviews] = useState<any[]>(initialReviews);
+  const [processedReviews, setProcessedReviews] = useState<FormattedReview[]>(initialReviews);
   
   useEffect(() => {
     // If reviews are already passed as props, use those
@@ -30,16 +49,7 @@ export const useReviewsFetching = (
           // First get the specific review
           const { data: reviewData, error: reviewError } = await supabase
             .from('reviews')
-            .select(`
-              id, 
-              rating, 
-              content, 
-              created_at,
-              business_id,
-              customer_name,
-              customer_phone,
-              profiles!business_id(name, avatar)
-            `)
+            .select('id, rating, content, created_at, business_id, customer_name, customer_phone')
             .eq('id', actualReviewId);
 
           if (reviewError) {
@@ -54,14 +64,7 @@ export const useReviewsFetching = (
           const review = reviewData[0];
           const { data: similarReviews, error: similarError } = await supabase
             .from('reviews')
-            .select(`
-              id, 
-              rating, 
-              content, 
-              created_at,
-              business_id,
-              profiles!business_id(name, avatar)
-            `)
+            .select('id, rating, content, created_at, business_id')
             .ilike('customer_name', `%${review.customer_name}%`)
             .order('created_at', { ascending: false });
 
@@ -69,17 +72,39 @@ export const useReviewsFetching = (
             throw similarError;
           }
           
-          // Format the reviews data
-          const formattedReviews = similarReviews ? similarReviews.map(rev => ({
-            id: rev.id,
-            rating: rev.rating,
-            content: rev.content,
-            date: rev.created_at,
-            reviewerId: rev.business_id,
-            // Use the updated profile name if available, otherwise use the stored customer_name
-            reviewerName: rev.profiles?.name || "The Painted Painter",
-            reviewerAvatar: rev.profiles?.avatar || ""
-          })) : [];
+          // Format the reviews data and fetch business names separately
+          const formattedReviews: FormattedReview[] = [];
+          
+          if (similarReviews) {
+            for (const rev of similarReviews) {
+              let businessName = "The Painted Painter";
+              let businessAvatar = "";
+              
+              if (rev.business_id) {
+                try {
+                  const { data: businessData } = await supabase
+                    .from('profiles')
+                    .select('name, avatar')
+                    .eq('id', rev.business_id)
+                    .single();
+                  businessName = businessData?.name || "The Painted Painter";
+                  businessAvatar = businessData?.avatar || "";
+                } catch (error) {
+                  console.error('Error fetching business profile:', error);
+                }
+              }
+              
+              formattedReviews.push({
+                id: rev.id,
+                rating: rev.rating,
+                content: rev.content,
+                date: rev.created_at,
+                reviewerId: rev.business_id,
+                reviewerName: businessName,
+                reviewerAvatar: businessAvatar
+              });
+            }
+          }
 
           setProcessedReviews(formattedReviews);
         } catch (error) {
@@ -102,40 +127,15 @@ export const useReviewsFetching = (
         console.log("=== FETCHING REVIEWS FOR CUSTOMER ===");
         console.log("Customer ID:", customerId);
         
-        // First try to fetch by customer_id
-        const { data: directReviews, error: directError } = await supabase
-          .from('reviews')
-          .select(`
-            id, 
-            rating, 
-            content, 
-            created_at,
-            business_id,
-            profiles!business_id(name, avatar)
-          `)
-          .eq('customer_id', customerId);
-
-        if (directError) {
-          console.error("Error fetching direct reviews:", directError);
-        }
-
-        console.log("Direct reviews found:", directReviews?.length || 0);
-        let allReviews = directReviews || [];
-
-        // If no direct reviews and we have a current user with a name, search by name
-        if ((!directReviews || directReviews.length === 0) && currentUser?.name) {
+        // Search by customer name if available
+        let allReviews: Review[] = [];
+        
+        if (currentUser?.name) {
           console.log("Searching by customer name:", currentUser.name);
           
           const { data: nameReviews, error: nameError } = await supabase
             .from('reviews')
-            .select(`
-              id, 
-              rating, 
-              content, 
-              created_at,
-              business_id,
-              profiles!business_id(name, avatar)
-            `)
+            .select('id, rating, content, created_at, business_id')
             .ilike('customer_name', `%${currentUser.name}%`);
 
           if (nameError) {
@@ -153,17 +153,37 @@ export const useReviewsFetching = (
 
         console.log("Total unique reviews:", uniqueReviews.length);
 
-        // Format the reviews data
-        const formattedReviews = uniqueReviews.map(review => ({
-          id: review.id,
-          rating: review.rating,
-          content: review.content,
-          date: review.created_at,
-          reviewerId: review.business_id,
-          // Use the updated profile name if available
-          reviewerName: review.profiles?.name || "The Painted Painter",
-          reviewerAvatar: review.profiles?.avatar || ""
-        }));
+        // Format the reviews data and fetch business names separately
+        const formattedReviews: FormattedReview[] = [];
+        
+        for (const review of uniqueReviews) {
+          let businessName = "The Painted Painter";
+          let businessAvatar = "";
+          
+          if (review.business_id) {
+            try {
+              const { data: businessData } = await supabase
+                .from('profiles')
+                .select('name, avatar')
+                .eq('id', review.business_id)
+                .single();
+              businessName = businessData?.name || "The Painted Painter";
+              businessAvatar = businessData?.avatar || "";
+            } catch (error) {
+              console.error('Error fetching business profile:', error);
+            }
+          }
+          
+          formattedReviews.push({
+            id: review.id,
+            rating: review.rating,
+            content: review.content,
+            date: review.created_at,
+            reviewerId: review.business_id,
+            reviewerName: businessName,
+            reviewerAvatar: businessAvatar
+          });
+        }
 
         setProcessedReviews(formattedReviews);
         console.log("=== REVIEW FETCH COMPLETE ===");

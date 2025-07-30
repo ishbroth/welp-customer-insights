@@ -90,6 +90,54 @@ Deno.serve(async (req) => {
 
     console.log('✅ Review ownership verified, proceeding with hard delete...');
 
+    // First, handle credit refunds for users who purchased access to this review
+    console.log('💳 Processing credit refunds for users who purchased access...');
+    try {
+      // Find all users who paid credits to unlock this review
+      const { data: creditTransactions, error: creditError } = await supabase
+        .from('credit_transactions')
+        .select('user_id, amount, description')
+        .eq('type', 'usage')
+        .like('description', `Unlocked review ${reviewId}%`);
+
+      if (creditError) {
+        console.error('❌ Error fetching credit transactions:', creditError);
+      } else if (creditTransactions && creditTransactions.length > 0) {
+        console.log(`🔍 Found ${creditTransactions.length} users who purchased access to this review`);
+        
+        // Refund each user who purchased access
+        for (const transaction of creditTransactions) {
+          try {
+            // Refund the credit amount (make it positive since it was negative in usage)
+            const refundAmount = Math.abs(transaction.amount);
+            
+            const { error: refundError } = await supabase.rpc('update_user_credits', {
+              p_user_id: transaction.user_id,
+              p_amount: refundAmount,
+              p_type: 'refund',
+              p_description: `Refund: Review deleted ${reviewId}`,
+              p_stripe_session_id: null
+            });
+
+            if (refundError) {
+              console.error('❌ Error refunding credits for user:', transaction.user_id, refundError);
+            } else {
+              console.log(`✅ Refunded ${refundAmount} credit(s) to user:`, transaction.user_id);
+            }
+          } catch (refundErr) {
+            console.error('❌ Exception during refund for user:', transaction.user_id, refundErr);
+          }
+        }
+        
+        console.log('✅ Credit refund processing completed');
+      } else {
+        console.log('ℹ️ No users found who purchased access to this review');
+      }
+    } catch (error) {
+      console.error('❌ Exception during credit refund processing:', error);
+      // Continue with deletion even if refund fails
+    }
+
     // Delete all associated data in order (foreign key dependencies)
     
     // 1. Delete review photos
