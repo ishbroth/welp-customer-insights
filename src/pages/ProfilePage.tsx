@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import StarRating from "@/components/StarRating";
+import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
+import { useProfileReviewsData } from "@/components/profile/hooks/useProfileReviewsData";
+import { useCustomerAverageRating } from "@/hooks/useCustomerAverageRating";
+import { useReviewAccess } from "@/hooks/useReviewAccess";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 import { useBillingData } from "@/hooks/useBillingData";
@@ -28,6 +33,24 @@ const ProfilePage = () => {
   const { subscriptionData } = useBillingData(currentUser);
   const { balance } = useCredits();
   const navigate = useNavigate();
+
+  // Customer reviews data for average rating (customer accounts only)
+  const { customerReviews } = useProfileReviewsFetching();
+  const { sortedReviews } = useProfileReviewsData(customerReviews, currentUser);
+  const { isReviewUnlocked } = useReviewAccess();
+  
+  // Calculate average rating for customer accounts
+  const { averageRating, shouldGrayOut, reviewCount } = useCustomerAverageRating({
+    reviews: sortedReviews.map(review => ({
+      rating: review.rating,
+      isEffectivelyClaimed: review.isEffectivelyClaimed,
+      matchScore: review.matchScore,
+      hasUserResponded: review.hasUserResponded,
+      isReviewUnlocked: isReviewUnlocked(review.id)
+    })),
+    isSubscribed: isSubscribed || subscriptionData?.subscribed || false,
+    hasFullAccess: isSubscribed || subscriptionData?.subscribed || false
+  });
 
   // Check if we came from verification success
   useEffect(() => {
@@ -116,7 +139,8 @@ const ProfilePage = () => {
                       {currentUser.name?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
+                  <div className="flex-1 flex">
+                    <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h2 className="text-xl font-semibold">{currentUser.name}</h2>
                       {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) && (
@@ -161,6 +185,29 @@ const ProfilePage = () => {
                     </div>
                     {currentUser.bio && (
                       <p className="mt-3 text-gray-700">{currentUser.bio}</p>
+                    )}
+                    </div>
+                    
+                    {/* Average Rating Display - Customer Accounts Only */}
+                    {isCustomerAccount && (
+                      <div className="flex flex-col items-center justify-center min-w-[140px] ml-6">
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Average Rating</p>
+                          <StarRating 
+                            rating={averageRating} 
+                            size="lg" 
+                            grayedOut={shouldGrayOut}
+                            className="justify-center mb-1"
+                          />
+                          <div className="text-xs text-gray-500">
+                            {reviewCount > 0 ? (
+                              <span>Based on {reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
+                            ) : (
+                              <span>No qualifying reviews yet</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
