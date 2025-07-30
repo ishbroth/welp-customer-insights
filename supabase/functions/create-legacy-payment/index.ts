@@ -53,16 +53,16 @@ serve(async (req) => {
     const { userType = "customer" } = await req.json();
     logStep("Request data", { userType });
 
-    // Check user's credit balance using anon client (for RLS)
+    // Create anon client for credit operations (respects RLS)
     const supabaseAnon = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { 
-        auth: { persistSession: false },
-        global: { headers: { Authorization: authHeader } }
-      }
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
+    // Set the auth header for the anon client
+    supabaseAnon.auth.setAuth(token);
+
+    // Check user's credit balance
     const { data: creditsData, error: creditsError } = await supabaseAnon
       .from('credits')
       .select('balance')

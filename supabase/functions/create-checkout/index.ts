@@ -53,6 +53,26 @@ serve(async (req) => {
     const { userType = "customer" } = await req.json();
     logStep("Request data", { userType });
 
+    // Create anon client for credit operations (respects RLS)
+    const supabaseAnon = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Set the auth header for the anon client
+    supabaseAnon.auth.setAuth(token);
+
+    // Check user's credit balance
+    const { data: creditsData, error: creditsError } = await supabaseAnon
+      .from('credits')
+      .select('balance')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const creditBalance = creditsData?.balance || 0;
+    const creditValueInCents = creditBalance * 300; // $3 per credit in cents
+    logStep("User credit balance", { creditBalance, creditValueInCents });
+
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
@@ -80,11 +100,40 @@ serve(async (req) => {
     }
 
     // Set up the price - $11.99 for both business and customer plans
-    const amount = 1199;  // $11.99 in cents for both types
+    const baseAmount = 1199;  // $11.99 in cents for both types
+    const discountAmount = Math.min(creditValueInCents, baseAmount);
+    const finalAmount = Math.max(0, baseAmount - discountAmount);
+    
+    logStep("Pricing calculation", { 
+      baseAmount, 
+      creditValueInCents, 
+      discountAmount, 
+      finalAmount,
+      creditsToApply: Math.ceil(discountAmount / 300)
+    });
     
     const origin = req.headers.get("origin") || "http://localhost:5173";
     
-    // Create a checkout session
+    // Apply credits if user has any and consume them
+    if (creditBalance > 0 && discountAmount > 0) {
+      const creditsToConsume = Math.ceil(discountAmount / 300);
+      logStep("Applying credits to subscription", { creditsToConsume, discountAmount });
+      
+      // Consume the credits using anon client with proper auth
+      const { error: creditError } = await supabaseAnon.rpc('update_user_credits', {
+        p_user_id: user.id,
+        p_amount: -creditsToConsume,
+        p_type: 'subscription_applied',
+        p_description: `Credits applied to ${userType} subscription (${creditsToConsume} credits = $${(discountAmount / 100).toFixed(2)} discount)`
+      });
+      
+      if (creditError) {
+        logStep("Error consuming credits", { error: creditError });
+        throw new Error("Failed to apply credits to subscription");
+      }
+    }
+    
+    // Create a checkout session with adjusted pricing
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -97,7 +146,7 @@ serve(async (req) => {
                 ? "Full access to all customer reviews and business tools" 
                 : "Full access to all reviews about you and response capabilities"
             },
-            unit_amount: amount,
+            unit_amount: finalAmount,
             recurring: { interval: "month" }
           },
           quantity: 1,
@@ -106,6 +155,13 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/profile?subscribed=true`,
       cancel_url: `${origin}/subscription?canceled=true`,
+      metadata: {
+        user_id: user.id,
+        user_type: userType,
+        credits_applied: discountAmount > 0 ? Math.ceil(discountAmount / 300).toString() : "0",
+        original_amount: baseAmount.toString(),
+        discount_amount: discountAmount.toString()
+      }
     });
 
     logStep("Created checkout session", { sessionId: session.id });
