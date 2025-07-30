@@ -40,18 +40,21 @@ export const useProfileReviewsFetching = () => {
           .from('credit_transactions')
           .select('description')
           .eq('type', 'usage')
-          .like('description', '%unlock review%');
+          .ilike('description', '%unlock%review%');
         
         // Extract review IDs from credit transaction descriptions
         const claimedReviewIds = new Set();
         if (claimedReviews) {
           claimedReviews.forEach(transaction => {
-            const match = transaction.description?.match(/unlock review ([a-f0-9-]+)/i);
+            // Match pattern: "Unlocked review [uuid]"
+            const match = transaction.description?.match(/unlocked review ([a-f0-9-]{36})/i);
             if (match) {
               claimedReviewIds.add(match[1]);
             }
           });
         }
+        
+        console.log("🔒 Found claimed review IDs:", Array.from(claimedReviewIds));
 
         const reviewMatches = await categorizeReviews(currentUser);
         
