@@ -35,10 +35,33 @@ export const useProfileReviewsFetching = () => {
       
       // If user is a customer, use the new matching logic
       if (currentUser.type === "customer") {
+        // First, fetch all claimed review IDs from credit transactions
+        const { data: claimedReviews } = await supabase
+          .from('credit_transactions')
+          .select('description')
+          .eq('type', 'usage')
+          .like('description', '%unlock review%');
+        
+        // Extract review IDs from credit transaction descriptions
+        const claimedReviewIds = new Set();
+        if (claimedReviews) {
+          claimedReviews.forEach(transaction => {
+            const match = transaction.description?.match(/unlock review ([a-f0-9-]+)/i);
+            if (match) {
+              claimedReviewIds.add(match[1]);
+            }
+          });
+        }
+
         const reviewMatches = await categorizeReviews(currentUser);
         
+        // Filter out reviews that have been claimed by any user
+        const availableMatches = reviewMatches.filter(match => 
+          !claimedReviewIds.has(match.review.id)
+        );
+        
         // Sort reviews: claimed first, then high quality, then potential matches
-        const sortedMatches = reviewMatches.sort((a, b) => {
+        const sortedMatches = availableMatches.sort((a, b) => {
           if (a.matchType === 'claimed' && b.matchType !== 'claimed') return -1;
           if (a.matchType !== 'claimed' && b.matchType === 'claimed') return 1;
           if (a.matchType === 'high_quality' && b.matchType === 'potential') return -1;

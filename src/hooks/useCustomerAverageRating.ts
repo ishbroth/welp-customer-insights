@@ -22,17 +22,14 @@ export const useCustomerAverageRating = ({
   return useMemo(() => {
     // Filter reviews that count towards the average rating
     const qualifyingReviews = reviews.filter(review => {
-      // Include if effectively claimed (responded to or unlocked via credits)
-      if (review.isEffectivelyClaimed || review.hasUserResponded || review.isReviewUnlocked) {
-        return true;
+      // Only include reviews if user has paid for access through subscription/legacy OR credits
+      if (!isSubscribed && !hasFullAccess) {
+        // Without subscription, only count reviews that were specifically unlocked with credits
+        return review.isReviewUnlocked || review.hasUserResponded;
       }
       
-      // Include if 80% match or higher
-      if (review.matchScore && review.matchScore >= 80) {
-        return true;
-      }
-      
-      return false;
+      // With subscription/legacy access, include effectively claimed reviews or unlocked reviews
+      return review.isEffectivelyClaimed || review.hasUserResponded || review.isReviewUnlocked;
     });
 
     // Calculate average rating
@@ -47,12 +44,11 @@ export const useCustomerAverageRating = ({
         return true;
       }
 
-      // Gray out if user is not subscribed AND hasn't unlocked any reviews AND no high-quality matches
+      // Gray out if user hasn't paid for access (no subscription AND no unlocked reviews via credits)
       if (!isSubscribed && !hasFullAccess) {
         const hasUnlockedReviews = reviews.some(review => review.isReviewUnlocked || review.hasUserResponded);
-        const hasHighQualityMatches = reviews.some(review => review.matchScore && review.matchScore >= 80);
         
-        if (!hasUnlockedReviews && !hasHighQualityMatches) {
+        if (!hasUnlockedReviews) {
           return true;
         }
       }
