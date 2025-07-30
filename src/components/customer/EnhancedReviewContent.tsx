@@ -3,6 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Lock, CreditCard, Crown, CheckCircle, UserCheck, UserX } from "lucide-react";
 import ReviewReactions from "@/components/customer/ReviewReactions";
+import ReviewMatchInfo from "@/components/customer/ReviewMatchInfo";
+
+interface DetailedMatch {
+  field: string;
+  reviewValue: string;
+  searchValue: string;
+  similarity: number;
+  matchType: 'exact' | 'partial' | 'fuzzy' | 'no_match';
+}
 
 interface EnhancedReviewContentProps {
   content: string;
@@ -32,6 +41,12 @@ interface EnhancedReviewContentProps {
   onUseCreditClick: () => void;
   isReviewClaimed: boolean;
   isClaimingReview: boolean;
+  matchType?: 'high_quality' | 'potential';
+  matchReasons?: string[];
+  matchScore?: number;
+  detailedMatches?: DetailedMatch[];
+  isNewReview?: boolean;
+  hideMatchScore?: boolean;
 }
 
 const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
@@ -62,6 +77,12 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   onUseCreditClick,
   isReviewClaimed,
   isClaimingReview,
+  matchType,
+  matchReasons,
+  matchScore,
+  detailedMatches,
+  isNewReview,
+  hideMatchScore,
 }) => {
   const [showResponseForm, setShowResponseForm] = useState(false);
 
@@ -85,6 +106,21 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
         ) : (
           <div className="space-y-4">
             <p className="text-gray-700 leading-relaxed">{getPreviewText(content)}</p>
+            
+            {/* Match Info */}
+            {!hideMatchScore && (
+              <ReviewMatchInfo
+                matchType={matchType || 'potential'}
+                matchReasons={matchReasons || ['Potential match found']}
+                matchScore={matchScore || 0}
+                detailedMatches={detailedMatches}
+                isNewReview={isNewReview}
+                isClaimingReview={false}
+                onClaimClick={() => {}}
+                isReviewClaimed={false}
+                hideMatchScore={false}
+              />
+            )}
             
             {/* Access Options Card */}
             <Card className="bg-gray-50 border-gray-200">

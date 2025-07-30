@@ -150,18 +150,6 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
-      {/* Show match info for all reviews */}
-      <ReviewMatchInfo
-        matchType={review.matchType || 'potential'}
-        matchReasons={review.matchReasons || ['Potential match found']}
-        matchScore={review.matchScore || 0}
-        detailedMatches={review.detailedMatches}
-        isNewReview={review.isNewReview}
-        isClaimingReview={false}
-        onClaimClick={() => {}}
-        isReviewClaimed={false}
-        hideMatchScore={isReviewActuallyUnlocked || review.hasUserResponded || hasSubscription}
-      />
       
       <div className="flex justify-between mb-4">
         <CustomerReviewCardHeader
@@ -209,6 +197,12 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         onUseCreditClick={handleUseCreditClick}
         isReviewClaimed={false}
         isClaimingReview={false}
+        matchType={review.matchType || 'potential'}
+        matchReasons={review.matchReasons || ['Potential match found']}
+        matchScore={review.matchScore || 0}
+        detailedMatches={review.detailedMatches}
+        isNewReview={review.isNewReview}
+        hideMatchScore={isReviewActuallyUnlocked || review.hasUserResponded || hasSubscription}
       />
 
       <div className="flex justify-between items-center mt-4">
