@@ -7,6 +7,7 @@ import { formatReview } from "@/utils/reviewFormatter";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfileReviewsMatching } from "./useProfileReviewsMatching";
 import { useReviewMatching } from "./useReviewMatching";
+import { useReviewClaims } from "./useReviewClaims";
 
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
@@ -16,6 +17,7 @@ export const useProfileReviewsFetching = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const { categorizeReviews } = useProfileReviewsMatching();
   const { checkReviewMatch } = useReviewMatching();
+  const { getUserClaimedReviews } = useReviewClaims();
 
   const fetchCustomerReviews = async () => {
     // Don't fetch if auth is still loading or user is not available
@@ -34,93 +36,30 @@ export const useProfileReviewsFetching = () => {
       console.log("User ID:", currentUser.id);
       console.log("User email:", currentUser.email);
       
-        // If user is a customer, use the dual search system
+        // If user is a customer, use the new global claims system
         if (currentUser.type === "customer") {
-          console.log("🔍 Starting dual search system for customer reviews...");
+          console.log("🔍 Starting review search for customer...");
           
-          // SEARCH 1: Get all claimed review IDs from credit transactions and associations
-          const { data: claimedFromCredits, error: creditsError } = await supabase
-            .from('credit_transactions')
-            .select('description, user_id')
-            .eq('type', 'usage')
-            .ilike('description', '%unlock%review%');
-          
-          const { data: claimedFromAssociations, error: associationsError } = await supabase
-            .from('customer_review_associations')
-            .select('review_id, customer_id')
-            .in('association_type', ['purchased', 'responded']);
-          
-          if (creditsError) console.error("Error fetching claimed reviews from credits:", creditsError);
-          if (associationsError) console.error("Error fetching claimed reviews from associations:", associationsError);
-          
-          // Build sets of claimed review IDs
-          const claimedByCurrentUser = new Set<string>();
-          const claimedByOthers = new Set<string>();
-          
-          // Process credit transactions
-          if (claimedFromCredits) {
-            claimedFromCredits.forEach(transaction => {
-              const match = transaction.description?.match(/Unlocked review ([a-f0-9-]{36})/i);
-              if (match) {
-                if (transaction.user_id === currentUser.id) {
-                  claimedByCurrentUser.add(match[1]);
-                } else {
-                  claimedByOthers.add(match[1]);
-                }
-              }
-            });
-          }
-          
-          // Process associations
-          if (claimedFromAssociations) {
-            claimedFromAssociations.forEach(association => {
-              if (association.customer_id === currentUser.id) {
-                claimedByCurrentUser.add(association.review_id);
-              } else {
-                claimedByOthers.add(association.review_id);
-              }
-            });
-          }
-          
-          console.log("🎯 Reviews claimed by current user:", Array.from(claimedByCurrentUser));
-          console.log("🔒 Reviews claimed by others:", Array.from(claimedByOthers));
-          
-          // SEARCH 1: Find potential matches from UNCLAIMED reviews only
-          const unclaimedMatches = await categorizeReviews(currentUser, Array.from(claimedByOthers));
+          // SEARCH 1: Find potential matches from unclaimed reviews only
+          const unclaimedMatches = await categorizeReviews(currentUser);
           console.log("📊 Unclaimed review matches found:", unclaimedMatches.length);
           
-          // SEARCH 2: Get reviews specifically claimed by current user
-          const claimedReviews = [];
-          if (claimedByCurrentUser.size > 0) {
-            console.log("🔍 Fetching reviews claimed by current user...");
-            const { data: userClaimedReviews, error: userClaimedError } = await supabase
-              .from('reviews')
-              .select(`
-                id, customer_name, customer_address, customer_city, customer_zipcode, 
-                customer_phone, rating, content, created_at, business_id
-              `)
-              .in('id', Array.from(claimedByCurrentUser));
-            
-            if (userClaimedError) {
-              console.error("Error fetching user's claimed reviews:", userClaimedError);
-            } else if (userClaimedReviews) {
-              // Mark these as claimed and add to results
-              userClaimedReviews.forEach(review => {
-                claimedReviews.push({
-                  review: review,
-                  matchType: 'claimed',
-                  matchScore: 100,
-                  matchReasons: ['Review claimed by your account']
-                });
-              });
-              console.log("✅ Found claimed reviews for current user:", claimedReviews.length);
-            }
-          }
+          // SEARCH 2: Get reviews claimed by current user using new system
+          const claimedReviews = await getUserClaimedReviews();
+          console.log("✅ Found claimed reviews for current user:", claimedReviews.length);
           
           // Combine results: claimed reviews first, then unclaimed matches
-          const allMatches = [...claimedReviews, ...unclaimedMatches];
+          const allMatches = [
+            ...claimedReviews.map(review => ({
+              review,
+              matchType: 'claimed' as const,
+              matchScore: 100,
+              matchReasons: ['Review claimed by your account']
+            })),
+            ...unclaimedMatches
+          ];
           console.log("📋 Total combined results:", allMatches.length);
-        
+          
           // Sort combined results: claimed first, then by match quality
           const sortedMatches = allMatches.sort((a, b) => {
             if (a.matchType === 'claimed' && b.matchType !== 'claimed') return -1;
@@ -175,8 +114,8 @@ export const useProfileReviewsFetching = () => {
                 detailedMatches = detailedMatchResult.detailedMatches;
               }
 
-              // Check if this review was claimed by the current user
-              const isClaimedByCurrentUser = claimedByCurrentUser.has(review.id);
+              // Check if this review was claimed by the current user (already handled in data structure)
+              const isClaimedByCurrentUser = match.matchType === 'claimed';
 
               return {
                 ...review,

@@ -85,24 +85,17 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
       return;
     }
 
-    const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
-    if (success) {
-      addUnlockedReview(review.id);
+    const result = await useCreditsFn(1, `Unlocked review ${review.id}`);
+    if (result.success) {
+      // Claim the review with the transaction ID
+      const claimed = await addUnlockedReview(review.id, result.transactionId);
       
-      // Create association record to properly claim this review
-      try {
-        await supabase
-          .from('customer_review_associations')
-          .insert({
-            customer_id: currentUser.id,
-            review_id: review.id,
-            association_type: 'purchased'
-          });
-      } catch (error) {
-        console.error("Error creating review association:", error);
+      if (claimed) {
+        loadCreditsData(); // Refresh credit balance
+        toast.success("Review unlocked using 1 credit!");
+      } else {
+        toast.error("This review has already been claimed by another user.");
       }
-      loadCreditsData(); // Refresh credit balance
-      toast.success("Review unlocked using 1 credit!");
     }
   };
 

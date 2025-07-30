@@ -98,12 +98,12 @@ export const useCredits = () => {
     }
   };
 
-  const useCredits = async (amount: number, description: string) => {
-    if (!currentUser) return false;
+  const useCredits = async (amount: number, description: string): Promise<{ success: boolean; transactionId?: string }> => {
+    if (!currentUser) return { success: false };
 
     if (balance < amount) {
       toast.error("Insufficient credits");
-      return false;
+      return { success: false };
     }
 
     try {
@@ -117,15 +117,33 @@ export const useCredits = () => {
       if (error) {
         console.error("Error using credits:", error);
         toast.error("Failed to use credits");
-        return false;
+        return { success: false };
+      }
+
+      // Get the transaction ID of the credit usage
+      const { data: transaction, error: transactionError } = await supabase
+        .from('credit_transactions')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('type', 'usage')
+        .eq('description', description)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (transactionError) {
+        console.error('Error fetching transaction ID:', transactionError);
       }
 
       await loadCreditsData(); // Reload data
-      return true;
+      return { 
+        success: true, 
+        transactionId: transaction?.id 
+      };
     } catch (error) {
       console.error("Error in useCredits:", error);
       toast.error("Failed to use credits");
-      return false;
+      return { success: false };
     }
   };
 

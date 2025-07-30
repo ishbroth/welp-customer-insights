@@ -68,13 +68,25 @@ export const useProfileReviewsMatching = () => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
 
-  const categorizeReviews = async (currentUser: any, claimedReviewIds: string[] = []) => {
+  const categorizeReviews = async (currentUser: any) => {
     console.log("=== CATEGORIZING REVIEWS FOR USER ===");
     console.log("User:", currentUser);
-    console.log("Excluding claimed review IDs (claimed by others):", claimedReviewIds);
     
     try {
-      // Build query to exclude claimed reviews at database level
+      // First, get all globally claimed reviews to exclude from matching
+      const { data: globalClaims, error: claimsError } = await supabase
+        .from('review_claims')
+        .select('review_id');
+
+      if (claimsError) {
+        console.error("Error fetching global claims:", claimsError);
+        return [];
+      }
+
+      const globallyClaimedReviewIds = globalClaims?.map(claim => claim.review_id) || [];
+      console.log(`🔍 Found ${globallyClaimedReviewIds.length} globally claimed reviews to exclude`);
+
+      // Get unclaimed reviews only (exclude ALL globally claimed reviews)
       let query = supabase
         .from('reviews')
         .select(`
@@ -93,10 +105,10 @@ export const useProfileReviewsMatching = () => {
         `)
         .order('created_at', { ascending: false });
 
-      // Filter out claimed reviews at database level if we have any
-      if (claimedReviewIds.length > 0) {
-        query = query.not('id', 'in', `(${claimedReviewIds.map(id => `"${id}"`).join(',')})`);
-        console.log(`🔍 Database query excluding ${claimedReviewIds.length} claimed review IDs`);
+      // Exclude globally claimed reviews at database level
+      if (globallyClaimedReviewIds.length > 0) {
+        query = query.not('id', 'in', `(${globallyClaimedReviewIds.map(id => `"${id}"`).join(',')})`);
+        console.log(`🔍 Database query excluding ${globallyClaimedReviewIds.length} globally claimed reviews`);
       }
 
       const { data: allReviews, error } = await query;
@@ -153,12 +165,12 @@ export const useProfileReviewsMatching = () => {
         };
       });
 
-      // Filter out low-quality matches (claimed reviews already excluded at DB level)
+      // Filter out low-quality matches (globally claimed reviews already excluded at DB level)
       const filteredReviews = categorizedReviews
         .filter(item => {
           // Keep high-quality matches and potential matches above threshold
-          return item.matchType === 'claimed' || 
-                 item.matchType === 'high_quality' || 
+          // No 'claimed' type here since we only fetch unclaimed reviews
+          return item.matchType === 'high_quality' || 
                  (item.matchType === 'potential' && item.matchScore > 30);
         })
         .sort((a, b) => {

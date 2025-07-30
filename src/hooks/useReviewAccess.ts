@@ -1,113 +1,68 @@
-
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/auth";
-
-interface ReviewAccessState {
-  unlockedReviews: Set<string>;
-  isLoading: boolean;
-}
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/auth';
+import { useReviewClaims } from './useReviewClaims';
 
 export const useReviewAccess = () => {
   const { currentUser } = useAuth();
-  const [accessState, setAccessState] = useState<ReviewAccessState>({
-    unlockedReviews: new Set(),
-    isLoading: true
-  });
+  const { claimReview, isReviewClaimedByUser } = useReviewClaims();
+  const [unlockedReviews, setUnlockedReviews] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const loadUnlockedReviews = async () => {
-      if (!currentUser) {
-        setAccessState({ unlockedReviews: new Set(), isLoading: false });
-        return;
-      }
-
-      try {
-        setAccessState(prev => ({ ...prev, isLoading: true }));
-        
-        // Query credit transactions for review unlocks
-        const { data: transactions, error } = await supabase
-          .from('credit_transactions')
-          .select('description')
-          .eq('user_id', currentUser.id)
-          .eq('type', 'usage')
-          .like('description', 'Unlocked review %');
-
-        if (error) {
-          console.error("Error loading unlocked reviews:", error);
-          setAccessState({ unlockedReviews: new Set(), isLoading: false });
-          return;
-        }
-
-        // Extract review IDs from descriptions
-        const unlockedReviewIds = new Set<string>();
-        transactions?.forEach(transaction => {
-          if (transaction.description) {
-            const match = transaction.description.match(/Unlocked review (.+)/);
-            if (match && match[1]) {
-              unlockedReviewIds.add(match[1]);
-            }
-          }
-        });
-
-        console.log('🎯 Loaded unlocked reviews:', Array.from(unlockedReviewIds));
-        setAccessState({ unlockedReviews: unlockedReviewIds, isLoading: false });
-      } catch (error) {
-        console.error("Error in loadUnlockedReviews:", error);
-        setAccessState({ unlockedReviews: new Set(), isLoading: false });
-      }
-    };
-
-    loadUnlockedReviews();
-  }, [currentUser]);
-
+  // Check if a review is unlocked (claimed by current user or they have active subscription)
   const isReviewUnlocked = (reviewId: string): boolean => {
-    return accessState.unlockedReviews.has(reviewId);
+    return unlockedReviews.has(reviewId);
   };
 
-  const addUnlockedReview = (reviewId: string) => {
-    setAccessState(prev => ({
-      ...prev,
-      unlockedReviews: new Set([...prev.unlockedReviews, reviewId])
-    }));
-  };
+  // Add a review to unlocked set and claim it in database
+  const addUnlockedReview = async (reviewId: string, creditTransactionId?: string): Promise<boolean> => {
+    if (!currentUser) return false;
 
-  const refreshAccess = async () => {
-    if (!currentUser) return;
+    // Try to claim the review atomically
+    const success = await claimReview(reviewId, 'credit_unlock', creditTransactionId);
     
+    if (success) {
+      setUnlockedReviews(prev => new Set(prev).add(reviewId));
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Refresh access list (fetch all reviews claimed by current user)
+  const refreshAccess = async () => {
+    if (!currentUser) {
+      setUnlockedReviews(new Set());
+      return;
+    }
+
     try {
-      const { data: transactions, error } = await supabase
-        .from('credit_transactions')
-        .select('description')
-        .eq('user_id', currentUser.id)
-        .eq('type', 'usage')
-        .like('description', 'Unlocked review %');
+      const { data: claims, error } = await supabase
+        .from('review_claims')
+        .select('review_id')
+        .eq('claimed_by', currentUser.id);
 
       if (error) {
-        console.error("Error refreshing unlocked reviews:", error);
+        console.error('Error fetching user claims:', error);
         return;
       }
 
-      const unlockedReviewIds = new Set<string>();
-      transactions?.forEach(transaction => {
-        if (transaction.description) {
-          const match = transaction.description.match(/Unlocked review (.+)/);
-          if (match && match[1]) {
-            unlockedReviewIds.add(match[1]);
-          }
-        }
-      });
-
-      setAccessState(prev => ({ ...prev, unlockedReviews: unlockedReviewIds }));
+      const claimedReviewIds = claims?.map(claim => claim.review_id) || [];
+      setUnlockedReviews(new Set(claimedReviewIds));
+      console.log(`✅ Refreshed access: ${claimedReviewIds.length} claimed reviews`);
     } catch (error) {
-      console.error("Error in refreshAccess:", error);
+      console.error('Error in refreshAccess:', error);
     }
   };
+
+  // Load initial access on mount and user change
+  useEffect(() => {
+    refreshAccess();
+  }, [currentUser]);
 
   return {
     isReviewUnlocked,
     addUnlockedReview,
     refreshAccess,
-    isLoading: accessState.isLoading
+    unlockedReviews: Array.from(unlockedReviews)
   };
 };

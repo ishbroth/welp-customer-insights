@@ -551,6 +551,51 @@ export type Database = {
         }
         Relationships: []
       }
+      review_claims: {
+        Row: {
+          claim_type: string
+          claimed_at: string
+          claimed_by: string
+          created_at: string
+          credit_transaction_id: string | null
+          id: string
+          review_id: string
+        }
+        Insert: {
+          claim_type: string
+          claimed_at?: string
+          claimed_by: string
+          created_at?: string
+          credit_transaction_id?: string | null
+          id?: string
+          review_id: string
+        }
+        Update: {
+          claim_type?: string
+          claimed_at?: string
+          claimed_by?: string
+          created_at?: string
+          credit_transaction_id?: string | null
+          id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_claims_credit_transaction_id_fkey"
+            columns: ["credit_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "credit_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_claims_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: true
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_photos: {
         Row: {
           caption: string | null
@@ -942,6 +987,15 @@ export type Database = {
           p_block_minutes?: number
           p_lockout_attempts?: number
           p_lockout_duration_minutes?: number
+        }
+        Returns: boolean
+      }
+      claim_review: {
+        Args: {
+          p_review_id: string
+          p_claimed_by: string
+          p_claim_type: string
+          p_credit_transaction_id?: string
         }
         Returns: boolean
       }
