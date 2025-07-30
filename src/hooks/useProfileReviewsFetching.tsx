@@ -32,6 +32,7 @@ export const useProfileReviewsFetching = () => {
       console.log("Auth loading:", authLoading);
       console.log("User type:", currentUser.type);
       console.log("User ID:", currentUser.id);
+      console.log("User email:", currentUser.email);
       
       // If user is a customer, use the new matching logic
       if (currentUser.type === "customer") {
@@ -57,12 +58,13 @@ export const useProfileReviewsFetching = () => {
             // Match pattern: "Unlocked review [uuid]"
             const match = transaction.description?.match(/unlocked review ([a-f0-9-]{36})/i);
             if (match) {
+              console.log(`📋 Processing transaction: ${transaction.description} by user ${transaction.user_id}`);
               if (transaction.user_id === currentUser.id) {
                 claimedByCurrentUserIds.add(match[1]);
                 console.log("✅ Found review claimed by current user:", match[1]);
               } else {
                 claimedByOthersIds.add(match[1]);
-                console.log("⚠️ Found review claimed by other user:", match[1]);
+                console.log("⚠️ Found review claimed by other user:", match[1], "User:", transaction.user_id);
               }
             } else {
               console.log("❌ Could not extract review ID from:", transaction.description);
