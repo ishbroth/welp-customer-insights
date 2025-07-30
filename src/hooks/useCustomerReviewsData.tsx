@@ -46,8 +46,7 @@ export const useCustomerReviewsData = () => {
             created_at,
             business_id,
             customer_name,
-            customer_phone,
-            profiles!business_id(name, avatar)
+            customer_phone
           `)
           .eq('id', actualReviewId);
           
@@ -66,8 +65,7 @@ export const useCustomerReviewsData = () => {
               rating, 
               content, 
               created_at,
-              business_id,
-              profiles!business_id(name, avatar)
+              business_id
             `)
             .ilike('customer_name', `%${review.customer_name}%`)
             .order('created_at', { ascending: false });
@@ -79,36 +77,62 @@ export const useCustomerReviewsData = () => {
           reviewsData = similarReviews || [];
         }
       } else {
-        // This is a regular customer from profiles, fetch their reviews
-        const { data, error } = await supabase
-          .from('reviews')
-          .select(`
-            id, 
-            rating, 
-            content, 
-            created_at,
-            business_id,
-            profiles!business_id(name, avatar)
-          `)
-          .eq('customer_id', customerId)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
+        // This is a regular customer from profiles, fetch their reviews by customer name
+        // First get the customer name from profiles
+        const { data: customerData } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', customerId)
+          .single();
+          
+        if (customerData?.name) {
+          const { data, error } = await supabase
+            .from('reviews')
+            .select(`
+              id, 
+              rating, 
+              content, 
+              created_at,
+              business_id
+            `)
+            .ilike('customer_name', `%${customerData.name}%`)
+            .order('created_at', { ascending: false });
+          
+          if (error) {
+            throw error;
+          }
+          
+          reviewsData = data || [];
+        } else {
+          reviewsData = [];
         }
-        
-        reviewsData = data || [];
       }
       
-      // Format reviews data - properly use business profile information
-      const formattedReviews = reviewsData ? reviewsData.map(review => ({
-        id: review.id,
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at,
-        reviewerId: review.business_id,
-        // Use the business profile name from the joined data
-        reviewerName: review.profiles?.name || "Anonymous Business"
+      // Format reviews data - get business names separately to avoid type issues
+      const formattedReviews = reviewsData ? await Promise.all(reviewsData.map(async (review) => {
+        // Fetch business name separately to avoid complex type references
+        let businessName = "Anonymous Business";
+        if (review.business_id) {
+          try {
+            const { data: businessData } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', review.business_id)
+              .single();
+            businessName = businessData?.name || "Anonymous Business";
+          } catch (error) {
+            console.error('Error fetching business name:', error);
+          }
+        }
+        
+        return {
+          id: review.id,
+          rating: review.rating,
+          content: review.content,
+          date: review.created_at,
+          reviewerId: review.business_id,
+          reviewerName: businessName
+        };
       })) : [];
       
       // Update state with fetched reviews
