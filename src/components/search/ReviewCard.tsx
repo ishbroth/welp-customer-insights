@@ -166,6 +166,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               onCustomerClick={customerInfo.isClaimed && canViewFullContent ? handleCustomerNameClick : undefined}
               size="small"
               showContactInfo={canViewFullContent}
+              hideMatchScore={true}
             />
           </div>
         </div>

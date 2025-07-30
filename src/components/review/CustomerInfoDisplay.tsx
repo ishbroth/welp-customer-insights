@@ -22,13 +22,15 @@ interface CustomerInfoDisplayProps {
   onCustomerClick?: () => void;
   size?: 'small' | 'medium' | 'large';
   showContactInfo?: boolean;
+  hideMatchScore?: boolean;
 }
 
 const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
   customerInfo,
   onCustomerClick,
   size = 'medium',
-  showContactInfo = false
+  showContactInfo = false,
+  hideMatchScore = false
 }) => {
   const getInitials = (name: string) => {
     if (name) {
@@ -92,7 +94,7 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
         </div>
         
         {/* Show match quality score for unclaimed reviews */}
-        {!customerInfo.isClaimed && customerInfo.matchScore && customerInfo.matchScore > 5 && customerInfo.matchType && (
+        {!hideMatchScore && !customerInfo.isClaimed && customerInfo.matchScore && customerInfo.matchScore > 5 && customerInfo.matchType && (
           <div className="flex justify-end mb-1">
             <ReviewMatchQualityScore 
               matchScore={customerInfo.matchScore}
