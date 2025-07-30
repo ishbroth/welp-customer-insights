@@ -7,7 +7,7 @@ interface DetailedMatch {
   reviewValue: string;
   searchValue: string;
   similarity: number;
-  matchType: 'exact' | 'partial' | 'fuzzy';
+  matchType: 'exact' | 'partial' | 'fuzzy' | 'no_match';
 }
 
 interface MatchResult {
@@ -207,6 +207,29 @@ export const useReviewMatching = () => {
 
     const percentageScore = Math.min(100, Math.round(score));
     
+    // Add all remaining customer fields that weren't matched for complete transparency
+    const allFields = [
+      { key: 'customer_name', label: 'Name', userValue: userFullName },
+      { key: 'customer_phone', label: 'Phone', userValue: userProfile?.phone },
+      { key: 'customer_address', label: 'Address', userValue: userProfile?.address },
+      { key: 'customer_city', label: 'City', userValue: userProfile?.city },
+      { key: 'customer_zipcode', label: 'ZIP Code', userValue: userProfile?.zipcode }
+    ];
+
+    // Add non-matching fields to show complete customer information from the review
+    allFields.forEach(field => {
+      const reviewValue = review[field.key];
+      if (reviewValue && !detailedMatches.find(m => m.field === field.label)) {
+        detailedMatches.push({
+          field: field.label,
+          reviewValue,
+          searchValue: field.userValue || 'Not provided',
+          similarity: 0,
+          matchType: 'no_match'
+        });
+      }
+    });
+
     console.log('🎯 FINAL MATCH RESULT:', {
       reviewId: review.id,
       totalScore: percentageScore,
