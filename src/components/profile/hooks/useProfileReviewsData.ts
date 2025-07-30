@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
+import { useReviewAccess } from "@/hooks/useReviewAccess";
 
 export const useProfileReviewsData = (customerReviews: any[], currentUser: any) => {
   const [localReviews, setLocalReviews] = useState(customerReviews);
+  const { isReviewUnlocked } = useReviewAccess();
   
   const isCustomerUser = currentUser?.type === "customer";
   const isBusinessUser = currentUser?.type === "business" || currentUser?.type === "admin";
@@ -27,7 +29,9 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
     // Determine which reviews are "claimed" (unlocked by payment or responded to)
     const reviewsWithClaimStatus = localReviews.map(review => ({
       ...review,
-      isEffectivelyClaimed: review.isClaimed === true || review.hasUserResponded === true || 
+      isEffectivelyClaimed: review.isClaimed === true || 
+                           review.hasUserResponded === true || 
+                           isReviewUnlocked(review.id) ||
                            (hasFullAccess && review.matchType && ['high_quality', 'potential'].includes(review.matchType))
     }));
 
@@ -68,13 +72,17 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
       });
     } else {
       // For non-subscribers: sort by unlocked/responded status first, then match score/date
-      const sortedUnclaimed = unclaimedReviews.sort((a, b) => {
+      sortedReviews = reviewsWithClaimStatus.sort((a, b) => {
         const aData = a as any;
         const bData = b as any;
         
-        // Unlocked/responded reviews first
+        // Effectively claimed reviews (unlocked/responded) first
         if (aData.isEffectivelyClaimed && !bData.isEffectivelyClaimed) return -1;
         if (!aData.isEffectivelyClaimed && bData.isEffectivelyClaimed) return 1;
+        
+        // Then by claimed status (for backwards compatibility)
+        if (aData.isClaimed && !bData.isClaimed) return -1;
+        if (!aData.isClaimed && bData.isClaimed) return 1;
         
         // New reviews next
         if (aData.isNewReview && !bData.isNewReview) return -1;
@@ -88,13 +96,6 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
         if (aData.matchScore !== bData.matchScore) return (bData.matchScore || 0) - (aData.matchScore || 0);
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
-
-      const sortedClaimed = claimedReviews.sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      });
-
-      // Show claimed reviews first, then potential matches
-      sortedReviews = [...sortedClaimed, ...sortedUnclaimed];
     }
   } else {
     // For business users, use original sorting
