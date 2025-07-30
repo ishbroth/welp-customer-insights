@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { fetchBusinessProfile } from "@/services/businessProfileService";
 import { formatReview } from "@/utils/reviewFormatter";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfileReviewsMatching } from "./useProfileReviewsMatching.ts";
+import { useProfileReviewsMatching } from "./useProfileReviewsMatching";
 import { useReviewMatching } from "./useReviewMatching";
 
 export const useProfileReviewsFetching = () => {
@@ -65,22 +65,12 @@ export const useProfileReviewsFetching = () => {
         
         console.log("🔒 Total claimed review IDs:", Array.from(claimedReviewIds));
 
-        const reviewMatches = await categorizeReviews(currentUser);
-        console.log("📊 Total review matches before filtering:", reviewMatches.length);
-        
-        // Filter out reviews that have been claimed by any user
-        const availableMatches = reviewMatches.filter(match => {
-          const isClaimedByOthers = claimedReviewIds.has(match.review.id);
-          if (isClaimedByOthers) {
-            console.log("🚫 Filtering out claimed review:", match.review.id);
-          }
-          return !isClaimedByOthers;
-        });
-        
-        console.log("📊 Available matches after filtering:", availableMatches.length);
+        // Pass claimed review IDs to categorizeReviews to exclude them from initial fetch
+        const reviewMatches = await categorizeReviews(currentUser, Array.from(claimedReviewIds) as string[]);
+        console.log("📊 Total review matches (already filtered):", reviewMatches.length);
         
         // Sort reviews: claimed first, then high quality, then potential matches
-        const sortedMatches = availableMatches.sort((a, b) => {
+        const sortedMatches = reviewMatches.sort((a, b) => {
           if (a.matchType === 'claimed' && b.matchType !== 'claimed') return -1;
           if (a.matchType !== 'claimed' && b.matchType === 'claimed') return 1;
           if (a.matchType === 'high_quality' && b.matchType === 'potential') return -1;

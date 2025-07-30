@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { fetchBusinessProfile } from "@/services/businessProfileService";
 import { formatReview } from "@/utils/reviewFormatter";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfileReviewsMatching } from "./useProfileReviewsMatching";
+
 import { Customer } from "@/types/search";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
@@ -68,13 +68,15 @@ export const useProfileReviewsMatching = () => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
 
-  const categorizeReviews = async (currentUser: any) => {
+  const categorizeReviews = async (currentUser: any, claimedReviewIds: string[] = []) => {
     console.log("=== CATEGORIZING REVIEWS FOR USER ===");
     console.log("User:", currentUser);
+    console.log("Excluding claimed review IDs:", claimedReviewIds);
     
     try {
       // Get all reviews from database with proper business profile data
-      const { data: allReviews, error } = await supabase
+      // Exclude reviews that have been claimed by other users
+      let query = supabase
         .from('reviews')
         .select(`
           id,
@@ -87,12 +89,17 @@ export const useProfileReviewsMatching = () => {
           content,
           created_at,
           business_id,
-          customer_id,
-          claimed_at,
-          profiles!business_id(id, name, avatar, verified),
-          business_info!business_id(verified)
+          
+          profiles!business_id(id, name, avatar, verified)
         `)
         .order('created_at', { ascending: false });
+
+      // Add NOT IN clause to exclude claimed reviews if any exist
+      if (claimedReviewIds.length > 0) {
+        query = query.not('id', 'in', `(${claimedReviewIds.map(id => `"${id}"`).join(',')})`);
+      }
+
+      const { data: allReviews, error } = await query;
 
       if (error) {
         console.error("Error fetching reviews:", error);
@@ -108,7 +115,7 @@ export const useProfileReviewsMatching = () => {
 
       // Process each review and categorize based on match quality
       const categorizedReviews = allReviews.map(review => {
-        const isDirectlyClaimed = review.customer_id === currentUser.id;
+        const isDirectlyClaimed = false; // Reviews don't have customer_id yet
         
         if (isDirectlyClaimed) {
           return {
@@ -117,8 +124,8 @@ export const useProfileReviewsMatching = () => {
               business_profile: review.profiles,
               reviewerName: review.profiles?.name || 'Business',
               reviewerAvatar: review.profiles?.avatar || '',
-              reviewerVerified: review.business_info?.verified || false,
-              customerId: review.customer_id // This will be the current user's ID for claimed reviews
+              reviewerVerified: review.profiles?.verified || false,
+              customerId: null // Reviews don't have customer_id yet
             },
             matchType: 'claimed' as const,
             matchScore: 100,
@@ -136,8 +143,8 @@ export const useProfileReviewsMatching = () => {
             business_profile: review.profiles,
             reviewerName: review.profiles?.name || 'Business', 
             reviewerAvatar: review.profiles?.avatar || '',
-            reviewerVerified: review.business_info?.verified || false,
-            customerId: review.customer_id // This will be null for unclaimed reviews
+            reviewerVerified: review.profiles?.verified || false,
+            customerId: null // Reviews don't have customer_id yet
           },
           matchType: matchResult.matchType,
           matchScore: matchResult.matchScore,
