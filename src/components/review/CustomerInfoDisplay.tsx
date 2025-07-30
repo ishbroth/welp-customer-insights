@@ -92,7 +92,7 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
         </div>
         
         {/* Show match quality score for unclaimed reviews */}
-        {!customerInfo.isClaimed && customerInfo.matchScore && customerInfo.matchType && (
+        {!customerInfo.isClaimed && customerInfo.matchScore && customerInfo.matchScore > 5 && customerInfo.matchType && (
           <div className="flex justify-end mb-1">
             <ReviewMatchQualityScore 
               matchScore={customerInfo.matchScore}
