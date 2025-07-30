@@ -53,8 +53,17 @@ serve(async (req) => {
     const { userType = "customer" } = await req.json();
     logStep("Request data", { userType });
 
-    // Check user's credit balance
-    const { data: creditsData, error: creditsError } = await supabaseClient
+    // Check user's credit balance using anon client (for RLS)
+    const supabaseAnon = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { 
+        auth: { persistSession: false },
+        global: { headers: { Authorization: authHeader } }
+      }
+    );
+
+    const { data: creditsData, error: creditsError } = await supabaseAnon
       .from('credits')
       .select('balance')
       .eq('user_id', user.id)
@@ -109,8 +118,8 @@ serve(async (req) => {
     if (creditBalance > 0 && discountAmount > 0) {
       logStep("Applying credits to legacy payment", { creditsToConsume: creditBalance, discountAmount });
       
-      // Consume all credits since this is a one-time payment
-      const { error: creditError } = await supabaseClient.rpc('update_user_credits', {
+      // Consume all credits since this is a one-time payment using anon client
+      const { error: creditError } = await supabaseAnon.rpc('update_user_credits', {
         p_user_id: user.id,
         p_amount: -creditBalance,
         p_type: 'legacy_applied',
