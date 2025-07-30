@@ -71,12 +71,11 @@ export const useProfileReviewsMatching = () => {
   const categorizeReviews = async (currentUser: any, claimedReviewIds: string[] = []) => {
     console.log("=== CATEGORIZING REVIEWS FOR USER ===");
     console.log("User:", currentUser);
-    console.log("Excluding claimed review IDs:", claimedReviewIds);
+    console.log("Excluding claimed review IDs (claimed by others):", claimedReviewIds);
     
     try {
       // Get all reviews from database with proper business profile data
-      // Exclude reviews that have been claimed by other users
-      let query = supabase
+      const { data: allReviews, error } = await supabase
         .from('reviews')
         .select(`
           id,
@@ -93,13 +92,6 @@ export const useProfileReviewsMatching = () => {
           profiles!business_id(id, name, avatar, verified)
         `)
         .order('created_at', { ascending: false });
-
-      // Add NOT IN clause to exclude claimed reviews if any exist
-      if (claimedReviewIds.length > 0) {
-        query = query.not('id', 'in', `(${claimedReviewIds.map(id => `"${id}"`).join(',')})`);
-      }
-
-      const { data: allReviews, error } = await query;
 
       if (error) {
         console.error("Error fetching reviews:", error);
@@ -153,13 +145,20 @@ export const useProfileReviewsMatching = () => {
         };
       });
 
-      // Filter out low-quality matches and sort by relevance
+      // Filter out low-quality matches and reviews claimed by OTHER users
       const filteredReviews = categorizedReviews
-        .filter(item => 
-          item.matchType === 'claimed' || 
-          item.matchType === 'high_quality' || 
-          (item.matchType === 'potential' && item.matchScore > 30)
-        )
+        .filter(item => {
+          // Exclude reviews claimed by other users (but keep reviews claimed by current user)
+          if (claimedReviewIds.includes(item.review.id)) {
+            console.log(`🚫 Excluding review ${item.review.id} - claimed by another user`);
+            return false;
+          }
+          
+          // Keep high-quality matches and potential matches above threshold
+          return item.matchType === 'claimed' || 
+                 item.matchType === 'high_quality' || 
+                 (item.matchType === 'potential' && item.matchScore > 30);
+        })
         .sort((a, b) => {
           // Claimed reviews first
           if (a.matchType === 'claimed' && b.matchType !== 'claimed') return -1;
