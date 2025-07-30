@@ -20,7 +20,7 @@ interface DetailedMatch {
   reviewValue: string;
   searchValue: string;
   similarity: number;
-  matchType: 'exact' | 'partial' | 'fuzzy';
+  matchType: 'exact' | 'partial' | 'fuzzy' | 'no_match';
 }
 
 interface EnhancedCustomerReviewCardProps {

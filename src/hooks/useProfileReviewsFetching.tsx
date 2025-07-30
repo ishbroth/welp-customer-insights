@@ -6,6 +6,7 @@ import { fetchBusinessProfile } from "@/services/businessProfileService";
 import { formatReview } from "@/utils/reviewFormatter";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfileReviewsMatching } from "./useProfileReviewsMatching.ts";
+import { useReviewMatching } from "./useReviewMatching";
 
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
@@ -14,6 +15,7 @@ export const useProfileReviewsFetching = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const { categorizeReviews } = useProfileReviewsMatching();
+  const { checkReviewMatch } = useReviewMatching();
 
   const fetchCustomerReviews = async () => {
     // Don't fetch if auth is still loading or user is not available
@@ -67,7 +69,7 @@ export const useProfileReviewsFetching = () => {
           }
         }
 
-        // Fetch business profiles for each review
+        // Fetch business profiles for each review and generate detailed matches
         const reviewsWithProfiles = await Promise.all(
           sortedMatches.map(async (match) => {
             const review = match.review;
@@ -82,6 +84,13 @@ export const useProfileReviewsFetching = () => {
               }
             }
 
+            // Generate detailed match information for non-claimed reviews
+            let detailedMatches = [];
+            if (match.matchType !== 'claimed') {
+              const detailedMatchResult = checkReviewMatch(review, currentUser);
+              detailedMatches = detailedMatchResult.detailedMatches;
+            }
+
             return {
               ...review,
               business_profile: businessProfile,
@@ -92,6 +101,7 @@ export const useProfileReviewsFetching = () => {
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
+              detailedMatches: detailedMatches,
               isClaimed: match.matchType === 'claimed',
               hasUserResponded: userResponsesMap.has(review.id) || false
             };
