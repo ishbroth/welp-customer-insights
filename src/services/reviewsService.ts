@@ -1,5 +1,9 @@
+import { createClient } from '@supabase/supabase-js';
 
-import { supabase } from "@/integrations/supabase/client";
+const SUPABASE_URL = "https://yftvcixhifvrovwhtgtj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdHZjaXhoaWZ2cm92d2h0Z3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5ODY1ODQsImV4cCI6MjA2MTU2MjU4NH0.dk0-iM54olbkNnCEb92-KNsIeDw9u2owEg4B-fh5ggc";
+
+const supabaseSimple = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
   console.log("=== FETCHING REVIEWS FOR USER ===");
@@ -11,19 +15,9 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     console.log("Fetching reviews for customer account...");
     
     // Search 1: Direct customer_id match
-    const { data: directReviews, error: directError } = await supabase
+    const { data: directReviews, error: directError } = await supabaseSimple
       .from('reviews')
-      .select(`
-        id, 
-        rating, 
-        content, 
-        created_at,
-        business_id,
-        customer_name,
-        customer_address,
-        customer_city,
-        customer_zipcode
-      `)
+      .select('*')
       .eq('customer_id', currentUser.id)
       .order('created_at', { ascending: false });
 
@@ -38,19 +32,9 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     if ((!directReviews || directReviews.length === 0) && currentUser?.name) {
       console.log("Searching by customer name:", currentUser.name);
       
-      const { data: nameReviews, error: nameError } = await supabase
+      const { data: nameReviews, error: nameError } = await supabaseSimple
         .from('reviews')
-        .select(`
-          id, 
-          rating, 
-          content, 
-          created_at,
-          business_id,
-          customer_name,
-          customer_address,
-          customer_city,
-          customer_zipcode
-        `)
+        .select('*')
         .ilike('customer_name', `%${currentUser.name}%`)
         .order('created_at', { ascending: false });
 
@@ -63,14 +47,14 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     }
 
     // Remove duplicates based on review ID
-    const uniqueReviews = allReviews.filter((review, index, self) => 
-      index === self.findIndex(r => r.id === review.id)
+    const uniqueReviews = allReviews.filter((review: any, index: number, self: any[]) => 
+      index === self.findIndex((r: any) => r.id === review.id)
     );
 
     console.log("Total unique reviews found:", uniqueReviews.length);
 
     // Now fetch business profile data and verification status for each review
-    const businessIds = [...new Set(uniqueReviews.map(r => r.business_id).filter(Boolean))];
+    const businessIds = [...new Set(uniqueReviews.map((r: any) => r.business_id).filter(Boolean))];
     console.log("Fetching business data for IDs:", businessIds);
 
     let businessProfilesMap = new Map();
@@ -78,51 +62,45 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
 
     if (businessIds.length > 0) {
       // Fetch business profiles
-      const { data: businessProfiles, error: profileError } = await supabase
+      const { data: businessProfiles, error: profileError } = await supabaseSimple
         .from('profiles')
-        .select('id, name, avatar, type')
+        .select('*')
         .in('id', businessIds)
         .eq('type', 'business');
 
       if (!profileError && businessProfiles) {
-        businessProfiles.forEach(profile => {
+        businessProfiles.forEach((profile: any) => {
           businessProfilesMap.set(profile.id, profile);
         });
       }
 
       // Fetch business verification statuses
-      const { data: businessInfos, error: businessError } = await supabase
+      const { data: businessInfos, error: businessError } = await supabaseSimple
         .from('business_info')
-        .select('id, verified')
+        .select('*')
         .in('id', businessIds);
 
       if (!businessError && businessInfos) {
-        businessInfos.forEach(business => {
+        businessInfos.forEach((business: any) => {
           businessVerificationMap.set(business.id, Boolean(business.verified));
         });
       }
     }
 
     // Fetch responses for each review
-    const reviewIds = uniqueReviews.map(r => r.id);
+    const reviewIds = uniqueReviews.map((r: any) => r.id);
     let responsesMap = new Map();
 
     if (reviewIds.length > 0) {
-      const { data: responses, error: responsesError } = await supabase
+      const { data: responses, error: responsesError } = await supabaseSimple
         .from('responses')
-        .select(`
-          id,
-          review_id,
-          author_id,
-          content,
-          created_at
-        `)
+        .select('*')
         .in('review_id', reviewIds)
         .order('created_at', { ascending: true });
 
       if (!responsesError && responses) {
         // Group responses by review_id
-        responses.forEach(response => {
+        responses.forEach((response: any) => {
           const reviewResponses = responsesMap.get(response.review_id) || [];
           reviewResponses.push(response);
           responsesMap.set(response.review_id, reviewResponses);
@@ -131,7 +109,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     }
 
     // Format reviews with business profile and response data
-    const reviewsWithBusinessProfile = uniqueReviews.map(review => {
+    const reviewsWithBusinessProfile = uniqueReviews.map((review: any) => {
       const businessProfile = businessProfilesMap.get(review.business_id);
       const isVerified = businessVerificationMap.get(review.business_id) || false;
       const reviewResponses = responsesMap.get(review.id) || [];
@@ -151,10 +129,10 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
         city: review.customer_city || "",
         zipCode: review.customer_zipcode || "",
         reactions: { like: [], funny: [], useful: [], ohNo: [] },
-        responses: reviewResponses.map(resp => ({
+        responses: reviewResponses.map((resp: any) => ({
           id: resp.id,
           authorId: resp.author_id,
-          authorName: "Customer Response", // Would need to fetch author profile if needed
+          authorName: "Customer Response",
           content: resp.content,
           createdAt: resp.created_at
         }))
@@ -169,20 +147,9 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     // For business users, fetch reviews they've written
     console.log("Fetching reviews for business account...");
     
-    const { data: businessReviews, error: businessError } = await supabase
+    const { data: businessReviews, error: businessError } = await supabaseSimple
       .from('reviews')
-      .select(`
-        id,
-        customer_id,
-        customer_name,
-        customer_address,
-        customer_city,
-        customer_zipcode,
-        customer_phone,
-        rating,
-        content,
-        created_at
-      `)
+      .select('*')
       .eq('business_id', currentUser.id)
       .order('created_at', { ascending: false });
 
