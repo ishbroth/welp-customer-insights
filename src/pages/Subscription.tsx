@@ -9,12 +9,14 @@ import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import SubscriptionFAQ from "@/components/subscription/SubscriptionFAQ";
 import { handleSubscription } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
+import { useCredits } from "@/hooks/useCredits";
 
 const Subscription = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
   const { currentUser, setIsSubscribed } = useAuth();
+  const { balance: creditBalance } = useCredits();
   const isCustomer = currentUser?.type === "customer";
 
   // Determine if we came from a specific review
@@ -46,7 +48,7 @@ const Subscription = () => {
     }
     
     console.log("📞 About to call handleSubscription");
-    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser);
+    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser, creditBalance);
   };
 
   const handleLegacySubscribeClick = async () => {
@@ -92,9 +94,14 @@ const Subscription = () => {
         const newWindow = window.open(data.url, '_blank');
         
         if (newWindow) {
+          const creditValue = creditBalance * 3;
+          const discountMessage = creditBalance > 0 
+            ? ` Your ${creditBalance} credit${creditBalance === 1 ? '' : 's'} ($${creditValue}) have been applied as a discount.`
+            : '';
+          
           toast({
             title: "Checkout Opened",
-            description: "Stripe checkout has opened in a new tab. Complete your payment there and return to this page.",
+            description: `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${discountMessage}`,
           });
         } else {
           toast({
@@ -149,6 +156,7 @@ const Subscription = () => {
               isProcessing={isProcessing}
               handleSubscribe={handleSubscribeClick}
               handleLegacySubscribe={handleLegacySubscribeClick}
+              creditBalance={creditBalance}
             />
             
             <SubscriptionFAQ isCustomer={isCustomer} />

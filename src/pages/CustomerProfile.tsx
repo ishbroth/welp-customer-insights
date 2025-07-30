@@ -64,18 +64,14 @@ const CustomerProfile = () => {
       }
 
       // Fetch reviews written about this customer
-      const { data: reviewsData, error: reviewsError } = await supabase
+      const reviewsResponse = await (supabase as any)
         .from('reviews')
-        .select(`
-          id, 
-          rating, 
-          content, 
-          created_at,
-          business_id,
-          profiles!business_id(name, avatar, verified)
-        `)
+        .select('id, rating, content, created_at, business_id')
         .eq('customer_id', customerId)
         .order('created_at', { ascending: false });
+      
+      const reviewsData = reviewsResponse.data;
+      const reviewsError = reviewsResponse.error;
 
       if (reviewsError) {
         console.error("Error fetching reviews:", reviewsError);
@@ -95,18 +91,33 @@ const CustomerProfile = () => {
         email: profile.email || ''
       };
 
-      const formattedReviews = (reviewsData || []).map(review => ({
-        id: review.id,
-        reviewerId: review.business_id,
-        reviewerName: review.profiles?.name || 'Business',
-        reviewerAvatar: review.profiles?.avatar || '',
-        reviewerVerified: review.profiles?.verified || false,
-        rating: review.rating,
-        content: review.content,
-        date: review.created_at,
-        customerId: customerId,
-        customerName: `${formattedCustomer.firstName} ${formattedCustomer.lastName}`.trim()
-      }));
+      // Fetch business profiles for reviews
+      const businessIds = (reviewsData || []).map(review => review.business_id).filter(Boolean);
+      const { data: businessProfiles } = await supabase
+        .from('profiles')
+        .select('id, name, avatar, verified')
+        .in('id', businessIds);
+
+      const businessMap = (businessProfiles || []).reduce((acc, business) => {
+        acc[business.id] = business;
+        return acc;
+      }, {} as Record<string, any>);
+
+      const formattedReviews = (reviewsData || []).map(review => {
+        const business = businessMap[review.business_id];
+        return {
+          id: review.id,
+          reviewerId: review.business_id,
+          reviewerName: business?.name || 'Business',
+          reviewerAvatar: business?.avatar || '',
+          reviewerVerified: business?.verified || false,
+          rating: review.rating,
+          content: review.content,
+          date: review.created_at,
+          customerId: customerId,
+          customerName: `${formattedCustomer.firstName} ${formattedCustomer.lastName}`.trim()
+        };
+      });
 
       setCustomerData(formattedCustomer);
       setReviews(formattedReviews);

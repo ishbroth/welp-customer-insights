@@ -8,9 +8,10 @@ interface SubscriptionPlanProps {
   isProcessing: boolean;
   handleSubscribe: () => void;
   handleLegacySubscribe: () => void;
+  creditBalance?: number;
 }
 
-const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe }: Omit<SubscriptionPlanProps, "type">) => {
+const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance = 0 }: Omit<SubscriptionPlanProps, "type">) => {
   const handlePremiumClick = () => {
     console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
     handleSubscribe();
@@ -75,8 +76,23 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
         
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold">Premium</h2>
-          <div className="text-3xl font-bold mt-4">$11.99<span className="text-base font-normal">/month</span></div>
-          <div className="text-sm text-gray-500">Full Access</div>
+          {creditBalance > 0 ? (
+            <div>
+              <div className="text-lg line-through text-gray-400">$11.99</div>
+              <div className="text-3xl font-bold text-green-600">
+                {creditBalance * 3 >= 11.99 ? "FREE" : `$${(11.99 - creditBalance * 3).toFixed(2)}`}
+                <span className="text-base font-normal">/month</span>
+              </div>
+              <div className="text-sm text-green-600 font-medium">
+                Credits applied: ${creditBalance * 3} discount
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="text-3xl font-bold mt-4">$11.99<span className="text-base font-normal">/month</span></div>
+              <div className="text-sm text-gray-500">Full Access</div>
+            </div>
+          )}
         </div>
         
         <ul className="space-y-3 mb-8">
@@ -120,8 +136,22 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
         
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold">Legacy</h2>
-          <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal"> once</span></div>
-          <div className="text-sm text-gray-500">Lifetime Access</div>
+          {creditBalance > 0 ? (
+            <div>
+              <div className="text-lg line-through text-gray-400">$250</div>
+              <div className="text-3xl font-bold text-green-600">
+                ${Math.max(0, 250 - creditBalance * 3)}<span className="text-base font-normal"> once</span>
+              </div>
+              <div className="text-sm text-green-600 font-medium">
+                Credits applied: ${Math.min(creditBalance * 3, 250)} discount
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal"> once</span></div>
+              <div className="text-sm text-gray-500">Lifetime Access</div>
+            </div>
+          )}
         </div>
         
         <ul className="space-y-3 mb-8">
@@ -159,7 +189,7 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
   );
 };
 
-const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe }: Omit<SubscriptionPlanProps, "type">) => {
+const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance = 0 }: Omit<SubscriptionPlanProps, "type">) => {
   const handlePremiumClick = () => {
     console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
     handleSubscribe();
@@ -228,8 +258,23 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
         
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold">Premium</h2>
-          <div className="text-3xl font-bold mt-4">$11.99<span className="text-base font-normal">/month</span></div>
-          <div className="text-sm text-gray-500">Full Access</div>
+          {creditBalance > 0 ? (
+            <div>
+              <div className="text-lg line-through text-gray-400">$11.99</div>
+              <div className="text-3xl font-bold text-green-600">
+                {creditBalance * 3 >= 11.99 ? "FREE" : `$${(11.99 - creditBalance * 3).toFixed(2)}`}
+                <span className="text-base font-normal">/month</span>
+              </div>
+              <div className="text-sm text-green-600 font-medium">
+                Credits applied: ${creditBalance * 3} discount
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="text-3xl font-bold mt-4">$11.99<span className="text-base font-normal">/month</span></div>
+              <div className="text-sm text-gray-500">Full Access</div>
+            </div>
+          )}
         </div>
         
         <ul className="space-y-3 mb-8">
@@ -273,8 +318,22 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
         
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold">Legacy</h2>
-          <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal"> once</span></div>
-          <div className="text-sm text-gray-500">Lifetime Access</div>
+          {creditBalance > 0 ? (
+            <div>
+              <div className="text-lg line-through text-gray-400">$250</div>
+              <div className="text-3xl font-bold text-green-600">
+                ${Math.max(0, 250 - creditBalance * 3)}<span className="text-base font-normal"> once</span>
+              </div>
+              <div className="text-sm text-green-600 font-medium">
+                Credits applied: ${Math.min(creditBalance * 3, 250)} discount
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal"> once</span></div>
+              <div className="text-sm text-gray-500">Lifetime Access</div>
+            </div>
+          )}
         </div>
         
         <ul className="space-y-3 mb-8">
@@ -312,8 +371,8 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
   );
 };
 
-export const SubscriptionPlans = ({ type, isProcessing, handleSubscribe, handleLegacySubscribe }: SubscriptionPlanProps) => {
+export const SubscriptionPlans = ({ type, isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance }: SubscriptionPlanProps) => {
   return type === "customer" 
-    ? <CustomerSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} handleLegacySubscribe={handleLegacySubscribe} />
-    : <BusinessSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} handleLegacySubscribe={handleLegacySubscribe} />;
+    ? <CustomerSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} handleLegacySubscribe={handleLegacySubscribe} creditBalance={creditBalance} />
+    : <BusinessSubscriptionPlans isProcessing={isProcessing} handleSubscribe={handleSubscribe} handleLegacySubscribe={handleLegacySubscribe} creditBalance={creditBalance} />;
 };

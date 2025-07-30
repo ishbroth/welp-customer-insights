@@ -29,7 +29,8 @@ export const handleSubscription = async (
   setIsSubscribed: (subscribed: boolean) => void,
   toast: any,
   isCustomer: boolean,
-  currentUser: any
+  currentUser: any,
+  creditBalance: number = 0
 ) => {
   console.log("🔥 handleSubscription called! isProcessing:", false, "isCustomer:", isCustomer);
   
@@ -68,9 +69,14 @@ export const handleSubscription = async (
       const newWindow = window.open(data.url, '_blank');
       
       if (newWindow) {
+        const creditValue = creditBalance * 3;
+        const discountMessage = creditBalance > 0 
+          ? ` Your ${creditBalance} credit${creditBalance === 1 ? '' : 's'} ($${creditValue}) ${creditValue >= 11.99 ? 'will cover this month' : 'have been applied as a discount'}.`
+          : '';
+        
         toast({
           title: "Checkout Opened",
-          description: "Stripe checkout has opened in a new tab. Complete your payment there and return to this page.",
+          description: `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${discountMessage}`,
         });
       } else {
         toast({
