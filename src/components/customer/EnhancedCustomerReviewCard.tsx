@@ -48,7 +48,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { balance, useCredits: useCreditsFn } = useCredits();
+  const { balance, useCredits: useCreditsFn, loadCreditsData } = useCredits();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
   
   // Use persistent review access check instead of local state
@@ -86,6 +86,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
     if (success) {
       addUnlockedReview(review.id);
+      loadCreditsData(); // Refresh credit balance
       toast.success("Review unlocked using 1 credit!");
     }
   };

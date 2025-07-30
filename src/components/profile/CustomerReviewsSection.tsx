@@ -104,7 +104,7 @@ const CustomerReviewsSection = ({
 
                   {/* Review content - with access control */}
                   <div className="mb-4">
-                    {(hasSubscription || isSubscribed || isReviewUnlocked(review.id)) ? (
+                  {(hasSubscription || isSubscribed || isReviewUnlocked(review.id)) ? (
                       <p className="text-gray-700 whitespace-pre-line">{review.content}</p>
                     ) : (
                       <div className="space-y-4">
