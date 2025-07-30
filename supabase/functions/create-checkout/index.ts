@@ -56,11 +56,15 @@ serve(async (req) => {
     // Create anon client for credit operations (respects RLS)
     const supabaseAnon = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      }
     );
-
-    // Set the auth header for the anon client
-    supabaseAnon.auth.setAuth(token);
 
     // Check user's credit balance
     const { data: creditsData, error: creditsError } = await supabaseAnon
