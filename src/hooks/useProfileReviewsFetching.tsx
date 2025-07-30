@@ -44,6 +44,29 @@ export const useProfileReviewsFetching = () => {
           return b.matchScore - a.matchScore;
         });
 
+        // Get all review IDs for response checking
+        const reviewIds = sortedMatches.map(match => match.review.id);
+        
+        // Fetch responses to determine which reviews the current user has responded to
+        let userResponsesMap = new Map();
+        if (reviewIds.length > 0) {
+          try {
+            const { data: responses } = await supabase
+              .from('responses')
+              .select('review_id, author_id')
+              .in('review_id', reviewIds)
+              .eq('author_id', currentUser.id);
+            
+            if (responses) {
+              responses.forEach(response => {
+                userResponsesMap.set(response.review_id, true);
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching user responses:', error);
+          }
+        }
+
         // Fetch business profiles for each review
         const reviewsWithProfiles = await Promise.all(
           sortedMatches.map(async (match) => {
@@ -69,7 +92,8 @@ export const useProfileReviewsFetching = () => {
               matchType: match.matchType,
               matchScore: match.matchScore,
               matchReasons: match.matchReasons,
-              isClaimed: match.matchType === 'claimed'
+              isClaimed: match.matchType === 'claimed',
+              hasUserResponded: userResponsesMap.has(review.id) || false
             };
           })
         );

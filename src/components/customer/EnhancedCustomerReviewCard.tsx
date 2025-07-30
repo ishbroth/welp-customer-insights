@@ -32,6 +32,7 @@ interface EnhancedCustomerReviewCardProps {
     detailedMatches?: DetailedMatch[];
     isNewReview?: boolean;
     customer_phone?: string;
+    hasUserResponded?: boolean;
   };
   isUnlocked: boolean;
   hasSubscription: boolean;
@@ -159,6 +160,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         isClaimingReview={false}
         onClaimClick={() => {}}
         isReviewClaimed={false}
+        hideMatchScore={isReviewActuallyUnlocked || review.hasUserResponded || hasSubscription}
       />
       
       <div className="flex justify-between mb-4">

@@ -21,6 +21,7 @@ interface ReviewMatchInfoProps {
   isClaimingReview: boolean;
   onClaimClick: () => void;
   isReviewClaimed: boolean;
+  hideMatchScore?: boolean;
 }
 
 const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
@@ -29,7 +30,13 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
   matchScore = 0,
   detailedMatches,
   isNewReview,
+  hideMatchScore = false,
 }) => {
+  // Don't render match info if it should be hidden (for unlocked/responded reviews)
+  if (hideMatchScore) {
+    return null;
+  }
+
   return (
     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <div className="flex items-center gap-2 mb-3">
