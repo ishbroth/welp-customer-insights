@@ -39,6 +39,11 @@ const ReviewMatchQualityScore: React.FC<ReviewMatchQualityScoreProps> = ({
     );
   }
 
+  // Don't display match score if it's 0 or very low
+  if (matchScore <= 5) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <Badge className={`${getScoreColor()} text-xs`}>
