@@ -66,7 +66,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   const [showResponseForm, setShowResponseForm] = useState(false);
 
   const getPreviewText = (text: string) => {
-    return text.substring(0, 50) + '...';
+    return text.substring(0, 3) + "...";
   };
 
   const handleResponseSubmit = async (content: string) => {
