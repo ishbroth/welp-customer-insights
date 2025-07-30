@@ -35,38 +35,46 @@ export const useProfileReviewsFetching = () => {
       
       // If user is a customer, use the new matching logic
       if (currentUser.type === "customer") {
-        // First, fetch all claimed review IDs from credit transactions
-        console.log("🔍 Fetching claimed reviews from credit transactions...");
-        const { data: claimedReviews, error: claimedError } = await supabase
+        // First, fetch ALL claimed review IDs from ALL users' credit transactions
+        console.log("🔍 Fetching all claimed reviews from credit transactions...");
+        const { data: allClaimedReviews, error: allClaimedError } = await supabase
           .from('credit_transactions')
-          .select('description')
+          .select('description, user_id')
           .eq('type', 'usage')
           .ilike('description', '%unlock%review%');
         
-        if (claimedError) {
-          console.error("Error fetching claimed reviews:", claimedError);
+        if (allClaimedError) {
+          console.error("Error fetching all claimed reviews:", allClaimedError);
         }
         
-        // Extract review IDs from credit transaction descriptions
-        const claimedReviewIds = new Set();
-        if (claimedReviews) {
-          console.log("📋 Processing claimed reviews:", claimedReviews);
-          claimedReviews.forEach(transaction => {
+        // Extract review IDs claimed by OTHER users (not current user)
+        const claimedByOthersIds = new Set();
+        const claimedByCurrentUserIds = new Set();
+        
+        if (allClaimedReviews) {
+          console.log("📋 Processing all claimed reviews:", allClaimedReviews);
+          allClaimedReviews.forEach(transaction => {
             // Match pattern: "Unlocked review [uuid]"
             const match = transaction.description?.match(/unlocked review ([a-f0-9-]{36})/i);
             if (match) {
-              claimedReviewIds.add(match[1]);
-              console.log("✅ Found claimed review ID:", match[1]);
+              if (transaction.user_id === currentUser.id) {
+                claimedByCurrentUserIds.add(match[1]);
+                console.log("✅ Found review claimed by current user:", match[1]);
+              } else {
+                claimedByOthersIds.add(match[1]);
+                console.log("⚠️ Found review claimed by other user:", match[1]);
+              }
             } else {
               console.log("❌ Could not extract review ID from:", transaction.description);
             }
           });
         }
         
-        console.log("🔒 Total claimed review IDs:", Array.from(claimedReviewIds));
+        console.log("🔒 Reviews claimed by others:", Array.from(claimedByOthersIds));
+        console.log("🎯 Reviews claimed by current user:", Array.from(claimedByCurrentUserIds));
 
-        // Pass claimed review IDs to categorizeReviews to exclude them from initial fetch
-        const reviewMatches = await categorizeReviews(currentUser, Array.from(claimedReviewIds) as string[]);
+        // Pass reviews claimed by OTHERS to exclude them from search
+        const reviewMatches = await categorizeReviews(currentUser, Array.from(claimedByOthersIds) as string[]);
         console.log("📊 Total review matches (already filtered):", reviewMatches.length);
         
         // Sort reviews: claimed first, then high quality, then potential matches
@@ -123,6 +131,9 @@ export const useProfileReviewsFetching = () => {
               detailedMatches = detailedMatchResult.detailedMatches;
             }
 
+            // Check if this review was claimed by the current user
+            const isClaimedByCurrentUser = claimedByCurrentUserIds.has(review.id);
+
             return {
               ...review,
               business_profile: businessProfile,
@@ -130,11 +141,11 @@ export const useProfileReviewsFetching = () => {
               reviewerAvatar: businessProfile?.avatar || '',
               reviewerName: businessProfile?.name || review.customer_name || 'Business',
               responses: [],
-              matchType: match.matchType,
-              matchScore: match.matchScore,
-              matchReasons: match.matchReasons,
+              matchType: isClaimedByCurrentUser ? 'claimed' : match.matchType,
+              matchScore: isClaimedByCurrentUser ? 100 : match.matchScore,
+              matchReasons: isClaimedByCurrentUser ? ['Review claimed by your account'] : match.matchReasons,
               detailedMatches: detailedMatches,
-              isClaimed: match.matchType === 'claimed',
+              isClaimed: isClaimedByCurrentUser,
               hasUserResponded: userResponsesMap.has(review.id) || false
             };
           })
