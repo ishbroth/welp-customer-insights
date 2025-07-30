@@ -10,6 +10,7 @@ import { useReviewPermissions } from "./useReviewPermissions";
 import { useAuth } from "@/contexts/auth";
 import { useCredits } from "@/hooks/useCredits";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
+import { supabase } from "@/integrations/supabase/client";
 import { useCustomerReviewCardHeader } from "./hooks/useCustomerReviewCardHeader";
 import CustomerReviewCardHeader from "./CustomerReviewCardHeader";
 import { Star } from "lucide-react";
@@ -87,6 +88,19 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     const success = await useCreditsFn(1, `Unlocked review ${review.id}`);
     if (success) {
       addUnlockedReview(review.id);
+      
+      // Create association record to properly claim this review
+      try {
+        await supabase
+          .from('customer_review_associations')
+          .insert({
+            customer_id: currentUser.id,
+            review_id: review.id,
+            association_type: 'purchased'
+          });
+      } catch (error) {
+        console.error("Error creating review association:", error);
+      }
       loadCreditsData(); // Refresh credit balance
       toast.success("Review unlocked using 1 credit!");
     }

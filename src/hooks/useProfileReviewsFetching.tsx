@@ -55,8 +55,8 @@ export const useProfileReviewsFetching = () => {
         if (allClaimedReviews) {
           console.log("📋 Processing all claimed reviews:", allClaimedReviews);
           allClaimedReviews.forEach(transaction => {
-            // Match pattern: "Unlocked review [uuid]"
-            const match = transaction.description?.match(/unlocked review ([a-f0-9-]{36})/i);
+            // Match pattern: "Unlocked review [uuid]" (case insensitive)
+            const match = transaction.description?.match(/Unlocked review ([a-f0-9-]{36})/i);
             if (match) {
               console.log(`📋 Processing transaction: ${transaction.description} by user ${transaction.user_id}`);
               if (transaction.user_id === currentUser.id) {
