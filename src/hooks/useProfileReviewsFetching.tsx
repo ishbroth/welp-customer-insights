@@ -36,32 +36,48 @@ export const useProfileReviewsFetching = () => {
       // If user is a customer, use the new matching logic
       if (currentUser.type === "customer") {
         // First, fetch all claimed review IDs from credit transactions
-        const { data: claimedReviews } = await supabase
+        console.log("🔍 Fetching claimed reviews from credit transactions...");
+        const { data: claimedReviews, error: claimedError } = await supabase
           .from('credit_transactions')
           .select('description')
           .eq('type', 'usage')
           .ilike('description', '%unlock%review%');
         
+        if (claimedError) {
+          console.error("Error fetching claimed reviews:", claimedError);
+        }
+        
         // Extract review IDs from credit transaction descriptions
         const claimedReviewIds = new Set();
         if (claimedReviews) {
+          console.log("📋 Processing claimed reviews:", claimedReviews);
           claimedReviews.forEach(transaction => {
             // Match pattern: "Unlocked review [uuid]"
             const match = transaction.description?.match(/unlocked review ([a-f0-9-]{36})/i);
             if (match) {
               claimedReviewIds.add(match[1]);
+              console.log("✅ Found claimed review ID:", match[1]);
+            } else {
+              console.log("❌ Could not extract review ID from:", transaction.description);
             }
           });
         }
         
-        console.log("🔒 Found claimed review IDs:", Array.from(claimedReviewIds));
+        console.log("🔒 Total claimed review IDs:", Array.from(claimedReviewIds));
 
         const reviewMatches = await categorizeReviews(currentUser);
+        console.log("📊 Total review matches before filtering:", reviewMatches.length);
         
         // Filter out reviews that have been claimed by any user
-        const availableMatches = reviewMatches.filter(match => 
-          !claimedReviewIds.has(match.review.id)
-        );
+        const availableMatches = reviewMatches.filter(match => {
+          const isClaimedByOthers = claimedReviewIds.has(match.review.id);
+          if (isClaimedByOthers) {
+            console.log("🚫 Filtering out claimed review:", match.review.id);
+          }
+          return !isClaimedByOthers;
+        });
+        
+        console.log("📊 Available matches after filtering:", availableMatches.length);
         
         // Sort reviews: claimed first, then high quality, then potential matches
         const sortedMatches = availableMatches.sort((a, b) => {
