@@ -14,22 +14,29 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
   if (currentUser.type === "customer") {
     console.log("Fetching reviews for customer account...");
     
-    // Search 1: Direct customer_id match
-    const { data: directReviews, error: directError } = await supabaseSimple
-      .from('reviews')
-      .select('*')
-      .eq('customer_id', currentUser.id)
-      .order('created_at', { ascending: false });
+    let allReviews: any[] = [];
 
-    if (directError) {
-      console.error("Error fetching direct reviews:", directError);
+    // Search 1: Reviews claimed by this customer
+    const { data: claimedReviews, error: claimedError } = await supabaseSimple
+      .from('review_claims')
+      .select(`
+        reviews (
+          id, business_id, rating, content, customer_name, customer_address, 
+          customer_city, customer_zipcode, customer_phone, created_at, updated_at
+        )
+      `)
+      .eq('claimed_by', currentUser.id);
+
+    if (claimedError) {
+      console.error("Error fetching claimed reviews:", claimedError);
+    } else {
+      const reviewsFromClaims = claimedReviews?.map((claim: any) => claim.reviews).filter(Boolean) || [];
+      console.log("Search 1 (claimed reviews) found", reviewsFromClaims.length, "reviews");
+      allReviews = [...allReviews, ...reviewsFromClaims];
     }
 
-    console.log("Search 1 found", directReviews?.length || 0, "reviews");
-    let allReviews = directReviews || [];
-
-    // Search 2: By customer name if we have a name and no direct matches
-    if ((!directReviews || directReviews.length === 0) && currentUser?.name) {
+    // Search 2: By customer name if we have a name
+    if (currentUser?.name) {
       console.log("Searching by customer name:", currentUser.name);
       
       const { data: nameReviews, error: nameError } = await supabaseSimple
