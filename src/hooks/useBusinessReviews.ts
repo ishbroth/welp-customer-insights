@@ -17,7 +17,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
     setIsLoading(true);
     
     try {
-      // Fetch reviews written by this business with claim info (not soft deleted)
+      // Fetch reviews written by this business with claim info using LEFT JOIN
       const { data: reviewsData, error } = await supabase
         .from('reviews')
         .select(`
@@ -69,7 +69,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customerName: review.customer_name || "Anonymous Customer",
           rating: review.rating,
           content: review.content,
-          date: review.created_at, // Keep original ISO format
+          date: typeof review.created_at === 'string' ? review.created_at : new Date(review.created_at).toISOString(), // Ensure string format
           // Map database fields correctly to Review interface
           address: review.customer_address || "",
           city: review.customer_city || "",
