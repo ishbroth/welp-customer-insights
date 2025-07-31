@@ -51,16 +51,20 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       // Format reviews data to match Review type
       const formattedReviews = reviewsWithResponses.map(review => {
         const claimedBy = review.review_claims?.[0]?.claimed_by;
+        
+        // Ensure we have a valid date string
+        const reviewDate = review.created_at ? new Date(review.created_at).toISOString() : new Date().toISOString();
+        
         console.log("BusinessReviews: Processing review:", {
           id: review.id,
           customer_name: review.customer_name,
           created_at: review.created_at,
+          reviewDate: reviewDate,
           review_claims: review.review_claims,
-          claimedBy: claimedBy,
-          raw_review: review
+          claimedBy: claimedBy
         });
         
-        return {
+        const formattedReview = {
           id: review.id,
           reviewerId: currentUser.id,
           reviewerName: currentUser.name || "Anonymous Business",
@@ -69,7 +73,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customerName: review.customer_name || "Anonymous Customer",
           rating: review.rating,
           content: review.content,
-          date: typeof review.created_at === 'string' ? review.created_at : new Date(review.created_at).toISOString(), // Ensure string format
+          date: reviewDate, // Ensure consistent date format
           // Map database fields correctly to Review interface
           address: review.customer_address || "",
           city: review.customer_city || "",
@@ -82,6 +86,14 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           reactions: { like: [], funny: [], useful: [], ohNo: [] },
           responses: []
         };
+        
+        console.log("BusinessReviews: Formatted review:", {
+          id: formattedReview.id,
+          customerName: formattedReview.customerName,
+          date: formattedReview.date
+        });
+        
+        return formattedReview;
       });
 
       setWorkingReviews(formattedReviews);
