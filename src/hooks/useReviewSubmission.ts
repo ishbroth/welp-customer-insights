@@ -99,12 +99,8 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
           : "Your customer review has been successfully submitted.",
       });
       
-      // Navigate based on whether we're editing or creating new
-      if (isEditing) {
-        navigate("/profile/business-reviews");
-      } else {
-        navigate("/review/success");
-      }
+      // Navigate to business profile page for business accounts
+      navigate("/profile/business-reviews");
       return true;
     } catch (error: any) {
       console.error("Error submitting review:", error);
