@@ -7,7 +7,7 @@ import BusinessReviewCardContent from "./BusinessReviewCardContent";
 import BusinessReviewCardPhotos from "./BusinessReviewCardPhotos";
 import BusinessReviewCardReactions from "./BusinessReviewCardReactions";
 import ReviewConversationSection from "@/components/conversation/ReviewConversationSection";
-
+import BusinessReviewCardHeader from "./BusinessReviewCardHeader";
 import BusinessReviewCardActions from "./BusinessReviewCardActions";
 import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { useBusinessReviewCardLogic } from "./useBusinessReviewCardLogic";
@@ -84,13 +84,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     });
   };
 
-  // Customer info for left side (larger)
-  const customerInfo = {
-    name: review.customerName,
-    avatar: review.customerAvatar,
-    initials: getCustomerInitials()
-  };
-
   // Business info for right side (smaller) 
   const businessInfo = {
     name: review.reviewerName,
@@ -102,34 +95,16 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   return (
     <>
       <div className="bg-white p-6 rounded-lg shadow-sm border relative">
-        {/* Header with customer on left, business on right */}
-        <div className="flex items-start justify-between mb-4">
-          {/* Customer info - left side (larger) */}
-          <div className="flex items-center space-x-4">
-            <Avatar 
-              className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={handleCustomerClick}
-            >
-              <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-              <AvatarFallback className="bg-blue-100 text-blue-800">
-                {customerInfo.initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 
-                className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={handleCustomerClick}
-              >
-                {customerInfo.name}
-              </h3>
-              <p className="text-sm text-gray-500">
-                Review written on {formatDate(review.date)}
-              </p>
-              <p className="text-sm text-gray-500">Customer</p>
-            </div>
-          </div>
+        {/* Customer Header - handles claimed/unclaimed review data automatically */}
+        <BusinessReviewCardHeader 
+          review={review}
+          formatDate={formatDate}
+          getCustomerInitials={getCustomerInitials}
+          handleCustomerClick={handleCustomerClick}
+        />
 
-          {/* Business info - right side (smaller) */}
+        {/* Business info - right side (smaller) */}
+        <div className="flex justify-end mb-4">
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
