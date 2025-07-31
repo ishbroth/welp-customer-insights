@@ -42,8 +42,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
 
-  // Use subscription status from auth context instead of props
-  const isUnlocked = isSubscribed || isOneTimeUnlocked;
+  // Check if current user is the business that wrote this review
+  const isReviewAuthor = currentUser?.type === 'business' && currentUser?.id === review.reviewerId;
+  
+  // Use subscription status from auth context instead of props, OR if user authored the review
+  const isUnlocked = isSubscribed || isOneTimeUnlocked || isReviewAuthor;
   const canViewFullContent = isUnlocked;
 
   // Use the customer info system
