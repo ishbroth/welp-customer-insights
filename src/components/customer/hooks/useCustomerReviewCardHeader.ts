@@ -1,6 +1,8 @@
 
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useCustomerInfo } from "@/hooks/useCustomerInfo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useCustomerReviewCardHeader = (
   review: any,
@@ -11,7 +13,32 @@ export const useCustomerReviewCardHeader = (
 ) => {
   const navigate = useNavigate();
 
-  // Use enhanced customer info system for display purposes only
+  // Fetch actual customer profile if review is claimed
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerProfile', review.customerId],
+    queryFn: async () => {
+      if (!review.customerId) return null;
+      
+      console.log(`useCustomerReviewCardHeader: Fetching customer profile for ID: ${review.customerId}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name, name, phone')
+        .eq('id', review.customerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("useCustomerReviewCardHeader: Error fetching customer profile:", error);
+        return null;
+      }
+
+      console.log(`useCustomerReviewCardHeader: Customer profile result:`, data);
+      return data;
+    },
+    enabled: !!review.customerId
+  });
+
+  // Use enhanced customer info system with actual profile data
   const customerInfo = useCustomerInfo({
     customer_name: review.customerName,
     customer_phone: review.customer_phone,
@@ -21,7 +48,7 @@ export const useCustomerReviewCardHeader = (
     customerId: review.customerId,
     matchScore: review.matchScore,
     matchType: review.matchType
-  });
+  }, customerProfile);
 
   const getInitials = (name: string) => {
     if (name) {
@@ -52,10 +79,11 @@ export const useCustomerReviewCardHeader = (
     });
   };
 
-  // Force display customer info to use actual claim status
+  // Force display customer info to use actual claim status and include avatar
   const displayCustomerInfo = {
     ...customerInfo,
-    isClaimed: isReviewActuallyClaimed // Force to use database status
+    isClaimed: isReviewActuallyClaimed, // Force to use database status
+    avatar: customerInfo.avatar || '' // Use profile avatar if available
   };
 
   return {
