@@ -90,53 +90,148 @@ Deno.serve(async (req) => {
 
     console.log('✅ Review ownership verified, proceeding with hard delete...');
 
-    // First, handle credit refunds for users who purchased access to this review
+    // Enhanced credit refund processing with comprehensive error handling and verification
     console.log('💳 Processing credit refunds for users who purchased access...');
+    
+    let refundResults = [];
+    let totalRefundsProcessed = 0;
+    let refundErrors = [];
+    
     try {
-      // Find all users who paid credits to unlock this review
-      const { data: creditTransactions, error: creditError } = await supabase
+      // Create a service role client for administrative operations
+      const serviceClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        {
+          auth: {
+            persistSession: false
+          }
+        }
+      );
+
+      // Find all users who paid credits to unlock this review with comprehensive logging
+      console.log(`🔍 Searching for credit transactions with pattern: "Unlocked review ${reviewId}"`);
+      
+      const { data: creditTransactions, error: creditError } = await serviceClient
         .from('credit_transactions')
-        .select('user_id, amount, description')
+        .select('id, user_id, amount, description, created_at')
         .eq('type', 'usage')
         .like('description', `%Unlocked review ${reviewId}%`);
 
       if (creditError) {
         console.error('❌ Error fetching credit transactions:', creditError);
-      } else if (creditTransactions && creditTransactions.length > 0) {
-        console.log(`🔍 Found ${creditTransactions.length} users who purchased access to this review`);
-        
-        // Refund each user who purchased access
-        for (const transaction of creditTransactions) {
-          try {
-            // Refund the credit amount (make it positive since it was negative in usage)
-            const refundAmount = Math.abs(transaction.amount);
-            
-            const { error: refundError } = await supabase.rpc('update_user_credits', {
-              p_user_id: transaction.user_id,
-              p_amount: refundAmount,
-              p_type: 'refund',
-              p_description: `Refund: Review deleted ${reviewId}`,
-              p_stripe_session_id: null
-            });
-
-            if (refundError) {
-              console.error('❌ Error refunding credits for user:', transaction.user_id, refundError);
-            } else {
-              console.log(`✅ Refunded ${refundAmount} credit(s) to user:`, transaction.user_id);
-            }
-          } catch (refundErr) {
-            console.error('❌ Exception during refund for user:', transaction.user_id, refundErr);
-          }
-        }
-        
-        console.log('✅ Credit refund processing completed');
+        refundErrors.push(`Failed to fetch transactions: ${creditError.message}`);
       } else {
-        console.log('ℹ️ No users found who purchased access to this review');
+        console.log(`📊 Query returned ${creditTransactions?.length || 0} credit transactions`);
+        
+        if (creditTransactions && creditTransactions.length > 0) {
+          console.log(`🔍 Found ${creditTransactions.length} users who purchased access to this review`);
+          
+          // Log all found transactions for debugging
+          creditTransactions.forEach((transaction, index) => {
+            console.log(`📝 Transaction ${index + 1}: User ${transaction.user_id}, Amount: ${transaction.amount}, Description: "${transaction.description}"`);
+          });
+          
+          // Process refunds with enhanced error handling and verification
+          for (const transaction of creditTransactions) {
+            try {
+              console.log(`💳 Processing refund for user ${transaction.user_id}, transaction ${transaction.id}`);
+              
+              // Refund the credit amount (make it positive since it was negative in usage)
+              const refundAmount = Math.abs(transaction.amount);
+              
+              // Check if user already received a refund for this specific transaction
+              const { data: existingRefund, error: refundCheckError } = await serviceClient
+                .from('credit_transactions')
+                .select('id, description')
+                .eq('user_id', transaction.user_id)
+                .eq('type', 'refund')
+                .like('description', `%${reviewId}%`)
+                .limit(1);
+
+              if (refundCheckError) {
+                console.error(`❌ Error checking existing refunds for user ${transaction.user_id}:`, refundCheckError);
+              } else if (existingRefund && existingRefund.length > 0) {
+                console.log(`⚠️ User ${transaction.user_id} already has a refund for this review: ${existingRefund[0].description}`);
+                refundResults.push({
+                  userId: transaction.user_id,
+                  amount: refundAmount,
+                  status: 'already_refunded',
+                  existingRefundId: existingRefund[0].id
+                });
+                continue;
+              }
+
+              // Process the refund
+              const { error: refundError } = await serviceClient.rpc('update_user_credits', {
+                p_user_id: transaction.user_id,
+                p_amount: refundAmount,
+                p_type: 'refund',
+                p_description: `Refund: Review deleted ${reviewId}`,
+                p_stripe_session_id: null
+              });
+
+              if (refundError) {
+                console.error(`❌ Error refunding credits for user ${transaction.user_id}:`, refundError);
+                refundErrors.push(`User ${transaction.user_id}: ${refundError.message}`);
+                refundResults.push({
+                  userId: transaction.user_id,
+                  amount: refundAmount,
+                  status: 'failed',
+                  error: refundError.message
+                });
+              } else {
+                console.log(`✅ Successfully refunded ${refundAmount} credit(s) to user: ${transaction.user_id}`);
+                totalRefundsProcessed++;
+                refundResults.push({
+                  userId: transaction.user_id,
+                  amount: refundAmount,
+                  status: 'success'
+                });
+
+                // Verify the refund was processed by checking the updated balance
+                const { data: updatedCredits, error: balanceError } = await serviceClient
+                  .from('credits')
+                  .select('balance')
+                  .eq('user_id', transaction.user_id)
+                  .single();
+
+                if (balanceError) {
+                  console.error(`⚠️ Could not verify updated balance for user ${transaction.user_id}:`, balanceError);
+                } else {
+                  console.log(`✅ Verified: User ${transaction.user_id} new balance: ${updatedCredits.balance}`);
+                }
+              }
+            } catch (refundErr) {
+              console.error(`❌ Exception during refund for user ${transaction.user_id}:`, refundErr);
+              refundErrors.push(`User ${transaction.user_id}: ${refundErr.message}`);
+              refundResults.push({
+                userId: transaction.user_id,
+                amount: Math.abs(transaction.amount),
+                status: 'exception',
+                error: refundErr.message
+              });
+            }
+          }
+          
+          // Log comprehensive refund summary
+          console.log(`📊 Refund Summary: ${totalRefundsProcessed} successful, ${refundErrors.length} failed, ${refundResults.filter(r => r.status === 'already_refunded').length} already refunded`);
+          
+          if (refundErrors.length > 0) {
+            console.error('❌ Refund errors encountered:', refundErrors);
+          }
+        } else {
+          console.log('ℹ️ No users found who purchased access to this review');
+        }
       }
     } catch (error) {
-      console.error('❌ Exception during credit refund processing:', error);
+      console.error('❌ Critical exception during credit refund processing:', error);
+      refundErrors.push(`Critical error: ${error.message}`);
       // Continue with deletion even if refund fails
     }
+
+    // Log final refund status for monitoring
+    console.log(`📈 Final refund metrics: Total processed: ${totalRefundsProcessed}, Errors: ${refundErrors.length}`);
 
     // Delete all associated data in order (foreign key dependencies)
     
