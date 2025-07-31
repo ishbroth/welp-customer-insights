@@ -80,9 +80,9 @@ export const useCustomerSearch = () => {
       // Combine results - but first check for potential duplicates between profile and review customers
       const combinedCustomers = [...profileCustomers];
       
-      // Add review customers that don't match existing profile customers
+      // Add review customers that don't match existing profile customers, or merge reviews
       for (const reviewCustomer of reviewCustomers) {
-        const isDuplicate = profileCustomers.some(profileCustomer => {
+        const matchingProfileIndex = profileCustomers.findIndex(profileCustomer => {
           // Check if names and phones match
           const nameMatch = profileCustomer.firstName === reviewCustomer.firstName && 
                            profileCustomer.lastName === reviewCustomer.lastName;
@@ -92,10 +92,16 @@ export const useCustomerSearch = () => {
           return nameMatch || phoneMatch;
         });
         
-        if (!isDuplicate) {
+        if (matchingProfileIndex === -1) {
+          // No match found, add as new customer
           combinedCustomers.push(reviewCustomer);
         } else {
-          console.log(`Skipping duplicate review customer: ${reviewCustomer.firstName} ${reviewCustomer.lastName}`);
+          // Match found, merge reviews into the existing profile customer
+          console.log(`Merging reviews for duplicate customer: ${reviewCustomer.firstName} ${reviewCustomer.lastName}`);
+          combinedCustomers[matchingProfileIndex].reviews = [
+            ...combinedCustomers[matchingProfileIndex].reviews,
+            ...reviewCustomer.reviews
+          ];
         }
       }
       
