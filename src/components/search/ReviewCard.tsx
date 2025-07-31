@@ -315,14 +315,23 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               }
             </p>
             <div className="flex gap-2">
-              {balance > 0 && (
+              {balance > 0 ? (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={handleUseCreditClick}
                   className="flex-1"
                 >
-                  Use 1 Credit
+                  Unlock Responses (1 Credit)
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleOneTimeAccess}
+                  className="flex-1"
+                >
+                  Unlock Responses ($3)
                 </Button>
               )}
               <Button
