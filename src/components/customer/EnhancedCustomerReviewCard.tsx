@@ -132,10 +132,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
   const businessDisplayName = enhancedBusinessInfo.name;
 
-  // Enhanced customer info without claimed status
+  // Enhanced customer info - use the avatar from customerInfo (which includes claimed customer data)
   const enhancedCustomerInfo = {
-    ...customerInfo,
-    avatar: review.customerAvatar || ''
+    ...customerInfo
   };
 
   // Render stars - show actual rating if unlocked, grayed out if locked
