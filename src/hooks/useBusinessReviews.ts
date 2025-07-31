@@ -36,8 +36,6 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         .is('deleted_at', null) // Only get non-deleted reviews
         .order('created_at', { ascending: false });
 
-      console.log("BusinessReviews: Query result:", { reviewsData, error });
-
       if (error) {
         throw error;
       }
@@ -50,13 +48,10 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
 
       // Format reviews data to match Review type
       const formattedReviews = reviewsWithResponses.map(review => {
-        const claimedBy = review.review_claims?.[0]?.claimed_by;
         console.log("BusinessReviews: Processing review:", {
           id: review.id,
           customer_name: review.customer_name,
           created_at: review.created_at,
-          review_claims: review.review_claims,
-          claimedBy: claimedBy,
           raw_review: review
         });
         
@@ -65,7 +60,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           reviewerId: currentUser.id,
           reviewerName: currentUser.name || "Anonymous Business",
           reviewerAvatar: currentUser.avatar,
-          customerId: claimedBy || null, // Use claimed customer ID if available, null if not claimed
+          customerId: review.review_claims?.[0]?.claimed_by || '', // Use claimed customer ID if available
           customerName: review.customer_name || "Anonymous Customer",
           rating: review.rating,
           content: review.content,
