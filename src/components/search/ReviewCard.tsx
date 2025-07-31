@@ -12,6 +12,7 @@ import ReviewConversationSection from "@/components/conversation/ReviewConversat
 import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { useCredits } from "@/hooks/useCredits";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReviewCardProps {
   review: {
@@ -110,7 +111,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     });
   };
 
-  const handleOneTimeAccess = () => {
+  const handleOneTimeAccess = async () => {
     if (!currentUser) {
       sessionStorage.setItem('pendingReviewAccess', JSON.stringify({
         reviewId: review.id,
@@ -120,7 +121,28 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       return;
     }
     
-    navigate(`/subscription?reviewId=${review.id}&type=one-time`);
+    try {
+      console.log("Creating credit payment session...");
+      const { data, error } = await supabase.functions.invoke('create-credit-payment', {
+        body: {
+          returnUrl: window.location.href // Return to current search page
+        }
+      });
+
+      if (error) {
+        console.error("Error creating payment session:", error);
+        toast.error("Failed to create payment session");
+        return;
+      }
+
+      if (data?.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to initiate payment");
+    }
   };
 
   const handleSubscriptionAccess = () => {
