@@ -18,7 +18,8 @@ export const useBusinessReviewCardLogic = (review: Review) => {
   };
 
   const formatDate = (dateString: string) => {
-    console.log("formatDate input:", dateString);
+    console.log("formatDate input:", { _type: typeof dateString, value: dateString });
+    console.log("formatDate review.date:", review.date);
     if (!dateString) {
       console.log("formatDate: No date string provided");
       return "Invalid date";

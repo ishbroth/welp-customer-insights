@@ -64,7 +64,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           claimedBy: claimedBy
         });
         
-        const formattedReview = {
+        const formattedReview: Review = {
           id: review.id,
           reviewerId: currentUser.id,
           reviewerName: currentUser.name || "Anonymous Business",
@@ -83,9 +83,9 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_city: review.customer_city || "",
           customer_zipcode: review.customer_zipcode || "",
           customer_phone: review.customer_phone || "",
-          reactions: { like: [], funny: [], useful: [], ohNo: [] },
+          reactions: { like: [], funny: [], ohNo: [] },
           responses: []
-        } as Review;
+        };
         
         console.log("BusinessReviews: Formatted review:", {
           id: formattedReview.id,

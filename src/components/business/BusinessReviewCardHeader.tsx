@@ -90,6 +90,13 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     address: formatAddress(),
     hasProfile: !!customerProfile
   });
+  
+  console.log('BusinessReviewCardHeader: Review date debug:', {
+    reviewId: review.id,
+    reviewDate: review.date,
+    reviewDateType: typeof review.date,
+    reviewObject: review
+  });
 
   return (
     <div className="flex items-start justify-between mb-4">
