@@ -130,6 +130,41 @@ export type Database = {
           },
         ]
       }
+      conversation_participants: {
+        Row: {
+          business_id: string
+          created_at: string
+          customer_id: string
+          first_customer_response_at: string | null
+          id: string
+          review_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          customer_id: string
+          first_customer_response_at?: string | null
+          id?: string
+          review_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          customer_id?: string
+          first_customer_response_at?: string | null
+          id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: true
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -596,6 +631,47 @@ export type Database = {
           },
         ]
       }
+      review_conversations: {
+        Row: {
+          author_id: string
+          author_type: string
+          content: string
+          created_at: string
+          id: string
+          message_order: number
+          review_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_type: string
+          content: string
+          created_at?: string
+          id?: string
+          message_order?: number
+          review_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_order?: number
+          review_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_conversations_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_photos: {
         Row: {
           caption: string | null
@@ -968,6 +1044,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_conversation_message: {
+        Args: {
+          p_review_id: string
+          p_author_id: string
+          p_author_type: string
+          p_content: string
+        }
+        Returns: string
+      }
       check_rate_limit: {
         Args: {
           p_identifier: string
@@ -998,6 +1083,10 @@ export type Database = {
           p_credit_transaction_id?: string
         }
         Returns: boolean
+      }
+      claim_review_via_conversation: {
+        Args: { p_review_id: string; p_customer_id: string; p_content: string }
+        Returns: string
       }
       get_user_role: {
         Args: { user_id: string }

@@ -4,6 +4,7 @@ import { Review } from "@/types";
 import ReviewMatchInfo from "./ReviewMatchInfo";
 import EnhancedReviewContent from "./EnhancedReviewContent";
 import ReportReviewButton from "./ReportReviewButton";
+import ReviewConversationSection from "@/components/conversation/ReviewConversationSection";
 import { useEnhancedCustomerReviewCard } from "@/hooks/useEnhancedCustomerReviewCard";
 import { useReviewPermissions } from "./useReviewPermissions";
 
@@ -210,6 +211,14 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         detailedMatches={review.detailedMatches}
         isNewReview={review.isNewReview}
         hideMatchScore={isReviewActuallyUnlocked || review.hasUserResponded || hasSubscription}
+      />
+
+      {/* Conversation Section */}
+      <ReviewConversationSection 
+        reviewId={review.id}
+        shouldShowFullReview={shouldShowFullReview()}
+        isBusinessUser={false}
+        className="mt-4"
       />
 
       <div className="flex justify-between items-center mt-4">

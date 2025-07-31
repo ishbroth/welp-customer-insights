@@ -6,6 +6,7 @@ import StarRating from "@/components/StarRating";
 import BusinessReviewCardContent from "./BusinessReviewCardContent";
 import BusinessReviewCardPhotos from "./BusinessReviewCardPhotos";
 import BusinessReviewCardReactions from "./BusinessReviewCardReactions";
+import ReviewConversationSection from "@/components/conversation/ReviewConversationSection";
 
 import BusinessReviewCardActions from "./BusinessReviewCardActions";
 import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
@@ -168,6 +169,14 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         <BusinessReviewCardReactions 
           review={review}
           onReactionToggle={onReactionToggle}
+        />
+
+        {/* Conversation Section */}
+        <ReviewConversationSection 
+          reviewId={review.id}
+          shouldShowFullReview={true}
+          isBusinessUser={true}
+          className="mt-4"
         />
 
       </div>
