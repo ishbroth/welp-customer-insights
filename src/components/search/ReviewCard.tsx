@@ -167,6 +167,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               size="small"
               showContactInfo={canViewFullContent}
               hideMatchScore={true}
+              reviewCustomerId={review.customerId}
             />
           </div>
         </div>

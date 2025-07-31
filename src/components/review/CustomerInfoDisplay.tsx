@@ -2,6 +2,8 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReviewMatchQualityScore from "@/components/customer/ReviewMatchQualityScore";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CustomerInfo {
   name: string;
@@ -23,6 +25,7 @@ interface CustomerInfoDisplayProps {
   size?: 'small' | 'medium' | 'large';
   showContactInfo?: boolean;
   hideMatchScore?: boolean;
+  reviewCustomerId?: string; // Optional: pass review's customerId for profile data lookup
 }
 
 const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
@@ -30,8 +33,52 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
   onCustomerClick,
   size = 'medium',
   showContactInfo = false,
-  hideMatchScore = false
+  hideMatchScore = false,
+  reviewCustomerId
 }) => {
+  // Fetch customer profile data when review is claimed
+  const { data: customerProfile } = useQuery({
+    queryKey: ['customerProfile', reviewCustomerId],
+    queryFn: async () => {
+      if (!reviewCustomerId) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode')
+        .eq('id', reviewCustomerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("CustomerInfoDisplay: Error fetching customer profile:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!reviewCustomerId && customerInfo.isClaimed
+  });
+
+  // Enhanced customer info that uses profile data when available
+  const enhancedCustomerInfo = React.useMemo(() => {
+    if (!customerProfile || !customerInfo.isClaimed) {
+      return customerInfo;
+    }
+
+    // Use profile data when available
+    const profileName = customerProfile.first_name && customerProfile.last_name 
+      ? `${customerProfile.first_name} ${customerProfile.last_name}`
+      : customerProfile.first_name || customerProfile.last_name || customerProfile.name;
+
+    return {
+      ...customerInfo,
+      name: profileName || customerInfo.name,
+      avatar: customerProfile.avatar || customerInfo.avatar,
+      phone: customerProfile.phone || customerInfo.phone,
+      address: customerProfile.address || customerInfo.address,
+      city: customerProfile.city || customerInfo.city,
+      zipCode: customerProfile.zipcode || customerInfo.zipCode
+    };
+  }, [customerInfo, customerProfile]);
   const getInitials = (name: string) => {
     if (name) {
       const names = name.split(' ');
@@ -64,16 +111,16 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
   };
 
   const sizeClasses = getSizeClasses();
-  const isClickable = onCustomerClick && (customerInfo.isClaimed || customerInfo.matchConfidence === 'high');
+  const isClickable = onCustomerClick && (enhancedCustomerInfo.isClaimed || enhancedCustomerInfo.matchConfidence === 'high');
 
   return (
     <div className="flex items-center space-x-2">
       <Avatar className={sizeClasses.avatar}>
-        {customerInfo.isClaimed && customerInfo.avatar ? (
-          <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+        {enhancedCustomerInfo.isClaimed && enhancedCustomerInfo.avatar ? (
+          <AvatarImage src={enhancedCustomerInfo.avatar} alt={enhancedCustomerInfo.name} />
         ) : null}
         <AvatarFallback className="bg-gray-100 text-gray-600">
-          {getInitials(customerInfo.name)}
+          {getInitials(enhancedCustomerInfo.name)}
         </AvatarFallback>
       </Avatar>
       
@@ -84,32 +131,32 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
               className={`${sizeClasses.name} cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline`}
               onClick={onCustomerClick}
             >
-              {customerInfo.name}
+              {enhancedCustomerInfo.name}
             </h4>
           ) : (
             <h4 className={sizeClasses.name}>
-              {customerInfo.name}
+              {enhancedCustomerInfo.name}
             </h4>
           )}
         </div>
         
         {/* Show match quality score for unclaimed reviews */}
-        {!hideMatchScore && !customerInfo.isClaimed && customerInfo.matchScore && customerInfo.matchScore > 5 && customerInfo.matchType && (
+        {!hideMatchScore && !enhancedCustomerInfo.isClaimed && enhancedCustomerInfo.matchScore && enhancedCustomerInfo.matchScore > 5 && enhancedCustomerInfo.matchType && (
           <div className="flex justify-end mb-1">
             <ReviewMatchQualityScore 
-              matchScore={customerInfo.matchScore}
-              matchType={customerInfo.matchType}
+              matchScore={enhancedCustomerInfo.matchScore}
+              matchType={enhancedCustomerInfo.matchType}
             />
           </div>
         )}
         
         {showContactInfo && (
           <div className={sizeClasses.details}>
-            {customerInfo.isClaimed ? (
+            {enhancedCustomerInfo.isClaimed ? (
               <>
-                {customerInfo.phone && <p>{customerInfo.phone}</p>}
-                {customerInfo.address && (
-                  <p>{[customerInfo.address, customerInfo.city, customerInfo.zipCode].filter(Boolean).join(', ')}</p>
+                {enhancedCustomerInfo.phone && <p>{enhancedCustomerInfo.phone}</p>}
+                {enhancedCustomerInfo.address && (
+                  <p>{[enhancedCustomerInfo.address, enhancedCustomerInfo.city, enhancedCustomerInfo.zipCode].filter(Boolean).join(', ')}</p>
                 )}
               </>
             ) : (

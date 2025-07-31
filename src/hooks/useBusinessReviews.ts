@@ -17,7 +17,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
     setIsLoading(true);
     
     try {
-      // Fetch reviews written by this business (not soft deleted)
+      // Fetch reviews written by this business with claim info (not soft deleted)
       const { data: reviewsData, error } = await supabase
         .from('reviews')
         .select(`
@@ -29,7 +29,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_address,
           customer_city,
           customer_zipcode,
-          customer_phone
+          customer_phone,
+          review_claims(claimed_by)
         `)
         .eq('business_id', currentUser.id)
         .is('deleted_at', null) // Only get non-deleted reviews
@@ -59,7 +60,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           reviewerId: currentUser.id,
           reviewerName: currentUser.name || "Anonymous Business",
           reviewerAvatar: currentUser.avatar,
-          customerId: '', // No longer using customer_id
+          customerId: review.review_claims?.[0]?.claimed_by || '', // Use claimed customer ID if available
           customerName: review.customer_name || "Anonymous Customer",
           rating: review.rating,
           content: review.content,

@@ -210,6 +210,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
             onCustomerClick={customerInfo.isClaimed && (isUnlocked || hasSubscription) ? handleCustomerClick : undefined}
             size="small"
             showContactInfo={false}
+            reviewCustomerId={review.customerId}
           />
         </div>
       </div>
