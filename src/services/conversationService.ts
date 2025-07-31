@@ -132,16 +132,37 @@ export const conversationService = {
     return data;
   },
 
-  // Check if user can respond (conversation exists and user is participant)
+  // Check if user can respond (conversation exists and user is participant and it's their turn)
   async canUserRespond(reviewId: string, userId: string, userType: 'business' | 'customer'): Promise<boolean> {
     const participants = await this.getParticipants(reviewId);
     
-    if (!participants) return false;
+    if (!participants) {
+      // No conversation exists - only customers can start a conversation
+      return userType === 'customer';
+    }
 
-    if (userType === 'customer') {
-      return participants.customer_id === userId;
+    // Check if user is a participant
+    const isParticipant = userType === 'customer' 
+      ? participants.customer_id === userId
+      : participants.business_id === userId;
+    
+    if (!isParticipant) return false;
+
+    // Get the last message to determine whose turn it is
+    const messages = await this.getConversation(reviewId);
+    
+    if (messages.length === 0) {
+      // No messages yet - only customer can start
+      return userType === 'customer';
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    
+    // Turn alternates: if last message was from customer, business can respond next, and vice versa
+    if (lastMessage.author_type === 'customer') {
+      return userType === 'business';
     } else {
-      return participants.business_id === userId;
+      return userType === 'customer';
     }
   }
 };
