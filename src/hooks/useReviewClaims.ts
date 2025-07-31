@@ -70,6 +70,7 @@ export const useReviewClaims = () => {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) return [];
 
+      // First get the claimed reviews
       const { data: claims, error } = await supabase
         .from('review_claims')
         .select(`
@@ -86,8 +87,7 @@ export const useReviewClaims = () => {
             customer_phone,
             customer_address,
             customer_city,
-            customer_zipcode,
-            profiles!business_id(id, name, avatar, verified)
+            customer_zipcode
           )
         `)
         .eq('claimed_by', currentUser.user.id)
@@ -98,16 +98,41 @@ export const useReviewClaims = () => {
         return [];
       }
 
-      return claims?.map(claim => ({
-        ...claim.reviews,
-        claimType: claim.claim_type,
-        claimedAt: claim.claimed_at,
-        business_profile: claim.reviews?.profiles,
-        reviewerName: claim.reviews?.profiles?.name || 'Business',
-        reviewerAvatar: claim.reviews?.profiles?.avatar || '',
-        reviewerVerified: claim.reviews?.profiles?.verified || false,
-        isClaimed: true
-      })) || [];
+      if (!claims || claims.length === 0) {
+        console.log('No claimed reviews found for user');
+        return [];
+      }
+
+      // Get business profile data separately to avoid RLS filtering issues
+      const businessIds = [...new Set(claims.map(claim => claim.reviews?.business_id).filter(Boolean))];
+      let businessProfilesMap = new Map();
+      
+      if (businessIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar, verified')
+          .in('id', businessIds);
+
+        if (!profilesError && profiles) {
+          profiles.forEach(profile => {
+            businessProfilesMap.set(profile.id, profile);
+          });
+        }
+      }
+
+      return claims?.map(claim => {
+        const businessProfile = businessProfilesMap.get(claim.reviews?.business_id);
+        return {
+          ...claim.reviews,
+          claimType: claim.claim_type,
+          claimedAt: claim.claimed_at,
+          business_profile: businessProfile,
+          reviewerName: businessProfile?.name || 'Business',
+          reviewerAvatar: businessProfile?.avatar || '',
+          reviewerVerified: businessProfile?.verified || false,
+          isClaimed: true
+        };
+      }) || [];
     } catch (error) {
       console.error('Error in getUserClaimedReviews:', error);
       return [];
