@@ -158,7 +158,8 @@ export const useProfileReviewsFetching = () => {
             rating,
             content,
             created_at,
-            business_id
+            business_id,
+            review_claims!left(claimed_by)
           `)
           .eq('business_id', currentUser.id)
           .order('created_at', { ascending: false });
@@ -180,6 +181,8 @@ export const useProfileReviewsFetching = () => {
           customer_zipcode: review.customer_zipcode,
           customer_phone: review.customer_phone,
           business_id: review.business_id,
+          // Include customerId from review claims if available
+          customerId: review.review_claims?.[0]?.claimed_by || null,
           reviewerAvatar: currentUser.avatar || '',
           reviewerName: currentUser.name || 'Business',
           business_profile: {
