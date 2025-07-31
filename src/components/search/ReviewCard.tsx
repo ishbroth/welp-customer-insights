@@ -8,6 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import CustomerInfoDisplay from "@/components/review/CustomerInfoDisplay";
 import { useCustomerInfo } from "@/hooks/useCustomerInfo";
+import ReviewConversationSection from "@/components/conversation/ReviewConversationSection";
+import { useReviewAccess } from "@/hooks/useReviewAccess";
+import { useCredits } from "@/hooks/useCredits";
+import { toast } from "@/components/ui/sonner";
 
 interface ReviewCardProps {
   review: {
@@ -41,13 +45,20 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
+  const { balance, useCredits: useCreditsFn, loadCreditsData } = useCredits();
+  const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
 
   // Check if current user is the business that wrote this review
   const isReviewAuthor = currentUser?.type === 'business' && currentUser?.id === review.reviewerId;
   
-  // Use subscription status from auth context instead of props, OR if user authored the review
-  const isUnlocked = isSubscribed || isOneTimeUnlocked || isReviewAuthor;
-  const canViewFullContent = isUnlocked;
+  // Use persistent review access check
+  const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isOneTimeUnlocked;
+  
+  // For review content: authors can always see full content
+  const canViewFullContent = isSubscribed || isReviewActuallyUnlocked || isReviewAuthor;
+  
+  // For conversation participation: even authors need subscription or unlock
+  const canParticipateInConversation = isSubscribed || isReviewActuallyUnlocked;
 
   // Use the customer info system
   const customerInfo = useCustomerInfo({
@@ -123,6 +134,26 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     }
     
     navigate('/subscription');
+  };
+
+  const handleUseCreditClick = async () => {
+    if (balance < 1) {
+      toast.error("Insufficient credits");
+      return;
+    }
+
+    const result = await useCreditsFn(1, `Unlocked review ${review.id}`);
+    if (result.success) {
+      // Claim the review with the transaction ID
+      const claimed = await addUnlockedReview(review.id, result.transactionId);
+      
+      if (claimed) {
+        loadCreditsData(); // Refresh credit balance
+        toast.success("Review unlocked using 1 credit!");
+      } else {
+        toast.error("This review has already been claimed by another user.");
+      }
+    }
   };
 
   // Get first three letters for preview (not words)
@@ -261,6 +292,49 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </div>
           )}
         </div>
+
+        {/* Conversation Section */}
+        <ReviewConversationSection 
+          reviewId={review.id}
+          shouldShowFullReview={canParticipateInConversation}
+          isBusinessUser={currentUser?.type === 'business'}
+          className="mt-4"
+        />
+
+        {/* Conversation Access Prompt - Show when review content is visible but conversation participation needs unlock */}
+        {canViewFullContent && !canParticipateInConversation && (
+          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <div className="flex items-center text-gray-600 mb-2">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              <span className="text-sm">Unlock conversation to participate</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              {isReviewAuthor 
+                ? "Even as the review author, you need to unlock or subscribe to participate in conversations"
+                : "Subscribe or use credits to participate in the conversation"
+              }
+            </p>
+            <div className="flex gap-2">
+              {balance > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleUseCreditClick}
+                  className="flex-1"
+                >
+                  Use 1 Credit
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={handleSubscriptionAccess}
+                className="flex-1"
+              >
+                Subscribe
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
