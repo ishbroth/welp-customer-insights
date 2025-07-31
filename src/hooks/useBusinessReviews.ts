@@ -69,11 +69,11 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           reviewerId: currentUser.id,
           reviewerName: currentUser.name || "Anonymous Business",
           reviewerAvatar: currentUser.avatar,
-          customerId: claimedBy || null, // Use claimed customer ID if available, null if not claimed
+          customerId: claimedBy || "unclaimed", // Use claimed customer ID if available, "unclaimed" if not claimed
           customerName: review.customer_name || "Anonymous Customer",
           rating: review.rating,
           content: review.content,
-          date: reviewDate, // Ensure consistent date format
+          date: reviewDate,
           // Map database fields correctly to Review interface
           address: review.customer_address || "",
           city: review.customer_city || "",

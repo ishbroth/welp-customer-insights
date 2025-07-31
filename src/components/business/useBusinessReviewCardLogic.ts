@@ -17,16 +17,26 @@ export const useBusinessReviewCardLogic = (review: Review) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | any) => {
     console.log("formatDate input:", { _type: typeof dateString, value: dateString });
     console.log("formatDate review.date:", review.date);
-    if (!dateString) {
-      console.log("formatDate: No date string provided");
+    
+    // Handle corrupted date objects
+    let cleanDateString = dateString;
+    if (typeof dateString === 'object' && dateString?.value) {
+      cleanDateString = dateString.value;
+      if (typeof cleanDateString === 'object' && cleanDateString?.value) {
+        cleanDateString = cleanDateString.value;
+      }
+    }
+    
+    if (!cleanDateString || cleanDateString === 'undefined' || typeof cleanDateString !== 'string') {
+      console.log("formatDate: No valid date string provided");
       return "Invalid date";
     }
     
     try {
-      const date = new Date(dateString);
+      const date = new Date(cleanDateString);
       console.log("formatDate parsed date:", date);
       
       if (isNaN(date.getTime())) {
