@@ -39,11 +39,15 @@ export const conversationService = {
 
   // Check if a conversation exists for a review
   async hasConversation(reviewId: string): Promise<boolean> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('conversation_participants')
       .select('id')
       .eq('review_id', reviewId)
-      .single();
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking conversation:', error);
+    }
 
     return !!data;
   },
@@ -119,11 +123,10 @@ export const conversationService = {
       .from('conversation_participants')
       .select('*')
       .eq('review_id', reviewId)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching participants:', error);
-      throw error;
     }
 
     return data;
