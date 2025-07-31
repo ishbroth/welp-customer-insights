@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
         .from('credit_transactions')
         .select('user_id, amount, description')
         .eq('type', 'usage')
-        .like('description', `Unlocked review ${reviewId}%`);
+        .like('description', `%Unlocked review ${reviewId}%`);
 
       if (creditError) {
         console.error('❌ Error fetching credit transactions:', creditError);
