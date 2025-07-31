@@ -23,6 +23,9 @@ const Subscription = () => {
   const [fromReviewId, setFromReviewId] = useState<string | null>(null);
   
   useEffect(() => {
+    // Scroll to top when page loads
+    window.scrollTo(0, 0);
+    
     const params = new URLSearchParams(location.search);
     const reviewId = params.get("reviewId");
     const canceled = params.get("canceled");
