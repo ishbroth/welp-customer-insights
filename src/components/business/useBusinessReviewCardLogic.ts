@@ -30,6 +30,11 @@ export const useBusinessReviewCardLogic = (review: Review) => {
       }
     }
     
+    // Use the review.date directly if dateString is problematic
+    if (!cleanDateString || cleanDateString === 'undefined' || typeof cleanDateString !== 'string') {
+      cleanDateString = review.date;
+    }
+    
     if (!cleanDateString || cleanDateString === 'undefined' || typeof cleanDateString !== 'string') {
       console.log("formatDate: No valid date string provided");
       return "Invalid date";

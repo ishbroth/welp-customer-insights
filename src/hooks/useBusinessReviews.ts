@@ -52,8 +52,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       const formattedReviews = reviewsWithResponses.map(review => {
         const claimedBy = review.review_claims?.[0]?.claimed_by;
         
-        // Ensure we have a valid date string
-        const reviewDate = review.created_at ? new Date(review.created_at).toISOString() : new Date().toISOString();
+        // Ensure we have a valid date string - use the raw created_at value
+        const reviewDate = review.created_at || new Date().toISOString();
         
         console.log("BusinessReviews: Processing review:", {
           id: review.id,
@@ -69,7 +69,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           reviewerId: currentUser.id,
           reviewerName: currentUser.name || "Anonymous Business",
           reviewerAvatar: currentUser.avatar,
-          customerId: claimedBy || "unclaimed", // Use claimed customer ID if available, "unclaimed" if not claimed
+          customerId: claimedBy || "unclaimed",
           customerName: review.customer_name || "Anonymous Customer",
           rating: review.rating,
           content: review.content,
