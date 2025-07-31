@@ -85,7 +85,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_phone: review.customer_phone || "",
           reactions: { like: [], funny: [], useful: [], ohNo: [] },
           responses: []
-        };
+        } as Review;
         
         console.log("BusinessReviews: Formatted review:", {
           id: formattedReview.id,

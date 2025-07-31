@@ -46,9 +46,10 @@ export const useBusinessReviewCardLogic = (review: Review) => {
     }
   };
 
-  const getCustomerInitials = () => {
-    if (review.customerName) {
-      const names = review.customerName.split(' ');
+  const getCustomerInitials = (name?: string) => {
+    const customerName = name || review.customerName;
+    if (customerName) {
+      const names = customerName.split(' ');
       return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
     return "C";
