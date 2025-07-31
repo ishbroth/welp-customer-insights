@@ -98,6 +98,14 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
 
       setWorkingReviews(formattedReviews);
       
+      console.log("BusinessReviews: Final formatted reviews:", formattedReviews.map(r => ({
+        id: r.id,
+        customerName: r.customerName,
+        date: r.date,
+        dateType: typeof r.date,
+        dateValue: JSON.stringify(r.date)
+      })));
+      
       console.log("BusinessReviews: Formatted reviews with responses:", formattedReviews);
       
       if (reviewsData && reviewsData.length > 0) {

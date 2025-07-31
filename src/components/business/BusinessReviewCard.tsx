@@ -30,6 +30,15 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   onReactionToggle,
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  console.log("BusinessReviewCard: Received review data:", {
+    id: review.id,
+    customerName: review.customerName,
+    date: review.date,
+    dateType: typeof review.date,
+    dateValue: JSON.stringify(review.date)
+  });
+  
   const { handleCustomerClick, formatDate, getCustomerInitials } = useBusinessReviewCardLogic(review);
   const navigate = useNavigate();
 
