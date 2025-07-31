@@ -49,6 +49,12 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   let customerAddress = review.customer_address || '';
   let customerCity = review.customer_city || '';
   let customerZipcode = review.customer_zipcode || '';
+  
+  console.log("BusinessReviewCardHeader: Initial customer data:", {
+    reviewCustomerName: review.customerName,
+    customerDisplayName,
+    reviewObject: review
+  });
 
   if (customerProfile) {
     customerAvatar = customerProfile.avatar || '';

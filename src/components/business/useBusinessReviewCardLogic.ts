@@ -20,29 +20,55 @@ export const useBusinessReviewCardLogic = (review: Review) => {
   const formatDate = (dateString: string | any) => {
     console.log("formatDate input:", { _type: typeof dateString, value: dateString });
     console.log("formatDate review.date:", review.date);
+    console.log("formatDate review object:", review);
     
-    // Handle corrupted date objects
-    let cleanDateString = dateString;
-    if (typeof dateString === 'object' && dateString?.value) {
-      cleanDateString = dateString.value;
-      if (typeof cleanDateString === 'object' && cleanDateString?.value) {
-        cleanDateString = cleanDateString.value;
+    // Try to get a valid date string from multiple sources
+    let cleanDateString = null;
+    
+    // First try the passed dateString if it's a valid string
+    if (typeof dateString === 'string' && dateString !== 'undefined' && dateString !== 'null') {
+      cleanDateString = dateString;
+    }
+    // Try review.date if it's a string
+    else if (typeof review.date === 'string' && review.date !== 'undefined' && review.date !== 'null') {
+      cleanDateString = review.date;
+    }
+    // Handle corrupted nested objects - extract the actual date string
+    else if (typeof review.date === 'object' && review.date) {
+      // Try to extract from nested object structure
+      const extractDateString = (obj: any): string | null => {
+        if (typeof obj === 'string') return obj;
+        if (obj && typeof obj === 'object') {
+          if (obj.value) return extractDateString(obj.value);
+          if (obj.date) return extractDateString(obj.date);
+          if (obj.created_at) return extractDateString(obj.created_at);
+        }
+        return null;
+      };
+      cleanDateString = extractDateString(review.date);
+    }
+    
+    // If still no valid date, check if we have any other date fields on the review
+    if (!cleanDateString) {
+      // Look for other potential date fields on the review object
+      const reviewObj = review as any;
+      if (reviewObj.created_at && typeof reviewObj.created_at === 'string') {
+        cleanDateString = reviewObj.created_at;
+      } else if (reviewObj.createdAt && typeof reviewObj.createdAt === 'string') {
+        cleanDateString = reviewObj.createdAt;
       }
     }
     
-    // Use the review.date directly if dateString is problematic
-    if (!cleanDateString || cleanDateString === 'undefined' || typeof cleanDateString !== 'string') {
-      cleanDateString = review.date;
+    // As a last fallback, use current date
+    if (!cleanDateString || cleanDateString === 'undefined' || cleanDateString === 'null') {
+      console.warn("formatDate: No valid date found, using current date");
+      cleanDateString = new Date().toISOString();
     }
     
-    if (!cleanDateString || cleanDateString === 'undefined' || typeof cleanDateString !== 'string') {
-      console.log("formatDate: No valid date string provided");
-      return "Invalid date";
-    }
+    console.log("formatDate: Using date string:", cleanDateString);
     
     try {
       const date = new Date(cleanDateString);
-      console.log("formatDate parsed date:", date);
       
       if (isNaN(date.getTime())) {
         console.log("formatDate: Invalid date object");
