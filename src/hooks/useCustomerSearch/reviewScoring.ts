@@ -75,6 +75,7 @@ export const scoreReview = (
     
     // Direct similarity with higher weight for exact matches
     const similarity = calculateStringSimilarity(searchName, customerName);
+    console.log(`Review ${review.id} name similarity: "${searchName}" vs "${customerName}" = ${similarity}`);
     if (similarity > REVIEW_SEARCH_CONFIG.SIMILARITY_THRESHOLD) {
       let points = similarity * REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER;
       
@@ -112,8 +113,9 @@ export const scoreReview = (
             score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * 2; // Double points for exact word match
             matches++;
           }
-          // Partial word match
-          else if (nameWord.includes(searchWord) || searchWord.includes(nameWord)) {
+          // Partial word match - more strict criteria
+          else if (searchWord.length >= 4 && nameWord.length >= 4 && 
+                   (nameWord.includes(searchWord) || searchWord.includes(nameWord))) {
             score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH;
             matches++;
           }

@@ -58,20 +58,29 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       
       if (profileName) {
         const similarity = calculateStringSimilarity(searchName, profileName);
-        if (similarity > 0.2) { // Very low threshold for single field searches
+        console.log(`Name similarity for "${searchName}" vs "${profileName}": ${similarity}`);
+        
+        // Use higher threshold for multi-field searches
+        const threshold = isSingleFieldSearch ? 0.4 : 0.7;
+        if (similarity > threshold) {
           score += similarity * 3;
           matches++;
+          console.log(`✅ Name match: ${similarity} > ${threshold}`);
         }
         
-        // Also check if any word in the search matches any word in the profile name
-        const searchWords = searchName.split(/\s+/);
-        const profileWords = profileName.split(/\s+/);
+        // More strict word matching - require longer words and better matches
+        const searchWords = searchName.split(/\s+/).filter(word => word.length >= 3);
+        const profileWords = profileName.split(/\s+/).filter(word => word.length >= 3);
         
         for (const searchWord of searchWords) {
           for (const profileWord of profileWords) {
-            if (searchWord.length >= 2 && (profileWord.includes(searchWord) || searchWord.includes(profileWord))) {
+            // Exact word match or starts with (for longer words)
+            if (searchWord === profileWord || 
+                (searchWord.length >= 4 && profileWord.startsWith(searchWord)) ||
+                (profileWord.length >= 4 && searchWord.startsWith(profileWord))) {
               score += 1;
               matches++;
+              console.log(`✅ Word match: "${searchWord}" matches "${profileWord}"`);
             }
           }
         }
@@ -90,9 +99,12 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     // Address matching with fuzzy logic
     if (address && profile.address) {
       const similarity = calculateStringSimilarity(address.toLowerCase(), profile.address.toLowerCase());
-      if (similarity > 0.2) { // Lower threshold
+      const threshold = isSingleFieldSearch ? 0.4 : 0.6;
+      console.log(`Address similarity for "${address}" vs "${profile.address}": ${similarity}`);
+      if (similarity > threshold) {
         score += similarity * 2;
         matches++;
+        console.log(`✅ Address match: ${similarity} > ${threshold}`);
       }
       
       // Check for house number match - safely handle regex match results
@@ -112,9 +124,13 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     // City matching
     if (city && profile.city) {
       const similarity = calculateStringSimilarity(city.toLowerCase(), profile.city.toLowerCase());
-      if (similarity > 0.3 || profile.city.toLowerCase().includes(city.toLowerCase()) || city.toLowerCase().includes(profile.city.toLowerCase())) {
+      const threshold = isSingleFieldSearch ? 0.4 : 0.7;
+      console.log(`City similarity for "${city}" vs "${profile.city}": ${similarity}`);
+      if (similarity > threshold || 
+          (similarity > 0.8 && (profile.city.toLowerCase().includes(city.toLowerCase()) || city.toLowerCase().includes(profile.city.toLowerCase())))) {
         score += similarity * 1.5;
         matches++;
+        console.log(`✅ City match: ${similarity} > ${threshold}`);
       }
     }
     
@@ -171,19 +187,32 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     return { ...profile, searchScore: score, matchCount: matches };
   });
   
-  // For state-only searches, be very lenient with scoring
-  let minScore = 0.1;
+  // Apply stricter filtering for multi-field searches
+  let minScore = isSingleFieldSearch ? 0.5 : 2.0;
+  let minMatches = isSingleFieldSearch ? 1 : 2;
+  
   if (isStateOnlySearch) {
-    minScore = 0; // Return anything with any score at all for state-only searches
+    minScore = 0;
+    minMatches = 1;
   }
+  
+  console.log(`Filtering with minScore: ${minScore}, minMatches: ${minMatches}, isSingleField: ${isSingleFieldSearch}`);
   
   const filteredProfiles = scoredProfiles
     .filter(profile => {
-      // For state-only searches, include any profile that has a state match
+      console.log(`Profile ${profile.first_name} ${profile.last_name}: score=${profile.searchScore}, matches=${profile.matchCount}`);
+      
       if (isStateOnlySearch) {
-        return profile.matchCount > 0 || profile.searchScore > 0;
+        return profile.matchCount > 0;
       }
-      return profile.searchScore > minScore || profile.matchCount > 0;
+      
+      // For multi-field searches, require both minimum score AND minimum matches
+      if (!isSingleFieldSearch) {
+        return profile.searchScore >= minScore && profile.matchCount >= minMatches;
+      }
+      
+      // For single field searches, be more lenient
+      return profile.searchScore >= minScore || profile.matchCount >= minMatches;
     })
     .sort((a, b) => {
       // Sort by match count first, then by score

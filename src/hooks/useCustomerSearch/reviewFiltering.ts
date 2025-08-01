@@ -15,14 +15,23 @@ export const filterAndSortReviews = (
   scoredReviews: ScoredReview[],
   isSingleFieldSearch: boolean
 ): ScoredReview[] => {
-  // For single field searches, be very lenient - return anything with any match
-  let minScore = 0.1;
-  if (isSingleFieldSearch) {
-    minScore = 0; // Return anything with any score at all for single field searches
-  }
+  // Apply stricter filtering based on search type
+  let minScore = isSingleFieldSearch ? 5 : REVIEW_SEARCH_CONFIG.MINIMUM_SCORE_MULTI_FIELD;
+  let minMatches = isSingleFieldSearch ? 1 : REVIEW_SEARCH_CONFIG.MINIMUM_MATCHES_MULTI_FIELD;
+
+  console.log(`Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}`);
 
   const filteredReviews = scoredReviews
-    .filter(review => review.searchScore > minScore || review.matchCount > 0)
+    .filter(review => {
+      console.log(`Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}`);
+      
+      if (isSingleFieldSearch) {
+        return review.searchScore >= minScore || review.matchCount >= minMatches;
+      }
+      
+      // For multi-field searches, require both minimum score AND minimum matches
+      return review.searchScore >= minScore && review.matchCount >= minMatches;
+    })
     .sort((a, b) => {
       // Enhanced priority ranking system:
       // 1. Match quality (search score and match count) - highest priority
