@@ -60,8 +60,8 @@ export const searchProfiles = async (searchParams: SearchParams) => {
         const similarity = calculateStringSimilarity(searchName, profileName);
         console.log(`Name similarity for "${searchName}" vs "${profileName}": ${similarity}`);
         
-        // Use higher threshold for multi-field searches
-        const threshold = isSingleFieldSearch ? 0.4 : 0.7;
+        // Use more reasonable thresholds
+        const threshold = isSingleFieldSearch ? 0.4 : 0.5; // Lowered from 0.7 to 0.5
         if (similarity > threshold) {
           score += similarity * 3;
           matches++;
