@@ -13,17 +13,11 @@
 }
 
 @keyframes clockwise-highlight {
-  0% { 
+  0%, 80% { 
     fill: white; 
   }
-  20% { 
+  20%, 60% { 
     fill: #3b82f6; 
-  }
-  40% { 
-    fill: white; 
-  }
-  100% { 
-    fill: white; 
   }
 }
 
