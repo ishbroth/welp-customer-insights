@@ -91,6 +91,23 @@ const CustomerProfile: React.FC = () => {
                   </div>
                 )}
 
+                {(customerProfile.address || customerProfile.city || customerProfile.state || customerProfile.zipcode) && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <span>Address: {[
+                      customerProfile.address,
+                      customerProfile.city,
+                      customerProfile.state,
+                      customerProfile.zipcode
+                    ].filter(Boolean).join(', ')}</span>
+                  </div>
+                )}
+
+                {customerProfile.bio && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <span>Bio: {customerProfile.bio}</span>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   <span>Member since {new Date(customerProfile.created_at || '').toLocaleDateString()}</span>
@@ -113,7 +130,7 @@ const CustomerProfile: React.FC = () => {
         {/* Reviews Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Reviews by {displayName}</CardTitle>
+            <CardTitle>Reviews About {displayName}</CardTitle>
           </CardHeader>
           <CardContent>
             {customerReviews && customerReviews.length > 0 ? (
@@ -122,9 +139,23 @@ const CustomerProfile: React.FC = () => {
                   <div key={review.id} className="border-l-4 border-primary/20 pl-4 py-2">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium">{review.business_name || 'Business'}</h4>
-                      <Badge variant="outline">{review.rating}/5 stars</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{review.rating}/5 stars</Badge>
+                        {review.isClaimed ? (
+                          <Badge variant="default">Claimed</Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            {review.matchType === 'high_quality' ? 'High Match' : 'Potential Match'}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{review.content}</p>
+                    {review.matchReasons && review.matchReasons.length > 0 && (
+                      <p className="text-xs text-blue-600 mb-2">
+                        Match reasons: {review.matchReasons.join(', ')}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {new Date(review.created_at).toLocaleDateString()}
                     </p>
@@ -133,7 +164,7 @@ const CustomerProfile: React.FC = () => {
               </div>
             ) : (
               <p className="text-muted-foreground text-center py-8">
-                No reviews available.
+                No reviews found about this customer.
               </p>
             )}
           </CardContent>
