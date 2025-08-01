@@ -174,8 +174,9 @@ export const useProfileReviewsFetching = () => {
           id: review.id,
           rating: review.rating,
           content: review.content,
-          created_at: review.created_at,
-          customer_name: review.customer_name,
+          date: review.created_at,
+          customerName: review.customer_name, // Map to camelCase for component compatibility
+          customer_name: review.customer_name, // Keep snake_case for backward compatibility
           customer_address: review.customer_address,
           customer_city: review.customer_city,
           customer_zipcode: review.customer_zipcode,
