@@ -56,6 +56,12 @@ export interface Review {
     ohNo: string[];
   };
   responses?: ReviewResponse[];
+  location?: string;
+  // Extended properties for business profile reviews
+  isClaimed?: boolean;
+  isUnlocked?: boolean;
+  canReact?: boolean;
+  canRespond?: boolean;
 }
 
 export interface ReviewResponse {

@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useBusinessProfile } from "@/hooks/useBusinessProfile";
 import { useBusinessProfileReviews } from "@/hooks/useBusinessProfileReviews";
 import { useAuth } from "@/contexts/auth";
@@ -7,12 +7,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MessageCircle, Star } from "lucide-react";
+import { Calendar, MessageCircle, ArrowLeft } from "lucide-react";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
+import SubscriptionButton from "@/components/profile/SubscriptionButton";
+import { useProfileReviewsActions } from "@/components/profile/hooks/useProfileReviewsActions";
 
 const BusinessProfile: React.FC = () => {
   const { businessId } = useParams<{ businessId: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
   
   // Get state from navigation
@@ -26,6 +32,17 @@ const BusinessProfile: React.FC = () => {
   const { reviews: businessReviews, isLoading: reviewsLoading } = useBusinessProfileReviews(businessId, hasAccess);
 
   const isLoading = profileLoading || reviewsLoading;
+  
+  // Use profile review actions for handling purchases and reactions
+  const { handlePurchaseReview, handleReactionToggle } = useProfileReviewsActions(
+    currentUser,
+    isSubscribed,
+    () => false, // hasOneTimeAccess function - not used in this context
+    () => {
+      // Refresh the reviews when needed
+      window.location.reload();
+    }
+  );
 
   const getInitials = (name?: string) => {
     if (!name) return "B";
@@ -59,8 +76,19 @@ const BusinessProfile: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Back Navigation */}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Welp
+          </Button>
         {/* Header */}
         <Card>
           <CardHeader>
@@ -121,49 +149,39 @@ const BusinessProfile: React.FC = () => {
           </CardHeader>
         </Card>
 
-        {/* Reviews Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Reviews about {displayName}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {businessReviews && businessReviews.length > 0 ? (
-              <div className="space-y-4">
-                {businessReviews.map((review) => (
-                  <div key={review.id} className="border-l-4 border-primary/20 pl-4 py-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{review.customerName || 'Customer'}</h4>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-4 w-4 ${
-                                star <= review.rating
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <Badge variant="outline">{review.rating}/5</Badge>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">{review.content}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(review.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">
-                No reviews available.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+          {/* Reviews Section */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Reviews from {displayName}</CardTitle>
+              {/* Show subscription button for non-subscribed business users */}
+              {currentUser?.type === 'business' && !isSubscribed && businessReviews && businessReviews.length > 0 && (
+                <SubscriptionButton variant="outline" size="sm" />
+              )}
+            </CardHeader>
+            <CardContent>
+              {businessReviews && businessReviews.length > 0 ? (
+                <div className="space-y-6">
+                  {businessReviews.map((review) => (
+                    <EnhancedCustomerReviewCard
+                      key={review.id}
+                      review={review}
+                      isUnlocked={review.isUnlocked || false}
+                      hasSubscription={isSubscribed}
+                      onPurchase={handlePurchaseReview}
+                      onReactionToggle={handleReactionToggle}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  No reviews available.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

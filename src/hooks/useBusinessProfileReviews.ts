@@ -1,15 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Review } from "@/types";
+import { useAuth } from "@/contexts/auth";
+import { useReviewClaims } from "./useReviewClaims";
 
 export const useBusinessProfileReviews = (businessId: string | undefined, hasAccess: boolean) => {
+  const { currentUser, isSubscribed } = useAuth();
+  const { isReviewClaimedByUser } = useReviewClaims();
+  
   const { 
     data: reviews, 
     isLoading, 
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['businessProfileReviews', businessId],
+    queryKey: ['businessProfileReviews', businessId, currentUser?.id],
     queryFn: async () => {
       if (!businessId || !hasAccess) {
         return [];
@@ -29,7 +34,7 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
       }
       
       // Transform the data to match the Review type and load reactions from localStorage
-      const transformedReviews: Review[] = (data || []).map(review => {
+      const transformedReviews: Review[] = await Promise.all((data || []).map(async (review) => {
         // Load reactions from localStorage for this review
         const storageKey = `reactions_${review.id}`;
         const storedReactions = localStorage.getItem(storageKey);
@@ -52,26 +57,45 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
           console.log(`No stored reactions found for review ${review.id}`);
         }
 
+        // Check if this review is claimed by the current user
+        const isClaimed = currentUser ? await isReviewClaimedByUser(review.id) : false;
+
         const transformedReview = {
           id: review.id,
           reviewerId: review.business_id || '',
           reviewerName: review.customer_name || 'Anonymous',
-          customerId: '',
+          customerId: isClaimed ? currentUser?.id || '' : '',
           customerName: review.customer_name || 'Anonymous',
           rating: review.rating,
           content: review.content,
           date: review.created_at,
           location: `${review.customer_city || ''}, ${review.customer_zipcode || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || 'Unknown',
           reactions: reactions,
-          responses: []
+          responses: [],
+          isClaimed,
+          // Add access control flags
+          isUnlocked: isClaimed || isSubscribed || currentUser?.type === 'business',
+          canReact: !!currentUser,
+          canRespond: isClaimed && currentUser?.type === 'customer'
         };
         
         console.log(`Transformed review ${review.id}:`, transformedReview);
         return transformedReview;
+      }));
+      
+      // Sort reviews: claimed reviews first for customer users
+      const sortedReviews = transformedReviews.sort((a, b) => {
+        if (currentUser?.type === 'customer') {
+          // For customer users, prioritize claimed reviews
+          if (a.isClaimed && !b.isClaimed) return -1;
+          if (!a.isClaimed && b.isClaimed) return 1;
+        }
+        // Then sort by date (newest first)
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
       
-      console.log("All transformed business reviews:", transformedReviews);
-      return transformedReviews;
+      console.log("All transformed business reviews:", sortedReviews);
+      return sortedReviews;
     },
     enabled: !!businessId && hasAccess,
     retry: 1
