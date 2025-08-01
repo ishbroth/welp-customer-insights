@@ -157,10 +157,20 @@ export const searchReviews = async (searchParams: SearchParams) => {
     return scoredReview;
   });
 
+  // Detect search context for filtering
+  const searchContext = {
+    hasName: Boolean(firstName || lastName),
+    hasLocation: Boolean(address || city || zipCode),
+    hasPhone: Boolean(phone),
+    isNameFocused: Boolean(firstName || lastName) && Boolean(address || city || zipCode || phone),
+    isLocationOnly: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address || city || zipCode),
+    isPhoneOnly: !Boolean(firstName || lastName) && Boolean(phone) && !Boolean(address || city || zipCode)
+  };
+
   // Filter and sort the results
   const filteredReviews = isSingleFieldSearch 
     ? scoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
-    : filterAndSortReviews(scoredReviews, isSingleFieldSearch);
+    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext);
 
   logSearchResults(filteredReviews);
   

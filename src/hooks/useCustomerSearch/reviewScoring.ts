@@ -37,6 +37,30 @@ const calculateCompletenessScore = (review: ReviewData): number => {
   return completeness;
 };
 
+// Helper function to detect search context
+const detectSearchContext = (searchParams: {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+}) => {
+  const hasName = Boolean(searchParams.firstName || searchParams.lastName);
+  const hasLocation = Boolean(searchParams.address || searchParams.city || searchParams.zipCode);
+  const hasPhone = Boolean(searchParams.phone);
+  
+  return {
+    hasName,
+    hasLocation,
+    hasPhone,
+    isNameFocused: hasName && (hasLocation || hasPhone),
+    isLocationOnly: !hasName && !hasPhone && hasLocation,
+    isPhoneOnly: !hasName && hasPhone && !hasLocation
+  };
+};
+
 export const scoreReview = (
   review: ReviewData,
   searchParams: {
@@ -51,6 +75,8 @@ export const scoreReview = (
   businessState?: string | null
 ): ScoredReview => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
+  const searchContext = detectSearchContext(searchParams);
+  
   let score = 0;
   let matches = 0;
   const detailedMatches: Array<{
@@ -68,22 +94,50 @@ export const scoreReview = (
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const cleanZip = zipCode ? zipCode.replace(/\D/g, '') : '';
 
-  // Enhanced name matching with better fuzzy logic
+  // Early exit for name-focused searches with poor name similarity
+  if (searchContext.hasName && review.customer_name) {
+    const searchName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
+    const customerName = review.customer_name.toLowerCase();
+    const nameSimilarity = calculateStringSimilarity(searchName, customerName);
+    
+    // If this is a name-focused search and name similarity is too low, return early with minimal score
+    if (searchContext.isNameFocused && nameSimilarity < 0.4) {
+      return { 
+        ...review, 
+        searchScore: 0, 
+        matchCount: 0,
+        completenessScore,
+        detailedMatches: []
+      };
+    }
+  }
+
+  // Enhanced name matching with context-aware weighting
   if ((firstName || lastName) && review.customer_name) {
     const searchName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
     const customerName = review.customer_name.toLowerCase();
     
-    // Direct similarity with higher weight for exact matches
+    // Direct similarity with dynamic weight based on search context
     const similarity = calculateStringSimilarity(searchName, customerName);
     console.log(`Review ${review.id} name similarity: "${searchName}" vs "${customerName}" = ${similarity}`);
-    if (similarity > REVIEW_SEARCH_CONFIG.SIMILARITY_THRESHOLD) {
-      let points = similarity * REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER;
+    
+    if (similarity > 0.3) { // Lower threshold but we'll weight differently
+      let baseMultiplier = REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER;
+      
+      // Context-aware scoring: name gets much higher weight in name-focused searches
+      if (searchContext.isNameFocused) {
+        baseMultiplier *= 3; // Triple weight for name in name-focused searches
+      }
+      
+      let points = similarity * baseMultiplier;
       
       // Bonus for very high similarity
       if (similarity >= 0.95) {
-        points *= 1.5; // 50% bonus for near-exact name matches
+        points *= 2; // Double bonus for near-exact name matches
       } else if (similarity >= 0.85) {
-        points *= 1.2; // 20% bonus for very close matches
+        points *= 1.5; // 50% bonus for very close matches
+      } else if (similarity >= 0.7) {
+        points *= 1.2; // 20% bonus for good matches
       }
       
       score += points;
@@ -267,13 +321,16 @@ export const scoreReview = (
     }
   }
 
-  // Enhanced zip code matching with proximity scoring
+  // Enhanced zip code matching with context-aware scoring
   if (cleanZip && review.customer_zipcode) {
     const reviewZip = review.customer_zipcode.replace(/\D/g, '');
     
+    // Reduce zip scoring weight when name is provided
+    let zipMultiplier = searchContext.isNameFocused ? 0.3 : 1.0;
+    
     // Exact match gets highest priority
     if (reviewZip === cleanZip) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5;
+      score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5 * zipMultiplier;
       matches++;
       
       detailedMatches.push({
@@ -286,7 +343,7 @@ export const scoreReview = (
     }
     // Check for partial matches
     else if (reviewZip.startsWith(cleanZip) || cleanZip.startsWith(reviewZip)) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.PREFIX_ZIP_MATCH;
+      score += REVIEW_SEARCH_CONFIG.SCORES.PREFIX_ZIP_MATCH * zipMultiplier;
       matches++;
       
       detailedMatches.push({
@@ -305,7 +362,7 @@ export const scoreReview = (
       
       if (zipDifference <= REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE) {
         const proximityScore = Math.max(0, REVIEW_SEARCH_CONFIG.SCORES.PROXIMITY_BASE - (zipDifference / REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_MILES));
-        score += proximityScore;
+        score += proximityScore * zipMultiplier;
         matches++;
         
         detailedMatches.push({
