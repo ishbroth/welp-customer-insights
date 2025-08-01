@@ -1,4 +1,4 @@
-@keyframes welp-clockwise-highlight {
+@keyframes clockwise-highlight {
   0%, 80% { 
     fill: white; 
   }
@@ -8,31 +8,31 @@
 }
 
 .welp-arm-right {
-  animation: welp-clockwise-highlight 0.5s ease-in-out infinite;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0s;
   animation-fill-mode: forwards;
 }
 
 .welp-arm-bottom-right {
-  animation: welp-clockwise-highlight 0.5s ease-in-out infinite;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.1s;
   animation-fill-mode: forwards;
 }
 
 .welp-arm-bottom-left {
-  animation: welp-clockwise-highlight 0.5s ease-in-out infinite;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.2s;
   animation-fill-mode: forwards;
 }
 
 .welp-arm-top-left {
-  animation: welp-clockwise-highlight 0.5s ease-in-out infinite;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.3s;
   animation-fill-mode: forwards;
 }
 
 .welp-period {
-  animation: welp-clockwise-highlight 0.5s ease-in-out infinite;
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
   animation-delay: 0.4s;
   animation-fill-mode: forwards;
 }
