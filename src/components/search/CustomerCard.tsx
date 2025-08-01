@@ -40,17 +40,9 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
     });
   };
 
-  // Determine if customer has a profile or claimed reviews
+  // Use the hasFullAccess function passed from parent to determine profile visibility
   const hasViewableProfile = () => {
-    // If customer has an ID that starts with actual UUID (not review-customer-), they have a profile
-    if (customer.id && !customer.id.startsWith('review-customer-')) {
-      return true;
-    }
-    // If customer has reviews, consider it viewable (reviews indicate some form of profile)
-    if (customer.reviews && customer.reviews.length > 0) {
-      return true;
-    }
-    return false;
+    return hasFullAccess(customer.id);
   };
 
   const handleWriteReview = () => {
