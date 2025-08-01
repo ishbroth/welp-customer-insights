@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Review } from "@/types";
 import { useAuth } from "@/contexts/auth";
 import { useReviewClaims } from "./useReviewClaims";
+import { doesReviewMatchUser } from "@/utils/reviewMatching";
 
 export const useBusinessProfileReviews = (businessId: string | undefined, hasAccess: boolean) => {
   const { currentUser, isSubscribed } = useAuth();
@@ -60,6 +61,20 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         // Check if this review is claimed by the current user
         const isClaimed = currentUser ? await isReviewClaimedByUser(review.id) : false;
 
+        // Check if this review matches the current user's profile (for customer users)
+        const matchesCurrentUser = currentUser?.type === 'customer' ? 
+          doesReviewMatchUser(review, currentUser, currentUser) : true;
+
+        // Determine unlock status based on user type and review matching
+        let isUnlocked = false;
+        if (currentUser?.type === 'business') {
+          // Business users can unlock any review with subscription or claimed status
+          isUnlocked = isClaimed || isSubscribed;
+        } else if (currentUser?.type === 'customer') {
+          // Customer users can only unlock reviews that match their profile
+          isUnlocked = isClaimed || (matchesCurrentUser && isSubscribed);
+        }
+
         const transformedReview = {
           id: review.id,
           reviewerId: review.business_id || '',
@@ -73,8 +88,9 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
           reactions: reactions,
           responses: [],
           isClaimed,
+          matchesCurrentUser,
           // Add access control flags
-          isUnlocked: isClaimed || isSubscribed || currentUser?.type === 'business',
+          isUnlocked,
           canReact: !!currentUser,
           canRespond: isClaimed && currentUser?.type === 'customer'
         };
