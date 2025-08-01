@@ -23,8 +23,18 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
     value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
   );
 
-  // Simple hasFullAccess function for now - business users have full access to all customer data
+  // Check if a customer profile is viewable
   const hasFullAccess = (customerId: string) => {
+    console.log(`Checking hasFullAccess for customer ID: ${customerId}`);
+    
+    // For review-based customers, they don't have actual profiles to view
+    // The "View Profile" button should be disabled for review-based customers
+    if (customerId.startsWith('review-customer-')) {
+      console.log(`Review-based customer detected: ${customerId} - no profile available`);
+      return false;
+    }
+    
+    // For actual profile customers, business users have access
     return currentUser?.type === "business" || currentUser?.type === "admin";
   };
 
