@@ -4,6 +4,7 @@ import { Customer } from "@/types/search";
 import { useAuth } from "@/contexts/auth";
 import SearchResultsList from "./SearchResultsList";
 import EmptySearchResults from "./EmptySearchResults";
+import SearchLoadingState from "./SearchLoadingState";
 
 interface SearchResultsContainerProps {
   customers: Customer[];
@@ -21,17 +22,7 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
   const displayedCustomers = showAll ? customers : customers.slice(0, 3);
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="bg-gray-200 h-32 rounded-lg"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <SearchLoadingState />;
   }
 
   if (customers.length === 0) {
