@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { ThumbsUp, Laugh, Frown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -8,6 +7,7 @@ import { useAuth } from "@/contexts/auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useReviewReactions } from "@/hooks/useReviewReactions";
 
 interface ReviewReactionsProps {
   reviewId: string;
@@ -29,7 +29,7 @@ const ReviewReactions = ({
   businessId,
   businessName,
   businessAvatar,
-  reactions, 
+  reactions: initialReactions, 
   onReactionToggle 
 }: ReviewReactionsProps) => {
   const { currentUser, hasOneTimeAccess, isSubscribed } = useAuth();
@@ -37,6 +37,13 @@ const ReviewReactions = ({
   const userId = currentUser?.id || "";
   const isCustomerUser = currentUser?.type === "customer";
   const isBusinessUser = currentUser?.type === "business";
+  
+  // Use local reaction state that persists to localStorage
+  const { reactions, handleReactionToggle } = useReviewReactions({
+    reviewId,
+    initialReactions,
+    onReactionToggle
+  });
   
   // Fetch business profile to get the latest avatar if not provided
   const { data: businessProfile } = useQuery({
@@ -115,7 +122,7 @@ const ReviewReactions = ({
 
   const handleReaction = (reactionType: string) => {
     if (checkPermissions()) {
-      onReactionToggle(reviewId, reactionType);
+      handleReactionToggle(reviewId, reactionType);
     }
   };
 
