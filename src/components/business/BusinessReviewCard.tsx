@@ -39,7 +39,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     dateValue: JSON.stringify(review.date)
   });
   
-  const { handleCustomerClick, formatDate, getCustomerInitials } = useBusinessReviewCardLogic(review);
+  const { handleCustomerClick, formatDate, getCustomerInitials, isReviewClaimed } = useBusinessReviewCardLogic(review);
   const navigate = useNavigate();
 
   const getInitials = (name: string) => {
@@ -110,6 +110,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           formatDate={formatDate}
           getCustomerInitials={getCustomerInitials}
           handleCustomerClick={handleCustomerClick}
+          isReviewClaimed={isReviewClaimed}
         />
 
         {/* Business info - right side (smaller) */}

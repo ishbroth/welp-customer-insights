@@ -6,8 +6,8 @@ export const useBusinessReviewCardLogic = (review: Review) => {
   const navigate = useNavigate();
 
   const handleCustomerClick = () => {
+    // Only allow navigation if the review is claimed (has customerId)
     if (review.customerId) {
-      // Navigate to customer profile with read-only view
       navigate(`/customer-profile/${review.customerId}`, {
         state: { 
           readOnly: true,
@@ -16,6 +16,9 @@ export const useBusinessReviewCardLogic = (review: Review) => {
       });
     }
   };
+
+  // Check if the review is claimed (has a customer who claimed it)
+  const isReviewClaimed = !!review.customerId;
 
   const formatDate = (dateString: string | any) => {
     console.log("formatDate input:", { _type: typeof dateString, value: dateString });
@@ -100,6 +103,7 @@ export const useBusinessReviewCardLogic = (review: Review) => {
   return {
     handleCustomerClick,
     formatDate,
-    getCustomerInitials
+    getCustomerInitials,
+    isReviewClaimed
   };
 };

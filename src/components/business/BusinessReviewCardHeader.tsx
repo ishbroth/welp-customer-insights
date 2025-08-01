@@ -9,6 +9,7 @@ interface BusinessReviewCardHeaderProps {
   formatDate: (date: string) => string;
   getCustomerInitials: (name: string) => string;
   handleCustomerClick: () => void;
+  isReviewClaimed: boolean;
 }
 
 const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
@@ -16,6 +17,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   formatDate,
   getCustomerInitials,
   handleCustomerClick,
+  isReviewClaimed,
 }) => {
   // Fetch customer profile for avatar and contact info when review is claimed
   const { data: customerProfile } = useQuery({
@@ -109,8 +111,8 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
       <div className="flex items-center space-x-3">
         {/* Customer Avatar - shows profile pic when claimed, initials when not */}
         <Avatar 
-          className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={handleCustomerClick}
+          className={`h-10 w-10 ${isReviewClaimed ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+          onClick={isReviewClaimed ? handleCustomerClick : undefined}
         >
           {customerAvatar ? (
             <AvatarImage src={customerAvatar} alt={customerDisplayName} />
@@ -122,8 +124,12 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
         </Avatar>
         <div>
           <h3 
-            className="font-semibold cursor-pointer hover:text-blue-600 transition-colors"
-            onClick={handleCustomerClick}
+            className={`font-semibold ${
+              isReviewClaimed 
+                ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600' 
+                : 'text-gray-600'
+            }`}
+            onClick={isReviewClaimed ? handleCustomerClick : undefined}
           >
             {customerDisplayName}
           </h3>
