@@ -33,6 +33,8 @@ import Privacy from "@/pages/Privacy";
 import VerifyLicense from "@/pages/VerifyLicense";
 import NewReview from "@/pages/NewReview";
 import DebugAccount from "@/pages/DebugAccount";
+import CustomerProfile from "@/pages/CustomerProfile";
+import BusinessProfile from "@/pages/BusinessProfile";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -117,6 +119,19 @@ const AppRoutes = () => {
             <Route path="/verify-license" element={
               <PrivateRoute>
                 <VerifyLicense />
+              </PrivateRoute>
+            } />
+            
+            {/* Profile routes */}
+            <Route path="/customer-profile/:customerId" element={
+              <PrivateRoute>
+                <CustomerProfile />
+              </PrivateRoute>
+            } />
+            
+            <Route path="/business-profile/:businessId" element={
+              <PrivateRoute>
+                <BusinessProfile />
               </PrivateRoute>
             } />
             
