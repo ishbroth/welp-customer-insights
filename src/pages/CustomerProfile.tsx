@@ -169,6 +169,24 @@ const CustomerProfile: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Back to Welp Navigation */}
+        <div className="text-center py-6">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (currentUser) {
+                window.location.href = '/account';
+              } else {
+                window.location.href = '/';
+              }
+            }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <span className="mr-2">←</span>
+            Back to Welp
+          </Button>
+        </div>
       </div>
     </div>
   );
