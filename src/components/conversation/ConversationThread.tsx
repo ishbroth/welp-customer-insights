@@ -49,9 +49,15 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
   };
 
   const handleNameClick = (authorId: string, authorType: string) => {
-    if (!hasAccess) return;
+    console.log('handleNameClick called:', { authorId, authorType, hasAccess, currentUser: currentUser?.type });
+    
+    if (!hasAccess) {
+      console.log('Navigation blocked: no access');
+      return;
+    }
     
     if (authorType === 'business') {
+      console.log('Navigating to business profile:', authorId);
       navigate(`/business-profile/${authorId}`, {
         state: { 
           readOnly: true,
@@ -59,6 +65,7 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
         }
       });
     } else if (authorType === 'customer') {
+      console.log('Navigating to customer profile:', authorId);
       navigate(`/customer-profile/${authorId}`, {
         state: { 
           readOnly: true,
@@ -98,7 +105,7 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
                 <span 
                   className={`font-medium text-sm ${
                     hasAccess 
-                      ? "text-foreground cursor-pointer hover:text-blue-600 transition-colors" 
+                      ? "text-blue-600 cursor-pointer hover:text-blue-800 transition-colors" 
                       : "text-foreground"
                   }`}
                   onClick={hasAccess ? () => handleNameClick(message.author_id, message.author_type) : undefined}
