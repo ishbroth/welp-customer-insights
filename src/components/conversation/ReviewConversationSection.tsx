@@ -79,6 +79,7 @@ const ReviewConversationSection: React.FC<ReviewConversationSectionProps> = ({
             userProfiles={userProfiles}
             collapsed={!isBusinessUser} // Show full conversation for business users
             maxCollapsedMessages={2}
+            hasAccess={shouldShowFullReview} // Allow name clicking when user has review access
           />
         </div>
       )}

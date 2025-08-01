@@ -103,8 +103,12 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 
-                  className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors"
-                  onClick={handleViewProfile}
+                  className={`font-semibold text-lg ${
+                    hasViewableProfile() 
+                      ? "cursor-pointer hover:text-blue-600 transition-colors" 
+                      : "text-gray-400"
+                  }`}
+                  onClick={hasViewableProfile() ? handleViewProfile : undefined}
                 >
                   {customer.firstName} {customer.lastName}
                 </h3>
@@ -138,27 +142,14 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
               {customer.reviews?.length || 0} reviews
             </Badge>
             
-            <div className="flex gap-2">
+            {showWriteReviewButton && (
               <Button
-                variant="outline"
                 size="sm"
-                onClick={handleViewProfile}
-                disabled={!hasViewableProfile()}
-                className="flex items-center gap-1"
+                onClick={handleWriteReview}
               >
-                <User className="h-3 w-3" />
-                View Profile
+                Write Review
               </Button>
-              
-              {showWriteReviewButton && (
-                <Button
-                  size="sm"
-                  onClick={handleWriteReview}
-                >
-                  Write Review
-                </Button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </CardHeader>

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -10,15 +12,19 @@ interface ConversationThreadProps {
   userProfiles: Record<string, any>; // Profile data keyed by user ID
   collapsed?: boolean;
   maxCollapsedMessages?: number;
+  hasAccess?: boolean; // Whether user has access to click names
 }
 
 const ConversationThread: React.FC<ConversationThreadProps> = ({
   messages,
   userProfiles,
   collapsed = false,
-  maxCollapsedMessages = 2
+  maxCollapsedMessages = 2,
+  hasAccess = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(!collapsed);
+  const navigate = useNavigate();
+  const { currentUser, isSubscribed } = useAuth();
 
   const getInitials = (name: string) => {
     if (!name) return "U";
@@ -40,6 +46,26 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
   const getUserAvatar = (authorId: string) => {
     const profile = userProfiles[authorId];
     return profile?.avatar || null;
+  };
+
+  const handleNameClick = (authorId: string, authorType: string) => {
+    if (!hasAccess) return;
+    
+    if (authorType === 'business') {
+      navigate(`/business-profile/${authorId}`, {
+        state: { 
+          readOnly: true,
+          showRespondButton: currentUser?.type === 'customer'
+        }
+      });
+    } else if (authorType === 'customer') {
+      navigate(`/customer-profile/${authorId}`, {
+        state: { 
+          readOnly: true,
+          showWriteReviewButton: currentUser?.type === 'business'
+        }
+      });
+    }
   };
 
   if (messages.length === 0) return null;
@@ -69,7 +95,14 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm text-foreground">
+                <span 
+                  className={`font-medium text-sm ${
+                    hasAccess 
+                      ? "text-foreground cursor-pointer hover:text-blue-600 transition-colors" 
+                      : "text-foreground"
+                  }`}
+                  onClick={hasAccess ? () => handleNameClick(message.author_id, message.author_type) : undefined}
+                >
                   {displayName}
                 </span>
                 <span className="text-xs text-muted-foreground">
