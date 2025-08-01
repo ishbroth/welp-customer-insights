@@ -18,6 +18,7 @@ export interface Customer {
     content: string;
     date: string;
     reviewerVerified?: boolean;
+    customerId?: string;
   }>;
 }
 

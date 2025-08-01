@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,12 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Phone, Mail, User, Star, MessageCircle } from "lucide-react";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import ReviewsList from "@/components/search/ReviewsList";
+import { useCustomerAverageRating } from "@/hooks/useCustomerAverageRating";
 
 const CustomerProfile = () => {
   const { customerId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, isSubscribed } = useAuth();
   const { toast } = useToast();
   
   const [customerData, setCustomerData] = useState<any>(null);
@@ -29,6 +30,18 @@ const CustomerProfile = () => {
   const stateCustomer = location.state?.customer;
   const isReadOnly = location.state?.readOnly || false;
   const showWriteReviewButton = location.state?.showWriteReviewButton || false;
+
+  // Calculate average rating using the existing hook
+  const { averageRating, shouldGrayOut, reviewCount } = useCustomerAverageRating({
+    reviews: reviews.map(review => ({
+      rating: review.rating,
+      isEffectivelyClaimed: true, // Assume reviews shown here are accessible
+      hasUserResponded: false,
+      isReviewUnlocked: true
+    })),
+    isSubscribed: isSubscribed || false,
+    hasFullAccess: true // For customer profiles, assume full access if we can view
+  });
 
   useEffect(() => {
     if (stateCustomer) {
@@ -237,10 +250,20 @@ const CustomerProfile = () => {
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <Star className="h-3 w-3" />
-                    {reviews.length} reviews
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {/* Star Rating Display - only show if subscribed */}
+                    {(isSubscribed || currentUser?.type === 'admin') && reviewCount > 0 && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Star className={`h-3 w-3 ${shouldGrayOut ? 'text-gray-400' : 'text-yellow-500'} fill-current`} />
+                        {averageRating.toFixed(1)}
+                      </Badge>
+                    )}
+                    
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <MessageCircle className="h-3 w-3" />
+                      {reviews.length} reviews
+                    </Badge>
+                  </div>
                   
                   {showWriteReviewButton && currentUser?.type === 'business' && (
                     <Button onClick={handleWriteReview}>

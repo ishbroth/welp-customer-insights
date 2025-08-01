@@ -40,6 +40,19 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
     });
   };
 
+  // Determine if customer has a profile or claimed reviews
+  const hasViewableProfile = () => {
+    // If customer has an ID that starts with actual UUID (not review-customer-), they have a profile
+    if (customer.id && !customer.id.startsWith('review-customer-')) {
+      return true;
+    }
+    // If customer has reviews, consider it viewable (reviews indicate some form of profile)
+    if (customer.reviews && customer.reviews.length > 0) {
+      return true;
+    }
+    return false;
+  };
+
   const handleWriteReview = () => {
     // Check if user is logged in
     if (!currentUser) {
@@ -138,6 +151,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
                 variant="outline"
                 size="sm"
                 onClick={handleViewProfile}
+                disabled={!hasViewableProfile()}
                 className="flex items-center gap-1"
               >
                 <User className="h-3 w-3" />
