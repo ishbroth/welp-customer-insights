@@ -106,13 +106,6 @@ const BusinessProfile: React.FC = () => {
                   {businessProfile.verified && <VerifiedBadge />}
                   <Badge variant="secondary">Business</Badge>
                 </div>
-                
-                {isReadOnly && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Read-only profile view
-                  </p>
-                )}
-
                 {/* Business bio */}
                 {businessProfile.bio && (
                   <div className="text-sm text-muted-foreground mb-2">
