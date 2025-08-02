@@ -57,9 +57,11 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
           className="h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={onCustomerClick}
         >
-          <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+          {customerInfo.isClaimed ? (
+            <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+          ) : null}
           <AvatarFallback className="bg-gray-100 text-gray-600">
-            {getInitials(customerInfo.name)}
+            {customerInfo.isClaimed ? getInitials(customerInfo.name) : getInitials(businessInfo.name)}
           </AvatarFallback>
         </Avatar>
         <div>
