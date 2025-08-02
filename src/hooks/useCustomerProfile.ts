@@ -6,11 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { useReviewAccess } from "./useReviewAccess";
 
 export const useCustomerProfile = (customerId: string | undefined) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isReviewUnlocked } = useReviewAccess();
   
   const [customerProfile, setCustomerProfile] = useState<any | null>(null);
   const [customerReviews, setCustomerReviews] = useState<any[]>([]);
@@ -224,9 +226,9 @@ export const useCustomerProfile = (customerId: string | undefined) => {
   }, [customerId, currentUser, navigate, toast]);
 
   // Check if user has access to full reviews
-  const hasFullAccess = (customerId: string) => {
-    // Business users always have full access
-    return true;
+  const hasFullAccess = (reviewId: string) => {
+    // Business users can unlock any review with credits or have access through subscription
+    return isReviewUnlocked(reviewId);
   };
 
   return {
