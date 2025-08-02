@@ -113,6 +113,13 @@ const BusinessProfile: React.FC = () => {
                   </p>
                 )}
 
+                {/* Business bio */}
+                {businessProfile.bio && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span>{businessProfile.bio}</span>
+                  </div>
+                )}
+
                 {businessProfile.phone && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                     <span>Phone: {businessProfile.phone}</span>
@@ -127,13 +134,6 @@ const BusinessProfile: React.FC = () => {
                       {businessProfile.state && `, ${businessProfile.state}`}
                       {businessProfile.zipcode && ` ${businessProfile.zipcode}`}
                     </span>
-                  </div>
-                )}
-
-                {/* Business bio */}
-                {businessProfile.bio && (
-                  <div className="text-sm text-muted-foreground mb-2">
-                    <span>{businessProfile.bio}</span>
                   </div>
                 )}
 
