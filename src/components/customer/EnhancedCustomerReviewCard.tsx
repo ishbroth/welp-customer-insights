@@ -131,7 +131,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     review,
     businessProfile,
     finalBusinessAvatar,
-    false, // No claiming system
+    isReviewActuallyUnlocked, // Use actual unlock/claim status
     currentUser
   );
 
