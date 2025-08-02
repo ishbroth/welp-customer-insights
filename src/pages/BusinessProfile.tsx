@@ -25,8 +25,8 @@ const BusinessProfile: React.FC = () => {
   const isReadOnly = location.state?.readOnly || false;
   const showRespondButton = location.state?.showRespondButton || false;
 
-  // For read-only view, we assume they have access
-  const hasAccess = isReadOnly || isSubscribed || currentUser?.type === 'business' || currentUser?.type === 'admin';
+  // For read-only view, everyone should have access to see the reviews (but content access is controlled separately)
+  const hasAccess = true;
 
   const { businessProfile, isLoading: profileLoading } = useBusinessProfile(businessId, hasAccess);
   const { reviews: businessReviews, isLoading: reviewsLoading } = useBusinessProfileReviews(businessId, hasAccess);
