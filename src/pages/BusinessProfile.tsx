@@ -130,20 +130,27 @@ const BusinessProfile: React.FC = () => {
                   </div>
                 )}
 
+                {/* Business bio */}
+                {businessProfile.bio && (
+                  <div className="text-sm text-muted-foreground mb-2">
+                    <span>{businessProfile.bio}</span>
+                  </div>
+                )}
+
+                {/* Business category and license type */}
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-2">
+                  {businessProfile.business_info?.business_category && (
+                    <span>Category: {businessProfile.business_info.business_category}</span>
+                  )}
+                  {businessProfile.business_info?.license_type && (
+                    <span>License: {businessProfile.business_info.license_type}</span>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   <span>Business Profile</span>
                 </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                {showRespondButton && currentUser?.type === 'customer' && (
-                  <Button variant="outline">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Respond
-                  </Button>
-                )}
               </div>
             </div>
           </CardHeader>
