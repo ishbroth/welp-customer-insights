@@ -44,42 +44,24 @@ const EnhancedReviewHeader: React.FC<EnhancedReviewHeaderProps> = ({
 
   return (
     <div className="flex justify-between mb-4">
-      <div className="flex items-center space-x-3">
-        {/* Business Avatar */}
+      {/* Customer Avatar - show on the left */}
+      {customerName && (
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={finalBusinessAvatar} alt={reviewerName} />
-            <AvatarFallback className="bg-blue-100 text-blue-800">
-              {getBusinessInitials(reviewerName)}
-            </AvatarFallback>
+            {isReviewClaimed && finalCustomerAvatar ? (
+              <AvatarImage src={finalCustomerAvatar} alt={customerName} />
+            ) : (
+              <AvatarFallback className="bg-gray-100 text-gray-600">
+                {getCustomerInitials(customerName)}
+              </AvatarFallback>
+            )}
           </Avatar>
           <div>
             <div className="flex items-center gap-2">
-              {isUnlocked ? (
-                <h3 
-                  className="font-semibold cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  onClick={onBusinessNameClick}
-                >
-                  {reviewerName}
-                </h3>
-              ) : (
-                <h3 className="font-semibold">{reviewerName}</h3>
-              )}
-              {/* Show verified badge next to business name if verified */}
-              {isBusinessVerified && <VerifiedBadge size="sm" />}
+              <span className="font-semibold text-gray-700">{customerName}</span>
+              {/* Show verified badge next to customer name if claimed and verified */}
+              {isReviewClaimed && isCustomerVerified && <VerifiedBadge size="sm" />}
             </div>
-            <p className="text-sm text-gray-500">
-              {new Date(date).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Customer Avatar - show on the right */}
-      {customerName && (
-        <div className="flex items-center space-x-2">
-          <div className="text-right">
-            <div className="text-sm text-gray-500">About:</div>
             {displayPhone && (
               <div className="flex items-center text-sm text-gray-600">
                 <Phone className="h-3 w-3 mr-1" />
@@ -87,22 +69,38 @@ const EnhancedReviewHeader: React.FC<EnhancedReviewHeaderProps> = ({
               </div>
             )}
           </div>
-          <Avatar className="h-8 w-8">
-            {isReviewClaimed && finalCustomerAvatar ? (
-              <AvatarImage src={finalCustomerAvatar} alt={customerName} />
-            ) : (
-              <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                {getCustomerInitials(customerName)}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">{customerName}</span>
-            {/* Show verified badge next to customer name if claimed and verified */}
-            {isReviewClaimed && isCustomerVerified && <VerifiedBadge size="sm" />}
-          </div>
         </div>
       )}
+      
+      {/* Business Avatar - show on the right */}
+      <div className="flex items-center space-x-2">
+        <div className="text-right">
+          <div className="text-sm text-gray-500">
+            {new Date(date).toLocaleDateString()}
+          </div>
+          <div className="text-xs text-gray-400">Reviewed by:</div>
+        </div>
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={finalBusinessAvatar} alt={reviewerName} />
+          <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
+            {getBusinessInitials(reviewerName)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex items-center gap-2">
+          {isUnlocked ? (
+            <span 
+              className="text-sm font-medium cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+              onClick={onBusinessNameClick}
+            >
+              {reviewerName}
+            </span>
+          ) : (
+            <span className="text-sm font-medium">{reviewerName}</span>
+          )}
+          {/* Show verified badge next to business name if verified */}
+          {isBusinessVerified && <VerifiedBadge size="sm" />}
+        </div>
+      </div>
     </div>
   );
 };
