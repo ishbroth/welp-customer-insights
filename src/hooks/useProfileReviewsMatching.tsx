@@ -27,9 +27,13 @@ const checkReviewMatch = (review: ReviewMatchData, currentUser: any): MatchResul
   let matchScore = 0;
   const matchReasons: string[] = [];
 
+  // Get user's full name from profile
+  const userFullName = currentUser.name || 
+    `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim();
+
   // Check name match with fuzzy logic
-  if (review.customer_name && currentUser.name) {
-    const similarity = calculateStringSimilarity(review.customer_name, currentUser.name);
+  if (review.customer_name && userFullName) {
+    const similarity = calculateStringSimilarity(review.customer_name, userFullName);
     if (similarity >= 0.8) {
       matchScore += 40;
       matchReasons.push('Name match');
