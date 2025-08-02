@@ -62,17 +62,32 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
 
       // Format reviews data to match Review type and calculate activity status
       const formattedReviews = (reviewsData || []).map(review => {
-        const claimedBy = review.review_claims?.[0]?.claimed_by;
+        // Fix claimedBy detection - handle null values properly
+        const claimedBy = (review.review_claims && Array.isArray(review.review_claims) && review.review_claims.length > 0) 
+          ? review.review_claims[0]?.claimed_by 
+          : undefined;
         
-        // Fix conversation detection - check if array has items with actual id values
-        const hasConversation = Array.isArray(review.conversation_participants) 
+        // Fix conversation detection - handle null values from Supabase
+        const hasConversation = review.conversation_participants !== null 
+          && Array.isArray(review.conversation_participants) 
           && review.conversation_participants.length > 0 
-          && review.conversation_participants.some(cp => cp.id);
+          && review.conversation_participants.some(cp => cp && cp.id);
         
-        // Fix response detection - check if array has items with actual id values  
-        const hasResponses = Array.isArray(review.responses) 
+        // Fix response detection - handle null values from Supabase
+        const hasResponses = review.responses !== null 
+          && Array.isArray(review.responses) 
           && review.responses.length > 0 
-          && review.responses.some(r => r.id);
+          && review.responses.some(r => r && r.id);
+
+        // Debug logging to verify detection
+        console.log(`Review ${review.customer_name}:`, {
+          claimedBy,
+          hasConversation,
+          hasResponses,
+          conversation_participants: review.conversation_participants,
+          responses: review.responses,
+          review_claims: review.review_claims
+        });
         
         // Ensure we have a valid date string - use the raw created_at value
         const reviewDate = review.created_at || new Date().toISOString();
