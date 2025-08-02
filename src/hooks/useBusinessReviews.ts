@@ -44,9 +44,9 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_city,
           customer_zipcode,
           customer_phone,
-          review_claims!left(claimed_by),
-          conversation_participants!left(review_id),
-          responses!left(review_id)
+          review_claims(claimed_by),
+          conversation_participants(id),
+          responses(id)
         `)
         .eq('business_id', currentUser.id)
         .is('deleted_at', null) // Only get non-deleted reviews
