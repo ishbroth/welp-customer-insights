@@ -110,40 +110,64 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
       !context.hasPhone && !context.hasAddress &&
       !(context.hasFirstName && context.hasLastName),
     validate: (context, reviewData) => {
-      // Single name + location requires moderate name similarity AND location match
+      // Single name + location requires HIGH name similarity AND EXACT location match
       const searchName = (context.hasFirstName ? context.searchParams.firstName : context.searchParams.lastName) || '';
       const nameSimilarity = reviewData.customer_name ? 
         calculateStringSimilarity(searchName.toLowerCase(), reviewData.customer_name.toLowerCase()) : 0;
       
-      console.log(`🔍 Name similarity: "${searchName}" vs "${reviewData.customer_name}" = ${nameSimilarity}`);
+      console.log(`[SINGLE_NAME_LOCATION] Name similarity: "${searchName}" vs "${reviewData.customer_name}" = ${nameSimilarity}`);
       
-      // Lower threshold for fuzzy matching (0.65 allows "Samantha" vs "smanantha")
-      if (nameSimilarity < 0.65) return false;
+      // Higher threshold for single name searches to prevent wrong matches like "Isaac Wiley"
+      if (nameSimilarity < 0.75) {
+        console.log(`[SINGLE_NAME_LOCATION] Name similarity ${nameSimilarity} below threshold 0.75 - REJECTED`);
+        return false;
+      }
       
-      // AND require at least one location match
-      const cityMatches = context.hasCity && reviewData.customer_city &&
-                         calculateStringSimilarity(
-                           context.searchParams.city?.toLowerCase() || '',
-                           reviewData.customer_city.toLowerCase()
-                         ) >= 0.8;
+      // Require EXACT location matches for single name searches
+      let hasExactLocationMatch = false;
       
-      const zipMatches = context.hasZipCode && reviewData.customer_zipcode &&
-                        reviewData.customer_zipcode.replace(/\D/g, '').startsWith(
-                          context.searchParams.zipCode?.replace(/\D/g, '') || ''
-                        );
+      // Exact ZIP match
+      if (context.hasZipCode && reviewData.customer_zipcode) {
+        const searchZip = context.searchParams.zipCode?.replace(/\D/g, '') || '';
+        const reviewZip = reviewData.customer_zipcode.replace(/\D/g, '');
+        if (searchZip && reviewZip && searchZip === reviewZip) {
+          console.log(`[SINGLE_NAME_LOCATION] Exact ZIP match: ${searchZip}`);
+          hasExactLocationMatch = true;
+        }
+      }
       
-      // Check both business_state and derive from customer location
-      const customerState = reviewData.business_state;
-      const stateMatches = context.hasState && customerState &&
-                          customerState.toLowerCase().trim() === 
-                          context.searchParams.state?.toLowerCase().trim();
+      // Exact state match
+      if (context.hasState && reviewData.business_state) {
+        const searchState = context.searchParams.state?.toLowerCase().trim() || '';
+        const businessState = reviewData.business_state.toLowerCase().trim();
+        if (searchState === businessState) {
+          console.log(`[SINGLE_NAME_LOCATION] Exact state match: ${searchState}`);
+          hasExactLocationMatch = true;
+        }
+      }
       
-      console.log(`🔍 Location matches - City: ${cityMatches}, Zip: ${zipMatches}, State: ${stateMatches}`);
+      // High city similarity (still allow some fuzzy matching for cities)
+      if (context.hasCity && reviewData.customer_city) {
+        const citySimilarity = calculateStringSimilarity(
+          context.searchParams.city?.toLowerCase() || '',
+          reviewData.customer_city.toLowerCase()
+        );
+        if (citySimilarity >= 0.9) {
+          console.log(`[SINGLE_NAME_LOCATION] High city similarity: ${citySimilarity}`);
+          hasExactLocationMatch = true;
+        }
+      }
       
-      return cityMatches || zipMatches || stateMatches;
+      if (!hasExactLocationMatch) {
+        console.log(`[SINGLE_NAME_LOCATION] No exact location match found - REJECTED`);
+        return false;
+      }
+      
+      console.log(`[SINGLE_NAME_LOCATION] ACCEPTED - Name: ${nameSimilarity}, Location match: true`);
+      return true;
     },
-    minScoreRequired: 15,
-    description: 'Single name + location requires moderate name similarity and location match'
+    minScoreRequired: 20,
+    description: 'Single name + location requires high name similarity and exact location match'
   },
   {
     name: 'weak_name_combination',

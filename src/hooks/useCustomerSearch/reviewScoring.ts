@@ -123,8 +123,14 @@ export const scoreReview = (
     const customerName = review.customer_name.toLowerCase();
     const nameSimilarity = calculateStringSimilarity(searchName, customerName);
     
-    // If this is a name-focused search and name similarity is too low, return early with minimal score
-    if (searchContext.isNameFocused && nameSimilarity < 0.4) {
+    console.log(`[EARLY_NAME_CHECK] Review ${review.id}: "${searchName}" vs "${customerName}" = ${nameSimilarity}`);
+    
+    // Stricter early exit for single name searches to prevent wrong matches like "Isaac Wiley"
+    const isSingleNameSearch = Boolean(firstName && !lastName) || Boolean(lastName && !firstName);
+    const nameThreshold = isSingleNameSearch ? 0.6 : 0.4;
+    
+    if (searchContext.isNameFocused && nameSimilarity < nameThreshold) {
+      console.log(`[EARLY_NAME_CHECK] Review ${review.id} REJECTED - Name similarity ${nameSimilarity} below threshold ${nameThreshold}`);
       return { 
         ...review, 
         searchScore: 0, 

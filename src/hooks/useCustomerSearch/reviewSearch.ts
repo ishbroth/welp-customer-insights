@@ -66,10 +66,10 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       });
     }
 
-    // Fetch business verification status
+    // Fetch business verification status and state information
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
-      .select('id, verified, business_name')
+      .select('id, verified, business_name, license_state')
       .in('id', businessIds);
 
     if (businessError) {
@@ -81,11 +81,12 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
         businessVerificationMap.set(business.id, isVerified);
         console.log(`✅ VERIFICATION MAPPED: Business ID ${business.id} -> verified: ${isVerified}`);
         
-        // Enhance existing profile with verification status
+        // Enhance existing profile with verification status and state
         if (businessProfilesMap.has(business.id)) {
           const existingProfile = businessProfilesMap.get(business.id);
           existingProfile.verified = isVerified;
           existingProfile.business_name = business.business_name;
+          existingProfile.business_state = business.license_state; // Use license_state for business state
           businessProfilesMap.set(business.id, existingProfile);
         }
       });
@@ -150,7 +151,7 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       city, 
       state, 
       zipCode 
-    }, businessProfile?.state || null);
+    }, businessProfile?.business_state || businessProfile?.state || null);
     
     console.log(`Review ${review.id}: Score: ${scoredReview.searchScore}, Business: ${formattedReview.reviewerName}, Verified: ${scoredReview.reviewerVerified}`);
     
