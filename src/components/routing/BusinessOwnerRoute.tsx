@@ -1,6 +1,7 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 interface BusinessOwnerRouteProps {
   children: React.ReactNode;
@@ -11,7 +12,11 @@ const BusinessOwnerRoute = ({ children }: BusinessOwnerRouteProps) => {
   
   // Show loading while auth state is being determined
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <WelpLoadingIcon size={48} />
+      </div>
+    );
   }
   
   // Redirect to login if not logged in
@@ -21,7 +26,11 @@ const BusinessOwnerRoute = ({ children }: BusinessOwnerRouteProps) => {
   
   // Allow access if we have a session but profile is still loading
   if (!currentUser) {
-    return <div>Loading profile...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <WelpLoadingIcon size={48} showText={true} text="Loading profile..." />
+      </div>
+    );
   }
   
   // Redirect if not a business owner

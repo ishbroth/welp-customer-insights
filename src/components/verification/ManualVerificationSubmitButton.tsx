@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 interface ManualVerificationSubmitButtonProps {
   isSubmitting: boolean;
@@ -18,7 +19,7 @@ const ManualVerificationSubmitButton = ({
       >
         {isSubmitting ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            <WelpLoadingIcon size={16} className="mr-2" />
             Submitting...
           </>
         ) : (

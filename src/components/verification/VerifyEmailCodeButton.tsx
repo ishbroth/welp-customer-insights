@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 interface VerifyEmailCodeButtonProps {
   onClick: () => void;
@@ -22,7 +22,7 @@ const VerifyEmailCodeButton: React.FC<VerifyEmailCodeButtonProps> = ({
     >
       {isLoading ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <WelpLoadingIcon size={16} className="mr-2" />
           Verifying...
         </>
       ) : (
