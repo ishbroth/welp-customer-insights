@@ -100,6 +100,13 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     }
   };
 
+  // Check if customer user can unlock this specific review
+  const canCustomerUnlockReview = () => {
+    if (!isCustomerUser) return true; // Business users can unlock any review
+    // Customer users can only unlock reviews that match their profile and are unlocked in the backend
+    return review.isUnlocked || isReviewActuallyUnlocked;
+  };
+
   // Use the permission system
   const {
     canReact,
@@ -192,16 +199,16 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         responses={[]}
         hasSubscription={hasSubscription}
         isUnlocked={isReviewActuallyUnlocked}
-        creditBalance={balance}
+        creditBalance={canCustomerUnlockReview() ? balance : 0}
         currentUser={currentUser}
-        onPurchaseClick={handlePurchaseClick}
+        onPurchaseClick={canCustomerUnlockReview() ? handlePurchaseClick : () => {}}
         onClaimClick={() => {}}
         onUnclaimClick={() => {}}
         onReactionToggle={(reactionType: string) => handleReactionToggle(review.id, reactionType)}
         onSubmitResponse={async () => false}
         onDeleteResponse={() => {}}
-        onSubscribeClick={handleSubscribeClick}
-        onUseCreditClick={handleUseCreditClick}
+        onSubscribeClick={canCustomerUnlockReview() ? handleSubscribeClick : () => {}}
+        onUseCreditClick={canCustomerUnlockReview() ? handleUseCreditClick : () => {}}
         isReviewClaimed={false}
         isClaimingReview={false}
         matchType={review.matchType || 'potential'}
