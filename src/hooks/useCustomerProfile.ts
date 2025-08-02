@@ -131,6 +131,14 @@ export const useCustomerProfile = (customerId: string | undefined) => {
         // Process claimed reviews
         const processedClaimedReviews = claimedReviews?.map(claim => ({
           ...claim.reviews,
+          // Map to ReviewCard expected format
+          reviewerId: claim.reviews.business_id,
+          reviewerName: claim.reviews.profiles?.name || 'Business',
+          reviewerAvatar: claim.reviews.profiles?.avatar,
+          reviewerVerified: claim.reviews.profiles?.verified || false,
+          customerId: customerId,
+          date: claim.reviews.created_at,
+          // Keep original fields for backwards compatibility
           business_name: claim.reviews.profiles?.name || 'Business',
           business_avatar: claim.reviews.profiles?.avatar,
           business_verified: claim.reviews.profiles?.verified,
@@ -147,6 +155,13 @@ export const useCustomerProfile = (customerId: string | undefined) => {
             const matchResult = checkReviewMatch(review, customerProfile);
             return {
               ...review,
+              // Map to ReviewCard expected format
+              reviewerId: review.business_id,
+              reviewerName: review.profiles?.name || 'Business',
+              reviewerAvatar: review.profiles?.avatar,
+              reviewerVerified: review.profiles?.verified || false,
+              date: review.created_at,
+              // Keep original fields for backwards compatibility
               business_name: review.profiles?.name || 'Business',
               business_avatar: review.profiles?.avatar,
               business_verified: review.profiles?.verified,
@@ -227,8 +242,12 @@ export const useCustomerProfile = (customerId: string | undefined) => {
 
   // Check if user has access to full reviews
   const hasFullAccess = (reviewId: string) => {
-    // Business users can unlock any review with credits or have access through subscription
-    return isReviewUnlocked(reviewId);
+    // Check if current user is the author of this review
+    const review = customerReviews.find(r => r.id === reviewId);
+    const isAuthor = currentUser?.type === 'business' && currentUser?.id === review?.reviewerId;
+    
+    // Business users have access if they're the author, unlocked the review, or have subscription
+    return isAuthor || isReviewUnlocked(reviewId);
   };
 
   return {

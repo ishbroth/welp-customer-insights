@@ -22,6 +22,10 @@ const CustomerProfile: React.FC = () => {
   const showWriteReviewButton = location.state?.showWriteReviewButton || false;
 
   const { customerProfile, customerReviews, isLoading, hasFullAccess } = useCustomerProfile(customerId);
+  
+  // Check if current business user has already written a review about this customer
+  const hasAlreadyWrittenReview = currentUser?.type === 'business' && 
+    customerReviews.some(review => review.reviewerId === currentUser.id);
 
   const getInitials = (firstName?: string, lastName?: string, name?: string) => {
     if (firstName && lastName) {
@@ -123,9 +127,13 @@ const CustomerProfile: React.FC = () => {
                   {/* Action buttons */}
                   <div className="flex gap-2">
                     {showWriteReviewButton && currentUser?.type === 'business' && (
-                      <Button variant="outline">
+                      <Button 
+                        variant="outline" 
+                        disabled={hasAlreadyWrittenReview}
+                        title={hasAlreadyWrittenReview ? "You have already written a review about this customer" : "Write a review about this customer"}
+                      >
                         <MessageCircle className="h-4 w-4 mr-2" />
-                        Write Review
+                        {hasAlreadyWrittenReview ? "Review Already Written" : "Write Review"}
                       </Button>
                     )}
                   </div>
