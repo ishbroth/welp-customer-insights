@@ -1,4 +1,4 @@
-import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { calculateStringSimilarity, calculateNameSimilarity } from "@/utils/stringSimilarity";
 
 export interface FieldCombinationContext {
   searchParams: {
@@ -113,7 +113,7 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
       // Single name + location requires HIGH name similarity AND EXACT location match
       const searchName = (context.hasFirstName ? context.searchParams.firstName : context.searchParams.lastName) || '';
       const nameSimilarity = reviewData.customer_name ? 
-        calculateStringSimilarity(searchName.toLowerCase(), reviewData.customer_name.toLowerCase()) : 0;
+        calculateNameSimilarity(searchName, reviewData.customer_name) : 0;
       
       console.log(`[SINGLE_NAME_LOCATION] Name similarity: "${searchName}" vs "${reviewData.customer_name}" = ${nameSimilarity}`);
       

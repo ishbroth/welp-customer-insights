@@ -1,5 +1,5 @@
 
-import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { calculateStringSimilarity, calculateNameSimilarity } from "@/utils/stringSimilarity";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { ReviewData } from "./types";
@@ -117,20 +117,42 @@ export const scoreReview = (
     };
   }
 
-  // Early exit for name-focused searches with poor name similarity
+  // Mandatory name validation for name-focused searches
   if (searchContext.hasName && review.customer_name) {
-    const searchName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
-    const customerName = review.customer_name.toLowerCase();
-    const nameSimilarity = calculateStringSimilarity(searchName, customerName);
+    let totalNameSimilarity = 0;
+    let nameCount = 0;
     
-    console.log(`[EARLY_NAME_CHECK] Review ${review.id}: "${searchName}" vs "${customerName}" = ${nameSimilarity}`);
+    if (firstName) {
+      const firstNameSim = calculateNameSimilarity(firstName, review.customer_name);
+      console.log(`[NAME_VALIDATION] First name: "${firstName}" vs "${review.customer_name}" = ${firstNameSim.toFixed(3)}`);
+      totalNameSimilarity += firstNameSim;
+      nameCount++;
+    }
     
-    // Stricter early exit for single name searches to prevent wrong matches like "Isaac Wiley"
-    const isSingleNameSearch = Boolean(firstName && !lastName) || Boolean(lastName && !firstName);
-    const nameThreshold = isSingleNameSearch ? 0.6 : 0.4;
+    if (lastName) {
+      const lastNameSim = calculateNameSimilarity(lastName, review.customer_name);
+      console.log(`[NAME_VALIDATION] Last name: "${lastName}" vs "${review.customer_name}" = ${lastNameSim.toFixed(3)}`);
+      totalNameSimilarity += lastNameSim;
+      nameCount++;
+    }
     
-    if (searchContext.isNameFocused && nameSimilarity < nameThreshold) {
-      console.log(`[EARLY_NAME_CHECK] Review ${review.id} REJECTED - Name similarity ${nameSimilarity} below threshold ${nameThreshold}`);
+    const avgNameSimilarity = nameCount > 0 ? totalNameSimilarity / nameCount : 0;
+    
+    // Count other strong field matches
+    let otherStrongMatches = 0;
+    if (phone && review.customer_phone && phone.replace(/\D/g, '') === review.customer_phone.replace(/\D/g, '')) {
+      otherStrongMatches++;
+    }
+    if (address && review.customer_address && calculateStringSimilarity(address, review.customer_address) > 0.7) {
+      otherStrongMatches++;
+    }
+    if (zipCode && review.customer_zipcode && zipCode.replace(/\D/g, '') === review.customer_zipcode.replace(/\D/g, '')) {
+      otherStrongMatches++;
+    }
+    
+    // Reject if name doesn't match meaningfully AND we don't have 3+ other strong matches
+    if (avgNameSimilarity < 0.4 && otherStrongMatches < 3) {
+      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - Avg name similarity: ${avgNameSimilarity.toFixed(3)}, Other matches: ${otherStrongMatches}`);
       return { 
         ...review, 
         searchScore: 0, 
@@ -141,49 +163,72 @@ export const scoreReview = (
     }
   }
 
-  // Enhanced name matching with context-aware weighting
+  // Enhanced name matching with massive weight increase for name importance
   if ((firstName || lastName) && review.customer_name) {
-    const searchName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
-    const customerName = review.customer_name.toLowerCase();
+    let bestNameScore = 0;
+    let bestSimilarity = 0;
     
-    // Direct similarity with dynamic weight based on search context
-    const similarity = calculateStringSimilarity(searchName, customerName);
-    console.log(`Review ${review.id} name similarity: "${searchName}" vs "${customerName}" = ${similarity}`);
+    // Test individual name components for better matching
+    if (firstName) {
+      const firstSim = calculateNameSimilarity(firstName, review.customer_name);
+      console.log(`[NAME_SCORING] First name: "${firstName}" vs "${review.customer_name}" = ${firstSim.toFixed(3)}`);
+      if (firstSim > bestSimilarity) {
+        bestSimilarity = firstSim;
+      }
+    }
     
-    if (similarity > 0.3) { // Lower threshold but we'll weight differently
-      let baseMultiplier = REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER;
+    if (lastName) {
+      const lastSim = calculateNameSimilarity(lastName, review.customer_name);
+      console.log(`[NAME_SCORING] Last name: "${lastName}" vs "${review.customer_name}" = ${lastSim.toFixed(3)}`);
+      if (lastSim > bestSimilarity) {
+        bestSimilarity = lastSim;
+      }
+    }
+    
+    // Full name comparison
+    const fullSearchName = [firstName, lastName].filter(Boolean).join(' ');
+    const fullSim = calculateStringSimilarity(fullSearchName.toLowerCase(), review.customer_name.toLowerCase());
+    console.log(`[NAME_SCORING] Full name: "${fullSearchName}" vs "${review.customer_name}" = ${fullSim.toFixed(3)}`);
+    
+    // Use the best similarity found
+    const finalSimilarity = Math.max(bestSimilarity, fullSim);
+    
+    if (finalSimilarity > 0.2) { // Very low threshold but massive scoring difference
+      // MASSIVELY increased base score for names - this is now the dominant factor
+      let namePoints = 0;
       
-      // Context-aware scoring: name gets much higher weight in name-focused searches
+      if (finalSimilarity >= 0.8) {
+        namePoints = 60; // Excellent match
+      } else if (finalSimilarity >= 0.6) {
+        namePoints = finalSimilarity * 50; // Good match: 30-50 points
+      } else if (finalSimilarity >= 0.4) {
+        namePoints = finalSimilarity * 25; // Fair match: 10-25 points
+      } else {
+        namePoints = finalSimilarity * 10; // Poor match: 2-10 points
+      }
+      
+      // Context-aware bonus
       if (searchContext.isNameFocused) {
-        baseMultiplier *= 3; // Triple weight for name in name-focused searches
+        namePoints *= 1.5; // Additional 50% for name-focused searches
       }
       
-      let points = similarity * baseMultiplier;
-      
-      // Bonus for very high similarity
-      if (similarity >= 0.95) {
-        points *= 2; // Double bonus for near-exact name matches
-      } else if (similarity >= 0.85) {
-        points *= 1.5; // 50% bonus for very close matches
-      } else if (similarity >= 0.7) {
-        points *= 1.2; // 20% bonus for good matches
-      }
-      
-      score += points;
+      score += namePoints;
       matches++;
+      
+      console.log(`[NAME_SCORING] Review ${review.id} name score: ${namePoints.toFixed(1)} (similarity: ${finalSimilarity.toFixed(3)})`);
       
       detailedMatches.push({
         field: 'Name',
         reviewValue: review.customer_name,
-        searchValue: [firstName, lastName].filter(Boolean).join(' '),
-        similarity,
-        matchType: similarity >= 0.9 ? 'exact' : similarity >= 0.7 ? 'partial' : 'fuzzy'
+        searchValue: fullSearchName,
+        similarity: finalSimilarity,
+        matchType: finalSimilarity >= 0.8 ? 'exact' : finalSimilarity >= 0.6 ? 'partial' : 'fuzzy'
       });
     }
     
     // Word-by-word matching with position awareness
-    const searchWords = searchName.split(/\s+/);
-    const nameWords = customerName.split(/\s+/);
+    const searchWords = fullSearchName.toLowerCase().split(/\s+/);
+    const nameWords = review.customer_name.toLowerCase().split(/\s+/);
     
     for (let i = 0; i < searchWords.length; i++) {
       const searchWord = searchWords[i];
