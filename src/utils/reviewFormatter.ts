@@ -39,7 +39,9 @@ export const formatReview = (review: any, currentUser: any) => {
     matchReasons: review.matchReasons,
     detailedMatches: review.detailedMatches,
     isNewReview: review.isNewReview,
-    isClaimed: review.isClaimed
+    isClaimed: review.isClaimed,
+    matchesCurrentUser: review.matchType && 
+      ['high_quality', 'potential', 'claimed'].includes(review.matchType)
   };
 
   console.log("formatReview: Formatted review:", {
