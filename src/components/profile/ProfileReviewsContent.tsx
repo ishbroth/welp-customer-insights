@@ -7,6 +7,7 @@ import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 import { useSessionTracking } from "@/hooks/useSessionTracking";
 import { useBusinessReviews } from "@/hooks/useBusinessReviews";
@@ -68,14 +69,15 @@ const ProfileReviewsContent = ({
   if (isLoading) {
     return (
       <div className="text-center py-10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ea384c] mx-auto mb-4"></div>
-        <p className="text-gray-500 mb-2">Loading your reviews...</p>
-        <p className="text-sm text-gray-400">
-          {currentUser?.type === "customer" 
+        <WelpLoadingIcon 
+          size={80} 
+          showText={true} 
+          text={currentUser?.type === "customer" 
             ? "Searching for reviews written about you by businesses..."
-            : "We're checking for reviews that match your profile information."
+            : "Loading your reviews..."
           }
-        </p>
+          className="mb-4"
+        />
       </div>
     );
   }

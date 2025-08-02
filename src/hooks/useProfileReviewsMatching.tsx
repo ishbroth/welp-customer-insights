@@ -69,8 +69,6 @@ export const useProfileReviewsMatching = () => {
   const { currentUser } = useAuth();
 
   const categorizeReviews = async (currentUser: any) => {
-    console.log("=== CATEGORIZING REVIEWS FOR USER ===");
-    console.log("User:", currentUser);
     
     try {
       // First, get all globally claimed reviews to exclude from matching
@@ -79,12 +77,10 @@ export const useProfileReviewsMatching = () => {
         .select('review_id');
 
       if (claimsError) {
-        console.error("Error fetching global claims:", claimsError);
         return [];
       }
 
       const globallyClaimedReviewIds = globalClaims?.map(claim => claim.review_id) || [];
-      console.log(`🔍 Found ${globallyClaimedReviewIds.length} globally claimed reviews to exclude`);
 
       // Get unclaimed reviews only (exclude ALL globally claimed reviews)
       let query = supabase
@@ -108,22 +104,17 @@ export const useProfileReviewsMatching = () => {
       // Exclude globally claimed reviews at database level
       if (globallyClaimedReviewIds.length > 0) {
         query = query.not('id', 'in', `(${globallyClaimedReviewIds.map(id => `"${id}"`).join(',')})`);
-        console.log(`🔍 Database query excluding ${globallyClaimedReviewIds.length} globally claimed reviews`);
       }
 
       const { data: allReviews, error } = await query;
 
       if (error) {
-        console.error("Error fetching reviews:", error);
         return [];
       }
 
       if (!allReviews || allReviews.length === 0) {
-        console.log("No reviews found in database");
         return [];
       }
-
-      console.log(`Found ${allReviews.length} total reviews`);
 
       // Process each review and categorize based on match quality
       const categorizedReviews = allReviews.map(review => {
@@ -181,12 +172,9 @@ export const useProfileReviewsMatching = () => {
           // Then by match score
           return b.matchScore - a.matchScore;
         });
-
-      console.log(`Categorized ${filteredReviews.length} relevant reviews`);
       
       return filteredReviews;
     } catch (error) {
-      console.error("Error in categorizeReviews:", error);
       return [];
     }
   };
