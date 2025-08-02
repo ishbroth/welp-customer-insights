@@ -47,6 +47,12 @@ interface EnhancedReviewContentProps {
   detailedMatches?: DetailedMatch[];
   isNewReview?: boolean;
   hideMatchScore?: boolean;
+  // Customer details from review
+  customerName?: string;
+  customerAddress?: string;
+  customerCity?: string;
+  customerZipcode?: string;
+  customerPhone?: string;
 }
 
 const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
@@ -83,6 +89,11 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   detailedMatches,
   isNewReview,
   hideMatchScore,
+  customerName,
+  customerAddress,
+  customerCity,
+  customerZipcode,
+  customerPhone,
 }) => {
   const [showResponseForm, setShowResponseForm] = useState(false);
 
@@ -107,20 +118,31 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           <div className="space-y-4">
             <p className="text-gray-700 leading-relaxed">{getPreviewText(content)}</p>
             
-            {/* Match Info */}
-            {!hideMatchScore && (
-              <ReviewMatchInfo
-                matchType={matchType || 'potential'}
-                matchReasons={matchReasons || ['Potential match found']}
-                matchScore={matchScore || 0}
-                detailedMatches={detailedMatches}
-                isNewReview={isNewReview}
-                isClaimingReview={false}
-                onClaimClick={() => {}}
-                isReviewClaimed={false}
-                hideMatchScore={false}
-              />
-            )}
+            {/* Customer Details */}
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div className="text-sm text-gray-600 mb-2 font-medium">Customer Information</div>
+              <div className="space-y-1 text-sm text-gray-700">
+                {customerName && (
+                  <div><span className="font-medium">Name:</span> {customerName}</div>
+                )}
+                {customerPhone && (
+                  <div><span className="font-medium">Phone:</span> {customerPhone}</div>
+                )}
+                {customerAddress && (
+                  <div><span className="font-medium">Address:</span> {customerAddress}</div>
+                )}
+                {(customerCity || customerZipcode) && (
+                  <div>
+                    <span className="font-medium">Location:</span> 
+                    {customerCity && ` ${customerCity}`}
+                    {customerZipcode && ` ${customerZipcode}`}
+                  </div>
+                )}
+                {!customerName && !customerPhone && !customerAddress && !customerCity && !customerZipcode && (
+                  <div className="text-gray-500 italic">No additional customer details available</div>
+                )}
+              </div>
+            </div>
             
             {/* Access Options Card */}
             <Card className="bg-gray-50 border-gray-200">

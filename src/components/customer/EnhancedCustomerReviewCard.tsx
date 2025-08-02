@@ -34,6 +34,9 @@ interface EnhancedCustomerReviewCardProps {
     detailedMatches?: DetailedMatch[];
     isNewReview?: boolean;
     customer_phone?: string;
+    customer_address?: string;
+    customer_city?: string;
+    customer_zipcode?: string;
     hasUserResponded?: boolean;
   };
   isUnlocked: boolean;
@@ -217,6 +220,11 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         detailedMatches={review.detailedMatches}
         isNewReview={review.isNewReview}
         hideMatchScore={isReviewActuallyUnlocked || review.hasUserResponded || hasSubscription}
+        customerName={review.customerName}
+        customerAddress={review.customer_address}
+        customerCity={review.customer_city}
+        customerZipcode={review.customer_zipcode}
+        customerPhone={review.customer_phone}
       />
 
       {/* Conversation Section */}
