@@ -38,6 +38,7 @@ interface EnhancedCustomerReviewCardProps {
     customer_city?: string;
     customer_zipcode?: string;
     hasUserResponded?: boolean;
+    matchesCurrentUser?: boolean;
   };
   isUnlocked: boolean;
   hasSubscription: boolean;
@@ -106,8 +107,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   // Check if customer user can unlock this specific review
   const canCustomerUnlockReview = () => {
     if (!isCustomerUser) return true; // Business users can unlock any review
-    // Customer users can only unlock reviews that match their profile and are unlocked in the backend
-    return review.isUnlocked || isReviewActuallyUnlocked;
+    // Customer users can only unlock reviews that match their profile
+    return review.matchesCurrentUser;
   };
 
   // Use the permission system
