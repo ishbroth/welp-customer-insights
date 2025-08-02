@@ -56,6 +56,13 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
       return;
     }
     
+    // If customer clicks their own name, navigate to their own profile
+    if (authorType === 'customer' && authorId === currentUser?.id) {
+      console.log('Navigating to own profile');
+      navigate('/profile');
+      return;
+    }
+    
     if (authorType === 'business') {
       console.log('Navigating to business profile:', authorId);
       navigate(`/business-profile/${authorId}`, {
