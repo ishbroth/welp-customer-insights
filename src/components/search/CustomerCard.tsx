@@ -85,8 +85,15 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
     navigate(`/review/new?${params.toString()}`);
   };
 
+  // Check if current user has already reviewed this customer
+  const hasAlreadyReviewed = () => {
+    if (!currentUser || currentUser.type !== 'business') return false;
+    return customer.reviews?.some(review => review.reviewerId === currentUser.id) || false;
+  };
+
   // Only show write review button for business users or non-logged users
   const showWriteReviewButton = !currentUser || currentUser.type === 'business';
+  const alreadyReviewed = hasAlreadyReviewed();
 
   return (
     <Card className="w-full">
@@ -145,9 +152,12 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             {showWriteReviewButton && (
               <Button
                 size="sm"
+                variant={alreadyReviewed ? "outline" : "default"}
+                disabled={alreadyReviewed}
                 onClick={handleWriteReview}
+                className={alreadyReviewed ? "text-muted-foreground cursor-not-allowed" : ""}
               >
-                Write Review
+                {alreadyReviewed ? "Already Reviewed" : "Write Review"}
               </Button>
             )}
           </div>
@@ -183,8 +193,14 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             <p className="text-sm">No reviews yet</p>
             <p className="text-xs text-gray-400 mb-3">Be the first to review this customer</p>
             {showWriteReviewButton && (
-              <Button size="sm" onClick={handleWriteReview}>
-                Write First Review
+              <Button 
+                size="sm" 
+                variant={alreadyReviewed ? "outline" : "default"}
+                disabled={alreadyReviewed}
+                onClick={handleWriteReview}
+                className={alreadyReviewed ? "text-muted-foreground cursor-not-allowed" : ""}
+              >
+                {alreadyReviewed ? "Already Reviewed" : "Write First Review"}
               </Button>
             )}
           </div>
