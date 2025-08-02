@@ -71,8 +71,9 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
           // Business users can unlock any review with subscription or claimed status
           isUnlocked = isClaimed || isSubscribed;
         } else if (currentUser?.type === 'customer') {
-          // Customer users can only unlock reviews that match their profile
-          isUnlocked = isClaimed || (matchesCurrentUser && isSubscribed);
+          // Customer users can only unlock reviews written about them by this specific business
+          const isReviewAboutCurrentUser = matchesCurrentUser && review.business_id === businessId;
+          isUnlocked = isReviewAboutCurrentUser && (isClaimed || isSubscribed);
         }
 
         const transformedReview = {
