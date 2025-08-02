@@ -43,8 +43,6 @@ const BusinessReviews = () => {
           <div className="container mx-auto">
             <BusinessReviewsHeader 
               reviewCount={workingReviews.length}
-              isLoading={isLoading}
-              onRefresh={fetchBusinessReviews}
             />
             
             <BusinessReviewsSubscriptionBanner hasSubscription={hasSubscription} />

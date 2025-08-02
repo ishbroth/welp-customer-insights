@@ -5,11 +5,9 @@ import { Edit } from "lucide-react";
 
 interface BusinessReviewsHeaderProps {
   reviewCount: number;
-  isLoading: boolean;
-  onRefresh: () => void;
 }
 
-const BusinessReviewsHeader = ({ reviewCount, isLoading, onRefresh }: BusinessReviewsHeaderProps) => {
+const BusinessReviewsHeader = ({ reviewCount }: BusinessReviewsHeaderProps) => {
   return (
     <>
       <div className="mb-6 flex justify-between items-center">
@@ -19,8 +17,11 @@ const BusinessReviewsHeader = ({ reviewCount, isLoading, onRefresh }: BusinessRe
             Manage the reviews you've written about customers.
           </p>
         </div>
-        <Button onClick={onRefresh} disabled={isLoading}>
-          {isLoading ? "Loading..." : "Refresh Reviews"}
+        <Button asChild>
+          <Link to="/review/new">
+            <Edit className="mr-2 h-4 w-4" />
+            Write New Review
+          </Link>
         </Button>
       </div>
       
@@ -30,12 +31,6 @@ const BusinessReviewsHeader = ({ reviewCount, isLoading, onRefresh }: BusinessRe
             {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'} total
           </span>
         </div>
-        <Button asChild>
-          <Link to="/review/new">
-            <Edit className="mr-2 h-4 w-4" />
-            Write New Review
-          </Link>
-        </Button>
       </div>
     </>
   );
