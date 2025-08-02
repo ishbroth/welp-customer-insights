@@ -58,8 +58,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   // For review content: authors can always see full content
   const canViewFullContent = isSubscribed || isReviewActuallyUnlocked || isReviewAuthor;
   
-  // For conversation participation: even authors need subscription or unlock
-  const canParticipateInConversation = isSubscribed || isReviewActuallyUnlocked;
+  // For conversation participation: authors should also have full access
+  const canParticipateInConversation = isSubscribed || isReviewActuallyUnlocked || isReviewAuthor;
 
   // Use the customer info system
   const customerInfo = useCustomerInfo({
