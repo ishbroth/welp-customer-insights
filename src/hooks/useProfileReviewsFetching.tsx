@@ -107,11 +107,17 @@ export const useProfileReviewsFetching = () => {
                 }
               }
 
-              // Generate detailed match information for non-claimed reviews
+              // Generate detailed match information for all reviews (both claimed and unclaimed)
               let detailedMatches = [];
+              let enhancedMatchScore = match.matchScore;
+              let enhancedMatchReasons = match.matchReasons;
+              
+              // For non-claimed reviews, use the detailed matching system
               if (match.matchType !== 'claimed') {
                 const detailedMatchResult = checkReviewMatch(review, currentUser);
                 detailedMatches = detailedMatchResult.detailedMatches;
+                enhancedMatchScore = detailedMatchResult.score;
+                enhancedMatchReasons = detailedMatchResult.reasons;
               }
 
               // Check if this review was claimed by the current user (already handled in data structure)
@@ -125,10 +131,11 @@ export const useProfileReviewsFetching = () => {
                 reviewerName: businessProfile?.name || review.customer_name || 'Business',
                 responses: [],
                 matchType: isClaimedByCurrentUser ? 'claimed' : match.matchType,
-                matchScore: isClaimedByCurrentUser ? 100 : match.matchScore,
-                matchReasons: isClaimedByCurrentUser ? ['Review claimed by your account'] : match.matchReasons,
+                matchScore: isClaimedByCurrentUser ? 100 : enhancedMatchScore,
+                matchReasons: isClaimedByCurrentUser ? ['Review claimed by your account'] : enhancedMatchReasons,
                 detailedMatches: detailedMatches,
                 isClaimed: isClaimedByCurrentUser,
+                isEffectivelyClaimed: isClaimedByCurrentUser,
                 hasUserResponded: userResponsesMap.has(review.id) || false
               };
             })
