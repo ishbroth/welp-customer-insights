@@ -8,12 +8,17 @@ interface UseReviewNavigationProps {
 }
 
 export const useReviewNavigation = ({ reviewerId, isUnlocked }: UseReviewNavigationProps) => {
-  const { isSubscribed } = useAuth();
+  const { isSubscribed, currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleBusinessNameClick = () => {
     if (isSubscribed || isUnlocked) {
-      navigate(`/business-profile/${reviewerId}`);
+      // If the reviewerId matches current user's ID, go to their own profile
+      if (currentUser?.id === reviewerId) {
+        navigate('/profile');
+      } else {
+        navigate(`/business-profile/${reviewerId}`);
+      }
     }
   };
 
