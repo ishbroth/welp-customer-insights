@@ -146,6 +146,21 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
               </div>
             </div>
             
+            {/* Match Information - show for unlockable reviews */}
+            {canUnlockReview && (
+              <ReviewMatchInfo
+                matchType={matchType}
+                matchReasons={matchReasons}
+                matchScore={matchScore}
+                detailedMatches={detailedMatches}
+                isNewReview={isNewReview}
+                isClaimingReview={isClaimingReview}
+                onClaimClick={onClaimClick}
+                isReviewClaimed={isReviewClaimed}
+                hideMatchScore={hideMatchScore}
+              />
+            )}
+            
             {/* Access Options Card - only show if user can unlock this review */}
             {canUnlockReview && (
               <Card className="bg-gray-50 border-gray-200">
