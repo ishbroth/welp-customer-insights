@@ -5,6 +5,20 @@ import { Review } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Helper function to calculate sort priority
+const calculateSortPriority = (claimedBy: string | undefined, hasConversation: boolean, hasResponses: boolean): number => {
+  const isClaimed = !!claimedBy;
+  const hasActivity = hasConversation || hasResponses;
+  
+  if (isClaimed && hasActivity) {
+    return 1; // Tier 1: Claimed with activity (highest priority)
+  } else if (isClaimed) {
+    return 2; // Tier 2: Claimed without activity
+  } else {
+    return 3; // Tier 3: Unclaimed (lowest priority)
+  }
+};
+
 export const useBusinessReviews = (onRefresh?: () => void) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -17,7 +31,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
     setIsLoading(true);
     
     try {
-      // Fetch reviews written by this business with claim info using LEFT JOIN
+      // Fetch reviews written by this business with claim info, conversations, and responses
       const { data: reviewsData, error } = await supabase
         .from('reviews')
         .select(`
@@ -30,11 +44,12 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_city,
           customer_zipcode,
           customer_phone,
-          review_claims!left(claimed_by)
+          review_claims!left(claimed_by),
+          conversation_participants!left(review_id),
+          responses!left(review_id)
         `)
         .eq('business_id', currentUser.id)
         .is('deleted_at', null) // Only get non-deleted reviews
-        .order('created_at', { ascending: false });
 
       console.log("BusinessReviews: Query result:", { reviewsData, error });
 
@@ -45,12 +60,15 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       console.log("BusinessReviews: Found reviews:", reviewsData?.length || 0);
       console.log("BusinessReviews: Raw data sample:", reviewsData?.[0]);
 
-      // No responses in this simplified version
-      const reviewsWithResponses = reviewsData || [];
-
-      // Format reviews data to match Review type
-      const formattedReviews = reviewsWithResponses.map(review => {
+      // Format reviews data to match Review type and calculate activity status
+      const formattedReviews = (reviewsData || []).map(review => {
         const claimedBy = review.review_claims?.[0]?.claimed_by;
+        const hasConversation = Array.isArray(review.conversation_participants) 
+          ? review.conversation_participants.length > 0 
+          : !!review.conversation_participants;
+        const hasResponses = Array.isArray(review.responses) 
+          ? review.responses.length > 0 
+          : !!review.responses;
         
         // Ensure we have a valid date string - use the raw created_at value
         const reviewDate = review.created_at || new Date().toISOString();
@@ -61,7 +79,9 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           created_at: review.created_at,
           reviewDate: reviewDate,
           review_claims: review.review_claims,
-          claimedBy: claimedBy
+          claimedBy: claimedBy,
+          hasConversation: hasConversation,
+          hasResponses: hasResponses
         });
         
         const formattedReview: Review = {
@@ -87,16 +107,43 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           responses: []
         };
         
+        // Add sorting priority metadata
+        (formattedReview as any)._sortPriority = calculateSortPriority(claimedBy, hasConversation, hasResponses);
+        
         console.log("BusinessReviews: Formatted review:", {
           id: formattedReview.id,
           customerName: formattedReview.customerName,
-          date: formattedReview.date
+          date: formattedReview.date,
+          sortPriority: (formattedReview as any)._sortPriority
         });
         
         return formattedReview;
       });
 
-      setWorkingReviews(formattedReviews);
+      // Sort reviews with multi-tier priority:
+      // Tier 1: Claimed AND has activity (conversations/responses)
+      // Tier 2: Claimed but no activity
+      // Tier 3: Unclaimed
+      // Within each tier, sort by created_at descending
+      const sortedReviews = formattedReviews.sort((a, b) => {
+        const aPriority = (a as any)._sortPriority;
+        const bPriority = (b as any)._sortPriority;
+        
+        // First, sort by priority (lower number = higher priority)
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority;
+        }
+        
+        // Within same priority, sort by date (newest first)
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+
+      // Clean up temporary sort priority metadata
+      sortedReviews.forEach(review => {
+        delete (review as any)._sortPriority;
+      });
+
+      setWorkingReviews(sortedReviews);
       
       console.log("BusinessReviews: Final formatted reviews:", formattedReviews.map(r => ({
         id: r.id,
