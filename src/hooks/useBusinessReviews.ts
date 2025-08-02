@@ -63,12 +63,16 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       // Format reviews data to match Review type and calculate activity status
       const formattedReviews = (reviewsData || []).map(review => {
         const claimedBy = review.review_claims?.[0]?.claimed_by;
+        
+        // Fix conversation detection - check if array has items with actual id values
         const hasConversation = Array.isArray(review.conversation_participants) 
-          ? review.conversation_participants.length > 0 
-          : !!review.conversation_participants;
+          && review.conversation_participants.length > 0 
+          && review.conversation_participants.some(cp => cp.id);
+        
+        // Fix response detection - check if array has items with actual id values  
         const hasResponses = Array.isArray(review.responses) 
-          ? review.responses.length > 0 
-          : !!review.responses;
+          && review.responses.length > 0 
+          && review.responses.some(r => r.id);
         
         // Ensure we have a valid date string - use the raw created_at value
         const reviewDate = review.created_at || new Date().toISOString();
