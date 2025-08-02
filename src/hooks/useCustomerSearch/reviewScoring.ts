@@ -3,6 +3,7 @@ import { calculateStringSimilarity } from "@/utils/stringSimilarity";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { ReviewData } from "./types";
+import { validateFieldCombination } from "./fieldCombinationRules";
 
 interface ScoredReview extends ReviewData {
   searchScore: number;
@@ -93,6 +94,28 @@ export const scoreReview = (
   // Clean phone and zip for comparison
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
   const cleanZip = zipCode ? zipCode.replace(/\D/g, '') : '';
+
+  // Validate field combination before scoring
+  const fieldValidation = validateFieldCombination(searchParams, {
+    customer_name: review.customer_name,
+    customer_phone: review.customer_phone,
+    customer_address: review.customer_address,
+    customer_city: review.customer_city,
+    customer_zipcode: review.customer_zipcode,
+    business_state: businessState || undefined
+  });
+
+  // Early exit if field combination is invalid
+  if (!fieldValidation.isValid) {
+    console.log(`[FIELD_VALIDATION] Review ${review.id} rejected by field combination rules: ${fieldValidation.appliedRules.join(', ')}`);
+    return { 
+      ...review, 
+      searchScore: 0, 
+      matchCount: 0,
+      completenessScore,
+      detailedMatches: []
+    };
+  }
 
   // Early exit for name-focused searches with poor name similarity
   if (searchContext.hasName && review.customer_name) {
@@ -302,7 +325,7 @@ export const scoreReview = (
     }
   }
 
-  // State matching - Use the business state parameter directly
+  // Enhanced state matching with mismatch penalties
   if (state && businessState) {
     const searchState = state.toLowerCase().trim();
     const reviewBusinessState = businessState.toLowerCase().trim();
@@ -318,6 +341,18 @@ export const scoreReview = (
         similarity: 1.0,
         matchType: 'exact'
       });
+    } else {
+      // Apply state mismatch penalty for location-focused searches
+      const hasLocationFocus = Boolean(city || zipCode || address);
+      if (hasLocationFocus && !phone && !(firstName && lastName)) {
+        // Heavy penalty for location-only searches with wrong state
+        score *= 0.3; // Reduce score by 70%
+        console.log(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${searchState} vs ${reviewBusinessState}`);
+      } else if (hasLocationFocus) {
+        // Moderate penalty for mixed searches with wrong state
+        score *= 0.7; // Reduce score by 30%
+        console.log(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${searchState} vs ${reviewBusinessState}`);
+      }
     }
   }
 
@@ -416,6 +451,18 @@ export const scoreReview = (
   // Cap at 100%
   percentageScore = Math.min(100, percentageScore);
 
+  // Apply field combination minimum score requirement
+  if (percentageScore < fieldValidation.minScoreRequired) {
+    console.log(`[FIELD_VALIDATION] Review ${review.id} score ${percentageScore} below required minimum ${fieldValidation.minScoreRequired} for rules: ${fieldValidation.appliedRules.join(', ')}`);
+    return { 
+      ...review, 
+      searchScore: 0, 
+      matchCount: 0,
+      completenessScore,
+      detailedMatches: []
+    };
+  }
+
   console.log('Enhanced review scoring result:', {
     reviewId: review.id,
     customerName: review.customer_name,
@@ -427,7 +474,8 @@ export const scoreReview = (
     completenessScore,
     fieldsWithData,
     finalMatches: matches,
-    detailedMatches
+    detailedMatches,
+    fieldValidation
   });
 
   return { 

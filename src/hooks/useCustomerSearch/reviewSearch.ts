@@ -170,7 +170,15 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
   // Filter and sort the results
   const filteredReviews = isSingleFieldSearch 
     ? scoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
-    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext, unlockedReviews);
+    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext, unlockedReviews, {
+        firstName, 
+        lastName, 
+        phone, 
+        address, 
+        city, 
+        state, 
+        zipCode 
+      });
 
   logSearchResults(filteredReviews);
   

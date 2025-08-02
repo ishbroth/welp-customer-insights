@@ -1,5 +1,6 @@
 
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
+import { analyzeFieldCombination } from "./fieldCombinationRules";
 
 interface ScoredReview {
   searchScore: number;
@@ -22,13 +23,33 @@ export const filterAndSortReviews = (
     isLocationOnly: boolean;
     isPhoneOnly: boolean;
   },
-  unlockedReviews?: string[]
+  unlockedReviews?: string[],
+  searchParams?: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  }
 ): ScoredReview[] => {
-  // Context-aware filtering
+  // Enhanced context-aware filtering with field combination analysis
   let minScore: number;
   let minMatches: number;
   
-  if (searchContext?.isNameFocused) {
+  // Analyze field combination if search params are provided
+  const fieldCombination = searchParams ? analyzeFieldCombination(searchParams) : null;
+  
+  if (fieldCombination?.combinationType === 'weak') {
+    // Weak combinations need very high standards
+    minScore = 40;
+    minMatches = 2;
+  } else if (fieldCombination?.combinationType === 'moderate') {
+    // Moderate combinations need good standards
+    minScore = 25;
+    minMatches = 2;
+  } else if (searchContext?.isNameFocused) {
     // For name-focused searches, be more selective
     minScore = 15; // Higher minimum score when name is provided
     minMatches = 2; // Require at least 2 matches including name
@@ -44,7 +65,7 @@ export const filterAndSortReviews = (
     minMatches = REVIEW_SEARCH_CONFIG.MINIMUM_MATCHES_MULTI_FIELD;
   }
 
-  console.log(`Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}`);
+  console.log(`Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}, fieldCombination=${fieldCombination?.combinationType}`);
 
   const filteredReviews = scoredReviews
     .filter(review => {
