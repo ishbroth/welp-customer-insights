@@ -47,6 +47,7 @@ interface EnhancedReviewContentProps {
   detailedMatches?: DetailedMatch[];
   isNewReview?: boolean;
   hideMatchScore?: boolean;
+  canUnlockReview: boolean;
   // Customer details from review
   customerName?: string;
   customerAddress?: string;
@@ -89,6 +90,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   detailedMatches,
   isNewReview,
   hideMatchScore,
+  canUnlockReview,
   customerName,
   customerAddress,
   customerCity,
@@ -144,51 +146,53 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
               </div>
             </div>
             
-            {/* Access Options Card */}
-            <Card className="bg-gray-50 border-gray-200">
-              <CardContent className="p-4">
-                <div className="flex items-center text-gray-600 mb-3">
-                  <Lock className="h-4 w-4 mr-2" />
-                  <span className="text-sm font-medium">Full review content locked</span>
-                </div>
-                
-                <p className="text-xs text-gray-500 mb-4">
-                  Choose an option to unlock this review and view the complete content
-                </p>
-                
-                <div className="space-y-3">
-                   {/* Credit/Purchase Option */}
-                   {creditBalance > 0 ? (
+            {/* Access Options Card - only show if user can unlock this review */}
+            {canUnlockReview && (
+              <Card className="bg-gray-50 border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center text-gray-600 mb-3">
+                    <Lock className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-medium">Full review content locked</span>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mb-4">
+                    Choose an option to unlock this review and view the complete content
+                  </p>
+                  
+                  <div className="space-y-3">
+                     {/* Credit/Purchase Option */}
+                     {creditBalance > 0 ? (
+                       <Button
+                         onClick={onUseCreditClick}
+                         variant="outline"
+                         className="w-full flex items-center justify-center gap-2"
+                       >
+                         <CreditCard className="h-4 w-4" />
+                         Unlock with 1 Credit
+                       </Button>
+                     ) : (
+                       <Button
+                         onClick={onPurchaseClick}
+                         variant="outline"
+                         className="w-full flex items-center justify-center gap-2"
+                       >
+                         <CreditCard className="h-4 w-4" />
+                         Unlock Review ($3)
+                       </Button>
+                     )}
+                     
+                     {/* Subscription Option */}
                      <Button
-                       onClick={onUseCreditClick}
-                       variant="outline"
-                       className="w-full flex items-center justify-center gap-2"
+                       onClick={onSubscribeClick}
+                       className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
                      >
-                       <CreditCard className="h-4 w-4" />
-                       Unlock with 1 Credit
+                       <Crown className="h-4 w-4" />
+                       Subscribe Now
                      </Button>
-                   ) : (
-                     <Button
-                       onClick={onPurchaseClick}
-                       variant="outline"
-                       className="w-full flex items-center justify-center gap-2"
-                     >
-                       <CreditCard className="h-4 w-4" />
-                       Unlock Review ($3)
-                     </Button>
-                   )}
-                   
-                   {/* Subscription Option */}
-                   <Button
-                     onClick={onSubscribeClick}
-                     className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
-                   >
-                     <Crown className="h-4 w-4" />
-                     Subscribe Now
-                   </Button>
-                 </div>
-              </CardContent>
-            </Card>
+                   </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

@@ -221,6 +221,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         detailedMatches={review.detailedMatches}
         isNewReview={review.isNewReview}
         hideMatchScore={isReviewActuallyUnlocked || review.hasUserResponded || hasSubscription}
+        canUnlockReview={canCustomerUnlockReview()}
         customerName={review.customerName}
         customerAddress={review.customer_address}
         customerCity={review.customer_city}
