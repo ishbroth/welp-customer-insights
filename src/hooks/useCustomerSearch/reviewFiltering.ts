@@ -46,9 +46,9 @@ export const filterAndSortReviews = (
     minScore = 40;
     minMatches = 2;
   } else if (fieldCombination?.combinationType === 'moderate') {
-    // Moderate combinations need good standards
-    minScore = 25;
-    minMatches = 2;
+    // More lenient for moderate combinations (like first name + location)
+    minScore = 12;
+    minMatches = 1;
   } else if (searchContext?.isNameFocused) {
     // For name-focused searches, be more selective
     minScore = 15; // Higher minimum score when name is provided
@@ -65,18 +65,26 @@ export const filterAndSortReviews = (
     minMatches = REVIEW_SEARCH_CONFIG.MINIMUM_MATCHES_MULTI_FIELD;
   }
 
-  console.log(`Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}, fieldCombination=${fieldCombination?.combinationType}`);
+  console.log(`🔍 Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}, fieldCombination=${fieldCombination?.combinationType}`);
 
   const filteredReviews = scoredReviews
     .filter(review => {
-      console.log(`Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}`);
+      console.log(`🔍 Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}"`);
       
       if (searchContext?.isLocationOnly || isSingleFieldSearch) {
-        return review.searchScore >= minScore || review.matchCount >= minMatches;
+        const passes = review.searchScore >= minScore || review.matchCount >= minMatches;
+        if (!passes) {
+          console.log(`❌ Review ${review.id} filtered out (location/single field)`);
+        }
+        return passes;
       }
       
       // For name-focused and multi-field searches, require both minimum score AND minimum matches
-      return review.searchScore >= minScore && review.matchCount >= minMatches;
+      const passes = review.searchScore >= minScore && review.matchCount >= minMatches;
+      if (!passes) {
+        console.log(`❌ Review ${review.id} filtered out (score: ${review.searchScore} < ${minScore} OR matches: ${review.matchCount} < ${minMatches})`);
+      }
+      return passes;
     })
     .sort((a, b) => {
       // PRIMARY SORT: Claimed/Unlocked reviews come first

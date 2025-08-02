@@ -110,13 +110,15 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
       !context.hasPhone && !context.hasAddress &&
       !(context.hasFirstName && context.hasLastName),
     validate: (context, reviewData) => {
-      // Single name + location requires high name similarity AND location match
+      // Single name + location requires moderate name similarity AND location match
       const searchName = (context.hasFirstName ? context.searchParams.firstName : context.searchParams.lastName) || '';
       const nameSimilarity = reviewData.customer_name ? 
         calculateStringSimilarity(searchName.toLowerCase(), reviewData.customer_name.toLowerCase()) : 0;
       
-      // Require very high name similarity for single name searches
-      if (nameSimilarity < 0.75) return false;
+      console.log(`🔍 Name similarity: "${searchName}" vs "${reviewData.customer_name}" = ${nameSimilarity}`);
+      
+      // Lower threshold for fuzzy matching (0.65 allows "Samantha" vs "smanantha")
+      if (nameSimilarity < 0.65) return false;
       
       // AND require at least one location match
       const cityMatches = context.hasCity && reviewData.customer_city &&
@@ -130,26 +132,30 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
                           context.searchParams.zipCode?.replace(/\D/g, '') || ''
                         );
       
-      const stateMatches = context.hasState && reviewData.business_state &&
-                          reviewData.business_state.toLowerCase().trim() === 
+      // Check both business_state and derive from customer location
+      const customerState = reviewData.business_state;
+      const stateMatches = context.hasState && customerState &&
+                          customerState.toLowerCase().trim() === 
                           context.searchParams.state?.toLowerCase().trim();
+      
+      console.log(`🔍 Location matches - City: ${cityMatches}, Zip: ${zipMatches}, State: ${stateMatches}`);
       
       return cityMatches || zipMatches || stateMatches;
     },
-    minScoreRequired: 35,
-    description: 'Single name + location requires high name similarity and location match'
+    minScoreRequired: 15,
+    description: 'Single name + location requires moderate name similarity and location match'
   },
   {
     name: 'weak_name_combination',
     applies: (context) => 
-      (context.hasFirstName && context.hasZipCode && !context.hasLastName) ||
-      (context.hasFirstName && context.hasCity && !context.hasLastName && !context.hasState),
+      (context.hasFirstName && context.hasCity && !context.hasLastName && !context.hasState && !context.hasZipCode),
     validate: (context, reviewData) => {
-      // Weak combinations like "first name + zip only" need very strict validation
-      return false; // Reject these weak combinations entirely
+      // Only reject very weak combinations like "first name + city only"
+      // Allow "first name + zip" or "first name + state" combinations
+      return false; 
     },
     minScoreRequired: 100, // Effectively impossible
-    description: 'Reject overly weak name combinations'
+    description: 'Reject overly weak name combinations (first name + city only)'
   },
   {
     name: 'address_different_name',
