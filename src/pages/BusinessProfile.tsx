@@ -106,39 +106,105 @@ const BusinessProfile: React.FC = () => {
                   {businessProfile.verified && <VerifiedBadge />}
                   <Badge variant="secondary">Business</Badge>
                 </div>
+                
                 {/* Business bio */}
                 {businessProfile.bio && (
-                  <div className="text-sm text-muted-foreground mb-2">
+                  <div className="text-sm text-muted-foreground mb-3">
                     <span>{businessProfile.bio}</span>
                   </div>
                 )}
 
-                {businessProfile.phone && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <span>Phone: {businessProfile.phone}</span>
-                  </div>
-                )}
-
-                {businessProfile.address && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <span>
-                      {businessProfile.address}
-                      {businessProfile.city && `, ${businessProfile.city}`}
-                      {businessProfile.state && `, ${businessProfile.state}`}
-                      {businessProfile.zipcode && ` ${businessProfile.zipcode}`}
-                    </span>
-                  </div>
-                )}
-
-                {/* Business category and license type */}
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-2">
-                  {businessProfile.business_info?.business_category && (
-                    <span>Category: {businessProfile.business_info.business_category}</span>
+                {/* Contact Information */}
+                <div className="space-y-1 mb-3">
+                  {businessProfile.phone && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Phone: {businessProfile.phone}</span>
+                    </div>
                   )}
-                  {businessProfile.business_info?.license_type && (
-                    <span>License: {businessProfile.business_info.license_type}</span>
+
+                  {businessProfile.address && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>
+                        {businessProfile.address}
+                        {businessProfile.city && `, ${businessProfile.city}`}
+                        {businessProfile.state && `, ${businessProfile.state}`}
+                        {businessProfile.zipcode && ` ${businessProfile.zipcode}`}
+                      </span>
+                    </div>
+                  )}
+
+                  {businessProfile.business_info?.website && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Website: </span>
+                      <a 
+                        href={businessProfile.business_info.website.startsWith('http') ? businessProfile.business_info.website : `https://${businessProfile.business_info.website}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        {businessProfile.business_info.website}
+                      </a>
+                    </div>
                   )}
                 </div>
+
+                {/* Business Details */}
+                <div className="space-y-1 mb-3">
+                  {businessProfile.business_info?.business_category && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Category: {businessProfile.business_info.business_category}</span>
+                      {businessProfile.business_info?.business_subcategory && (
+                        <span> • {businessProfile.business_info.business_subcategory}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* License Information */}
+                {businessProfile.business_info && (
+                  <div className="space-y-1 mb-3">
+                    {businessProfile.business_info.license_type && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>License Type: {businessProfile.business_info.license_type}</span>
+                        {businessProfile.business_info.license_state && (
+                          <span> ({businessProfile.business_info.license_state})</span>
+                        )}
+                      </div>
+                    )}
+                    
+                    {businessProfile.business_info.license_number && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>License #: {businessProfile.business_info.license_number}</span>
+                      </div>
+                    )}
+                    
+                    {businessProfile.business_info.license_status && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Status: </span>
+                        <Badge variant={businessProfile.business_info.license_status === 'Active' ? 'default' : 'secondary'}>
+                          {businessProfile.business_info.license_status}
+                        </Badge>
+                        {businessProfile.business_info.license_expiration && (
+                          <span className="ml-1">• Expires: {new Date(businessProfile.business_info.license_expiration).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {businessProfile.business_info.additional_licenses && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Additional Licenses: {businessProfile.business_info.additional_licenses}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Additional Information */}
+                {businessProfile.business_info?.additional_info && (
+                  <div className="text-sm text-muted-foreground mb-3">
+                    <span className="font-medium">Additional Info: </span>
+                    <span>{businessProfile.business_info.additional_info}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
