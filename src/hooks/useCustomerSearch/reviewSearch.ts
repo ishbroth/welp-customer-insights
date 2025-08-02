@@ -6,7 +6,7 @@ import { scoreReview } from "./reviewScoring";
 import { filterAndSortReviews, logSearchResults } from "./reviewFiltering";
 import { formatReviewData } from "./reviewDataFormatter";
 
-export const searchReviews = async (searchParams: SearchParams) => {
+export const searchReviews = async (searchParams: SearchParams, unlockedReviews?: string[]) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
   console.log("=== REVIEW SEARCH START ===");
@@ -170,7 +170,7 @@ export const searchReviews = async (searchParams: SearchParams) => {
   // Filter and sort the results
   const filteredReviews = isSingleFieldSearch 
     ? scoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
-    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext);
+    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext, unlockedReviews);
 
   logSearchResults(filteredReviews);
   

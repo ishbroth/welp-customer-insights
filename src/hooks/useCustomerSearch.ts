@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import { useToast } from "@/hooks/use-toast";
+import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { searchProfiles } from "./useCustomerSearch/profileSearch";
 import { searchReviews } from "./useCustomerSearch/reviewSearch";
 import { processProfileCustomers, processReviewCustomers } from "./useCustomerSearch/customerProcessor";
@@ -13,6 +14,7 @@ export const useCustomerSearch = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { unlockedReviews } = useReviewAccess();
   
   // Extract search parameters
   const searchParameters: SearchParams = {
@@ -50,7 +52,7 @@ export const useCustomerSearch = () => {
       // Search both profiles and reviews
       const [profilesData, reviewsData] = await Promise.all([
         searchProfiles(searchParameters),
-        searchReviews(searchParameters)
+        searchReviews(searchParameters, unlockedReviews)
       ]);
       
       // Process customers from profiles
@@ -128,7 +130,8 @@ export const useCustomerSearch = () => {
     searchParameters.city, 
     searchParameters.state, 
     searchParameters.zipCode, 
-    toast
+    toast,
+    unlockedReviews
   ]);
 
   useEffect(() => {

@@ -21,7 +21,8 @@ export const filterAndSortReviews = (
     isNameFocused: boolean;
     isLocationOnly: boolean;
     isPhoneOnly: boolean;
-  }
+  },
+  unlockedReviews?: string[]
 ): ScoredReview[] => {
   // Context-aware filtering
   let minScore: number;
@@ -57,6 +58,14 @@ export const filterAndSortReviews = (
       return review.searchScore >= minScore && review.matchCount >= minMatches;
     })
     .sort((a, b) => {
+      // PRIMARY SORT: Claimed/Unlocked reviews come first
+      const aIsClaimed = unlockedReviews?.includes(a.id) || false;
+      const bIsClaimed = unlockedReviews?.includes(b.id) || false;
+      
+      if (aIsClaimed !== bIsClaimed) {
+        return bIsClaimed ? 1 : -1; // Claimed reviews first
+      }
+      
       // Context-aware sorting for name-focused searches
       if (searchContext?.isNameFocused) {
         // For name-focused searches, prioritize search score heavily (which now includes heavy name weighting)
