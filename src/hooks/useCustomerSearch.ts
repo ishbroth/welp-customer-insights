@@ -131,7 +131,7 @@ export const useCustomerSearch = () => {
     searchParameters.state, 
     searchParameters.zipCode, 
     toast,
-    unlockedReviews
+    unlockedReviews.join(',')
   ]);
 
   useEffect(() => {
