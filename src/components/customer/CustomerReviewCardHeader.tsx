@@ -61,7 +61,7 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
             <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
           ) : null}
           <AvatarFallback className="bg-gray-100 text-gray-600">
-            {customerInfo.isClaimed ? getInitials(customerInfo.name) : getInitials(businessInfo.name)}
+            {getInitials(customerInfo.name)}
           </AvatarFallback>
         </Avatar>
         <div>
