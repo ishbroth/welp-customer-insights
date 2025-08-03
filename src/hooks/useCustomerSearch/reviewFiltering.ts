@@ -34,6 +34,10 @@ export const filterAndSortReviews = (
     zipCode?: string;
   }
 ): ScoredReview[] => {
+  // Check if search includes names
+  const hasNameSearch = searchParams?.firstName?.trim() || searchParams?.lastName?.trim();
+  
+  console.log(`🔍 Filtering and sorting reviews - hasNameSearch: ${!!hasNameSearch}`);
   // Enhanced context-aware filtering with field combination analysis
   let minScore: number;
   let minMatches: number;
@@ -87,69 +91,28 @@ export const filterAndSortReviews = (
       return passes;
     })
     .sort((a, b) => {
-      // PRIMARY SORT: Claimed/Unlocked reviews come first
-      const aIsClaimed = unlockedReviews?.includes(a.id) || false;
-      const bIsClaimed = unlockedReviews?.includes(b.id) || false;
-      
-      if (aIsClaimed !== bIsClaimed) {
-        return bIsClaimed ? 1 : -1; // Claimed reviews first
-      }
-      
-      // Context-aware sorting for name-focused searches
-      if (searchContext?.isNameFocused) {
-        // For name-focused searches, prioritize search score heavily (which now includes heavy name weighting)
-        const scoreDiff = b.searchScore - a.searchScore;
-        if (Math.abs(scoreDiff) > 10) {
-          return scoreDiff;
+      // CONDITIONAL SORTING BASED ON SEARCH TYPE
+      if (!hasNameSearch) {
+        // For searches WITHOUT names: Sort alphabetically by customer name
+        const aName = (a.customer_name || '').toLowerCase().trim();
+        const bName = (b.customer_name || '').toLowerCase().trim();
+        
+        if (aName && bName && aName !== bName) {
+          return aName.localeCompare(bName);
         }
-      }
-      
-      // Enhanced priority ranking system:
-      // 1. Match quality (search score and match count) - highest priority
-      // 2. Information completeness - medium priority
-      // 3. Verification status - lower priority
-      // 4. Date - lowest priority
-      
-      const aBusinessVerified = Boolean(a.reviewerVerified);
-      const bBusinessVerified = Boolean(b.reviewerVerified);
-      const aCustomerVerified = Boolean(a.customerVerified);
-      const bCustomerVerified = Boolean(b.customerVerified);
-      
-      // Calculate match quality score (combination of search score and match count)
-      const getMatchQuality = (review: ScoredReview) => {
-        return (review.searchScore * 0.7) + (review.matchCount * 10 * 0.3);
-      };
-      
-      const aMatchQuality = getMatchQuality(a);
-      const bMatchQuality = getMatchQuality(b);
-      
-      // 1. Primary sort: Match quality (search score + match count)
-      if (Math.abs(bMatchQuality - aMatchQuality) > 5) { // Only prioritize if significant difference
-        return bMatchQuality - aMatchQuality;
-      }
-      
-      // 2. Secondary sort: Information completeness
-      if (Math.abs(b.completenessScore - a.completenessScore) > 20) { // Only if significant difference
-        return b.completenessScore - a.completenessScore;
-      }
-      
-      // 3. Tertiary sort: Verification status
-      const getPriorityScore = (businessVerified: boolean, customerVerified: boolean) => {
-        if (businessVerified) return 3; // Highest priority
-        if (customerVerified) return 2; // Medium priority
-        return 1; // Lowest priority
-      };
-      
-      const aPriority = getPriorityScore(aBusinessVerified, aCustomerVerified);
-      const bPriority = getPriorityScore(bBusinessVerified, bCustomerVerified);
-      
-      if (bPriority !== aPriority) {
-        return bPriority - aPriority;
-      }
-      
-      // 4. Final sort: Date (newest first) for reviews with similar scores
-      if (a.created_at && b.created_at) {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else {
+        // For searches WITH names: Sort by claimed status first, then by date
+        const aIsClaimed = unlockedReviews?.includes(a.id) || false;
+        const bIsClaimed = unlockedReviews?.includes(b.id) || false;
+        
+        if (aIsClaimed !== bIsClaimed) {
+          return bIsClaimed ? 1 : -1; // Claimed reviews first
+        }
+        
+        // Then by date (newest first)
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
       }
       
       return 0;
