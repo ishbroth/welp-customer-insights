@@ -178,8 +178,36 @@ export const scoreReview = async (
     }
   }
   
-  // Remove strict early rejection - let the exact field match logic handle this
-  // This was preventing reviews with 4/5 exact matches from showing up
+  // Targeted name validation - require at least one name component match when names are searched
+  let nameComponentMatched = false;
+  if ((firstName || lastName) && review.customer_name) {
+    const customerNameLower = review.customer_name.toLowerCase();
+    const customerParts = customerNameLower.split(/\s+/).filter(part => part.length > 1);
+    
+    if (firstName) {
+      const firstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
+      if (firstNameSimilarity >= 0.3) nameComponentMatched = true;
+    }
+    
+    if (lastName) {
+      const lastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
+      if (lastNameSimilarity >= 0.3) nameComponentMatched = true;
+    }
+    
+    // If we have names in search but no name component matches, reject unless this is phone-only search
+    if (!nameComponentMatched && (firstName || lastName)) {
+      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ 0.3`);
+      return { 
+        ...review, 
+        searchScore: 0, 
+        matchCount: 0,
+        completenessScore,
+        exactFieldMatches: 0,
+        exactMatchDetails: [],
+        detailedMatches: []
+      };
+    }
+  }
 
   // Enhanced name matching with massive weight increase for name importance
   if ((firstName || lastName) && review.customer_name) {
@@ -653,6 +681,24 @@ export const scoreReview = async (
   // Apply field combination minimum score requirement
   if (percentageScore < fieldValidation.minScoreRequired) {
     console.log(`[FIELD_VALIDATION] Review ${review.id} score ${percentageScore} below required minimum ${fieldValidation.minScoreRequired} for rules: ${fieldValidation.appliedRules.join(', ')}`);
+    return { 
+      ...review, 
+      searchScore: 0, 
+      matchCount: 0,
+      completenessScore,
+      exactFieldMatches: 0,
+      exactMatchDetails: [],
+      detailedMatches: []
+    };
+  }
+
+  // Prevent state-only matches when major fields are provided
+  const hasMajorFields = (firstName || lastName || phone || address);
+  const onlyStateMatched = detailedMatches.length === 1 && 
+                          detailedMatches[0].field === 'State';
+  
+  if (hasMajorFields && onlyStateMatched) {
+    console.log(`[STATE_ONLY_FILTER] Review ${review.id} REJECTED - Only state matched when major fields provided`);
     return { 
       ...review, 
       searchScore: 0, 
