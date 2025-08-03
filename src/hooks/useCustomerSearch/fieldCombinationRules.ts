@@ -64,7 +64,12 @@ export const analyzeFieldCombination = (searchParams: {
   if (strongIdentifiers >= 2 || fieldCount >= 4) {
     combinationType = 'strong';
   } else if (strongIdentifiers >= 1 || fieldCount >= 3) {
-    combinationType = 'moderate';
+    // Special case: lastName + city + state without phone/address should be weak
+    if (hasLastName && hasCity && hasState && !hasPhone && !hasAddress && !hasFirstName) {
+      combinationType = 'weak';
+    } else {
+      combinationType = 'moderate';
+    }
   }
 
   return {

@@ -78,9 +78,16 @@ export const filterAndSortReviews = (
     minScore = 40;
     minMatches = 2;
   } else if (fieldCombination?.combinationType === 'moderate') {
-    // More lenient for moderate combinations (like first name + location)
-    minScore = 12;
-    minMatches = 1;
+    // Special case: Name + location only (without phone/address) should be strict
+    if (searchContext?.hasName && (searchContext?.hasLocation) && 
+        !searchContext?.hasPhone && !searchContext?.hasAddress) {
+      minScore = 40; // Much stricter for name + location only
+      minMatches = 2; // Require both name and location matches
+    } else {
+      // More lenient for moderate combinations with contact info
+      minScore = 12;
+      minMatches = 1;
+    }
   } 
   // FALLBACK CASES
   else if (isSingleFieldSearch) {
