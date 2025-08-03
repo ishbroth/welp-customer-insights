@@ -77,10 +77,11 @@ export const filterAndSortReviews = (
   }
 
   console.log(`🔍 Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}, fieldCombination=${fieldCombination?.combinationType}`);
+  console.log(`🔍 Total reviews to filter: ${scoredReviews.length}`);
 
   const filteredReviews = scoredReviews
     .filter(review => {
-      console.log(`🔍 Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}"`);
+      console.log(`🔍 Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}", city="${review.customer_city}", state="${review.customer_state}"`);
       
       // Special handling for address+state searches
       if (searchContext?.isAddressWithState) {

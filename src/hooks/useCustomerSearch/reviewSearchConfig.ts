@@ -8,7 +8,7 @@ export const REVIEW_SEARCH_CONFIG = {
   ZIP_PROXIMITY_RANGE: 50,
   ZIP_PROXIMITY_MILES: 25,
   CITY_PROXIMITY_MILES: 25,
-  CITY_GEOCODING_ENABLED: false, // Temporarily disable geocoding to fix string matching
+  CITY_GEOCODING_ENABLED: true, // Enable geocoding for proximity matching
   MAX_GEOCODING_CALLS_PER_SEARCH: 5,
   MINIMUM_SCORE_MULTI_FIELD: 4.0, // Increased from 2.0 for stricter filtering
   MINIMUM_MATCHES_MULTI_FIELD: 2,

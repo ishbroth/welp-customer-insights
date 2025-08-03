@@ -45,6 +45,8 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
   }
 
   console.log(`Found ${allReviews.length} total reviews in database`);
+  
+  // Debug: Will check CA reviews after business profile enrichment since state comes from business profile
 
   // Get business profiles and verification status
   const businessIds = [...new Set(allReviews.map(review => review.business_id).filter(Boolean))];
@@ -172,6 +174,23 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
 
   // Wait for all scoring to complete
   const scoredReviews = await Promise.all(scoringPromises);
+  
+  // Debug: Log all CA reviews after business profile enrichment
+  const caReviews = scoredReviews.filter(review => {
+    const businessProfile = businessProfilesMap.get(review.business_id);
+    const businessState = businessProfile?.business_state || businessProfile?.state;
+    const normalizedState = businessState ? normalizeState(businessState) : null;
+    return normalizedState === 'CA';
+  });
+  console.log(`🔍 Found ${caReviews.length} reviews with CA business state after enrichment:`, caReviews.map(r => ({
+    id: r.id,
+    name: r.customer_name,
+    city: r.customer_city,
+    business_id: r.business_id,
+    business_state: businessProfilesMap.get(r.business_id)?.business_state,
+    score: r.searchScore,
+    matches: r.matchCount
+  })));
 
   // Detect search context for filtering
   const searchContext = {
