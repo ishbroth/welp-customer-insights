@@ -178,25 +178,36 @@ export const scoreReview = async (
     }
   }
   
-  // Targeted name validation - require at least one name component match when names are searched
+  // Enhanced name validation with detailed debugging
   let nameComponentMatched = false;
   if ((firstName || lastName) && review.customer_name) {
     const customerNameLower = review.customer_name.toLowerCase();
     const customerParts = customerNameLower.split(/\s+/).filter(part => part.length > 1);
     
+    console.log(`[NAME_DEBUG] Review ${review.id} (${review.customer_name})`);
+    console.log(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
+    
+    let bestFirstNameSimilarity = 0;
+    let bestLastNameSimilarity = 0;
+    
     if (firstName) {
-      const firstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
-      if (firstNameSimilarity >= 0.3) nameComponentMatched = true;
+      bestFirstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
+      console.log(`[NAME_DEBUG] First name similarity: "${firstName}" vs "${review.customer_name}" = ${bestFirstNameSimilarity}`);
+      if (bestFirstNameSimilarity >= 0.5) nameComponentMatched = true;
     }
     
     if (lastName) {
-      const lastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
-      if (lastNameSimilarity >= 0.3) nameComponentMatched = true;
+      bestLastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
+      console.log(`[NAME_DEBUG] Last name similarity: "${lastName}" vs "${review.customer_name}" = ${bestLastNameSimilarity}`);
+      if (bestLastNameSimilarity >= 0.5) nameComponentMatched = true;
     }
     
-    // If we have names in search but no name component matches, reject unless this is phone-only search
+    console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (threshold: 0.5)`);
+    
+    // Stricter validation: require at least one name component with 0.5+ similarity
     if (!nameComponentMatched && (firstName || lastName)) {
-      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ 0.3`);
+      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ 0.5`);
+      console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
       return { 
         ...review, 
         searchScore: 0, 
