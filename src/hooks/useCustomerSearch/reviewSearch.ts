@@ -172,7 +172,8 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
     hasPhone: Boolean(phone),
     isNameFocused: Boolean(firstName || lastName) && Boolean(address || city || zipCode || phone),
     isLocationOnly: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address || city || zipCode),
-    isPhoneOnly: !Boolean(firstName || lastName) && Boolean(phone) && !Boolean(address || city || zipCode)
+    isPhoneOnly: !Boolean(firstName || lastName) && Boolean(phone) && !Boolean(address || city || zipCode),
+    isPhoneWithLocation: !Boolean(firstName || lastName) && Boolean(phone) && Boolean(address || city || zipCode)
   };
 
   // Filter and sort the results

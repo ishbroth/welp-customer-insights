@@ -191,7 +191,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       <CardContent className="p-4">
         {/* Customer Contact Information - Always visible at top */}
         <div className="bg-gray-50 p-3 rounded-md mb-4 border-l-4 border-blue-500">
-          <h5 className="font-medium text-sm text-gray-700 mb-2">Customer Information</h5>
           <div className="space-y-1 text-sm text-gray-600">
             <div className="font-medium">{customerInfo.name}</div>
             {customerInfo.phone && (

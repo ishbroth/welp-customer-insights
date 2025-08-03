@@ -22,6 +22,7 @@ export const filterAndSortReviews = (
     isNameFocused: boolean;
     isLocationOnly: boolean;
     isPhoneOnly: boolean;
+    isPhoneWithLocation: boolean;
   },
   unlockedReviews?: string[],
   searchParams?: {
@@ -53,6 +54,10 @@ export const filterAndSortReviews = (
     // For name-focused searches, be more selective
     minScore = 15; // Higher minimum score when name is provided
     minMatches = 2; // Require at least 2 matches including name
+  } else if (searchContext?.isPhoneWithLocation) {
+    // For phone+location searches without name, require high precision
+    minScore = 20; // Much higher score requirement
+    minMatches = 1; // At least one strong match (preferably phone)
   } else if (searchContext?.isLocationOnly) {
     // For location-only searches, use current broad matching
     minScore = 5;
@@ -70,6 +75,26 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => {
       console.log(`🔍 Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}"`);
+      
+      // Special handling for phone+location searches without name
+      if (searchContext?.isPhoneWithLocation) {
+        // Prioritize exact phone matches heavily
+        const hasPhoneMatch = searchParams?.phone && review.customer_phone && 
+          review.customer_phone.replace(/\D/g, '') === searchParams.phone.replace(/\D/g, '');
+        
+        if (hasPhoneMatch) {
+          // Allow any phone match through, regardless of location score
+          console.log(`✅ Review ${review.id} passes (exact phone match)`);
+          return true;
+        } else {
+          // For non-phone matches in phone+location searches, require very high location scores
+          const passes = review.searchScore >= 30 && review.matchCount >= minMatches;
+          if (!passes) {
+            console.log(`❌ Review ${review.id} filtered out (phone+location search, no phone match, low location score: ${review.searchScore})`);
+          }
+          return passes;
+        }
+      }
       
       if (searchContext?.isLocationOnly || isSingleFieldSearch) {
         const passes = review.searchScore >= minScore || review.matchCount >= minMatches;

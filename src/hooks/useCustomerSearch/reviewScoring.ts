@@ -59,7 +59,8 @@ const detectSearchContext = (searchParams: {
     hasPhone,
     isNameFocused: hasName && (hasLocation || hasPhone),
     isLocationOnly: !hasName && !hasPhone && hasLocation,
-    isPhoneOnly: !hasName && hasPhone && !hasLocation
+    isPhoneOnly: !hasName && hasPhone && !hasLocation,
+    isPhoneWithLocation: !hasName && hasPhone && hasLocation
   };
 };
 
