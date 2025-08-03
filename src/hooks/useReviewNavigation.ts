@@ -17,7 +17,7 @@ export const useReviewNavigation = ({ reviewerId, isUnlocked }: UseReviewNavigat
       if (currentUser?.id === reviewerId) {
         navigate('/profile');
       } else {
-        navigate(`/business-profile/${reviewerId}`);
+        navigate(`/business-profile/${reviewerId}`, { state: { readOnly: true } });
       }
     }
   };

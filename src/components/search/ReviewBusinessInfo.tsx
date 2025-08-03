@@ -20,7 +20,7 @@ const ReviewBusinessInfo = ({
 
   const handleBusinessClick = () => {
     if (isSubscribed || hasFullAccess) {
-      navigate(`/business/${reviewerId}`);
+      navigate(`/business-profile/${reviewerId}`, { state: { readOnly: true } });
     }
   };
 
