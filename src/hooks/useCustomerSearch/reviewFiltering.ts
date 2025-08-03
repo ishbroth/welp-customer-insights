@@ -214,18 +214,37 @@ export const filterAndSortReviews = (
         return bIsClaimed ? 1 : -1; // Claimed reviews first
       }
       
-      // SECONDARY SORT: Alphabetical by customer name
-      const aName = (a.customer_name || '').toLowerCase();
-      const bName = (b.customer_name || '').toLowerCase();
-      const nameComparison = aName.localeCompare(bName);
-      
-      if (nameComparison !== 0) {
-        return nameComparison;
-      }
-      
-      // TERTIARY SORT: Date (newest first) for same customer name
-      if (a.created_at && b.created_at) {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      // SECONDARY SORT: Conditional based on whether name fields were searched
+      if (searchContext?.hasName) {
+        // If name fields were searched: Sort by searchScore (highest first)
+        const scoreComparison = b.searchScore - a.searchScore;
+        if (scoreComparison !== 0) {
+          return scoreComparison;
+        }
+        
+        // TERTIARY SORT: Date (newest first) when name was searched
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+      } else {
+        // If no name fields: Sort by searchScore (highest first)
+        const scoreComparison = b.searchScore - a.searchScore;
+        if (scoreComparison !== 0) {
+          return scoreComparison;
+        }
+        
+        // TERTIARY SORT: Alphabetical by customer name when no name was searched
+        const aName = (a.customer_name || '').toLowerCase();
+        const bName = (b.customer_name || '').toLowerCase();
+        const nameComparison = aName.localeCompare(bName);
+        if (nameComparison !== 0) {
+          return nameComparison;
+        }
+        
+        // QUATERNARY SORT: Date (newest first) as final tiebreaker
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
       }
       
       return 0;
