@@ -10,6 +10,29 @@ interface GroupedReview extends ReviewData {
 
 // Function to determine if two reviews are about the same customer
 const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): boolean => {
+  // Debug logging for Isaac Wiley issue
+  const name1 = review1.customer_name?.toLowerCase().trim() || '';
+  const name2 = review2.customer_name?.toLowerCase().trim() || '';
+  
+  if (name1.includes('isaac') || name2.includes('isaac')) {
+    console.log(`🔍 Comparing Isaac reviews:`, {
+      review1: {
+        id: review1.id,
+        name: review1.customer_name,
+        phone: review1.customer_phone,
+        address: review1.customer_address,
+        zip: review1.customer_zipcode
+      },
+      review2: {
+        id: review2.id,
+        name: review2.customer_name,
+        phone: review2.customer_phone,
+        address: review2.customer_address,
+        zip: review2.customer_zipcode
+      }
+    });
+  }
+  
   // Clean phone numbers for comparison
   const cleanPhone1 = review1.customer_phone ? review1.customer_phone.replace(/\D/g, '') : '';
   const cleanPhone2 = review2.customer_phone ? review2.customer_phone.replace(/\D/g, '') : '';
@@ -22,27 +45,49 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
   );
   
   // Check if names are similar (if both exist)
-  const name1 = review1.customer_name?.toLowerCase().trim() || '';
-  const name2 = review2.customer_name?.toLowerCase().trim() || '';
   const nameMatch = name1 && name2 && (
-    calculateStringSimilarity(name1, name2) > 0.8 ||
+    calculateStringSimilarity(name1, name2) > 0.7 || // Lowered threshold for better matching
     name1 === name2
   );
   
   // Check if addresses are similar using the new address comparison (if both exist)
   const address1 = review1.customer_address || '';
   const address2 = review2.customer_address || '';
-  const addressMatch = address1 && address2 && compareAddresses(address1, address2, 0.8);
+  const addressMatch = address1 && address2 && (
+    compareAddresses(address1, address2, 0.8) ||
+    compareAddresses(address1, address2, 0.6) // More lenient fallback
+  );
   
   // Check if zip codes match (if both exist)
   const zip1 = review1.customer_zipcode?.replace(/\D/g, '') || '';
   const zip2 = review2.customer_zipcode?.replace(/\D/g, '') || '';
   const zipMatch = zip1 && zip2 && zip1 === zip2;
   
+  // Debug logging for Isaac Wiley matching
+  if (name1.includes('isaac') || name2.includes('isaac')) {
+    console.log(`🔍 Isaac matching results:`, {
+      nameMatch,
+      nameSimilarity: name1 && name2 ? calculateStringSimilarity(name1, name2) : 0,
+      phoneMatch,
+      addressMatch,
+      zipMatch,
+      cleanPhone1,
+      cleanPhone2,
+      address1,
+      address2
+    });
+  }
+  
   // NEW LOGIC: Group reviews if ANY strong matching criteria is met
   // Phone match alone is sufficient (strong identifier)
   if (phoneMatch) {
     console.log(`Phone match found between reviews: ${cleanPhone1}`);
+    return true;
+  }
+  
+  // EXACT NAME + ZIP match is sufficient (for cases like Isaac Wiley)
+  if (name1 === name2 && zipMatch) {
+    console.log(`Exact name + zip match found: ${name1} in ${zip1}`);
     return true;
   }
   
@@ -58,7 +103,7 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
     return true;
   }
   
-  // Name + zip match is sufficient
+  // Name + zip match is sufficient (for similar names)
   if (nameMatch && zipMatch) {
     console.log(`Name + zip match found: ${name1} in ${zip1}`);
     return true;
