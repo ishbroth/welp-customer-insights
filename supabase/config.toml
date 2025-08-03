@@ -41,6 +41,9 @@ verify_jwt = false
 [functions.webhook]
 verify_jwt = false
 
+[functions.geocode-city]
+verify_jwt = false
+
 [db]
 port = 54322
 shadow_port = 54320
