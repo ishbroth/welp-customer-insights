@@ -37,14 +37,43 @@ export const filterAndSortReviews = (
     zipCode?: string;
   }
 ): ScoredReview[] => {
-  // Enhanced context-aware filtering with field combination analysis
+  // PRECISION-BASED FILTERING: Less info = more strict, more info with names = more flexible
   let minScore: number;
   let minMatches: number;
   
   // Analyze field combination if search params are provided
   const fieldCombination = searchParams ? analyzeFieldCombination(searchParams) : null;
   
-  if (fieldCombination?.combinationType === 'weak') {
+  // HIGH PRECISION (STRICT) - No names provided, require exact matches
+  if (searchContext?.isLocationOnly) {
+    // Location-only searches (like "Los Angeles, CA") must be very strict
+    minScore = 35; // Much higher - require strong location similarity or proximity
+    minMatches = 1; // At least one strong location match
+  } else if (searchContext?.isPhoneOnly || (searchContext?.isPhoneWithLocation && !searchContext?.hasName)) {
+    // Phone searches without names must match exactly
+    minScore = 40; // Very high for phone-only searches
+    minMatches = 1; // Must have the phone match
+  } else if (searchContext?.isAddressWithState && !searchContext?.hasName) {
+    // Address+state without names must match exactly
+    minScore = 35; // High score requirement for address accuracy
+    minMatches = 1; // At least one strong address match
+  } 
+  // MODERATE PRECISION - Names provided, allow fuzzy matching
+  else if (searchContext?.isNameFocused) {
+    // Name-focused searches can be more flexible with locations
+    minScore = 15; // Moderate score when name is provided
+    minMatches = 2; // Require name match + one other field
+  } else if (searchContext?.isPhoneWithLocation && searchContext?.hasName) {
+    // Phone+location WITH name can be flexible on location
+    minScore = 20; // Allow for location flexibility when name is present
+    minMatches = 1; // At least one strong match (name or phone)
+  } else if (searchContext?.isAddressWithState && searchContext?.hasName) {
+    // Address+state WITH name can be flexible on address
+    minScore = 25; // Moderate requirement when name helps validate
+    minMatches = 1; // Name helps validate the match
+  }
+  // FIELD COMBINATION ANALYSIS
+  else if (fieldCombination?.combinationType === 'weak') {
     // Weak combinations need very high standards
     minScore = 40;
     minMatches = 2;
@@ -52,23 +81,9 @@ export const filterAndSortReviews = (
     // More lenient for moderate combinations (like first name + location)
     minScore = 12;
     minMatches = 1;
-  } else if (searchContext?.isNameFocused) {
-    // For name-focused searches, be more selective
-    minScore = 15; // Higher minimum score when name is provided
-    minMatches = 2; // Require at least 2 matches including name
-  } else if (searchContext?.isAddressWithState) {
-    // For address+state searches, require high address similarity
-    minScore = 25; // High score requirement to ensure address relevance
-    minMatches = 1; // At least one strong address match
-  } else if (searchContext?.isPhoneWithLocation) {
-    // For phone+location searches without name, require high precision
-    minScore = 20; // Much higher score requirement
-    minMatches = 1; // At least one strong match (preferably phone)
-  } else if (searchContext?.isLocationOnly) {
-    // For location-only searches, use current broad matching
-    minScore = 5;
-    minMatches = 1;
-  } else if (isSingleFieldSearch) {
+  } 
+  // FALLBACK CASES
+  else if (isSingleFieldSearch) {
     minScore = 5;
     minMatches = 1;
   } else {
@@ -120,10 +135,21 @@ export const filterAndSortReviews = (
         }
       }
       
-      if (searchContext?.isLocationOnly || isSingleFieldSearch) {
+      // HIGH PRECISION filtering for location-only searches
+      if (searchContext?.isLocationOnly) {
+        // For strict location-only searches, require BOTH high score AND matches
+        const passes = review.searchScore >= minScore && review.matchCount >= minMatches;
+        if (!passes) {
+          console.log(`❌ Review ${review.id} filtered out (location-only strict: score ${review.searchScore} < ${minScore} OR matches ${review.matchCount} < ${minMatches})`);
+        }
+        return passes;
+      }
+      
+      // Standard single field searches (less strict)
+      if (isSingleFieldSearch) {
         const passes = review.searchScore >= minScore || review.matchCount >= minMatches;
         if (!passes) {
-          console.log(`❌ Review ${review.id} filtered out (location/single field)`);
+          console.log(`❌ Review ${review.id} filtered out (single field)`);
         }
         return passes;
       }
