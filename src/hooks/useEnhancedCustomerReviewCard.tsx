@@ -135,14 +135,19 @@ export const useEnhancedCustomerReviewCard = ({
   };
 
   const handleBusinessNameClick = () => {
-    // Navigate to business profile with read-only view
-    navigate(`/business-profile/${review.reviewerId}`, {
-      state: { 
-        readOnly: true,
-        showRespondButton: currentUser?.type === 'customer',
-        reviewId: review.id
-      }
-    });
+    // If current user is the business owner of this review, go to their own profile
+    if (currentUser?.id === review.reviewerId) {
+      navigate('/profile');
+    } else {
+      // Navigate to business profile with read-only view
+      navigate(`/business-profile/${review.reviewerId}`, {
+        state: { 
+          readOnly: true,
+          showRespondButton: currentUser?.type === 'customer',
+          reviewId: review.id
+        }
+      });
+    }
   };
 
   return {

@@ -72,13 +72,18 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   });
 
   const handleBusinessNameClick = () => {
-    navigate(`/business-profile/${review.reviewerId}`, {
-      state: { 
-        readOnly: true,
-        showRespondButton: currentUser?.type === 'customer',
-        reviewId: review.id
-      }
-    });
+    // If current user is the business owner of this review, go to their own profile
+    if (currentUser?.id === review.reviewerId) {
+      navigate('/profile');
+    } else {
+      navigate(`/business-profile/${review.reviewerId}`, {
+        state: { 
+          readOnly: true,
+          showRespondButton: currentUser?.type === 'customer',
+          reviewId: review.id
+        }
+      });
+    }
   };
 
   const handleCustomerNameClick = () => {
