@@ -178,19 +178,8 @@ export const scoreReview = async (
     }
   }
   
-  // Early rejection for name+phone searches where either field fails
-  if (isNamePhoneSearch && (!nameMatchFound || !phoneMatchFound)) {
-    console.log(`[MULTI_FIELD_VALIDATION] Review ${review.id} REJECTED - Name+Phone search failed. Name match: ${nameMatchFound}, Phone match: ${phoneMatchFound}`);
-    return { 
-      ...review, 
-      searchScore: 0, 
-      matchCount: 0,
-      completenessScore,
-      exactFieldMatches: 0,
-      exactMatchDetails: [],
-      detailedMatches: []
-    };
-  }
+  // Remove strict early rejection - let the exact field match logic handle this
+  // This was preventing reviews with 4/5 exact matches from showing up
 
   // Enhanced name matching with massive weight increase for name importance
   if ((firstName || lastName) && review.customer_name) {
