@@ -479,6 +479,13 @@ export const scoreReview = async (
       console.log(`[CITY_FINAL] City match added ${points.toFixed(2)} points for "${city}" -> "${review.customer_city}"`);
     } else {
       console.log(`[CITY_NO_MATCH] No match found for "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
+      
+      // Apply heavy penalty for name + location only searches when city doesn't match
+      if (searchContext.hasName && searchContext.hasLocation && 
+          !searchContext.hasPhone && !searchContext.hasAddress) {
+        score *= 0.1; // Reduce score by 90% for missing city match in location-focused searches
+        console.log(`[CITY_PENALTY] Applied heavy city mismatch penalty to review ${review.id} for name+location search`);
+      }
     }
   }
 

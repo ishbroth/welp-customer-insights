@@ -88,7 +88,7 @@ export const filterAndSortReviews = (
       minScore = 12;
       minMatches = 1;
     }
-  } 
+  }
   // FALLBACK CASES
   else if (isSingleFieldSearch) {
     minScore = 5;
@@ -159,6 +159,22 @@ export const filterAndSortReviews = (
           console.log(`❌ Review ${review.id} filtered out (single field)`);
         }
         return passes;
+      }
+      
+      // Additional validation for name + location only searches
+      if (searchContext?.hasName && searchContext?.hasLocation && 
+          !searchContext?.hasPhone && !searchContext?.hasAddress && 
+          searchParams.city) {
+        
+        // For name + city + state searches, require city match if city was searched for
+        const hasCityMatch = review.detailedMatches?.some(match => 
+          match.field === 'City' && (match.similarity >= 0.3 || match.matchType === 'proximity')
+        );
+        
+        if (!hasCityMatch) {
+          console.log(`❌ Review ${review.id} rejected - City "${searchParams.city}" required but not matched`);
+          return false;
+        }
       }
       
       // For name-focused and multi-field searches, require both minimum score AND minimum matches
