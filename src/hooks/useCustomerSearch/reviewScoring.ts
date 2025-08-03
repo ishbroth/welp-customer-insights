@@ -455,6 +455,13 @@ export const scoreReview = async (
     if (searchNumber && reviewNumber && !isNaN(Number(searchNumber)) && searchNumber === reviewNumber) {
       addressScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH * 2; // Street number match is very valuable
       addressMatched = true;
+      
+      // Count street number match as exact match if the search is just a number
+      if (address.trim() === searchNumber && !isNaN(Number(address.trim()))) {
+        exactFieldMatches++;
+        exactMatchDetails.push({ field: 'address', isExact: true });
+        console.log(`[ADDRESS_EXACT] Street number exact match: "${address}" = "${reviewNumber}" (counted as exact)`);
+      }
     }
     
     // Check other address components
@@ -502,6 +509,9 @@ export const scoreReview = async (
       // Bonus for exact city match
       if (similarity >= 0.95) {
         points *= 1.3;
+        exactFieldMatches++;
+        exactMatchDetails.push({ field: 'city', isExact: true });
+        console.log(`[CITY_EXACT] Exact city match: "${city}" = "${review.customer_city}"`);
       }
       
       cityMatched = true;
@@ -625,6 +635,7 @@ export const scoreReview = async (
       matches++;
       exactFieldMatches++;
       exactMatchDetails.push({ field: 'zip', isExact: true });
+      console.log(`[ZIP_EXACT] Exact ZIP match: "${cleanZip}" = "${reviewZip}"`);
       
       detailedMatches.push({
         field: 'ZIP Code',
@@ -760,6 +771,9 @@ export const scoreReview = async (
     };
   }
 
+  console.log(`[EXACT_MATCH_COUNT] Review ${review.id} final exact matches: ${exactFieldMatches}/${searchFieldCount}`);
+  console.log(`[EXACT_MATCH_DETAILS] Fields: ${exactMatchDetails.map(d => d.field).join(', ')}`);
+  
   console.log('Enhanced review scoring result:', {
     reviewId: review.id,
     customerName: review.customer_name,
@@ -771,6 +785,8 @@ export const scoreReview = async (
     completenessScore,
     fieldsWithData,
     finalMatches: matches,
+    exactFieldMatches,
+    exactMatchDetails,
     detailedMatches,
     fieldValidation
   });
