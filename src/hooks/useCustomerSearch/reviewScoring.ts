@@ -11,6 +11,11 @@ interface ScoredReview extends ReviewData {
   searchScore: number;
   matchCount: number;
   completenessScore: number;
+  exactFieldMatches: number;
+  exactMatchDetails: Array<{
+    field: string;
+    isExact: boolean;
+  }>;
   detailedMatches: Array<{
     field: string;
     reviewValue: string;
@@ -86,6 +91,11 @@ export const scoreReview = async (
   
   let score = 0;
   let matches = 0;
+  let exactFieldMatches = 0;
+  const exactMatchDetails: Array<{
+    field: string;
+    isExact: boolean;
+  }> = [];
   const detailedMatches: Array<{
     field: string;
     reviewValue: string;
@@ -119,6 +129,8 @@ export const scoreReview = async (
       searchScore: 0, 
       matchCount: 0,
       completenessScore,
+      exactFieldMatches: 0,
+      exactMatchDetails: [],
       detailedMatches: []
     };
   }
@@ -174,6 +186,8 @@ export const scoreReview = async (
       searchScore: 0, 
       matchCount: 0,
       completenessScore,
+      exactFieldMatches: 0,
+      exactMatchDetails: [],
       detailedMatches: []
     };
   }
@@ -228,6 +242,13 @@ export const scoreReview = async (
       score += namePoints;
       matches++;
       
+      // Check for exact name match
+      const isExactNameMatch = finalSimilarity >= 0.8;
+      if (isExactNameMatch) {
+        exactFieldMatches++;
+        exactMatchDetails.push({ field: 'name', isExact: true });
+      }
+      
       console.log(`[NAME_SCORING] Review ${review.id} name score: ${namePoints.toFixed(1)} (similarity: ${finalSimilarity.toFixed(3)})`);
       
       detailedMatches.push({
@@ -281,6 +302,8 @@ export const scoreReview = async (
     if (reviewPhone === cleanPhone) {
       score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 2;
       matches++;
+      exactFieldMatches++;
+      exactMatchDetails.push({ field: 'phone', isExact: true });
       
       detailedMatches.push({
         field: 'Phone',
@@ -297,6 +320,8 @@ export const scoreReview = async (
       if (searchLast7 === reviewLast7) {
         score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH;
         matches++;
+        exactFieldMatches++;
+        exactMatchDetails.push({ field: 'phone', isExact: true });
         
         detailedMatches.push({
           field: 'Phone',
@@ -332,6 +357,8 @@ export const scoreReview = async (
     if (compareAddresses(address, review.customer_address, 0.9)) {
       addressScore = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5;
       addressMatched = true;
+      exactFieldMatches++;
+      exactMatchDetails.push({ field: 'address', isExact: true });
       
       detailedMatches.push({
         field: 'Address',
@@ -342,15 +369,17 @@ export const scoreReview = async (
       });
     } 
     // Medium confidence match
-    else if (compareAddresses(address, review.customer_address, 0.7)) {
+    else if (compareAddresses(address, review.customer_address, 0.8)) {
       addressScore = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER;
       addressMatched = true;
+      exactFieldMatches++;
+      exactMatchDetails.push({ field: 'address', isExact: true });
       
       detailedMatches.push({
         field: 'Address',
         reviewValue: review.customer_address,
         searchValue: address,
-        similarity: 0.7,
+        similarity: 0.8,
         matchType: 'partial'
       });
     }
@@ -498,6 +527,8 @@ export const scoreReview = async (
         if (addressMatched) {
           score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
           matches++;
+          exactFieldMatches++;
+          exactMatchDetails.push({ field: 'state', isExact: true });
           console.log(`[STATE_MATCH] Address+State search: state bonus added for "${state}" <-> "${businessState}"`);
         } else {
           console.log(`[STATE_NO_BONUS] Address+State search: no state bonus (address didn't match)`);
@@ -506,6 +537,8 @@ export const scoreReview = async (
         // For other search types, always give state points
         score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
         matches++;
+        exactFieldMatches++;
+        exactMatchDetails.push({ field: 'state', isExact: true });
         console.log(`[STATE_MATCH] Normalized state match: "${state}" <-> "${businessState}"`);
       }
       
@@ -542,6 +575,8 @@ export const scoreReview = async (
     if (reviewZip === cleanZip) {
       score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 1.5 * zipMultiplier;
       matches++;
+      exactFieldMatches++;
+      exactMatchDetails.push({ field: 'zip', isExact: true });
       
       detailedMatches.push({
         field: 'ZIP Code',
@@ -634,6 +669,8 @@ export const scoreReview = async (
       searchScore: 0, 
       matchCount: 0,
       completenessScore,
+      exactFieldMatches: 0,
+      exactMatchDetails: [],
       detailedMatches: []
     };
   }
@@ -658,6 +695,8 @@ export const scoreReview = async (
     searchScore: percentageScore, 
     matchCount: matches,
     completenessScore,
+    exactFieldMatches,
+    exactMatchDetails,
     detailedMatches
   };
 };

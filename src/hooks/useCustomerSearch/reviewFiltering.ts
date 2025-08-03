@@ -6,6 +6,11 @@ interface ScoredReview {
   searchScore: number;
   matchCount: number;
   completenessScore: number;
+  exactFieldMatches: number;
+  exactMatchDetails: Array<{
+    field: string;
+    isExact: boolean;
+  }>;
   reviewerVerified?: boolean;
   customerVerified?: boolean;
   created_at?: string;
@@ -159,6 +164,22 @@ export const filterAndSortReviews = (
           console.log(`❌ Review ${review.id} filtered out (single field)`);
         }
         return passes;
+      }
+      
+      // PRIORITY RULE: 3+ exact field matches = auto-qualify (before other validation)
+      const searchedFieldCount = Object.values(searchParams).filter(val => val && val.trim() !== '').length;
+      if (review.exactFieldMatches >= 3 && searchedFieldCount >= 3) {
+        // If name was searched, it MUST be one of the 3 exact matches
+        if (searchContext?.hasName) {
+          const hasExactNameMatch = review.exactMatchDetails?.find(m => m.field === 'name')?.isExact;
+          if (hasExactNameMatch) {
+            console.log(`✅ Review ${review.id} AUTO-QUALIFIED: ${review.exactFieldMatches} exact field matches including name`);
+            return true; // Auto-qualify: 3+ exact matches including name
+          }
+        } else {
+          console.log(`✅ Review ${review.id} AUTO-QUALIFIED: ${review.exactFieldMatches} exact field matches (no name required)`);
+          return true; // Auto-qualify: 3+ exact matches, no name required
+        }
       }
       
       // Additional validation for name + location only searches
