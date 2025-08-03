@@ -28,6 +28,7 @@ export const useEnhancedCustomerReviewCard = ({
 }: any) => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [showClaimDialog, setShowClaimDialog] = useState(false);
   const [isClaimingReview, setIsClaimingReview] = useState(false);
   const [reactions, setReactions] = useState<Reactions>({
@@ -134,10 +135,9 @@ export const useEnhancedCustomerReviewCard = ({
   };
 
   const handleBusinessNameClick = () => {
-    if (!isUnlocked && !hasSubscription) return;
+    if (!currentUser) return;
     
     // Navigate to business profile with read-only view
-    const navigate = useNavigate();
     navigate(`/business-profile/${review.reviewerId}`, {
       state: { 
         readOnly: true,
