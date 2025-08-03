@@ -55,10 +55,6 @@ const SearchBox = ({
           Search for Customer Reviews with any piece of information.
         </p>
         
-        <p className="text-center text-sm text-red-600 mb-4 font-medium">
-          * State selection is required for all searches
-        </p>
-        
         <div className="space-y-3">
           <SearchField
             placeholder="First Name"
