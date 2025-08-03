@@ -4,6 +4,7 @@ import { compareAddresses } from "@/utils/addressNormalization";
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { ReviewData } from "./types";
 import { validateFieldCombination } from "./fieldCombinationRules";
+import { areCitiesInProximity, calculateProximityScore } from "@/utils/cityProximity";
 
 interface ScoredReview extends ReviewData {
   searchScore: number;
@@ -14,7 +15,7 @@ interface ScoredReview extends ReviewData {
     reviewValue: string;
     searchValue: string;
     similarity: number;
-    matchType: 'exact' | 'partial' | 'fuzzy';
+    matchType: 'exact' | 'partial' | 'fuzzy' | 'proximity';
   }>;
 }
 
@@ -62,7 +63,7 @@ const detectSearchContext = (searchParams: {
   };
 };
 
-export const scoreReview = (
+export const scoreReview = async (
   review: ReviewData,
   searchParams: {
     firstName?: string;
@@ -74,7 +75,7 @@ export const scoreReview = (
     zipCode?: string;
   },
   businessState?: string | null
-): ScoredReview => {
+): Promise<ScoredReview> => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
   const searchContext = detectSearchContext(searchParams);
   
@@ -85,7 +86,7 @@ export const scoreReview = (
     reviewValue: string;
     searchValue: string;
     similarity: number;
-    matchType: 'exact' | 'partial' | 'fuzzy';
+    matchType: 'exact' | 'partial' | 'fuzzy' | 'proximity';
   }> = [];
 
   // Calculate completeness score for this review
@@ -368,20 +369,60 @@ export const scoreReview = (
     }
   }
 
-  // Enhanced city matching with fuzzy logic
+  // Enhanced city matching with fuzzy logic and geographic proximity
   if (city && review.customer_city) {
     const similarity = calculateStringSimilarity(city.toLowerCase(), review.customer_city.toLowerCase());
+    let cityMatched = false;
+    let matchType = 'none';
+    let points = 0;
+    
+    // Check string similarity first
     if (similarity > REVIEW_SEARCH_CONFIG.CITY_SIMILARITY_THRESHOLD || 
         review.customer_city.toLowerCase().includes(city.toLowerCase()) || 
         city.toLowerCase().includes(review.customer_city.toLowerCase())) {
       
-      let points = similarity * REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER;
+      points = similarity * REVIEW_SEARCH_CONFIG.SCORES.CITY_SIMILARITY_MULTIPLIER;
       
       // Bonus for exact city match
       if (similarity >= 0.95) {
         points *= 1.3;
       }
       
+      cityMatched = true;
+      matchType = similarity >= 0.9 ? 'exact' : 'partial';
+    }
+    
+    // Check geographic proximity if string matching didn't work or for additional scoring
+    if (REVIEW_SEARCH_CONFIG.CITY_GEOCODING_ENABLED && state && businessState) {
+      try {
+        const { isInProximity, distance } = await areCitiesInProximity(
+          city, 
+          state, 
+          review.customer_city, 
+          businessState
+        );
+        
+        if (isInProximity && distance !== undefined) {
+          const proximityScore = calculateProximityScore(distance);
+          
+          if (!cityMatched && proximityScore > 0) {
+            // Geographic match without string match
+            points = proximityScore;
+            cityMatched = true;
+            matchType = 'proximity';
+          } else if (cityMatched && proximityScore > 0) {
+            // Boost existing string match with proximity bonus
+            points += proximityScore * 0.5;
+          }
+          
+          console.log(`[CITY_PROXIMITY] ${city}, ${state} <-> ${review.customer_city}, ${businessState}: ${distance?.toFixed(1)} miles (score: ${proximityScore.toFixed(2)})`);
+        }
+      } catch (error) {
+        console.warn('Error checking city proximity:', error);
+      }
+    }
+    
+    if (cityMatched) {
       score += points;
       matches++;
       
@@ -389,8 +430,8 @@ export const scoreReview = (
         field: 'City',
         reviewValue: review.customer_city,
         searchValue: city,
-        similarity,
-        matchType: similarity >= 0.9 ? 'exact' : 'partial'
+        similarity: matchType === 'proximity' ? 0.8 : similarity,
+        matchType: matchType as 'exact' | 'partial' | 'fuzzy' | 'proximity'
       });
     }
   }

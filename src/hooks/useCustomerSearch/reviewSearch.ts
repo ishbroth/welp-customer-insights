@@ -5,12 +5,16 @@ import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { scoreReview } from "./reviewScoring";
 import { filterAndSortReviews, logSearchResults } from "./reviewFiltering";
 import { formatReviewData } from "./reviewDataFormatter";
+import { initializeGeocodingForSearch, cleanupAfterSearch } from "@/utils/cityProximity";
 
 export const searchReviews = async (searchParams: SearchParams, unlockedReviews?: string[]) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
   console.log("=== REVIEW SEARCH START ===");
   console.log("Search parameters:", searchParams);
+  
+  // Initialize geocoding for the search
+  initializeGeocodingForSearch();
   
   // Get all reviews with business profile data
   const { data: allReviews, error } = await supabase
@@ -100,8 +104,8 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
   console.log(`Processing ${allReviews.length} reviews for search matching...`);
   console.log("Is single field search:", isSingleFieldSearch);
 
-  // Score each review based on how well it matches the search criteria
-  const scoredReviews = allReviews.map(review => {
+  // Score each review based on how well it matches the search criteria (async)
+  const scoringPromises = allReviews.map(async review => {
     // Add the business profile data to the review
     const businessProfile = businessProfilesMap.get(review.business_id);
     
@@ -143,7 +147,7 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       reviewerAvatar: formattedReview.reviewerAvatar ? 'Present' : 'Missing'
     });
     
-    const scoredReview = scoreReview(formattedReview, { 
+    const scoredReview = await scoreReview(formattedReview, { 
       firstName, 
       lastName, 
       phone, 
@@ -153,10 +157,13 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       zipCode 
     }, businessProfile?.business_state || businessProfile?.state || null);
     
-    console.log(`Review ${review.id}: Score: ${scoredReview.searchScore}, Business: ${formattedReview.reviewerName}, Verified: ${scoredReview.reviewerVerified}`);
+    console.log(`Review ${review.id}: Score: ${scoredReview.searchScore}, Business: ${formattedReview.reviewerName}, Verified: ${formattedReview.reviewerVerified}`);
     
     return scoredReview;
   });
+
+  // Wait for all scoring to complete
+  const scoredReviews = await Promise.all(scoringPromises);
 
   // Detect search context for filtering
   const searchContext = {
@@ -182,6 +189,9 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       });
 
   logSearchResults(filteredReviews);
+  
+  // Cleanup geocoding cache after search
+  cleanupAfterSearch();
   
   console.log("=== REVIEW SEARCH COMPLETE ===");
   return filteredReviews;
