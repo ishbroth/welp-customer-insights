@@ -47,7 +47,7 @@ export const filterAndSortReviews = (
   // HIGH PRECISION (STRICT) - No names provided, require exact matches
   if (searchContext?.isLocationOnly) {
     // Location-only searches (like "Los Angeles, CA") must be very strict
-    minScore = 35; // Much higher - require strong location similarity or proximity
+    minScore = 65; // Much higher - require strong location similarity or proximity
     minMatches = 1; // At least one strong location match
   } else if (searchContext?.isPhoneOnly || (searchContext?.isPhoneWithLocation && !searchContext?.hasName)) {
     // Phone searches without names must match exactly
