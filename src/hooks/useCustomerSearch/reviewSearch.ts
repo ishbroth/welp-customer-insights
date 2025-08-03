@@ -6,6 +6,7 @@ import { scoreReview } from "./reviewScoring";
 import { filterAndSortReviews, logSearchResults } from "./reviewFiltering";
 import { formatReviewData } from "./reviewDataFormatter";
 import { initializeGeocodingForSearch, cleanupAfterSearch } from "@/utils/cityProximity";
+import { normalizeState } from "@/utils/stateNormalization";
 
 export const searchReviews = async (searchParams: SearchParams, unlockedReviews?: string[]) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
@@ -90,7 +91,14 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
           const existingProfile = businessProfilesMap.get(business.id);
           existingProfile.verified = isVerified;
           existingProfile.business_name = business.business_name;
-          existingProfile.business_state = business.license_state; // Use license_state for business state
+          
+          // Prioritize profile.state over license_state, normalize both
+          const profileState = existingProfile.state ? normalizeState(existingProfile.state) : null;
+          const licenseState = business.license_state ? normalizeState(business.license_state) : null;
+          existingProfile.business_state = profileState || licenseState;
+          
+          console.log(`[STATE_MAPPING] Business ${business.id}: profile.state="${existingProfile.state}" -> normalized: "${profileState}", license_state="${business.license_state}" -> normalized: "${licenseState}", final: "${existingProfile.business_state}"`);
+          
           businessProfilesMap.set(business.id, existingProfile);
         }
       });

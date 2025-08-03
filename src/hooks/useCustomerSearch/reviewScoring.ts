@@ -1,6 +1,7 @@
 
 import { calculateStringSimilarity, calculateNameSimilarity } from "@/utils/stringSimilarity";
 import { compareAddresses } from "@/utils/addressNormalization";
+import { compareStates } from "@/utils/stateNormalization";
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { ReviewData } from "./types";
 import { validateFieldCombination } from "./fieldCombinationRules";
@@ -444,12 +445,10 @@ export const scoreReview = async (
     }
   }
 
-  // Enhanced state matching with mismatch penalties
+  // Enhanced state matching with normalized comparison
   if (state && businessState) {
-    const searchState = state.toLowerCase().trim();
-    const reviewBusinessState = businessState.toLowerCase().trim();
-    
-    if (searchState === reviewBusinessState) {
+    // Use normalized state comparison to handle CA vs California
+    if (compareStates(state, businessState)) {
       score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
       matches++;
       
@@ -460,17 +459,19 @@ export const scoreReview = async (
         similarity: 1.0,
         matchType: 'exact'
       });
+      
+      console.log(`[STATE_MATCH] Normalized state match: "${state}" <-> "${businessState}"`);
     } else {
       // Apply state mismatch penalty for location-focused searches
       const hasLocationFocus = Boolean(city || zipCode || address);
       if (hasLocationFocus && !phone && !(firstName && lastName)) {
         // Heavy penalty for location-only searches with wrong state
         score *= 0.3; // Reduce score by 70%
-        console.log(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${searchState} vs ${reviewBusinessState}`);
+        console.log(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${state} vs ${businessState}`);
       } else if (hasLocationFocus) {
         // Moderate penalty for mixed searches with wrong state
         score *= 0.7; // Reduce score by 30%
-        console.log(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${searchState} vs ${reviewBusinessState}`);
+        console.log(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${state} vs ${businessState}`);
       }
     }
   }
