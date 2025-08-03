@@ -19,10 +19,12 @@ export const filterAndSortReviews = (
     hasName: boolean;
     hasLocation: boolean;
     hasPhone: boolean;
+    hasAddress: boolean;
     isNameFocused: boolean;
     isLocationOnly: boolean;
     isPhoneOnly: boolean;
     isPhoneWithLocation: boolean;
+    isAddressWithState: boolean;
   },
   unlockedReviews?: string[],
   searchParams?: {
@@ -54,6 +56,10 @@ export const filterAndSortReviews = (
     // For name-focused searches, be more selective
     minScore = 15; // Higher minimum score when name is provided
     minMatches = 2; // Require at least 2 matches including name
+  } else if (searchContext?.isAddressWithState) {
+    // For address+state searches, require high address similarity
+    minScore = 25; // High score requirement to ensure address relevance
+    minMatches = 1; // At least one strong address match
   } else if (searchContext?.isPhoneWithLocation) {
     // For phone+location searches without name, require high precision
     minScore = 20; // Much higher score requirement
@@ -75,6 +81,23 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => {
       console.log(`🔍 Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}"`);
+      
+      // Special handling for address+state searches
+      if (searchContext?.isAddressWithState) {
+        // For address+state searches, require substantial address matches
+        const hasAddressInDetailedMatches = review.detailedMatches?.some(match => 
+          match.field === 'Address' && match.similarity >= 0.6
+        );
+        
+        if (hasAddressInDetailedMatches) {
+          console.log(`✅ Review ${review.id} passes (address+state search with address match)`);
+          return true;
+        } else {
+          // Reject reviews that don't have meaningful address matches
+          console.log(`❌ Review ${review.id} filtered out (address+state search, no substantial address match)`);
+          return false;
+        }
+      }
       
       // Special handling for phone+location searches without name
       if (searchContext?.isPhoneWithLocation) {

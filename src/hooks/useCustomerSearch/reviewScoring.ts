@@ -53,15 +53,18 @@ const detectSearchContext = (searchParams: {
   const hasName = Boolean(searchParams.firstName || searchParams.lastName);
   const hasLocation = Boolean(searchParams.address || searchParams.city || searchParams.zipCode);
   const hasPhone = Boolean(searchParams.phone);
+  const hasAddress = Boolean(searchParams.address);
   
   return {
     hasName,
     hasLocation,
     hasPhone,
+    hasAddress,
     isNameFocused: hasName && (hasLocation || hasPhone),
     isLocationOnly: !hasName && !hasPhone && hasLocation,
     isPhoneOnly: !hasName && hasPhone && !hasLocation,
-    isPhoneWithLocation: !hasName && hasPhone && hasLocation
+    isPhoneWithLocation: !hasName && hasPhone && hasLocation,
+    isAddressWithState: !hasName && !hasPhone && hasAddress && searchParams.state
   };
 };
 
@@ -318,11 +321,17 @@ export const scoreReview = async (
   }
 
   // Enhanced address matching with street number awareness
+  let addressScore = 0;
+  let addressMatched = false;
+  
   if (address && review.customer_address) {
+    // Calculate base address similarity
+    const addressSimilarity = calculateStringSimilarity(address.toLowerCase(), review.customer_address.toLowerCase());
+    
     // Check for high-confidence address match first
     if (compareAddresses(address, review.customer_address, 0.9)) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5;
-      matches++;
+      addressScore = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 1.5;
+      addressMatched = true;
       
       detailedMatches.push({
         field: 'Address',
@@ -334,14 +343,27 @@ export const scoreReview = async (
     } 
     // Medium confidence match
     else if (compareAddresses(address, review.customer_address, 0.7)) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER;
-      matches++;
+      addressScore = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER;
+      addressMatched = true;
       
       detailedMatches.push({
         field: 'Address',
         reviewValue: review.customer_address,
         searchValue: address,
         similarity: 0.7,
+        matchType: 'partial'
+      });
+    }
+    // For address+state searches, require higher similarity threshold
+    else if (searchContext.isAddressWithState && addressSimilarity >= 0.6) {
+      addressScore = REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_SIMILARITY_MULTIPLIER * 0.8;
+      addressMatched = true;
+      
+      detailedMatches.push({
+        field: 'Address',
+        reviewValue: review.customer_address,
+        searchValue: address,
+        similarity: addressSimilarity,
         matchType: 'partial'
       });
     }
@@ -354,8 +376,8 @@ export const scoreReview = async (
     const searchNumber = addressWords[0];
     const reviewNumber = reviewAddressWords[0];
     if (searchNumber && reviewNumber && !isNaN(Number(searchNumber)) && searchNumber === reviewNumber) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH * 2; // Street number match is very valuable
-      matches++;
+      addressScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH * 2; // Street number match is very valuable
+      addressMatched = true;
     }
     
     // Check other address components
@@ -363,11 +385,26 @@ export const scoreReview = async (
       if (word.length >= REVIEW_SEARCH_CONFIG.MIN_WORD_LENGTH) {
         for (const reviewWord of reviewAddressWords) {
           if (reviewWord.includes(word) || word.includes(reviewWord)) {
-            score += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH;
-            matches++;
+            addressScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH;
+            addressMatched = true;
           }
         }
       }
+    }
+    
+    // For address+state searches, only add score if address actually matched
+    if (searchContext.isAddressWithState) {
+      if (addressMatched) {
+        score += addressScore;
+        matches++;
+        console.log(`[ADDRESS_MATCH] Address+State search: added ${addressScore.toFixed(1)} points for "${address}" -> "${review.customer_address}"`);
+      } else {
+        console.log(`[ADDRESS_NO_MATCH] Address+State search: no address match for "${address}" -> "${review.customer_address}" (similarity: ${addressSimilarity.toFixed(3)})`);
+      }
+    } else {
+      // For non-address-focused searches, always add the score
+      score += addressScore;
+      if (addressMatched) matches++;
     }
   }
 
@@ -449,8 +486,21 @@ export const scoreReview = async (
   if (state && businessState) {
     // Use normalized state comparison to handle CA vs California
     if (compareStates(state, businessState)) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
-      matches++;
+      // For address+state searches, only give state points if address also matched
+      if (searchContext.isAddressWithState) {
+        if (addressMatched) {
+          score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
+          matches++;
+          console.log(`[STATE_MATCH] Address+State search: state bonus added for "${state}" <-> "${businessState}"`);
+        } else {
+          console.log(`[STATE_NO_BONUS] Address+State search: no state bonus (address didn't match)`);
+        }
+      } else {
+        // For other search types, always give state points
+        score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
+        matches++;
+        console.log(`[STATE_MATCH] Normalized state match: "${state}" <-> "${businessState}"`);
+      }
       
       detailedMatches.push({
         field: 'State',
@@ -459,8 +509,6 @@ export const scoreReview = async (
         similarity: 1.0,
         matchType: 'exact'
       });
-      
-      console.log(`[STATE_MATCH] Normalized state match: "${state}" <-> "${businessState}"`);
     } else {
       // Apply state mismatch penalty for location-focused searches
       const hasLocationFocus = Boolean(city || zipCode || address);
