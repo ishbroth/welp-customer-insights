@@ -500,7 +500,7 @@ export const scoreReview = async (
     }
   }
 
-  // Enhanced city matching with fuzzy logic and geographic proximity
+  // Enhanced city matching with fuzzy logic and geographic proximity - CUSTOMER DATA ONLY
   if (city && review.customer_city) {
     const similarity = calculateStringSimilarity(city.toLowerCase(), review.customer_city.toLowerCase());
     let cityMatchedLocal = false;
@@ -529,37 +529,10 @@ export const scoreReview = async (
       console.log(`[CITY_MATCH] String match found: "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
     }
     
-    // Check geographic proximity if string matching didn't work or for additional scoring
-    if (REVIEW_SEARCH_CONFIG.CITY_GEOCODING_ENABLED && state && businessState) {
-      try {
-        const { isInProximity, distance } = await areCitiesInProximity(
-          city, 
-          state, 
-          review.customer_city, 
-          businessState
-        );
-        
-        if (isInProximity && distance !== undefined) {
-          const proximityScore = calculateProximityScore(distance);
-          
-          if (!cityMatchedLocal && proximityScore > 0) {
-            // Geographic match without string match
-            points = proximityScore;
-            cityMatched = true;
-            cityMatchedLocal = true;
-            matchType = 'proximity';
-            console.log(`[CITY_PROXIMITY] Geographic match: "${city}, ${state}" <-> "${review.customer_city}, ${businessState}": ${distance.toFixed(1)} miles (score: ${proximityScore.toFixed(2)})`);
-          } else if (cityMatchedLocal && proximityScore > 0) {
-            // Boost existing string match with proximity bonus
-            points += proximityScore * 0.5;
-            console.log(`[CITY_PROXIMITY] Boosting string match: "${city}, ${state}" <-> "${review.customer_city}, ${businessState}": ${distance.toFixed(1)} miles (bonus: ${(proximityScore * 0.5).toFixed(2)})`);
-          }
-        }
-      } catch (error) {
-        console.warn('Error checking city proximity:', error);
-        // Continue with string-based matching even if geocoding fails
-      }
-    }
+    // DISABLED: Geographic proximity checks removed to enforce customer-only data matching
+    // Geographic proximity was using business state data which caused false positives
+    console.log(`[CITY_MATCHING] Only using customer city data: "${review.customer_city}" vs search "${city}"`);
+    
     
     if (cityMatchedLocal) {
       score += points;
@@ -586,50 +559,88 @@ export const scoreReview = async (
     }
   }
 
-  // Enhanced state matching with normalized comparison
-  if (state && businessState) {
-    // Use normalized state comparison to handle CA vs California
-    if (compareStates(state, businessState)) {
+  // Enhanced state matching - CUSTOMER DATA ONLY with business fallback
+  // Derive customer state from customer location data or use business state as last resort
+  let customerState = null;
+  
+  // Try to extract state from customer zipcode/address or use business state as fallback
+  if (review.customer_zipcode && review.customer_zipcode.length >= 5) {
+    // For major states with known zip patterns, we could derive state
+    // For now, use business state as proxy only if no customer location conflicts
+    customerState = businessState;
+  } else if (businessState && !review.customer_city) {
+    // Only use business state if we have no customer location to contradict it
+    customerState = businessState;
+  }
+  
+  console.log(`[STATE_SOURCE] Customer state derived: ${customerState} (from business: ${businessState})`);
+  
+  if (state && customerState) {
+    // Use normalized state comparison to handle CA vs California  
+    if (compareStates(state, customerState)) {
+      // Give very low weight to state matches (as requested by user)
+      const statePoints = REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 0.1; // Very low weight
+      
       // For address+state searches, only give state points if address also matched
       if (searchContext.isAddressWithState) {
         if (addressMatched) {
-          score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
+          score += statePoints;
           matches++;
           exactFieldMatches++;
           exactMatchDetails.push({ field: 'state', isExact: true });
-          console.log(`[STATE_MATCH] Address+State search: state bonus added for "${state}" <-> "${businessState}"`);
+          console.log(`[STATE_MATCH] Address+State search: minimal state bonus added for "${state}" <-> "${customerState}"`);
         } else {
           console.log(`[STATE_NO_BONUS] Address+State search: no state bonus (address didn't match)`);
         }
       } else {
-        // For other search types, always give state points
-        score += REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH;
-        matches++;
-        exactFieldMatches++;
-        exactMatchDetails.push({ field: 'state', isExact: true });
-        console.log(`[STATE_MATCH] Normalized state match: "${state}" <-> "${businessState}"`);
+        // For comprehensive searches (5+ fields), require state match but give minimal weight
+        if (searchFieldCount >= 5) {
+          score += statePoints;
+          matches++;
+          exactFieldMatches++;
+          exactMatchDetails.push({ field: 'state', isExact: true });
+          console.log(`[STATE_MATCH] Comprehensive search: mandatory state match with minimal weight "${state}" <-> "${customerState}"`);
+        }
       }
       
       detailedMatches.push({
         field: 'State',
-        reviewValue: businessState,
+        reviewValue: customerState,
         searchValue: state,
         similarity: 1.0,
         matchType: 'exact'
       });
     } else {
-      // Apply state mismatch penalty for location-focused searches
+      // State mismatch is now critical for comprehensive searches
+      if (searchFieldCount >= 5) {
+        console.log(`[STATE_MISMATCH] REJECTING review ${review.id} - State mismatch in comprehensive search: ${state} vs ${customerState}`);
+        return { 
+          ...review, 
+          searchScore: 0, 
+          matchCount: 0,
+          completenessScore,
+          exactFieldMatches: 0,
+          exactMatchDetails: [],
+          detailedMatches: []
+        };
+      }
+      
+      // Apply penalties for location-focused searches
       const hasLocationFocus = Boolean(city || zipCode || address);
       if (hasLocationFocus && !phone && !(firstName && lastName)) {
         // Heavy penalty for location-only searches with wrong state
-        score *= 0.3; // Reduce score by 70%
-        console.log(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${state} vs ${businessState}`);
+        score *= 0.1; // Reduce score by 90% (stronger penalty)
+        console.log(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${state} vs ${customerState}`);
       } else if (hasLocationFocus) {
         // Moderate penalty for mixed searches with wrong state
-        score *= 0.7; // Reduce score by 30%
-        console.log(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${state} vs ${businessState}`);
+        score *= 0.5; // Reduce score by 50% (stronger penalty)
+        console.log(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${state} vs ${customerState}`);
       }
     }
+  } else if (state && searchFieldCount >= 5) {
+    // For comprehensive searches, lack of customer state data is problematic
+    console.log(`[STATE_MISSING] Review ${review.id} lacks customer state data for comprehensive search - penalizing`);
+    score *= 0.7; // 30% penalty for missing state data
   }
 
   // Enhanced zip code matching with context-aware scoring
