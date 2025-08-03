@@ -178,14 +178,34 @@ export const scoreReview = async (
     }
   }
   
-  // Enhanced name validation with detailed debugging
+  // Count non-empty search parameters for dynamic validation
+  const searchFieldCount = [firstName, lastName, phone, address, city, state, zipCode]
+    .filter(field => field && field.trim().length > 0).length;
+  
+  console.log(`[FIELD_COUNT] Total search fields: ${searchFieldCount}`);
+  
+  // Dynamic name validation based on search comprehensiveness
   let nameComponentMatched = false;
+  let nameThreshold = 0.5; // Default for 1-3 fields
+  let allowExactMatchBypass = false;
+  
+  if (searchFieldCount >= 6) {
+    nameThreshold = 0.2; // Very permissive for comprehensive searches
+    allowExactMatchBypass = true;
+  } else if (searchFieldCount >= 5) {
+    nameThreshold = 0.25;
+    allowExactMatchBypass = true;
+  } else if (searchFieldCount >= 4) {
+    nameThreshold = 0.3;
+  }
+  
   if ((firstName || lastName) && review.customer_name) {
     const customerNameLower = review.customer_name.toLowerCase();
     const customerParts = customerNameLower.split(/\s+/).filter(part => part.length > 1);
     
     console.log(`[NAME_DEBUG] Review ${review.id} (${review.customer_name})`);
     console.log(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
+    console.log(`[NAME_DEBUG] Using name threshold: ${nameThreshold} (based on ${searchFieldCount} fields)`);
     
     let bestFirstNameSimilarity = 0;
     let bestLastNameSimilarity = 0;
@@ -193,30 +213,36 @@ export const scoreReview = async (
     if (firstName) {
       bestFirstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
       console.log(`[NAME_DEBUG] First name similarity: "${firstName}" vs "${review.customer_name}" = ${bestFirstNameSimilarity}`);
-      if (bestFirstNameSimilarity >= 0.5) nameComponentMatched = true;
+      if (bestFirstNameSimilarity >= nameThreshold) nameComponentMatched = true;
     }
     
     if (lastName) {
       bestLastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
       console.log(`[NAME_DEBUG] Last name similarity: "${lastName}" vs "${review.customer_name}" = ${bestLastNameSimilarity}`);
-      if (bestLastNameSimilarity >= 0.5) nameComponentMatched = true;
+      if (bestLastNameSimilarity >= nameThreshold) nameComponentMatched = true;
     }
     
-    console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (threshold: 0.5)`);
+    console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (threshold: ${nameThreshold})`);
+    console.log(`[NAME_DEBUG] Allow exact match bypass: ${allowExactMatchBypass}`);
     
-    // Stricter validation: require at least one name component with 0.5+ similarity
+    // Apply name validation with field count consideration
     if (!nameComponentMatched && (firstName || lastName)) {
-      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ 0.5`);
-      console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
-      return { 
-        ...review, 
-        searchScore: 0, 
-        matchCount: 0,
-        completenessScore,
-        exactFieldMatches: 0,
-        exactMatchDetails: [],
-        detailedMatches: []
-      };
+      // For comprehensive searches (5+ fields), defer name rejection until after we check exact matches
+      if (allowExactMatchBypass) {
+        console.log(`[NAME_VALIDATION] Comprehensive search - will check for exact match bypass after scoring`);
+      } else {
+        console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ ${nameThreshold}`);
+        console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
+        return { 
+          ...review, 
+          searchScore: 0, 
+          matchCount: 0,
+          completenessScore,
+          exactFieldMatches: 0,
+          exactMatchDetails: [],
+          detailedMatches: []
+        };
+      }
     }
   }
 
@@ -701,6 +727,25 @@ export const scoreReview = async (
       exactMatchDetails: [],
       detailedMatches: []
     };
+  }
+
+  // Apply deferred name validation for comprehensive searches
+  if (allowExactMatchBypass && !nameComponentMatched && (firstName || lastName)) {
+    const requiredExactMatches = searchFieldCount >= 6 ? 4 : 3;
+    if (exactFieldMatches < requiredExactMatches) {
+      console.log(`[NAME_VALIDATION_DEFERRED] Review ${review.id} REJECTED - Insufficient exact matches (${exactFieldMatches}/${requiredExactMatches}) to bypass name validation`);
+      return { 
+        ...review, 
+        searchScore: 0, 
+        matchCount: 0,
+        completenessScore,
+        exactFieldMatches: 0,
+        exactMatchDetails: [],
+        detailedMatches: []
+      };
+    } else {
+      console.log(`[NAME_VALIDATION_BYPASS] Review ${review.id} ACCEPTED - Bypassed name validation with ${exactFieldMatches} exact matches`);
+    }
   }
 
   // Prevent state-only matches when major fields are provided
