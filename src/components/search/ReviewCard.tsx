@@ -189,26 +189,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
-        {/* Customer Contact Information - Always visible at top */}
-        <div className="bg-gray-50 p-3 rounded-md mb-4 border-l-4 border-blue-500">
-          <div className="space-y-1 text-sm text-gray-600">
-            <div className="font-medium">{customerInfo.name}</div>
-            {customerInfo.phone && (
-              <div>Phone: {customerInfo.phone}</div>
-            )}
-            {customerInfo.address && (
-              <div>Address: {customerInfo.address}</div>
-            )}
-            {(customerInfo.city || customerInfo.zipCode) && (
-              <div>
-                {customerInfo.city && customerInfo.city}
-                {customerInfo.city && customerInfo.zipCode ? ', ' : ''}
-                {customerInfo.zipCode && customerInfo.zipCode}
-              </div>
-            )}
-          </div>
-        </div>
-
         <div className="flex items-start justify-between mb-3">
           {/* Business info - left side */}
           <div className="flex items-center space-x-3">
