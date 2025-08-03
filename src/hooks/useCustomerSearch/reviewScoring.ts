@@ -507,33 +507,24 @@ export const scoreReview = async (
         matchType: 'partial'
       });
     }
-    // Enhanced nearby zip codes check (within proximity range)
+    // Check for nearby zip codes (within ~20 miles approximation)
     else if (cleanZip.length >= 5 && reviewZip.length >= 5) {
       const searchZipNum = parseInt(cleanZip.slice(0, 5));
       const reviewZipNum = parseInt(reviewZip.slice(0, 5));
       const zipDifference = Math.abs(searchZipNum - reviewZipNum);
       
-      console.log(`[ZIP_PROXIMITY_CHECK] Comparing ${cleanZip} (${searchZipNum}) vs ${reviewZip} (${reviewZipNum}), difference: ${zipDifference}, range: ${REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE}`);
-      
       if (zipDifference <= REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE) {
-        // Improved proximity scoring with better scaling
-        const proximityScore = REVIEW_SEARCH_CONFIG.SCORES.PROXIMITY_BASE + 
-                             (REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE - zipDifference) * 0.15;
-        
+        const proximityScore = Math.max(0, REVIEW_SEARCH_CONFIG.SCORES.PROXIMITY_BASE - (zipDifference / REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_MILES));
         score += proximityScore * zipMultiplier;
         matches++;
-        
-        console.log(`[ZIP_PROXIMITY_MATCH] Found nearby zip: ${cleanZip} -> ${reviewZip} (diff: ${zipDifference}, score: ${proximityScore.toFixed(2)})`);
         
         detailedMatches.push({
           field: 'ZIP Code (Nearby)',
           reviewValue: review.customer_zipcode,
           searchValue: zipCode || '',
-          similarity: Math.max(0.3, 1.0 - (zipDifference / REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE)),
-          matchType: 'proximity'
+          similarity: Math.max(0, 1 - (zipDifference / REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE)),
+          matchType: 'fuzzy'
         });
-      } else {
-        console.log(`[ZIP_PROXIMITY_MISS] Zip difference ${zipDifference} exceeds range ${REVIEW_SEARCH_CONFIG.ZIP_PROXIMITY_RANGE}`);
       }
     }
   }

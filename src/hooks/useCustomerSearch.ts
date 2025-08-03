@@ -76,8 +76,8 @@ export const useCustomerSearch = () => {
         reviewerVerified: review.reviewerVerified
       }));
       
-      // Process review customers with enhanced grouping and conditional sorting
-      const reviewCustomers = processReviewCustomers(cleanReviewsData, searchParameters);
+      // Process review customers (now with grouping logic)
+      const reviewCustomers = processReviewCustomers(cleanReviewsData);
       
       // Combine results - but first check for potential duplicates between profile and review customers
       const combinedCustomers = [...profileCustomers];
