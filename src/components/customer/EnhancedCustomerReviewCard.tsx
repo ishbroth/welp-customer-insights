@@ -174,7 +174,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           businessInfo={enhancedBusinessInfo}
           customerInfo={enhancedCustomerInfo}
           reviewDate={review.date}
-          shouldBusinessNameBeClickable={isReviewActuallyUnlocked || hasSubscription}
+          shouldBusinessNameBeClickable={!!currentUser}
           onBusinessNameClick={handleBusinessNameClick}
           onCustomerClick={handleCustomerClick}
         />
