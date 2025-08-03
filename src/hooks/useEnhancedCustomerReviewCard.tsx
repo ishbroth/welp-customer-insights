@@ -135,13 +135,11 @@ export const useEnhancedCustomerReviewCard = ({
   };
 
   const handleBusinessNameClick = () => {
-    if (!currentUser) return;
-    
     // Navigate to business profile with read-only view
     navigate(`/business-profile/${review.reviewerId}`, {
       state: { 
         readOnly: true,
-        showRespondButton: true, // Customer can respond to reviews
+        showRespondButton: currentUser?.type === 'customer',
         reviewId: review.id
       }
     });

@@ -72,8 +72,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   });
 
   const handleBusinessNameClick = () => {
-    if (!canViewFullContent) return;
-    
     navigate(`/business-profile/${review.reviewerId}`, {
       state: { 
         readOnly: true,
@@ -218,18 +216,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </Avatar>
             <div>
               <div className="flex items-center gap-1">
-                {canViewFullContent ? (
-                  <h4 
-                    className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                    onClick={handleBusinessNameClick}
-                  >
-                    {review.reviewerName}
-                  </h4>
-                ) : (
-                  <h4 className="font-medium text-gray-400">
-                    {review.reviewerName}
-                  </h4>
-                )}
+                <h4 
+                  className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={handleBusinessNameClick}
+                >
+                  {review.reviewerName}
+                </h4>
                 {review.reviewerVerified && <VerifiedBadge size="xs" />}
               </div>
               <p className="text-sm text-gray-500">Business</p>
