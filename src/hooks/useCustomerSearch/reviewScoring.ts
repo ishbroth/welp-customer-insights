@@ -184,25 +184,24 @@ export const scoreReview = async (
   
   console.log(`[FIELD_COUNT] Total search fields: ${searchFieldCount}`);
   
-  // Dynamic name validation based on search comprehensiveness
+  // Track name validation state but defer strict validation for comprehensive searches
+  let nameValidationDeferred = false;
   let nameComponentMatched = false;
   let nameThreshold = 0.5; // Default for 1-3 fields
-  let allowExactMatchBypass = false;
   
+  // Set thresholds based on search comprehensiveness
   if (searchFieldCount >= 6) {
     nameThreshold = 0.2; // Very permissive for comprehensive searches
-    allowExactMatchBypass = true;
+    nameValidationDeferred = true;
   } else if (searchFieldCount >= 5) {
     nameThreshold = 0.25;
-    allowExactMatchBypass = true;
+    nameValidationDeferred = true;
   } else if (searchFieldCount >= 4) {
     nameThreshold = 0.3;
   }
   
+  // Store name validation results but don't reject yet for comprehensive searches
   if ((firstName || lastName) && review.customer_name) {
-    const customerNameLower = review.customer_name.toLowerCase();
-    const customerParts = customerNameLower.split(/\s+/).filter(part => part.length > 1);
-    
     console.log(`[NAME_DEBUG] Review ${review.id} (${review.customer_name})`);
     console.log(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
     console.log(`[NAME_DEBUG] Using name threshold: ${nameThreshold} (based on ${searchFieldCount} fields)`);
@@ -223,26 +222,21 @@ export const scoreReview = async (
     }
     
     console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (threshold: ${nameThreshold})`);
-    console.log(`[NAME_DEBUG] Allow exact match bypass: ${allowExactMatchBypass}`);
+    console.log(`[NAME_DEBUG] Validation deferred: ${nameValidationDeferred}`);
     
-    // Apply name validation with field count consideration
-    if (!nameComponentMatched && (firstName || lastName)) {
-      // For comprehensive searches (5+ fields), defer name rejection until after we check exact matches
-      if (allowExactMatchBypass) {
-        console.log(`[NAME_VALIDATION] Comprehensive search - will check for exact match bypass after scoring`);
-      } else {
-        console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ ${nameThreshold}`);
-        console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
-        return { 
-          ...review, 
-          searchScore: 0, 
-          matchCount: 0,
-          completenessScore,
-          exactFieldMatches: 0,
-          exactMatchDetails: [],
-          detailedMatches: []
-        };
-      }
+    // Only reject immediately for simpler searches
+    if (!nameComponentMatched && !nameValidationDeferred) {
+      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ ${nameThreshold}`);
+      console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
+      return { 
+        ...review, 
+        searchScore: 0, 
+        matchCount: 0,
+        completenessScore,
+        exactFieldMatches: 0,
+        exactMatchDetails: [],
+        detailedMatches: []
+      };
     }
   }
 
@@ -730,7 +724,7 @@ export const scoreReview = async (
   }
 
   // Apply deferred name validation for comprehensive searches
-  if (allowExactMatchBypass && !nameComponentMatched && (firstName || lastName)) {
+  if (nameValidationDeferred && !nameComponentMatched && (firstName || lastName)) {
     const requiredExactMatches = searchFieldCount >= 6 ? 4 : 3;
     if (exactFieldMatches < requiredExactMatches) {
       console.log(`[NAME_VALIDATION_DEFERRED] Review ${review.id} REJECTED - Insufficient exact matches (${exactFieldMatches}/${requiredExactMatches}) to bypass name validation`);
