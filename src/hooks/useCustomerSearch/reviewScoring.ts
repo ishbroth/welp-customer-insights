@@ -390,6 +390,8 @@ export const scoreReview = async (
       
       cityMatched = true;
       matchType = similarity >= 0.9 ? 'exact' : 'partial';
+      
+      console.log(`[CITY_MATCH] String match found: "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
     }
     
     // Check geographic proximity if string matching didn't work or for additional scoring
@@ -410,15 +412,16 @@ export const scoreReview = async (
             points = proximityScore;
             cityMatched = true;
             matchType = 'proximity';
+            console.log(`[CITY_PROXIMITY] Geographic match: "${city}, ${state}" <-> "${review.customer_city}, ${businessState}": ${distance.toFixed(1)} miles (score: ${proximityScore.toFixed(2)})`);
           } else if (cityMatched && proximityScore > 0) {
             // Boost existing string match with proximity bonus
             points += proximityScore * 0.5;
+            console.log(`[CITY_PROXIMITY] Boosting string match: "${city}, ${state}" <-> "${review.customer_city}, ${businessState}": ${distance.toFixed(1)} miles (bonus: ${(proximityScore * 0.5).toFixed(2)})`);
           }
-          
-          console.log(`[CITY_PROXIMITY] ${city}, ${state} <-> ${review.customer_city}, ${businessState}: ${distance?.toFixed(1)} miles (score: ${proximityScore.toFixed(2)})`);
         }
       } catch (error) {
         console.warn('Error checking city proximity:', error);
+        // Continue with string-based matching even if geocoding fails
       }
     }
     
@@ -433,6 +436,10 @@ export const scoreReview = async (
         similarity: matchType === 'proximity' ? 0.8 : similarity,
         matchType: matchType as 'exact' | 'partial' | 'fuzzy' | 'proximity'
       });
+      
+      console.log(`[CITY_FINAL] City match added ${points.toFixed(2)} points for "${city}" -> "${review.customer_city}"`);
+    } else {
+      console.log(`[CITY_NO_MATCH] No match found for "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
     }
   }
 
