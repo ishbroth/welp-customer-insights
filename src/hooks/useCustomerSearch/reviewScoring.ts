@@ -92,6 +92,12 @@ export const scoreReview = async (
   let score = 0;
   let matches = 0;
   let exactFieldMatches = 0;
+  
+  // Declare match tracking variables early
+  let phoneMatched = false;
+  let cityMatched = false;
+  let zipMatched = false;
+  
   const exactMatchDetails: Array<{
     field: string;
     isExact: boolean;
@@ -352,6 +358,7 @@ export const scoreReview = async (
       matches++;
       exactFieldMatches++;
       exactMatchDetails.push({ field: 'phone', isExact: true });
+      phoneMatched = true;
       
       detailedMatches.push({
         field: 'Phone',
@@ -370,6 +377,7 @@ export const scoreReview = async (
         matches++;
         exactFieldMatches++;
         exactMatchDetails.push({ field: 'phone', isExact: true });
+        phoneMatched = true;
         
         detailedMatches.push({
           field: 'Phone',
@@ -495,7 +503,7 @@ export const scoreReview = async (
   // Enhanced city matching with fuzzy logic and geographic proximity
   if (city && review.customer_city) {
     const similarity = calculateStringSimilarity(city.toLowerCase(), review.customer_city.toLowerCase());
-    let cityMatched = false;
+    let cityMatchedLocal = false;
     let matchType = 'none';
     let points = 0;
     
@@ -515,6 +523,7 @@ export const scoreReview = async (
       }
       
       cityMatched = true;
+      cityMatchedLocal = true;
       matchType = similarity >= 0.9 ? 'exact' : 'partial';
       
       console.log(`[CITY_MATCH] String match found: "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
@@ -533,13 +542,14 @@ export const scoreReview = async (
         if (isInProximity && distance !== undefined) {
           const proximityScore = calculateProximityScore(distance);
           
-          if (!cityMatched && proximityScore > 0) {
+          if (!cityMatchedLocal && proximityScore > 0) {
             // Geographic match without string match
             points = proximityScore;
             cityMatched = true;
+            cityMatchedLocal = true;
             matchType = 'proximity';
             console.log(`[CITY_PROXIMITY] Geographic match: "${city}, ${state}" <-> "${review.customer_city}, ${businessState}": ${distance.toFixed(1)} miles (score: ${proximityScore.toFixed(2)})`);
-          } else if (cityMatched && proximityScore > 0) {
+          } else if (cityMatchedLocal && proximityScore > 0) {
             // Boost existing string match with proximity bonus
             points += proximityScore * 0.5;
             console.log(`[CITY_PROXIMITY] Boosting string match: "${city}, ${state}" <-> "${review.customer_city}, ${businessState}": ${distance.toFixed(1)} miles (bonus: ${(proximityScore * 0.5).toFixed(2)})`);
@@ -551,7 +561,7 @@ export const scoreReview = async (
       }
     }
     
-    if (cityMatched) {
+    if (cityMatchedLocal) {
       score += points;
       matches++;
       
@@ -635,6 +645,7 @@ export const scoreReview = async (
       matches++;
       exactFieldMatches++;
       exactMatchDetails.push({ field: 'zip', isExact: true });
+      zipMatched = true;
       console.log(`[ZIP_EXACT] Exact ZIP match: "${cleanZip}" = "${reviewZip}"`);
       
       detailedMatches.push({
@@ -753,13 +764,33 @@ export const scoreReview = async (
     }
   }
 
-  // Prevent state-only matches when major fields are provided
+  // Enhanced state-only filter - prevent weak matches from passing
   const hasMajorFields = (firstName || lastName || phone || address);
-  const onlyStateMatched = detailedMatches.length === 1 && 
-                          detailedMatches[0].field === 'State';
+  const hasSubstantialMatch = phoneMatched || nameComponentMatched || addressMatched || cityMatched || zipMatched;
   
-  if (hasMajorFields && onlyStateMatched) {
+  // Check for truly weak matches (only state + weak city similarity)
+  const hasOnlyWeakMatches = detailedMatches.length <= 2 && 
+    detailedMatches.every(match => 
+      match.field === 'State' || 
+      (match.field === 'City' && match.similarity !== undefined && match.similarity < 0.6)
+    );
+  
+  if (hasMajorFields && (detailedMatches.length === 1 && detailedMatches[0].field === 'State')) {
     console.log(`[STATE_ONLY_FILTER] Review ${review.id} REJECTED - Only state matched when major fields provided`);
+    return { 
+      ...review, 
+      searchScore: 0, 
+      matchCount: 0,
+      completenessScore,
+      exactFieldMatches: 0,
+      exactMatchDetails: [],
+      detailedMatches: []
+    };
+  }
+  
+  // Filter out weak similarity matches (like La Mesa vs San Diego)
+  if (hasMajorFields && hasOnlyWeakMatches && !hasSubstantialMatch) {
+    console.log(`[WEAK_MATCH_FILTER] Review ${review.id} REJECTED - Only weak matches found (state + weak city)`);
     return { 
       ...review, 
       searchScore: 0, 

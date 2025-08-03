@@ -4,7 +4,7 @@ export const REVIEW_SEARCH_CONFIG = {
   FINAL_RESULTS_LIMIT: 100,
   MIN_WORD_LENGTH: 3,
   SIMILARITY_THRESHOLD: 0.7,
-  CITY_SIMILARITY_THRESHOLD: 0.3, // Lowered for better string matching
+  CITY_SIMILARITY_THRESHOLD: 0.6, // Raised to prevent weak matches like "La Mesa" vs "San Diego"
   ZIP_PROXIMITY_RANGE: 50,
   ZIP_PROXIMITY_MILES: 25,
   CITY_PROXIMITY_MILES: 25,
