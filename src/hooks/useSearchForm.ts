@@ -35,6 +35,19 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // MANDATORY: State must always be provided
+    if (!state || state.trim() === "") {
+      alert("Please select a state to search.");
+      return;
+    }
+    
+    // At least one additional field must be provided along with state
+    const hasAdditionalField = lastName || firstName || phone || address || city || zipCode;
+    if (!hasAdditionalField) {
+      alert("Please enter at least one search criteria along with the state.");
+      return;
+    }
+    
     // Extract first word of address for search and normalize only here
     const firstWordOfAddress = address.trim().split(/\s+/)[0];
     const normalizedAddress = normalizeAddress(firstWordOfAddress);

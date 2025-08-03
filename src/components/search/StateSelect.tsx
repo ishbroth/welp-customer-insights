@@ -60,12 +60,14 @@ interface StateSelectProps {
 }
 
 const StateSelect = ({ value, onValueChange }: StateSelectProps) => {
+  const hasError = !value || value.trim() === "";
+  
   return (
     <Select value={value} onValueChange={onValueChange} required>
-      <SelectTrigger className="welp-input">
-        <SelectValue placeholder="Select state" />
+      <SelectTrigger className={`welp-input ${hasError ? 'border-red-500 ring-red-500' : ''}`}>
+        <SelectValue placeholder="Select state *" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
         {US_STATES.map((state) => (
           <SelectItem key={state.value} value={state.value}>
             {state.label}

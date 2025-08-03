@@ -55,19 +55,23 @@ const SearchBox = ({
           Search for Customer Reviews with any piece of information.
         </p>
         
+        <p className="text-center text-sm text-red-600 mb-4 font-medium">
+          * State selection is required for all searches
+        </p>
+        
         <div className="space-y-3">
           <SearchField
             placeholder="First Name"
             value={formValues.firstName}
             onChange={(e) => setters.setFirstName(e.target.value)}
-            required={!formValues.lastName && !formValues.phone && !formValues.address && !formValues.city && !formValues.state && !formValues.zipCode}
+            required={false}
           />
           
           <SearchField
             placeholder="Last Name"
             value={formValues.lastName}
             onChange={(e) => setters.setLastName(e.target.value)}
-            required={!formValues.firstName && !formValues.phone && !formValues.address && !formValues.city && !formValues.state && !formValues.zipCode}
+            required={false}
           />
           
           <SearchField
@@ -75,7 +79,7 @@ const SearchBox = ({
             placeholder="Phone Number"
             value={formValues.phone}
             onChange={(e) => setters.setPhone(e.target.value)}
-            required={!formValues.lastName && !formValues.firstName && !formValues.address && !formValues.city && !formValues.state && !formValues.zipCode}
+            required={false}
           />
           
           <SearchField
@@ -86,7 +90,7 @@ const SearchBox = ({
               setters.setAddress(e.target.value);
             }}
             onAddressComponentsExtracted={handleAddressComponentsExtracted}
-            required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.city && !formValues.state && !formValues.zipCode}
+            required={false}
           />
 
           <SearchField
@@ -96,16 +100,21 @@ const SearchBox = ({
               console.log('📍 SearchBox - Manual city change:', e.target.value);
               setters.setCity(e.target.value);
             }}
-            required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.address && !formValues.state && !formValues.zipCode}
+            required={false}
           />
 
-          <StateSelect 
-            value={formValues.state} 
-            onValueChange={(value) => {
-              console.log('📍 SearchBox - Manual state change:', value);
-              setters.setState(value);
-            }} 
-          />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">
+              State <span className="text-red-500">*</span>
+            </label>
+            <StateSelect 
+              value={formValues.state} 
+              onValueChange={(value) => {
+                console.log('📍 SearchBox - Manual state change:', value);
+                setters.setState(value);
+              }} 
+            />
+          </div>
 
           <SearchField
             placeholder="ZIP Code"
@@ -114,7 +123,7 @@ const SearchBox = ({
               console.log('📍 SearchBox - Manual zip change:', e.target.value);
               setters.setZipCode(e.target.value);
             }}
-            required={!formValues.lastName && !formValues.firstName && !formValues.phone && !formValues.address && !formValues.city && !formValues.state}
+            required={false}
           />
         </div>
         
