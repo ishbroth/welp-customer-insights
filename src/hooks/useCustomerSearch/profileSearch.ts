@@ -50,8 +50,13 @@ export const searchProfiles = async (searchParams: SearchParams) => {
   const scoredProfiles = allProfiles.map(profile => {
     let score = 0;
     let matches = 0;
+    let nameMatch = false;
+    let phoneMatch = false;
     
-    // Name matching with fuzzy logic
+    // Multi-field validation: for Name + Phone searches, BOTH must have meaningful matches
+    const isNamePhoneSearch = (firstName || lastName) && cleanPhone;
+    
+    // Name matching with stricter requirements
     if (firstName || lastName) {
       const searchName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
       const profileName = [profile.first_name, profile.last_name].filter(Boolean).join(' ').toLowerCase();
@@ -60,26 +65,29 @@ export const searchProfiles = async (searchParams: SearchParams) => {
         const similarity = calculateStringSimilarity(searchName, profileName);
         console.log(`Name similarity for "${searchName}" vs "${profileName}": ${similarity}`);
         
-        // Use more reasonable thresholds
-        const threshold = isSingleFieldSearch ? 0.4 : 0.5; // Lowered from 0.7 to 0.5
+        // Stricter thresholds - no more weak name matches
+        const threshold = isSingleFieldSearch ? 0.6 : 0.7; // Increased from 0.4/0.5
         if (similarity > threshold) {
           score += similarity * 3;
           matches++;
+          nameMatch = true;
           console.log(`✅ Name match: ${similarity} > ${threshold}`);
         }
         
-        // More strict word matching - require longer words and better matches
+        // Word matching - require exact word matches or strong prefixes
         const searchWords = searchName.split(/\s+/).filter(word => word.length >= 3);
         const profileWords = profileName.split(/\s+/).filter(word => word.length >= 3);
         
         for (const searchWord of searchWords) {
           for (const profileWord of profileWords) {
-            // Exact word match or starts with (for longer words)
+            // Exact word match only (remove fuzzy word matching)
             if (searchWord === profileWord || 
-                (searchWord.length >= 4 && profileWord.startsWith(searchWord)) ||
-                (profileWord.length >= 4 && searchWord.startsWith(profileWord))) {
+                (searchWord.length >= 4 && profileWord.startsWith(searchWord) && profileWord.length <= searchWord.length + 2)) {
               score += 1;
-              matches++;
+              if (!nameMatch) {
+                matches++;
+                nameMatch = true;
+              }
               console.log(`✅ Word match: "${searchWord}" matches "${profileWord}"`);
             }
           }
@@ -87,13 +95,40 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    // Phone matching
+    // Phone matching - much more precise
     if (cleanPhone && profile.phone) {
       const profilePhone = profile.phone.replace(/\D/g, '');
-      if (profilePhone.includes(cleanPhone) || cleanPhone.includes(profilePhone.slice(-7))) {
-        score += 2;
+      
+      // Exact match
+      if (profilePhone === cleanPhone) {
+        score += 5;
         matches++;
+        phoneMatch = true;
+        console.log(`✅ Exact phone match: ${cleanPhone}`);
       }
+      // 7+ digit match (not just area code)
+      else if (cleanPhone.length >= 7 && profilePhone.length >= 7) {
+        const searchLast7 = cleanPhone.slice(-7);
+        const profileLast7 = profilePhone.slice(-7);
+        if (searchLast7 === profileLast7) {
+          score += 3;
+          matches++;
+          phoneMatch = true;
+          console.log(`✅ 7-digit phone match: ${searchLast7}`);
+        }
+      }
+      // Area code only match - very weak, requires other strong evidence
+      else if (cleanPhone.length >= 3 && profilePhone.length >= 3 && 
+               cleanPhone.slice(0, 3) === profilePhone.slice(0, 3)) {
+        score += 0.5; // Very low score for area code only
+        console.log(`⚠️ Area code only match: ${cleanPhone.slice(0, 3)} (weak)`);
+      }
+    }
+    
+    // Multi-field validation: reject if searching for Name + Phone but either field fails
+    if (isNamePhoneSearch && (!nameMatch || !phoneMatch)) {
+      console.log(`❌ Name+Phone search failed - Name match: ${nameMatch}, Phone match: ${phoneMatch}`);
+      return { ...profile, searchScore: 0, matchCount: 0 };
     }
     
     // Address matching with fuzzy logic
@@ -188,7 +223,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
   });
   
   // Apply stricter filtering for multi-field searches
-  let minScore = isSingleFieldSearch ? 0.5 : 2.0;
+  let minScore = isSingleFieldSearch ? 1.0 : 3.0; // Increased minimum scores
   let minMatches = isSingleFieldSearch ? 1 : 2;
   
   if (isStateOnlySearch) {

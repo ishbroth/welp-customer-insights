@@ -117,8 +117,13 @@ export const scoreReview = (
     };
   }
 
-  // Mandatory name validation for name-focused searches
-  if (searchContext.hasName && review.customer_name) {
+  // Enhanced validation for multi-field searches - reject weak combinations early
+  const isNamePhoneSearch = (firstName || lastName) && phone;
+  let nameMatchFound = false;
+  let phoneMatchFound = false;
+  
+  // Pre-validate name match for name+phone searches
+  if (isNamePhoneSearch && review.customer_name) {
     let totalNameSimilarity = 0;
     let nameCount = 0;
     
@@ -137,30 +142,34 @@ export const scoreReview = (
     }
     
     const avgNameSimilarity = nameCount > 0 ? totalNameSimilarity / nameCount : 0;
+    nameMatchFound = avgNameSimilarity >= 0.6; // Stricter threshold for combined searches
+  }
+  
+  // Pre-validate phone match for name+phone searches  
+  if (isNamePhoneSearch && review.customer_phone) {
+    const reviewPhone = review.customer_phone.replace(/\D/g, '');
+    const searchPhone = cleanPhone;
     
-    // Count other strong field matches
-    let otherStrongMatches = 0;
-    if (phone && review.customer_phone && phone.replace(/\D/g, '') === review.customer_phone.replace(/\D/g, '')) {
-      otherStrongMatches++;
+    // Require exact match or 7+ digit match (not just area code)
+    if (reviewPhone === searchPhone) {
+      phoneMatchFound = true;
+    } else if (searchPhone.length >= 7 && reviewPhone.length >= 7) {
+      const searchLast7 = searchPhone.slice(-7);
+      const reviewLast7 = reviewPhone.slice(-7);
+      phoneMatchFound = searchLast7 === reviewLast7;
     }
-    if (address && review.customer_address && calculateStringSimilarity(address, review.customer_address) > 0.7) {
-      otherStrongMatches++;
-    }
-    if (zipCode && review.customer_zipcode && zipCode.replace(/\D/g, '') === review.customer_zipcode.replace(/\D/g, '')) {
-      otherStrongMatches++;
-    }
-    
-    // Reject if name doesn't match meaningfully AND we don't have 3+ other strong matches
-    if (avgNameSimilarity < 0.4 && otherStrongMatches < 3) {
-      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - Avg name similarity: ${avgNameSimilarity.toFixed(3)}, Other matches: ${otherStrongMatches}`);
-      return { 
-        ...review, 
-        searchScore: 0, 
-        matchCount: 0,
-        completenessScore,
-        detailedMatches: []
-      };
-    }
+  }
+  
+  // Early rejection for name+phone searches where either field fails
+  if (isNamePhoneSearch && (!nameMatchFound || !phoneMatchFound)) {
+    console.log(`[MULTI_FIELD_VALIDATION] Review ${review.id} REJECTED - Name+Phone search failed. Name match: ${nameMatchFound}, Phone match: ${phoneMatchFound}`);
+    return { 
+      ...review, 
+      searchScore: 0, 
+      matchCount: 0,
+      completenessScore,
+      detailedMatches: []
+    };
   }
 
   // Enhanced name matching with massive weight increase for name importance
@@ -193,18 +202,16 @@ export const scoreReview = (
     // Use the best similarity found
     const finalSimilarity = Math.max(bestSimilarity, fullSim);
     
-    if (finalSimilarity > 0.2) { // Very low threshold but massive scoring difference
+    if (finalSimilarity > 0.6) { // Much stricter threshold to prevent weak matches
       // MASSIVELY increased base score for names - this is now the dominant factor
       let namePoints = 0;
       
       if (finalSimilarity >= 0.8) {
         namePoints = 60; // Excellent match
+      } else if (finalSimilarity >= 0.7) {
+        namePoints = finalSimilarity * 50; // Good match: 35-50 points
       } else if (finalSimilarity >= 0.6) {
-        namePoints = finalSimilarity * 50; // Good match: 30-50 points
-      } else if (finalSimilarity >= 0.4) {
-        namePoints = finalSimilarity * 25; // Fair match: 10-25 points
-      } else {
-        namePoints = finalSimilarity * 10; // Poor match: 2-10 points
+        namePoints = finalSimilarity * 25; // Fair match: 15-25 points
       }
       
       // Context-aware bonus
@@ -260,7 +267,7 @@ export const scoreReview = (
     }
   }
 
-  // Enhanced phone matching with partial number support
+  // Enhanced phone matching - much more precise requirements
   if (cleanPhone && review.customer_phone) {
     const reviewPhone = review.customer_phone.replace(/\D/g, '');
     
@@ -277,21 +284,33 @@ export const scoreReview = (
         matchType: 'exact'
       });
     }
-    // Check if phones contain each other or share significant digits
-    else if (reviewPhone.includes(cleanPhone) || 
-             cleanPhone.includes(reviewPhone) ||
-             (cleanPhone.length >= 7 && reviewPhone.includes(cleanPhone.slice(-7))) ||
-             (reviewPhone.length >= 7 && cleanPhone.includes(reviewPhone.slice(-7)))) {
-      score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH;
-      matches++;
-      
-      detailedMatches.push({
-        field: 'Phone',
-        reviewValue: review.customer_phone,
-        searchValue: phone || '',
-        similarity: 0.8,
-        matchType: 'partial'
-      });
+    // 7+ digit match (not just area code)
+    else if (cleanPhone.length >= 7 && reviewPhone.length >= 7) {
+      const searchLast7 = cleanPhone.slice(-7);
+      const reviewLast7 = reviewPhone.slice(-7);
+      if (searchLast7 === reviewLast7) {
+        score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH;
+        matches++;
+        
+        detailedMatches.push({
+          field: 'Phone',
+          reviewValue: review.customer_phone,
+          searchValue: phone || '',
+          similarity: 0.8,
+          matchType: 'partial'
+        });
+      }
+    }
+    // Area code only match - very weak, only for single-field searches or with strong other evidence
+    else if (cleanPhone.length >= 3 && reviewPhone.length >= 3 && 
+             cleanPhone.slice(0, 3) === reviewPhone.slice(0, 3)) {
+      // Only allow area code matches if this is NOT a name+phone search OR if name similarity is very high
+      if (!isNamePhoneSearch) {
+        score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 0.2; // Very low score
+        console.log(`⚠️ Area code only match accepted for non-name+phone search: ${cleanPhone.slice(0, 3)}`);
+      } else {
+        console.log(`❌ Area code only match rejected for name+phone search: ${cleanPhone.slice(0, 3)}`);
+      }
     }
   }
 
