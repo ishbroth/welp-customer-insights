@@ -2,10 +2,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { normalizeAddress } from "@/utils/addressNormalization";
+import { useToast } from "@/hooks/use-toast";
 
 export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) => void) => {
   const navigate = useNavigate();
   const [currentSearchParams] = useSearchParams();
+  const { toast } = useToast();
   
   // Initialize state from URL parameters if available
   const [lastName, setLastName] = useState(currentSearchParams.get("lastName") || "");
@@ -44,7 +46,24 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
     // At least one additional field must be provided along with state
     const hasAdditionalField = lastName || firstName || phone || address || city || zipCode;
     if (!hasAdditionalField) {
-      alert("Please enter at least one search criteria along with the state.");
+      toast({
+        title: "More information needed",
+        description: "Please enter at least one search criteria along with the state.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check for weak search combinations that are unlikely to produce good results
+    const hasStrongIdentifier = lastName || firstName || phone || zipCode || address;
+    const isCityStateOnly = city && state && !hasStrongIdentifier;
+    
+    if (isCityStateOnly) {
+      toast({
+        title: "Please provide more information",
+        description: "City and state alone may not provide accurate results. Try adding a name, phone number, address, or zip code for better matches.",
+        variant: "destructive"
+      });
       return;
     }
     
