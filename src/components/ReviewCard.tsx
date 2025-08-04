@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ReviewCardProps {
   review: Review;
@@ -19,6 +20,7 @@ const ReviewCard = ({
   showCustomerInfo = true,
   viewerType = "business"
 }: ReviewCardProps) => {
+  const isMobile = useIsMobile();
   const getInitials = (name: string) => {
     if (name) {
       const names = name.split(' ');
@@ -78,12 +80,12 @@ const ReviewCard = ({
 
   return (
     <Card className="w-full">
-      <CardContent className="p-6">
+      <CardContent className={`${isMobile ? "p-4" : "p-6"}`}>
         {/* Header with both business and customer info */}
-        <div className="flex items-start justify-between mb-4">
+        <div className={`${isMobile ? "flex-col space-y-3 mb-3" : "flex items-start justify-between mb-4"}`}>
           {/* Left side - larger */}
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12">
+          <div className={`flex items-center ${isMobile ? "space-x-3" : "space-x-4"}`}>
+            <Avatar className={`${isMobile ? "h-14 w-14" : "h-12 w-12"}`}>
               <AvatarImage src={leftSideInfo.avatar} alt={leftSideInfo.name} />
               <AvatarFallback className="bg-blue-100 text-blue-800">
                 {leftSideInfo.initials}
@@ -91,48 +93,50 @@ const ReviewCard = ({
             </Avatar>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-lg">{leftSideInfo.name}</h3>
-                {leftSideInfo.verified && <VerifiedBadge size="sm" />}
+                <h3 className={`font-semibold ${isMobile ? "text-lg" : "text-lg"}`}>{leftSideInfo.name}</h3>
+                {leftSideInfo.verified && <VerifiedBadge size={isMobile ? "sm" : "sm"} />}
               </div>
-              <p className="text-sm text-gray-500">{leftSideInfo.type}</p>
+              <p className={`text-gray-500 ${isMobile ? "text-sm" : "text-sm"}`}>{leftSideInfo.type}</p>
             </div>
           </div>
 
           {/* Right side - smaller */}
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
+          <div className={`flex items-center ${isMobile ? "space-x-3 pl-17" : "space-x-2"}`}>
+            <Avatar className={`${isMobile ? "h-10 w-10" : "h-8 w-8"}`}>
               <AvatarImage src={rightSideInfo.avatar} alt={rightSideInfo.name} />
-              <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+              <AvatarFallback className={`bg-gray-100 text-gray-600 ${isMobile ? "text-sm" : "text-xs"}`}>
                 {rightSideInfo.initials}
               </AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-1">
-                <h4 className="font-medium text-sm">{rightSideInfo.name}</h4>
-                {rightSideInfo.verified && <VerifiedBadge size="xs" />}
+                <h4 className={`font-medium ${isMobile ? "text-sm" : "text-sm"}`}>{rightSideInfo.name}</h4>
+                {rightSideInfo.verified && <VerifiedBadge size={isMobile ? "xs" : "xs"} />}
               </div>
-              <p className="text-xs text-gray-500">{rightSideInfo.type}</p>
+              <p className={`text-gray-500 ${isMobile ? "text-xs" : "text-xs"}`}>{rightSideInfo.type}</p>
             </div>
           </div>
         </div>
 
         {/* Rating and date */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className={`flex items-center gap-2 ${isMobile ? "mb-3" : "mb-2"}`}>
           <div className="flex">{renderStars(review.rating)}</div>
-          <span className="text-sm text-gray-500">
+          <span className={`text-gray-500 ${isMobile ? "text-sm" : "text-sm"}`}>
             {formatDate(review.date)}
           </span>
         </div>
 
         {/* Review Content */}
-        <div className="mb-4">
-          <p className="text-gray-700 whitespace-pre-wrap">{review.content}</p>
+        <div className={`${isMobile ? "mb-3" : "mb-4"}`}>
+          <p className={`text-gray-700 whitespace-pre-wrap ${isMobile ? "text-base leading-relaxed" : "text-base"}`}>
+            {review.content}
+          </p>
         </div>
 
         {/* Customer Address Info (only show if customer is on the left side) */}
         {isBusinessViewer && showCustomerInfo && (review.address || review.city || review.zipCode) && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
+          <div className={`bg-gray-50 rounded-lg ${isMobile ? "mb-3 p-3" : "mb-4 p-3"}`}>
+            <p className={`text-gray-600 ${isMobile ? "text-sm" : "text-sm"}`}>
               <strong>Customer Address:</strong> {[review.address, review.city, review.zipCode].filter(Boolean).join(', ')}
             </p>
           </div>

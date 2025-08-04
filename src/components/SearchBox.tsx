@@ -3,6 +3,7 @@ import SearchField from "@/components/search/SearchField";
 import StateSelect from "@/components/search/StateSelect";
 import SearchButton from "@/components/search/SearchButton";
 import { useSearchForm } from "@/hooks/useSearchForm";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SearchBoxProps {
   className?: string;
@@ -18,6 +19,7 @@ const SearchBox = React.memo(({
   buttonText = "Search a Customer"
 }: SearchBoxProps) => {
   const { formValues, setters, handleSearch } = useSearchForm(onSearch);
+  const isMobile = useIsMobile();
 
   // Handle Google Maps address component extraction - memoized for performance
   const handleAddressComponentsExtracted = useCallback((components: {
@@ -44,18 +46,18 @@ const SearchBox = React.memo(({
 
   return (
     <div className={className}>
-      <form onSubmit={handleSearch} className="space-y-4">
+      <form onSubmit={handleSearch} className={`${isMobile ? "space-y-3" : "space-y-4"}`}>
         {!simplified && (
-          <h2 className="text-2xl font-bold mb-4 text-center">
+          <h2 className={`font-bold text-center mb-4 ${isMobile ? "text-xl" : "text-2xl"}`}>
             Find Customer Reviews
           </h2>
         )}
         
-        <p className="text-center text-lg font-semibold text-gray-700 mb-4">
+        <p className={`text-center font-semibold text-gray-700 mb-4 ${isMobile ? "text-base px-2" : "text-lg"}`}>
           Search for Customer Reviews with any piece of information.
         </p>
         
-        <div className="space-y-3">
+        <div className={`${isMobile ? "space-y-2" : "space-y-3"}`}>
           <SearchField
             placeholder="First Name"
             value={formValues.firstName}
@@ -100,7 +102,7 @@ const SearchBox = React.memo(({
           />
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className={`block font-medium text-gray-700 ${isMobile ? "text-base" : "text-sm"}`}>
               State <span className="text-red-500">*</span>
             </label>
             <StateSelect 
