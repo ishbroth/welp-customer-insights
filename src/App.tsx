@@ -9,7 +9,7 @@ import AppRoutes from "@/components/routing/AppRoutes";
 import MobileStatusBar from "@/components/mobile/MobileStatusBar";
 import MobilePerformanceMonitor from "@/components/mobile/MobilePerformanceMonitor";
 import MobileKeyboard from "@/components/mobile/MobileKeyboard";
-import { useMobilePushNotifications } from "@/hooks/useMobilePushNotifications";
+import MobileInitializer from "@/components/mobile/MobileInitializer";
 
 const queryClient = new QueryClient();
 
@@ -20,14 +20,12 @@ const QueryClientWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 function App() {
-  // Initialize mobile push notifications
-  useMobilePushNotifications();
-
   return (
     <QueryClientWrapper>
       <Router>
         <AuthProvider>
           <LoadingProvider>
+            <MobileInitializer />
             <MobileStatusBar backgroundColor="#ea384c" />
             <MobileKeyboard adjustViewport={true} />
             <AppRoutes />
