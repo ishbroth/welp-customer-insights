@@ -65,7 +65,11 @@ const SignupSection = () => {
                   }
                 }}
                 disabled={isBusinessUser && isVerified}
-                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                className={`w-full ${
+                  isBusinessUser && isVerified 
+                    ? "bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed hover:bg-gray-100" 
+                    : "border-blue-300 text-blue-700 hover:bg-blue-50"
+                }`}
               >
                 {!isSignedIn ? "Get Verified" : 
                  isBusinessUser && isVerified ? "Already Verified" : 
