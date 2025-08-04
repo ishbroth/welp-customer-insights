@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Accordion,
@@ -9,10 +8,10 @@ import {
 } from "@/components/ui/accordion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useCustomerCount } from "@/hooks/useCustomerCount";
 
 const FAQ = () => {
-  // In a real app connected to Supabase, we would fetch this count from the database
-  const [customerCount] = useState(12457);
+  const { customerCount } = useCustomerCount();
 
   return (
     <div className="flex flex-col min-h-screen">
