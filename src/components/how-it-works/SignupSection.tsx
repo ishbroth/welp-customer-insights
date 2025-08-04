@@ -77,18 +77,6 @@ const SignupSection = () => {
               </Button>
             </div>
           </div>
-          
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              Already have an account?{" "}
-              <button 
-                onClick={() => navigate("/login")}
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Sign in here
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </section>
