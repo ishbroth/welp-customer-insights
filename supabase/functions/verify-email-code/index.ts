@@ -204,7 +204,11 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Sign in the user automatically
+    // First, sign out any existing session to ensure clean transition
+    console.log("Signing out any existing session before new account login");
+    await supabase.auth.signOut();
+
+    // Sign in the user automatically with the new account
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email,
       password: userData.password

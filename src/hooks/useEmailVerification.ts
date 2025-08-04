@@ -110,9 +110,13 @@ export const useEmailVerification = ({
       if (result.success && result.isValid) {
         console.log("✅ Account created successfully");
         
+        // Clear any existing session first to ensure clean transition
+        console.log("🔐 Clearing existing session before setting new session");
+        await supabase.auth.signOut();
+        
         // If the edge function returned session data, set it in Supabase auth
         if (result.session) {
-          console.log("🔐 Setting session from edge function response");
+          console.log("🔐 Setting new session from edge function response");
           await supabase.auth.setSession({
             access_token: result.session.access_token,
             refresh_token: result.session.refresh_token
