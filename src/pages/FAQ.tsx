@@ -116,7 +116,7 @@ const FAQ = () => {
                   <AccordionContent className="px-6 pb-4">
                     As a customer, you can respond to reviews by first purchasing access to the full review for $3. 
                     Once purchased, you'll be able to read the complete review and add your response. Your response 
-                    will be visible to any business that views that review in the future. Or you can simply subscribe for $11.99/mo and completely manage your reputations by viewing and respond to ANY review about you.
+                    will be visible to any business that views that review in the future. Or you can simply subscribe for $11.99/mo and completely manage your reputation by viewing and respond to ANY review about you.
                   </AccordionContent>
                 </AccordionItem>
                 
