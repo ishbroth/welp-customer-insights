@@ -6,6 +6,7 @@ import { Review } from "@/types";
 import ReviewReactions from "@/components/ReviewReactions";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileShareButton from "@/components/mobile/MobileShareButton";
 
 interface ReviewCardProps {
   review: Review;
@@ -153,6 +154,19 @@ const ReviewCard = ({
             reactions={review.reactions}
             onReactionToggle={onReactionToggle}
           />
+        )}
+
+        {/* Mobile Share Button */}
+        {isMobile && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <MobileShareButton
+              title={`Review by ${leftSideInfo.name}`}
+              text={`${review.rating} star review: ${review.content}`}
+              size="sm"
+              variant="ghost"
+              className="w-full justify-center"
+            />
+          </div>
         )}
       </CardContent>
     </Card>

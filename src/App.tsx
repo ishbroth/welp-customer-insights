@@ -6,6 +6,10 @@ import { LoadingProvider } from "@/contexts/LoadingContext";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as HotToaster } from "@/components/ui/toaster";
 import AppRoutes from "@/components/routing/AppRoutes";
+import MobileStatusBar from "@/components/mobile/MobileStatusBar";
+import MobilePerformanceMonitor from "@/components/mobile/MobilePerformanceMonitor";
+import MobileKeyboard from "@/components/mobile/MobileKeyboard";
+import { useMobilePushNotifications } from "@/hooks/useMobilePushNotifications";
 
 const queryClient = new QueryClient();
 
@@ -16,14 +20,20 @@ const QueryClientWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 function App() {
+  // Initialize mobile push notifications
+  useMobilePushNotifications();
+
   return (
     <QueryClientWrapper>
       <Router>
         <AuthProvider>
           <LoadingProvider>
+            <MobileStatusBar backgroundColor="#ea384c" />
+            <MobileKeyboard adjustViewport={true} />
             <AppRoutes />
             <Toaster />
             <HotToaster />
+            <MobilePerformanceMonitor />
           </LoadingProvider>
         </AuthProvider>
       </Router>
