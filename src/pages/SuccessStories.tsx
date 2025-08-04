@@ -5,6 +5,8 @@ import { ChevronDown, Star, ThumbsUp, MessageSquare, Quote } from "lucide-react"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useReviewCount } from "@/hooks/useReviewCount";
+import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
 
 // Mock success stories from users
 const successStories = [
@@ -52,6 +54,33 @@ const successStories = [
 
 const SuccessStories = () => {
   const { reviewCount } = useReviewCount();
+  const { currentUser, isSubscribed, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubscribeClick = () => {
+    if (!currentUser) {
+      navigate("/login");
+    } else if (currentUser.type === "business") {
+      if (!isSubscribed) {
+        navigate("/subscription");
+      }
+      // If already subscribed, do nothing (button is disabled)
+    } else {
+      // Customer user
+      navigate("/signup");
+    }
+  };
+
+  const getButtonText = () => {
+    if (loading) return "Subscribe Now!";
+    if (!currentUser) return "Subscribe Now!";
+    if (currentUser.type === "business" && isSubscribed) return "Already Subscribed";
+    return "Subscribe Now!";
+  };
+
+  const isButtonDisabled = () => {
+    return currentUser?.type === "business" && isSubscribed;
+  };
 
   return (
     <>
@@ -116,12 +145,17 @@ const SuccessStories = () => {
               <span className="font-medium">{reviewCount.toLocaleString()} Searchable Customer Reviews</span>
             </div>
           </div>
-          <a 
-            href="/signup" 
-            className="inline-block bg-welp-primary hover:bg-welp-tertiary text-white font-medium px-8 py-3 rounded-lg transition-colors"
+          <button 
+            onClick={handleSubscribeClick}
+            disabled={isButtonDisabled()}
+            className={`inline-block font-medium px-8 py-3 rounded-lg transition-colors ${
+              isButtonDisabled()
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-welp-primary hover:bg-welp-tertiary text-white"
+            }`}
           >
-            Subscribe Now!
-          </a>
+            {getButtonText()}
+          </button>
         </div>
       </div>
       <Footer />
