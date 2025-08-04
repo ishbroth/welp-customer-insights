@@ -55,13 +55,13 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
     }
 
     // Check for weak search combinations that are unlikely to produce good results
-    const hasStrongIdentifier = lastName || firstName || phone || zipCode || address;
-    const isCityStateOnly = city && state && !hasStrongIdentifier;
+    const hasStrongIdentifier = lastName || firstName || phone || address;
+    const isLocationOnly = (city || zipCode) && state && !hasStrongIdentifier;
     
-    if (isCityStateOnly) {
+    if (isLocationOnly) {
       toast({
         title: "Please provide more information",
-        description: "City and state alone may not provide accurate results. Try adding a name, phone number, address, or zip code for better matches.",
+        description: "Location information alone may not provide accurate results. Try adding a name, phone number, or street address for better matches.",
         variant: "destructive"
       });
       return;
