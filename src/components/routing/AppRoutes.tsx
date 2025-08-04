@@ -35,6 +35,7 @@ import NewReview from "@/pages/NewReview";
 import DebugAccount from "@/pages/DebugAccount";
 import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
+import Contact from "@/pages/Contact";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -70,6 +71,7 @@ const AppRoutes = () => {
             <Route path="/about" element={<About />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/debug-account" element={<DebugAccount />} />
