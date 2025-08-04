@@ -112,16 +112,8 @@ const SuccessStories = () => {
           <h2 className="text-2xl font-semibold text-welp-primary mb-6">Join Thousands of Satisfied Business Owners</h2>
           <div className="flex flex-wrap justify-center gap-6 mb-8">
             <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
-              <ThumbsUp className="h-5 w-5 text-welp-primary mr-2" />
-              <span className="font-medium">95% Satisfaction Rate</span>
-            </div>
-            <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
               <MessageSquare className="h-5 w-5 text-welp-primary mr-2" />
               <span className="font-medium">{reviewCount.toLocaleString()} Searchable Customer Reviews</span>
-            </div>
-            <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
-              <Star className="h-5 w-5 text-welp-primary mr-2" />
-              <span className="font-medium">4.8/5 Average Rating</span>
             </div>
           </div>
           <a 
