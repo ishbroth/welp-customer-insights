@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import SearchField from "@/components/search/SearchField";
 import StateSelect from "@/components/search/StateSelect";
 import SearchButton from "@/components/search/SearchButton";
@@ -11,7 +11,7 @@ interface SearchBoxProps {
   buttonText?: string;
 }
 
-const SearchBox = ({ 
+const SearchBox = React.memo(({ 
   className, 
   simplified = false, 
   onSearch,
@@ -19,8 +19,8 @@ const SearchBox = ({
 }: SearchBoxProps) => {
   const { formValues, setters, handleSearch } = useSearchForm(onSearch);
 
-  // Handle Google Maps address component extraction
-  const handleAddressComponentsExtracted = (components: {
+  // Handle Google Maps address component extraction - memoized for performance
+  const handleAddressComponentsExtracted = useCallback((components: {
     streetAddress: string;
     city: string;
     state: string;
@@ -40,7 +40,7 @@ const SearchBox = ({
     
     console.log('📍 SearchBox - FORCING zipCode update to:', components.zipCode);
     setters.setZipCode(components.zipCode);
-  };
+  }, [setters]);
 
   return (
     <div className={className}>
@@ -127,6 +127,8 @@ const SearchBox = ({
       </form>
     </div>
   );
-};
+});
+
+SearchBox.displayName = 'SearchBox';
 
 export default SearchBox;

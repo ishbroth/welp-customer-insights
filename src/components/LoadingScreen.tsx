@@ -3,7 +3,7 @@ import React from 'react';
 import { useLoading } from '@/contexts/LoadingContext';
 import './LoadingScreen.css';
 
-const LoadingScreen: React.FC = () => {
+const LoadingScreen: React.FC = React.memo(() => {
   const { isPageLoading } = useLoading();
 
   if (!isPageLoading) return null;
@@ -60,6 +60,8 @@ const LoadingScreen: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+
+LoadingScreen.displayName = 'LoadingScreen';
 
 export default LoadingScreen;

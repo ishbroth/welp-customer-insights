@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Customer } from "@/types/search";
 import { useAuth } from "@/contexts/auth";
 import SearchResultsList from "./SearchResultsList";
@@ -12,14 +12,18 @@ interface SearchResultsContainerProps {
   onRefresh: () => void;
 }
 
-const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResultsContainerProps) => {
+const SearchResultsContainer = React.memo(({ customers, isLoading, onRefresh }: SearchResultsContainerProps) => {
   const [showAll, setShowAll] = useState(false);
   const { currentUser } = useAuth();
   
-  // Check if current user is a business user by checking the type property
-  const isBusinessUser = currentUser?.type === 'business';
+  // Check if current user is a business user by checking the type property - memoized
+  const isBusinessUser = useMemo(() => currentUser?.type === 'business', [currentUser?.type]);
 
-  const displayedCustomers = showAll ? customers : customers.slice(0, 3);
+  // Memoized displayed customers to prevent unnecessary re-computations
+  const displayedCustomers = useMemo(() => 
+    showAll ? customers : customers.slice(0, 3), 
+    [showAll, customers]
+  );
 
   if (isLoading) {
     return <SearchLoadingState />;
@@ -38,6 +42,8 @@ const SearchResultsContainer = ({ customers, isLoading, onRefresh }: SearchResul
       />
     </div>
   );
-};
+});
+
+SearchResultsContainer.displayName = 'SearchResultsContainer';
 
 export default SearchResultsContainer;

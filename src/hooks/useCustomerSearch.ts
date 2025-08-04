@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import { useToast } from "@/hooks/use-toast";
@@ -9,15 +9,20 @@ import { searchReviews } from "./useCustomerSearch/reviewSearch";
 import { processProfileCustomers, processReviewCustomers } from "./useCustomerSearch/customerProcessor";
 import { SearchParams, ReviewData } from "./useCustomerSearch/types";
 
+// Simple cache for search results to improve performance
+const searchCache = new Map<string, { data: Customer[]; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const useCustomerSearch = () => {
   const [searchParams] = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { unlockedReviews } = useReviewAccess();
+  const debounceTimer = useRef<NodeJS.Timeout>();
   
-  // Extract search parameters
-  const searchParameters: SearchParams = {
+  // Extract search parameters - memoized for performance
+  const searchParameters: SearchParams = useMemo(() => ({
     lastName: searchParams.get("lastName") || "",
     firstName: searchParams.get("firstName") || "",
     phone: searchParams.get("phone") || "",
@@ -27,9 +32,20 @@ export const useCustomerSearch = () => {
     zipCode: searchParams.get("zipCode") || "",
     fuzzyMatch: searchParams.get("fuzzyMatch") === "true",
     similarityThreshold: parseFloat(searchParams.get("similarityThreshold") || "0.7")
-  };
+  }), [searchParams]);
 
   const fetchSearchResults = useCallback(async () => {
+    // Generate cache key for this search
+    const cacheKey = JSON.stringify(searchParameters);
+    
+    // Check cache first
+    const cached = searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log('Using cached search results');
+      setCustomers(cached.data);
+      return;
+    }
+
     // Check if we have any search parameters
     const hasSearchParams = Object.values(searchParameters)
       .slice(0, 7) // Only check the string parameters, not fuzzy/threshold
@@ -110,6 +126,16 @@ export const useCustomerSearch = () => {
       console.log("Final combined customers:", combinedCustomers);
       setCustomers(combinedCustomers);
       
+      // Cache the results
+      searchCache.set(cacheKey, { data: combinedCustomers, timestamp: Date.now() });
+      
+      // Clean up old cache entries
+      for (const [key, value] of searchCache.entries()) {
+        if (Date.now() - value.timestamp > CACHE_TTL) {
+          searchCache.delete(key);
+        }
+      }
+      
     } catch (error) {
       console.error('Search error:', error);
       toast({
@@ -134,8 +160,21 @@ export const useCustomerSearch = () => {
     unlockedReviews.join(',')
   ]);
 
+  // Debounced search trigger to prevent excessive API calls
   useEffect(() => {
-    fetchSearchResults();
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
+    debounceTimer.current = setTimeout(() => {
+      fetchSearchResults();
+    }, 300); // 300ms debounce
+    
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
   }, [fetchSearchResults]);
 
   return { 
