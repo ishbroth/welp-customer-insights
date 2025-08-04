@@ -83,7 +83,7 @@ const FAQ = () => {
                   </AccordionTrigger>
                   <AccordionContent className="px-6 pb-4">
                     Individual review access costs $3 per review for both customers and business owners. 
-                    Business owners also have the option to subscribe for $19.99 per month, which provides 
+                    Business owners also have the option to subscribe for $11.99 per month, which provides 
                     unlimited access to all customer reviews and additional features.
                   </AccordionContent>
                 </AccordionItem>
