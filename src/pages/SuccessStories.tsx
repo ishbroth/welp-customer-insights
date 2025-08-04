@@ -117,7 +117,7 @@ const SuccessStories = () => {
             </div>
             <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
               <MessageSquare className="h-5 w-5 text-welp-primary mr-2" />
-              <span className="font-medium">{reviewCount.toLocaleString()} Searchable Customers</span>
+              <span className="font-medium">{reviewCount.toLocaleString()} Searchable Customer Reviews</span>
             </div>
             <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
               <Star className="h-5 w-5 text-welp-primary mr-2" />
