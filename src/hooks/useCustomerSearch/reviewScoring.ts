@@ -456,6 +456,8 @@ export const scoreReview = async (
     // Enhanced word-by-word matching for partial addresses
     const addressWords = address.toLowerCase().split(/\s+/);
     const reviewAddressWords = review.customer_address.toLowerCase().split(/\s+/);
+    let hasExactWordMatch = false;
+    let bestWordMatchSimilarity = 0;
     
     // Check for street number match (first word often a number)
     const searchNumber = addressWords[0];
@@ -463,6 +465,8 @@ export const scoreReview = async (
     if (searchNumber && reviewNumber && !isNaN(Number(searchNumber)) && searchNumber === reviewNumber) {
       addressScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH * 2; // Street number match is very valuable
       addressMatched = true;
+      hasExactWordMatch = true;
+      bestWordMatchSimilarity = 1.0;
       
       // Count street number match as exact match if the search is just a number
       if (address.trim() === searchNumber && !isNaN(Number(address.trim()))) {
@@ -476,11 +480,38 @@ export const scoreReview = async (
     for (const word of addressWords) {
       if (word.length >= REVIEW_SEARCH_CONFIG.MIN_WORD_LENGTH) {
         for (const reviewWord of reviewAddressWords) {
-          if (reviewWord.includes(word) || word.includes(reviewWord)) {
+          // Exact word match
+          if (reviewWord === word) {
+            addressScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH * 2; // Double for exact
+            addressMatched = true;
+            hasExactWordMatch = true;
+            bestWordMatchSimilarity = Math.max(bestWordMatchSimilarity, 1.0);
+            console.log(`[ADDRESS_WORD_EXACT] Exact word match: "${word}" in "${review.customer_address}"`);
+          }
+          // Partial word match
+          else if (reviewWord.includes(word) || word.includes(reviewWord)) {
             addressScore += REVIEW_SEARCH_CONFIG.SCORES.ADDRESS_WORD_MATCH;
             addressMatched = true;
+            bestWordMatchSimilarity = Math.max(bestWordMatchSimilarity, 0.7);
           }
         }
+      }
+    }
+    
+    // For partial address searches with word matches, add to detailedMatches
+    // This is crucial for filtering logic that requires detailedMatches entries
+    if (hasExactWordMatch && bestWordMatchSimilarity >= 0.9) {
+      // If we haven't already added this address to detailedMatches via similarity
+      const existingAddressMatch = detailedMatches.find(match => match.field === 'Address');
+      if (!existingAddressMatch) {
+        detailedMatches.push({
+          field: 'Address',
+          reviewValue: review.customer_address,
+          searchValue: address,
+          similarity: bestWordMatchSimilarity,
+          matchType: 'partial'
+        });
+        console.log(`[ADDRESS_DETAILED] Added exact word match to detailedMatches: similarity=${bestWordMatchSimilarity}`);
       }
     }
     
