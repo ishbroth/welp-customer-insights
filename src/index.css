@@ -100,14 +100,19 @@
   }
   
   .welp-button {
-    @apply bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200;
+    @apply bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 min-h-[44px] touch-manipulation;
   }
   
   .welp-input {
-    @apply border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ea384c] focus:border-transparent;
+    @apply border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ea384c] focus:border-transparent min-h-[44px] touch-manipulation;
   }
   
   .welp-card {
-    @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200;
+    @apply bg-white rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-shadow duration-200;
+  }
+  
+  /* Mobile-specific utilities */
+  .mobile-touch-target {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
   }
 }

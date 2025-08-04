@@ -11,30 +11,30 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-welp-dark text-white py-6 mt-auto">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-3 text-[#ea384c]">
+    <footer className="bg-welp-dark text-white py-4 md:py-6 mt-auto">
+      <div className="container mx-auto px-3 md:px-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-8">
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3 text-[#ea384c]">
               Welp.
             </h3>
-            <p className="text-gray-300 text-sm">
+            <p className="text-gray-300 text-xs md:text-sm">
               Review your customers. <br />
               Because businesses are people too.
             </p>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-3">About</h4>
-            <ul className="space-y-2 text-gray-300 text-sm">
+            <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">About</h4>
+            <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
               <li><button onClick={() => handleLinkClick("/about")} className="hover:text-welp-primary transition-colors cursor-pointer">About Welp.</button></li>
               <li><button onClick={() => handleLinkClick("/how-it-works")} className="hover:text-welp-primary transition-colors cursor-pointer">How It Works</button></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-3">Support</h4>
-            <ul className="space-y-2 text-gray-300 text-sm">
+            <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">Support</h4>
+            <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
               <li><button onClick={() => handleLinkClick("/faq")} className="hover:text-welp-primary transition-colors cursor-pointer">FAQ</button></li>
               <li><button onClick={() => handleLinkClick("/terms")} className="hover:text-welp-primary transition-colors cursor-pointer">Terms of Service</button></li>
               <li><button onClick={() => handleLinkClick("/privacy")} className="hover:text-welp-primary transition-colors cursor-pointer">Privacy Policy</button></li>
@@ -42,8 +42,8 @@ const Footer = () => {
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-3">Business Owners</h4>
-            <ul className="space-y-2 text-gray-300 text-sm">
+            <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">Business Owners</h4>
+            <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
               <li><button onClick={() => handleLinkClick("/verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Business Verification</button></li>
               <li><button onClick={() => handleLinkClick("/subscription")} className="hover:text-welp-primary transition-colors cursor-pointer">Subscription Benefits</button></li>
               <li><button onClick={() => handleLinkClick("/success-stories")} className="hover:text-welp-primary transition-colors cursor-pointer">Success Stories</button></li>
@@ -51,8 +51,8 @@ const Footer = () => {
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-3">Customer Accounts</h4>
-            <ul className="space-y-2 text-gray-300 text-sm">
+            <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">Customer Accounts</h4>
+            <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
               <li><button onClick={() => handleLinkClick("/customer-verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Customer Verification</button></li>
               <li><button onClick={() => handleLinkClick("/customer-benefits")} className="hover:text-welp-primary transition-colors cursor-pointer">Subscription Benefits</button></li>
               <li><button onClick={() => handleLinkClick("/customer-stories")} className="hover:text-welp-primary transition-colors cursor-pointer">Success Stories</button></li>
@@ -60,8 +60,8 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="mt-8 pt-4 border-t border-gray-700">
-          <p className="text-gray-400 text-sm text-center md:text-left">
+        <div className="mt-6 md:mt-8 pt-3 md:pt-4 border-t border-gray-700">
+          <p className="text-gray-400 text-xs md:text-sm text-center md:text-left">
             © {currentYear} Welp. All rights reserved.
           </p>
         </div>

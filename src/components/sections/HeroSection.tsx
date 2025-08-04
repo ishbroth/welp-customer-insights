@@ -17,12 +17,12 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="bg-[#ea384c] text-white py-16 md:py-24">
-      <div className="container mx-auto px-4">
+    <section className="bg-[#ea384c] text-white py-12 md:py-16 lg:py-24">
+      <div className="container mx-auto px-3 md:px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">Welp.</h1>
-          <p className="text-xl md:text-2xl mb-8">Review your customers. Because businesses are people too.</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold mb-3 md:mb-4">Welp.</h1>
+          <p className="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8">Review your customers. Because businesses are people too.</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
             {currentUser ? (
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
@@ -42,13 +42,13 @@ const HeroSection = () => {
               </Tooltip>
             ) : (
               <Link to="/signup">
-                <Button className="bg-white text-[#ea384c] hover:bg-gray-100 font-bold py-3 px-6 rounded-full">
+                <Button className="bg-white text-[#ea384c] hover:bg-gray-100 font-bold py-2 md:py-3 px-4 md:px-6 rounded-full text-sm md:text-base">
                   Get Started
                 </Button>
               </Link>
             )}
             <Link to="/about">
-              <Button variant="outline" className="border-white text-[#ea384c] hover:bg-white/10 hover:text-white font-bold py-3 px-6 rounded-full">
+              <Button variant="outline" className="border-white text-[#ea384c] hover:bg-white/10 hover:text-white font-bold py-2 md:py-3 px-4 md:px-6 rounded-full text-sm md:text-base">
                 Learn More
               </Button>
             </Link>
