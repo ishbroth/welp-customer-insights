@@ -2,9 +2,13 @@
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 
 const SignupSection = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  
+  const isBusinessUser = currentUser?.type === 'business';
 
   return (
     <section className="py-16 bg-white">
@@ -29,8 +33,10 @@ const SignupSection = () => {
               <Button 
                 onClick={() => navigate("/signup")}
                 className="w-full"
+                disabled={isBusinessUser}
+                variant={isBusinessUser ? "secondary" : "default"}
               >
-                Create Business Account
+                {isBusinessUser ? "Already Business User" : "Create Business Account"}
               </Button>
             </div>
             
