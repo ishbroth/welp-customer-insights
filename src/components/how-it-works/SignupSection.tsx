@@ -3,12 +3,15 @@ import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 
 const SignupSection = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { isVerified } = useVerifiedStatus(currentUser?.id);
   
   const isBusinessUser = currentUser?.type === 'business';
+  const isSignedIn = !!currentUser;
 
   return (
     <section className="py-16 bg-white">
@@ -31,12 +34,10 @@ const SignupSection = () => {
                 Create your business account and start writing reviews immediately. All accounts can write permanent reviews.
               </p>
               <Button 
-                onClick={() => navigate("/signup")}
+                onClick={() => isBusinessUser ? navigate("/review/new") : navigate("/signup")}
                 className="w-full"
-                disabled={isBusinessUser}
-                variant={isBusinessUser ? "secondary" : "default"}
               >
-                {isBusinessUser ? "Already Business User" : "Create Business Account"}
+                {isBusinessUser ? "Write a Review" : "Create Business Account"}
               </Button>
             </div>
             
@@ -55,11 +56,20 @@ const SignupSection = () => {
                 <span className="text-sm font-medium">Verified Business</span>
               </div>
               <Button 
-                variant="outline"
-                onClick={() => navigate("/verify-license")}
+                variant={(!isSignedIn || (isBusinessUser && isVerified)) ? "secondary" : "outline"}
+                onClick={() => {
+                  if (!isSignedIn) {
+                    navigate("/login");
+                  } else if (isBusinessUser && !isVerified) {
+                    navigate("/verify-license");
+                  }
+                }}
+                disabled={isBusinessUser && isVerified}
                 className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
               >
-                Learn About Verification
+                {!isSignedIn ? "Get Verified" : 
+                 isBusinessUser && isVerified ? "Already Verified" : 
+                 "Get Verified"}
               </Button>
             </div>
           </div>
