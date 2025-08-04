@@ -272,7 +272,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                   <span className="text-sm">Full review locked</span>
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
-                  Subscribe or purchase one-time access to view the complete review
+                  Customers may track their own reviews only.
                 </p>
                 <div className="flex gap-2">
                   {customerCanAccessReview && (
