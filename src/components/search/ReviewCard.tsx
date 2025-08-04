@@ -13,6 +13,7 @@ import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { useCredits } from "@/hooks/useCredits";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { doesReviewMatchUser } from "@/utils/reviewMatching";
 
 interface ReviewCardProps {
   review: {
@@ -51,6 +52,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   // Check if current user is the business that wrote this review
   const isReviewAuthor = currentUser?.type === 'business' && currentUser?.id === review.reviewerId;
+  
+  // Check if customer user can access this review (only if it matches their profile)
+  const customerCanAccessReview = currentUser?.type === 'customer' 
+    ? doesReviewMatchUser(review, currentUser)
+    : true; // Business users can access any review
   
   // Use persistent review access check
   const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isOneTimeUnlocked;
@@ -269,22 +275,31 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                   Subscribe or purchase one-time access to view the complete review
                 </p>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleOneTimeAccess}
-                    className="flex-1"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    Unlock Review ($3)
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSubscriptionAccess}
-                    className="flex-1"
-                  >
-                    Subscribe for Unlimited Access
-                  </Button>
+                  {customerCanAccessReview && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleOneTimeAccess}
+                        className="flex-1"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Unlock Review ($3)
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSubscriptionAccess}
+                        className="flex-1"
+                      >
+                        Subscribe for Unlimited Access
+                      </Button>
+                    </>
+                  )}
+                  {!customerCanAccessReview && (
+                    <p className="text-xs text-gray-500 italic">
+                      This review does not match your profile information
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -313,7 +328,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               }
             </p>
             <div className="flex gap-2">
-              {balance > 0 ? (
+              {customerCanAccessReview && balance > 0 ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -322,7 +337,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 >
                   Unlock Responses (1 Credit)
                 </Button>
-              ) : (
+              ) : customerCanAccessReview ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -331,14 +346,21 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 >
                   Unlock Responses ($3)
                 </Button>
+              ) : null}
+              {customerCanAccessReview && (
+                <Button
+                  size="sm"
+                  onClick={handleSubscriptionAccess}
+                  className="flex-1"
+                >
+                  Subscribe
+                </Button>
               )}
-              <Button
-                size="sm"
-                onClick={handleSubscriptionAccess}
-                className="flex-1"
-              >
-                Subscribe
-              </Button>
+              {!customerCanAccessReview && (
+                <p className="text-xs text-gray-500 italic">
+                  This review does not match your profile information
+                </p>
+              )}
             </div>
           </div>
         )}
