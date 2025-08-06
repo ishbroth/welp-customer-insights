@@ -16,8 +16,8 @@ const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileRe
     
     // Route based on user type
     if (currentUser?.type === "business") {
-      console.log("✅ Navigating to /subscription (business user)");
-      navigate("/subscription");
+      console.log("✅ Navigating to /subscriptions (business user)");
+      navigate("/subscriptions");
     } else {
       console.log("✅ Navigating to /customer-benefits (customer user)");
       navigate("/customer-benefits");
