@@ -49,6 +49,28 @@ serve(async (req) => {
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
+      
+      // Get user profile to determine user type
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('type')
+        .eq('id', user.id)
+        .single();
+      
+      const userType = profile?.type || 'customer';
+      
+      // Update subscribers table with unsubscribed status
+      await supabaseClient.from("subscribers").upsert({
+        email: user.email,
+        user_id: user.id,
+        stripe_customer_id: null,
+        subscribed: false,
+        subscription_tier: null,
+        subscription_end: null,
+        user_type: userType,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
+      
       return new Response(JSON.stringify({ subscribed: false, subscription_end: null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -65,19 +87,44 @@ serve(async (req) => {
     });
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionEnd = null;
+    let subscriptionTier = null;
+
+    // Get user profile to determine user type
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('type')
+      .eq('id', user.id)
+      .single();
+    
+    const userType = profile?.type || 'customer';
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+      subscriptionTier = userType === "business" ? "Business Premium" : "Customer Premium";
+      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd, userType });
     } else {
       logStep("No active subscription found");
     }
 
-    logStep("Returning subscription status", { subscribed: hasActiveSub, subscriptionEnd });
+    // Update subscribers table with current status
+    await supabaseClient.from("subscribers").upsert({
+      email: user.email,
+      user_id: user.id,
+      stripe_customer_id: customerId,
+      subscribed: hasActiveSub,
+      subscription_tier: subscriptionTier,
+      subscription_end: subscriptionEnd,
+      user_type: userType,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'email' });
+
+    logStep("Returning subscription status", { subscribed: hasActiveSub, subscriptionEnd, userType });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      subscription_tier: subscriptionTier,
+      user_type: userType
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

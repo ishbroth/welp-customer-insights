@@ -14,10 +14,14 @@ const SubscriptionButton = ({ variant = "default", size = "default", className =
   const { isSubscribed, currentUser } = useAuth();
 
   const handleSubscriptionClick = () => {
+    console.log("🔀 SubscriptionButton clicked - User type:", currentUser?.type, "User object:", currentUser);
+    
     // Route based on user type
     if (currentUser?.type === "business") {
+      console.log("✅ Navigating to /subscription (business user)");
       navigate("/subscription");
     } else {
+      console.log("✅ Navigating to /customer-benefits (customer user)");
       navigate("/customer-benefits");
     }
   };
