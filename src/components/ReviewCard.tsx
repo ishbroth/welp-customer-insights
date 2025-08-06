@@ -129,7 +129,7 @@ const ReviewCard = ({
 
         {/* Review Content */}
         <div className={`${isMobile ? "mb-3" : "mb-4"}`}>
-          <p className={`text-gray-700 whitespace-pre-wrap ${isMobile ? "text-base leading-relaxed" : "text-base"}`}>
+          <p className={`text-gray-700 whitespace-pre-wrap ${isMobile ? "text-sm leading-relaxed" : "text-base"}`}>
             {review.content}
           </p>
         </div>

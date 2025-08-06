@@ -115,10 +115,10 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
       {/* Review Content */}
       <div>
         {shouldShowFullReview ? (
-          <p className="text-gray-700 leading-relaxed">{content}</p>
+          <p className="text-gray-700 leading-relaxed md:text-base text-sm">{content}</p>
         ) : (
           <div className="space-y-4">
-            <p className="text-gray-700 leading-relaxed">{getPreviewText(content)}</p>
+            <p className="text-gray-700 leading-relaxed md:text-base text-sm">{getPreviewText(content)}</p>
             
             {/* Match Information - show for unlockable reviews */}
             {canUnlockReview && (
@@ -148,37 +148,37 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
                     Choose an option to unlock this review and view the complete content
                   </p>
                   
-                  <div className="space-y-3">
-                     {/* Credit/Purchase Option */}
-                     {creditBalance > 0 ? (
-                       <Button
-                         onClick={onUseCreditClick}
-                         variant="outline"
-                         className="w-full flex items-center justify-center gap-2"
-                       >
-                         <CreditCard className="h-4 w-4" />
-                         Unlock with 1 Credit
-                       </Button>
-                     ) : (
-                       <Button
-                         onClick={onPurchaseClick}
-                         variant="outline"
-                         className="w-full flex items-center justify-center gap-2"
-                       >
-                         <CreditCard className="h-4 w-4" />
-                         Unlock Review ($3)
-                       </Button>
-                     )}
-                     
-                     {/* Subscription Option */}
-                     <Button
-                       onClick={onSubscribeClick}
-                       className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
-                     >
-                       <Crown className="h-4 w-4" />
-                       Subscribe Now
-                     </Button>
-                   </div>
+                   <div className="space-y-3">
+                      {/* Credit/Purchase Option */}
+                      {creditBalance > 0 ? (
+                        <Button
+                          onClick={onUseCreditClick}
+                          variant="outline"
+                          className="w-full flex items-center justify-center gap-2 text-xs sm:text-sm px-3 py-2"
+                        >
+                          <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="truncate">Unlock with 1 Credit</span>
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={onPurchaseClick}
+                          variant="outline"
+                          className="w-full flex items-center justify-center gap-2 text-xs sm:text-sm px-3 py-2"
+                        >
+                          <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="truncate">Unlock Review ($3)</span>
+                        </Button>
+                      )}
+                      
+                      {/* Subscription Option */}
+                      <Button
+                        onClick={onSubscribeClick}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm px-3 py-2"
+                      >
+                        <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="truncate">Subscribe Now</span>
+                      </Button>
+                    </div>
                 </CardContent>
               </Card>
             )}

@@ -18,17 +18,17 @@ const BusinessReviewCardActions: React.FC<BusinessReviewCardActionsProps> = ({
         variant="ghost" 
         size="sm" 
         onClick={onEdit}
-        className="bg-white hover:bg-gray-100 shadow-sm"
+        className="bg-white hover:bg-gray-100 shadow-sm px-2 sm:px-3 py-1"
       >
-        <Edit className="h-4 w-4" />
+        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
       <Button 
         variant="ghost" 
         size="sm" 
         onClick={handleDeleteClick}
-        className="bg-white hover:bg-gray-100 text-red-500 hover:text-red-700 shadow-sm"
+        className="bg-white hover:bg-gray-100 text-red-500 hover:text-red-700 shadow-sm px-2 sm:px-3 py-1"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
     </div>
   );

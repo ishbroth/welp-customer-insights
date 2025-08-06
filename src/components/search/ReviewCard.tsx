@@ -260,10 +260,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         {/* Review Content */}
         <div className="mb-4">
           {canViewFullContent ? (
-            <p className="text-gray-700 leading-relaxed">{review.content}</p>
+            <p className="text-gray-700 leading-relaxed md:text-base text-sm">{review.content}</p>
           ) : (
             <div className="relative">
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-gray-700 leading-relaxed md:text-base text-sm">
                 {getPreviewText(review.content)}
               </p>
               <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
@@ -274,24 +274,24 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 <p className="text-xs text-gray-500 mb-3">
                   Customers may track their own reviews only.
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {customerCanAccessReview && (
                     <>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={handleOneTimeAccess}
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm px-2 py-1"
                       >
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Unlock Review ($3)
+                        <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="truncate">Unlock ($3)</span>
                       </Button>
                       <Button
                         size="sm"
                         onClick={handleSubscriptionAccess}
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm px-2 py-1"
                       >
-                        Subscribe for Unlimited Access
+                        <span className="truncate">Subscribe</span>
                       </Button>
                     </>
                   )}
@@ -327,33 +327,33 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 : "Subscribe or use credits to participate in the conversation"
               }
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               {customerCanAccessReview && balance > 0 ? (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={handleUseCreditClick}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm px-2 py-1"
                 >
-                  Unlock Responses (1 Credit)
+                  <span className="truncate">Unlock (1 Credit)</span>
                 </Button>
               ) : customerCanAccessReview ? (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={handleOneTimeAccess}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm px-2 py-1"
                 >
-                  Unlock Responses ($3)
+                  <span className="truncate">Unlock ($3)</span>
                 </Button>
               ) : null}
               {customerCanAccessReview && (
                 <Button
                   size="sm"
                   onClick={handleSubscriptionAccess}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm px-2 py-1"
                 >
-                  Subscribe
+                  <span className="truncate">Subscribe</span>
                 </Button>
               )}
               {!customerCanAccessReview && (

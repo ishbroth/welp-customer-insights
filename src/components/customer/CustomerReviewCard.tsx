@@ -217,7 +217,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
 
       {isUnlocked ? (
         <div>
-          <p className="text-gray-700">{review.content}</p>
+          <p className="text-gray-700 md:text-base text-sm leading-relaxed">{review.content}</p>
           <div className="mt-2 text-sm text-green-600 flex items-center">
             <Eye className="h-4 w-4 mr-1" />
             Full review unlocked
@@ -242,24 +242,24 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
         </div>
       ) : (
         <div>
-          <p className="text-gray-700">{getFirstThreeWords(review.content)}</p>
+          <p className="text-gray-700 md:text-base text-sm leading-relaxed">{getFirstThreeWords(review.content)}</p>
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 onClick={handleOneTimeAccess}
                 size="sm"
                 variant="outline"
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm px-2 py-1"
               >
-                <Lock className="h-4 w-4 mr-2" />
-                Unlock Review ($3)
+                <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                <span className="truncate">Unlock ($3)</span>
               </Button>
               <Button 
                 onClick={handleSubscriptionAccess}
                 size="sm"
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm px-2 py-1"
               >
-                Subscribe for Unlimited Access
+                <span className="truncate">Subscribe</span>
               </Button>
             </div>
           </div>

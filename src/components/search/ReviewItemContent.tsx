@@ -36,7 +36,7 @@ const ReviewItemContent = ({
     <div className="mb-4">
       {/* Review Content */}
       <div className="mb-3">
-        <p className="text-gray-700 leading-relaxed">
+        <p className="text-gray-700 leading-relaxed md:text-base text-sm">
           {hasFullAccess ? fullReviewContent : review.content}
         </p>
       </div>
