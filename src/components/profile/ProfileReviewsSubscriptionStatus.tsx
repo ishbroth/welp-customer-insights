@@ -12,14 +12,17 @@ const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileRe
   const { currentUser } = useAuth();
 
   const handleSubscribeClick = () => {
-    console.log("🔀 ProfileReviewsSubscriptionStatus clicked - User type:", currentUser?.type, "User object:", currentUser);
+    console.log("🔀 ProfileReviewsSubscriptionStatus clicked");
+    console.log("📋 Current user object:", currentUser);
+    console.log("📋 User type:", currentUser?.type);
+    console.log("📋 User type strict check:", currentUser?.type === "business");
     
     // Route based on user type
     if (currentUser?.type === "business") {
       console.log("✅ Navigating to /subscription (business user)");
       navigate("/subscription");
     } else {
-      console.log("✅ Navigating to /customer-benefits (customer user)");
+      console.log("✅ Navigating to /customer-benefits (customer user - fallback)");
       navigate("/customer-benefits");
     }
   };
