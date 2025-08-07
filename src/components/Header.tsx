@@ -61,32 +61,32 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
 
           {isMobile ? (
             <div className="flex items-center">
-              {/* Mobile header layout for profile pages */}
-              {isOnProfilePage && currentUser ? (
-                <div className="flex items-center space-x-2 text-xs">
-                  {/* Search link for business users */}
-                  {showSearch && (
-                    <Link 
-                      to="/search" 
-                      className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
-                    >
-                      <Search className="h-3 w-3 mr-1" />
-                      <span className="text-xs">search</span>
-                    </Link>
-                  )}
-                  
-                  {/* Post Review for business owners */}
-                  {isBusinessOwner && (
-                    <Link 
-                      to="/review/new" 
-                      className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      <span className="text-xs">post review</span>
-                    </Link>
-                  )}
-                  
-                  {/* Username and tiny avatar */}
+              {/* Mobile header layout for all pages */}
+              <div className="flex items-center space-x-2 text-xs">
+                {/* Search link for business users */}
+                {showSearch && (
+                  <Link 
+                    to="/search" 
+                    className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                  >
+                    <Search className="h-3 w-3 mr-1" />
+                    <span className="text-xs">search</span>
+                  </Link>
+                )}
+                
+                {/* Post Review for business owners */}
+                {isBusinessOwner && (
+                  <Link 
+                    to="/review/new" 
+                    className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    <span className="text-xs">post review</span>
+                  </Link>
+                )}
+                
+                {/* Username and tiny avatar OR sign in link */}
+                {currentUser ? (
                   <div className="flex items-center space-x-1">
                     <span className="text-xs text-welp-dark truncate max-w-[80px]">
                       {truncateUsername(currentUser.name)}
@@ -99,22 +99,16 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
                       )}
                     </Avatar>
                   </div>
-                </div>
-              ) : (
-                /* Regular mobile hamburger menu for non-profile pages */
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={toggleMenu} 
-                  aria-label="Toggle Menu"
-                >
-                  {isMenuOpen ? (
-                    <X className="h-6 w-6 text-welp-dark" />
-                  ) : (
-                    <Menu className="h-6 w-6 text-welp-dark" />
-                  )}
-                </Button>
-              )}
+                ) : (
+                  <Link 
+                    to="/login" 
+                    className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                  >
+                    <LogIn className="h-3 w-3 mr-1" />
+                    <span className="text-xs">sign in</span>
+                  </Link>
+                )}
+              </div>
             </div>
           ) : (
             <nav className="flex items-center space-x-4">
@@ -175,66 +169,6 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
           )}
         </div>
 
-        {/* Mobile Menu - only show for non-profile pages */}
-        {isMobile && isMenuOpen && !isOnProfilePage && (
-          <div className="mt-3 py-3 border-t border-gray-200">
-            <nav className="flex flex-col space-y-2">
-              {/* Show search link for non-logged in users or business owners on mobile too */}
-              {showSearch && (
-                <Link
-                  to="/search"
-                  className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
-                  onClick={toggleMenu}
-                >
-                  <Search className="mr-2 h-4 w-4" /> Search
-                </Link>
-              )}
-              
-              {/* Only show Post Review for business owners on mobile too */}
-              {isBusinessOwner && (
-                <Link
-                  to="/review/new"
-                  className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
-                  onClick={toggleMenu}
-                >
-                  <Edit className="mr-2 h-4 w-4" /> Post Review
-                </Link>
-              )}
-              
-              {currentUser ? (
-                <>
-                  <Link
-                    to="/profile"
-                    className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
-                    onClick={toggleMenu}
-                  >
-                    <User className="mr-2 h-4 w-4" /> My Profile
-                  </Link>
-                  <Button 
-                    variant="ghost"
-                    className="justify-start text-welp-dark hover:text-[#ea384c] p-0"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" /> Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center py-2"
-                    onClick={toggleMenu}
-                  >
-                    <LogIn className="mr-2 h-4 w-4" /> Login
-                  </Link>
-                  <Link to="/signup" onClick={toggleMenu}>
-                    <Button className="bg-[#ea384c] hover:bg-[#d02e40] text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 w-full">Sign Up</Button>
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   );
