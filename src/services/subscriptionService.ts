@@ -88,8 +88,8 @@ export const handleSubscription = async (
     if (data?.url) {
       console.log("🚀 Opening Stripe checkout:", data.url);
       
-      // Use device-appropriate checkout method
-      openStripeCheckout(data.url, isMobile);
+      // Use same-tab navigation to avoid popup blockers
+      openStripeCheckout(data.url);
       
       const creditValue = creditBalance * 3;
       const refundMessage = creditBalance > 0 
@@ -97,10 +97,8 @@ export const handleSubscription = async (
         : '';
       
       toast({
-        title: isMobile ? "Redirecting to Checkout" : "Checkout Opened",
-        description: isMobile 
-          ? `Redirecting to Stripe checkout. Complete your payment and you'll be returned to this page.${refundMessage}`
-          : `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${refundMessage}`,
+        title: "Redirecting to Checkout",
+        description: `Redirecting to Stripe checkout. Complete your payment and you'll be returned to this page.${refundMessage}`,
       });
       
       // Reset processing state since user will complete checkout in new tab

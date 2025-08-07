@@ -24,7 +24,7 @@ const BuyCredits = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, loadCreditsData } = useCredits();
   const { subscriptionData } = useBillingData(currentUser);
-  const { openCheckout, isMobile } = useStripeCheckout();
+  const { openCheckout } = useStripeCheckout();
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -131,7 +131,7 @@ const BuyCredits = () => {
         console.log("🚀 Opening Stripe checkout URL:", data.url);
         openCheckout(data.url);
         
-        toast.success(isMobile ? "Redirecting to Stripe checkout..." : "Stripe checkout opened in new tab!");
+        toast.success("Redirecting to Stripe checkout...");
       } else {
         console.error("❌ No checkout URL received from function");
         console.error("Full response data:", data);

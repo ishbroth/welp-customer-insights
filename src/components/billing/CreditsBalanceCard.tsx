@@ -16,7 +16,7 @@ const CreditsBalanceCard = () => {
   const { currentUser } = useAuth();
   const { subscriptionData } = useBillingData(currentUser);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { openCheckout, isMobile } = useStripeCheckout();
+  const { openCheckout } = useStripeCheckout();
   
 
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -95,7 +95,7 @@ const CreditsBalanceCard = () => {
         console.log("🚀 Opening Stripe checkout URL:", data.url);
         openCheckout(data.url);
         
-        toast.success(isMobile ? "Redirecting to Stripe checkout..." : "Stripe checkout opened in new tab!");
+        toast.success("Redirecting to Stripe checkout...");
       } else {
         console.error("❌ No URL returned from payment session");
         console.error("Full response data:", data);
