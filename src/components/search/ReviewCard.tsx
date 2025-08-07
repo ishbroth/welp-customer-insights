@@ -61,11 +61,15 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   // Use persistent review access check
   const isReviewActuallyUnlocked = isReviewUnlocked(review.id) || isOneTimeUnlocked;
   
-  // For review content: authors can always see full content
-  const canViewFullContent = isSubscribed || isReviewActuallyUnlocked || isReviewAuthor;
+  // For review content: customer users must BOTH have access AND profile match, others just need access
+  const canViewFullContent = currentUser?.type === 'customer' 
+    ? (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor) && customerCanAccessReview
+    : (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor);
   
-  // For conversation participation: authors should also have full access
-  const canParticipateInConversation = isSubscribed || isReviewActuallyUnlocked || isReviewAuthor;
+  // For conversation participation: same rule as content viewing
+  const canParticipateInConversation = currentUser?.type === 'customer'
+    ? (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor) && customerCanAccessReview
+    : (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor);
 
   // Use the customer info system
   const customerInfo = useCustomerInfo({
