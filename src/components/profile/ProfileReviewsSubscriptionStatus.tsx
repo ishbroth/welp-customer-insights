@@ -15,16 +15,23 @@ const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileRe
     console.log("🔀 ProfileReviewsSubscriptionStatus clicked");
     console.log("📋 Current user object:", currentUser);
     console.log("📋 User type:", currentUser?.type);
+    console.log("📋 User type string:", String(currentUser?.type));
+    console.log("📋 User type typeof:", typeof currentUser?.type);
     console.log("📋 User type strict check:", currentUser?.type === "business");
+    console.log("📋 User type loose check:", currentUser?.type == "business");
     
-    // Route based on user type
-    if (currentUser?.type === "business") {
-      console.log("✅ Navigating to /subscription (business user)");
+    // More explicit routing logic with additional checks
+    const userType = String(currentUser?.type).toLowerCase().trim();
+    console.log("📋 Normalized user type:", userType);
+    
+    if (userType === "business") {
+      console.log("✅ BUSINESS DETECTED - Navigating to /subscription");
       navigate("/subscription");
-    } else {
-      console.log("✅ Navigating to /customer-benefits (customer user - fallback)");
-      navigate("/customer-benefits");
+      return;
     }
+    
+    console.log("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
+    navigate("/customer-benefits");
   };
 
   if (hasSubscription) {
