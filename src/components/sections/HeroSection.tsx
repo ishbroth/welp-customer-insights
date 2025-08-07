@@ -22,8 +22,13 @@ const HeroSection = () => {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold mb-3 md:mb-4">Welp.</h1>
           <div className="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8">
-            <p>Review your customers.</p>
-            <p>Because businesses are people too.</p>
+            {/* Mobile: Two lines */}
+            <div className="block md:hidden">
+              <p>Review your customers.</p>
+              <p>Because businesses are people too.</p>
+            </div>
+            {/* Desktop: One line */}
+            <p className="hidden md:block">Review your customers. Because businesses are people too.</p>
           </div>
           <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
             {currentUser ? (
