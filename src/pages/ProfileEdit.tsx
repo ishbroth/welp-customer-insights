@@ -77,7 +77,7 @@ const ProfileEdit = () => {
       <div className="flex-grow flex flex-col md:flex-row">
         <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 md:ml-0 ml-12">
           <div className="container mx-auto max-w-4xl">
             <h1 className="text-3xl font-bold mb-8">Edit Profile</h1>
             

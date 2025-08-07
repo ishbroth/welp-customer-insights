@@ -29,7 +29,7 @@ const NotificationsPage = () => {
         <div className="flex-grow flex flex-col md:flex-row">
           <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
           
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-6 md:ml-0 ml-12">
             <div className="container mx-auto max-w-3xl">
               <div className="flex items-center justify-center py-10">
                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -49,7 +49,7 @@ const NotificationsPage = () => {
       <div className="flex-grow flex flex-col md:flex-row">
         <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 md:ml-0 ml-12">
           <div className="container mx-auto max-w-3xl">
             <div className="mb-6">
               <h1 className="text-3xl font-bold flex items-center gap-2">
