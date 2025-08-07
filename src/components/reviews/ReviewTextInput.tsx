@@ -32,7 +32,7 @@ const ReviewTextInput: React.FC<ReviewTextInputProps> = ({
         rows={6}
         value={comment}
         onChange={handleChange}
-        placeholder="Describe your experience with this customer..."
+        placeholder="Describe the customer and your experience with them..."
         className="w-full p-3 border rounded-md focus:ring-2 focus:ring-welp-primary focus:border-transparent"
         maxLength={1500}
       />
