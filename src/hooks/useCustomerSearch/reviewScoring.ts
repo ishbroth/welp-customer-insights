@@ -190,7 +190,7 @@ export const scoreReview = async (
   
   console.log(`[FIELD_COUNT] Total search fields: ${searchFieldCount}`);
   
-  // Track name validation state but defer strict validation for comprehensive searches
+  // Track name validation state with improved component matching
   let nameValidationDeferred = false;
   let nameComponentMatched = false;
   let nameThreshold = 0.5; // Default for 1-3 fields
@@ -206,7 +206,7 @@ export const scoreReview = async (
     nameThreshold = 0.3;
   }
   
-  // Store name validation results but don't reject yet for comprehensive searches
+  // Store name validation results with improved individual component validation
   if ((firstName || lastName) && review.customer_name) {
     console.log(`[NAME_DEBUG] Review ${review.id} (${review.customer_name})`);
     console.log(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
@@ -218,21 +218,35 @@ export const scoreReview = async (
     if (firstName) {
       bestFirstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
       console.log(`[NAME_DEBUG] First name similarity: "${firstName}" vs "${review.customer_name}" = ${bestFirstNameSimilarity}`);
-      if (bestFirstNameSimilarity >= nameThreshold) nameComponentMatched = true;
     }
     
     if (lastName) {
       bestLastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
       console.log(`[NAME_DEBUG] Last name similarity: "${lastName}" vs "${review.customer_name}" = ${bestLastNameSimilarity}`);
-      if (bestLastNameSimilarity >= nameThreshold) nameComponentMatched = true;
     }
     
-    console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (threshold: ${nameThreshold})`);
+    // Improved component validation logic for nickname matches
+    if (firstName && lastName) {
+      // For both first and last name searches, use flexible component matching
+      // Allow matches where one component is strong (≥0.8) and other is moderate (≥0.4)
+      // OR where both components are reasonably good (≥0.6)
+      const hasStrongComponent = bestFirstNameSimilarity >= 0.8 || bestLastNameSimilarity >= 0.8;
+      const hasModerateComponent = bestFirstNameSimilarity >= 0.4 && bestLastNameSimilarity >= 0.4;
+      const hasBothGoodComponents = bestFirstNameSimilarity >= 0.6 && bestLastNameSimilarity >= 0.6;
+      
+      nameComponentMatched = (hasStrongComponent && hasModerateComponent) || hasBothGoodComponents;
+      console.log(`[NAME_DEBUG] Component analysis: strong=${hasStrongComponent}, moderate=${hasModerateComponent}, bothGood=${hasBothGoodComponents}`);
+    } else {
+      // For single component searches, use the original threshold
+      nameComponentMatched = (bestFirstNameSimilarity >= nameThreshold) || (bestLastNameSimilarity >= nameThreshold);
+    }
+    
+    console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity})`);
     console.log(`[NAME_DEBUG] Validation deferred: ${nameValidationDeferred}`);
     
     // Only reject immediately for simpler searches
     if (!nameComponentMatched && !nameValidationDeferred) {
-      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity ≥ ${nameThreshold}`);
+      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity meets criteria`);
       console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
       return { 
         ...review, 
