@@ -2,6 +2,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useLoading } from "@/contexts/LoadingContext";
+import { useEffect } from "react";
 import LoadingRoute from "./LoadingRoute";
 import PrivateRoute from "./PrivateRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
@@ -39,7 +40,18 @@ import Contact from "@/pages/Contact";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
-  const { isPageLoading } = useLoading();
+  const { isPageLoading, setIsInitialLoading } = useLoading();
+
+  // Handle initial loading completion
+  useEffect(() => {
+    if (!loading) {
+      // Wait a bit for auth to fully settle, then hide initial loading
+      const timer = setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, setIsInitialLoading]);
 
   if (loading) {
     return (

@@ -4,9 +4,9 @@ import { useLoading } from '@/contexts/LoadingContext';
 import './LoadingScreen.css';
 
 const LoadingScreen: React.FC = React.memo(() => {
-  const { isPageLoading } = useLoading();
+  const { isPageLoading, isInitialLoading } = useLoading();
 
-  if (!isPageLoading) return null;
+  if (!isPageLoading && !isInitialLoading) return null;
 
   return (
     <div className="fixed inset-0 bg-[#ea384c] z-50 flex items-center justify-center loading-screen-overlay">
