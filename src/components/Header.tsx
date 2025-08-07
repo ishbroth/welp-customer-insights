@@ -87,8 +87,11 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
                 
                 {/* Username and tiny avatar OR sign in link */}
                 {currentUser ? (
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs text-welp-dark truncate max-w-[80px]">
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center space-x-1 text-welp-dark hover:text-[#ea384c] transition-colors"
+                  >
+                    <span className="text-xs truncate max-w-[80px]">
                       {truncateUsername(currentUser.name)}
                     </span>
                     <Avatar className="h-5 w-5">
@@ -98,7 +101,7 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
                         <AvatarFallback className="text-xs">{currentUser.name[0]}</AvatarFallback>
                       )}
                     </Avatar>
-                  </div>
+                  </Link>
                 ) : (
                   <Link 
                     to="/login" 
