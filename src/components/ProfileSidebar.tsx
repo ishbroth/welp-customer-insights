@@ -37,9 +37,9 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
   
   return (
     <>
-      {/* Mobile toggle button - positioned to not overlap brand */}
+      {/* Mobile toggle button - positioned under header */}
       {isMobile && (
-        <div className="fixed top-4 right-4 z-50">
+        <div className="fixed top-16 right-4 z-50">
           <Button 
             variant="outline" 
             size="sm" 

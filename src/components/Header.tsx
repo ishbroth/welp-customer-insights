@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,11 +8,16 @@ import { useAuth } from "@/contexts/auth";
 import { Menu, X, User, Search, Edit, LogOut, LogIn } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-const Header = () => {
+interface HeaderProps {
+  isProfilePage?: boolean;
+}
+
+const Header = ({ isProfilePage = false }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Determine if current user is a business owner (not a customer)
   const isBusinessOwner = currentUser?.type === "business" || currentUser?.type === "admin";
@@ -26,6 +31,17 @@ const Header = () => {
     logout();
     navigate("/");
     setIsMenuOpen(false);
+  };
+
+  // Check if we're on a profile-related page
+  const isOnProfilePage = isProfilePage || location.pathname.startsWith('/profile') || location.pathname === '/notifications';
+  
+  // Truncate username for mobile display
+  const truncateUsername = (name: string) => {
+    if (name.length > 15) {
+      return name.substring(0, 15) + "...";
+    }
+    return name;
   };
 
   return (
@@ -45,18 +61,60 @@ const Header = () => {
 
           {isMobile ? (
             <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleMenu} 
-                aria-label="Toggle Menu"
-              >
-                {isMenuOpen ? (
-                  <X className="h-6 w-6 text-welp-dark" />
-                ) : (
-                  <Menu className="h-6 w-6 text-welp-dark" />
-                )}
-              </Button>
+              {/* Mobile header layout for profile pages */}
+              {isOnProfilePage && currentUser ? (
+                <div className="flex items-center space-x-2 text-xs">
+                  {/* Search link for business users */}
+                  {showSearch && (
+                    <Link 
+                      to="/search" 
+                      className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                    >
+                      <Search className="h-3 w-3 mr-1" />
+                      <span className="text-xs">search</span>
+                    </Link>
+                  )}
+                  
+                  {/* Post Review for business owners */}
+                  {isBusinessOwner && (
+                    <Link 
+                      to="/review/new" 
+                      className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      <span className="text-xs">post review</span>
+                    </Link>
+                  )}
+                  
+                  {/* Username and tiny avatar */}
+                  <div className="flex items-center space-x-1">
+                    <span className="text-xs text-welp-dark truncate max-w-[80px]">
+                      {truncateUsername(currentUser.name)}
+                    </span>
+                    <Avatar className="h-5 w-5">
+                      {currentUser.avatar ? (
+                        <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                      ) : (
+                        <AvatarFallback className="text-xs">{currentUser.name[0]}</AvatarFallback>
+                      )}
+                    </Avatar>
+                  </div>
+                </div>
+              ) : (
+                /* Regular mobile hamburger menu for non-profile pages */
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleMenu} 
+                  aria-label="Toggle Menu"
+                >
+                  {isMenuOpen ? (
+                    <X className="h-6 w-6 text-welp-dark" />
+                  ) : (
+                    <Menu className="h-6 w-6 text-welp-dark" />
+                  )}
+                </Button>
+              )}
             </div>
           ) : (
             <nav className="flex items-center space-x-4">
@@ -117,8 +175,8 @@ const Header = () => {
           )}
         </div>
 
-        {/* Mobile Menu */}
-        {isMobile && isMenuOpen && (
+        {/* Mobile Menu - only show for non-profile pages */}
+        {isMobile && isMenuOpen && !isOnProfilePage && (
           <div className="mt-3 py-3 border-t border-gray-200">
             <nav className="flex flex-col space-y-2">
               {/* Show search link for non-logged in users or business owners on mobile too */}
