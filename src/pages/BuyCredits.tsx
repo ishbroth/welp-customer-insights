@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
+import { useStripeCheckout } from "@/utils/stripeCheckout";
 
 const BuyCredits = () => {
   const [creditAmount, setCreditAmount] = useState(1);
@@ -23,6 +24,7 @@ const BuyCredits = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, loadCreditsData } = useCredits();
   const { subscriptionData } = useBillingData(currentUser);
+  const { openCheckout, isMobile } = useStripeCheckout();
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -127,9 +129,9 @@ const BuyCredits = () => {
 
       if (data?.url) {
         console.log("🚀 Opening Stripe checkout URL:", data.url);
-        window.open(data.url, '_blank');
+        openCheckout(data.url);
         
-        toast.success("Stripe checkout opened in new tab!");
+        toast.success(isMobile ? "Redirecting to Stripe checkout..." : "Stripe checkout opened in new tab!");
       } else {
         console.error("❌ No checkout URL received from function");
         console.error("Full response data:", data);

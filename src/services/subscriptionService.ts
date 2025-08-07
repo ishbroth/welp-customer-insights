@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { openStripeCheckout } from "@/utils/stripeCheckout";
 
 export const openCustomerPortal = async () => {
   try {
@@ -14,6 +15,7 @@ export const openCustomerPortal = async () => {
     
     if (data?.url) {
       console.log("Redirecting to customer portal:", data.url);
+      // Customer portal always opens in new tab for security
       window.open(data.url, '_blank');
     } else {
       throw new Error("No portal URL received");
@@ -50,7 +52,8 @@ export const handleSubscription = async (
   toast: any,
   isCustomer: boolean,
   currentUser: any,
-  creditBalance: number = 0
+  creditBalance: number = 0,
+  isMobile: boolean = false
 ) => {
   console.log("🔥 handleSubscription called! isProcessing:", false, "isCustomer:", isCustomer);
   
@@ -83,28 +86,22 @@ export const handleSubscription = async (
     }
     
     if (data?.url) {
-      console.log("🚀 Opening Stripe checkout in new tab:", data.url);
+      console.log("🚀 Opening Stripe checkout:", data.url);
       
-      // Open Stripe checkout in a new tab to avoid iframe restrictions
-      const newWindow = window.open(data.url, '_blank');
+      // Use device-appropriate checkout method
+      openStripeCheckout(data.url, isMobile);
       
-      if (newWindow) {
-        const creditValue = creditBalance * 3;
-        const refundMessage = creditBalance > 0 
-          ? ` After payment, you'll receive a $${Math.min(creditValue, 11.99).toFixed(2)} refund for your ${creditBalance} credit${creditBalance === 1 ? '' : 's'}.`
-          : '';
-        
-        toast({
-          title: "Checkout Opened",
-          description: `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${refundMessage}`,
-        });
-      } else {
-        toast({
-          title: "Popup Blocked",
-          description: "Please allow popups for this site and try again, or copy this URL to complete your payment: " + data.url,
-          variant: "destructive"
-        });
-      }
+      const creditValue = creditBalance * 3;
+      const refundMessage = creditBalance > 0 
+        ? ` After payment, you'll receive a $${Math.min(creditValue, 11.99).toFixed(2)} refund for your ${creditBalance} credit${creditBalance === 1 ? '' : 's'}.`
+        : '';
+      
+      toast({
+        title: isMobile ? "Redirecting to Checkout" : "Checkout Opened",
+        description: isMobile 
+          ? `Redirecting to Stripe checkout. Complete your payment and you'll be returned to this page.${refundMessage}`
+          : `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${refundMessage}`,
+      });
       
       // Reset processing state since user will complete checkout in new tab
       setIsProcessing(false);

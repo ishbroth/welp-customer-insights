@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Review } from "@/types";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { supabase } from "@/integrations/supabase/client";
+import { useStripeCheckout } from "@/utils/stripeCheckout";
 
 export const useProfileReviewsActions = (
   currentUser: any,
@@ -14,6 +15,7 @@ export const useProfileReviewsActions = (
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isReviewUnlocked: isCreditUnlocked } = useReviewAccess();
+  const { openCheckout } = useStripeCheckout();
 
   const handlePurchaseReview = async (reviewId: string) => {
     if (!currentUser) {
@@ -39,8 +41,8 @@ export const useProfileReviewsActions = (
       }
 
       if (data?.url) {
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
+        // Open Stripe checkout with device-appropriate behavior
+        openCheckout(data.url);
       }
     } catch (error) {
       console.error('Error calling payment function:', error);

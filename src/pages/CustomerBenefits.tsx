@@ -11,6 +11,7 @@ import { handleSubscription } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Shield, Zap, Users, Clock } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const CustomerBenefits = () => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -18,6 +19,7 @@ const CustomerBenefits = () => {
   const location = useLocation();
   const { currentUser, setIsSubscribed } = useAuth();
   const isCustomer = currentUser?.type === "customer";
+  const isMobile = useIsMobile();
 
   // Determine if we came from a specific review
   const [fromReviewId, setFromReviewId] = useState<string | null>(null);
@@ -48,7 +50,7 @@ const CustomerBenefits = () => {
     }
     
     console.log("📞 About to call handleSubscription");
-    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser);
+    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser, 0, isMobile);
   };
 
   const handleLegacySubscribeClick = async () => {
@@ -88,22 +90,30 @@ const CustomerBenefits = () => {
       }
       
       if (data?.url) {
-        console.log("🚀 Legacy - Opening Stripe checkout in new tab:", data.url);
+        console.log("🚀 Legacy - Opening Stripe checkout:", data.url);
         
-        // Open Stripe checkout in a new tab to avoid iframe restrictions
-        const newWindow = window.open(data.url, '_blank');
-        
-        if (newWindow) {
+        // Use device-appropriate checkout method
+        if (isMobile) {
+          window.location.href = data.url;
           toast({
-            title: "Checkout Opened",
-            description: "Stripe checkout has opened in a new tab. Complete your payment there and return to this page.",
+            title: "Redirecting to Checkout",
+            description: "Redirecting to Stripe checkout. Complete your payment and you'll be returned to this page.",
           });
         } else {
-          toast({
-            title: "Popup Blocked",
-            description: "Please allow popups for this site and try again, or copy this URL to complete your payment: " + data.url,
-            variant: "destructive"
-          });
+          const newWindow = window.open(data.url, '_blank');
+          
+          if (newWindow) {
+            toast({
+              title: "Checkout Opened",
+              description: "Stripe checkout has opened in a new tab. Complete your payment there and return to this page.",
+            });
+          } else {
+            toast({
+              title: "Popup Blocked",
+              description: "Please allow popups for this site and try again, or copy this URL to complete your payment: " + data.url,
+              variant: "destructive"
+            });
+          }
         }
         
         // Reset processing state since user will complete checkout in new tab

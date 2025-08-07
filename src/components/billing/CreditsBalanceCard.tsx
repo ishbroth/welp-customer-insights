@@ -9,12 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useStripeCheckout } from "@/utils/stripeCheckout";
 
 const CreditsBalanceCard = () => {
   const { balance, isLoading, loadCreditsData, processSuccessfulPurchase } = useCredits();
   const { currentUser } = useAuth();
   const { subscriptionData } = useBillingData(currentUser);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { openCheckout, isMobile } = useStripeCheckout();
   
 
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -91,9 +93,9 @@ const CreditsBalanceCard = () => {
 
       if (data?.url) {
         console.log("🚀 Opening Stripe checkout URL:", data.url);
-        window.open(data.url, '_blank');
+        openCheckout(data.url);
         
-        toast.success("Stripe checkout opened in new tab!");
+        toast.success(isMobile ? "Redirecting to Stripe checkout..." : "Stripe checkout opened in new tab!");
       } else {
         console.error("❌ No URL returned from payment session");
         console.error("Full response data:", data);
