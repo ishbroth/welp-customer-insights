@@ -27,7 +27,7 @@ export const calculateStringSimilarity = (str1: string, str2: string): number =>
   return (maxLen - matrix[len1][len2]) / maxLen;
 };
 
-// Enhanced name similarity with proper component-wise matching
+// Enhanced name similarity with first/last name component matching
 export const calculateNameSimilarity = (searchName: string, customerName: string): number => {
   if (!searchName || !customerName) return 0;
   
@@ -43,29 +43,35 @@ export const calculateNameSimilarity = (searchName: string, customerName: string
   // Direct full name comparison
   const directSimilarity = calculateStringSimilarity(searchNameLower, customerNameLower);
   
-  // Component-wise matching: compare each search part to each customer part
-  let bestComponentMatch = 0;
-  let strongMatches = 0;
-  
-  for (const searchPart of searchParts) {
-    let bestPartMatch = 0;
-    for (const customerPart of customerParts) {
-      const partSimilarity = calculateStringSimilarity(searchPart, customerPart);
-      bestPartMatch = Math.max(bestPartMatch, partSimilarity);
+  // For multi-part searches (first + last name), require component-specific matching
+  if (searchParts.length >= 2 && customerParts.length >= 2) {
+    // Try to match first-to-first and last-to-last specifically
+    const firstToFirst = calculateStringSimilarity(searchParts[0], customerParts[0]);
+    const lastToLast = calculateStringSimilarity(searchParts[searchParts.length - 1], customerParts[customerParts.length - 1]);
+    
+    // Both components must have reasonable similarity
+    const minComponentSimilarity = 0.7;
+    if (firstToFirst >= minComponentSimilarity && lastToLast >= minComponentSimilarity) {
+      // Average the component similarities for a strong match
+      return (firstToFirst + lastToLast) / 2;
     }
     
-    // Count strong matches (>= 0.8 similarity)
-    if (bestPartMatch >= 0.8) {
-      strongMatches++;
+    // If direct comparison is very strong, allow it to override weak component matches
+    if (directSimilarity >= 0.9) {
+      return directSimilarity;
     }
     
-    bestComponentMatch = Math.max(bestComponentMatch, bestPartMatch);
+    // Otherwise, this is not a valid match for multi-component names
+    return 0;
   }
   
-  // If we have multiple search parts, require at least one strong component match
-  if (searchParts.length > 1 && strongMatches === 0) {
-    // Only allow weak matches if the direct similarity is very high
-    return directSimilarity >= 0.9 ? directSimilarity : 0;
+  // For single-component searches, use existing logic
+  let bestComponentMatch = 0;
+  for (const searchPart of searchParts) {
+    for (const customerPart of customerParts) {
+      const partSimilarity = calculateStringSimilarity(searchPart, customerPart);
+      bestComponentMatch = Math.max(bestComponentMatch, partSimilarity);
+    }
   }
   
   // Return the best of direct comparison or component matching

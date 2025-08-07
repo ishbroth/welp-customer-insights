@@ -276,21 +276,52 @@ export const scoreReview = async (
     // Use the best similarity found
     const finalSimilarity = Math.max(bestSimilarity, fullSim);
     
-    if (finalSimilarity > 0.6) { // Much stricter threshold to prevent weak matches
-      // MASSIVELY increased base score for names - this is now the dominant factor
+    // Require much stricter threshold and proper component matching
+    if (finalSimilarity >= 0.7) { 
+      // Name scoring is now the DOMINANT factor (80-90% of total possible score)
       let namePoints = 0;
       
-      if (finalSimilarity >= 0.8) {
-        namePoints = 60; // Excellent match
-      } else if (finalSimilarity >= 0.7) {
-        namePoints = finalSimilarity * 50; // Good match: 35-50 points
-      } else if (finalSimilarity >= 0.6) {
-        namePoints = finalSimilarity * 25; // Fair match: 15-25 points
+      // If both first and last names were provided, validate component matching
+      if (firstName && lastName) {
+        const fullSearchName = `${firstName} ${lastName}`;
+        const componentSimilarity = calculateNameSimilarity(fullSearchName, review.customer_name);
+        
+        // For first+last searches, use component-specific matching
+        if (componentSimilarity >= 0.7) {
+          if (componentSimilarity >= 0.9) {
+            namePoints = 100; // Excellent component match
+          } else if (componentSimilarity >= 0.8) {
+            namePoints = 80; // Very good component match
+          } else {
+            namePoints = 60; // Good component match
+          }
+        } else {
+          // Component matching failed - this shouldn't match
+          console.log(`[NAME_COMPONENT_FAIL] Component matching failed for "${fullSearchName}" vs "${review.customer_name}" (similarity: ${componentSimilarity})`);
+          return { 
+            ...review, 
+            searchScore: 0, 
+            matchCount: 0,
+            completenessScore,
+            exactFieldMatches: 0,
+            exactMatchDetails: [],
+            detailedMatches: []
+          };
+        }
+      } else {
+        // Single name component searches use regular similarity
+        if (finalSimilarity >= 0.9) {
+          namePoints = 80; // Excellent single component match
+        } else if (finalSimilarity >= 0.8) {
+          namePoints = 60; // Very good single component match
+        } else {
+          namePoints = 40; // Good single component match
+        }
       }
       
-      // Context-aware bonus
+      // Context-aware bonus for name-focused searches
       if (searchContext.isNameFocused) {
-        namePoints *= 1.5; // Additional 50% for name-focused searches
+        namePoints *= 1.2; // Additional 20% for name-focused searches
       }
       
       score += namePoints;
@@ -609,8 +640,8 @@ export const scoreReview = async (
   if (state && customerState) {
     // Use normalized state comparison to handle CA vs California  
     if (compareStates(state, customerState)) {
-      // Give very low weight to state matches (as requested by user)
-      const statePoints = REVIEW_SEARCH_CONFIG.SCORES.EXACT_ZIP_MATCH * 0.1; // Very low weight
+      // Give extremely low weight to state matches to prevent weak name matches from passing
+      const statePoints = 0.5; // Minimal state bonus
       
       // For address+state searches, only give state points if address also matched
       if (searchContext.isAddressWithState) {
