@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { Customer } from "@/types/search";
 import { useToast } from "@/hooks/use-toast";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
+import { useAuth } from "@/contexts/auth";
 import { searchProfiles } from "./useCustomerSearch/profileSearch";
 import { searchReviews } from "./useCustomerSearch/reviewSearch";
 import { processProfileCustomers, processReviewCustomers } from "./useCustomerSearch/customerProcessor";
@@ -19,6 +20,7 @@ export const useCustomerSearch = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { unlockedReviews } = useReviewAccess();
+  const { currentUser } = useAuth();
   const debounceTimer = useRef<NodeJS.Timeout>();
   
   // Extract search parameters - memoized for performance
@@ -123,11 +125,21 @@ export const useCustomerSearch = () => {
         }
       }
       
-      console.log("Final combined customers:", combinedCustomers);
-      setCustomers(combinedCustomers);
+      // Sort customers to prioritize those with reviews by the current user
+      const sortedCustomers = combinedCustomers.sort((a, b) => {
+        const aHasUserReview = a.reviews?.some(review => review.reviewerId === currentUser?.id) || false;
+        const bHasUserReview = b.reviews?.some(review => review.reviewerId === currentUser?.id) || false;
+        
+        if (aHasUserReview && !bHasUserReview) return -1;
+        if (!aHasUserReview && bHasUserReview) return 1;
+        return 0;
+      });
+      
+      console.log("Final combined customers:", sortedCustomers);
+      setCustomers(sortedCustomers);
       
       // Cache the results
-      searchCache.set(cacheKey, { data: combinedCustomers, timestamp: Date.now() });
+      searchCache.set(cacheKey, { data: sortedCustomers, timestamp: Date.now() });
       
       // Clean up old cache entries
       for (const [key, value] of searchCache.entries()) {
