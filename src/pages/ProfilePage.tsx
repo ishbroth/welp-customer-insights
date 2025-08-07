@@ -314,14 +314,46 @@ const ProfilePage = () => {
                       
                       {!isSubscribed && !subscriptionData?.subscribed ? (
                         <Button 
-                          onClick={() => navigate('/customer-benefits')}
+                          onClick={() => {
+                            console.log("🔀 ProfilePage Subscribe Now clicked");
+                            console.log("📋 Current user object:", currentUser);
+                            console.log("📋 User type:", currentUser?.type);
+                            
+                            // Route based on user type - business users to subscription, customers to benefits
+                            const userType = String(currentUser?.type).toLowerCase().trim();
+                            console.log("📋 Normalized user type:", userType);
+                            
+                            if (userType === "business") {
+                              console.log("✅ BUSINESS DETECTED - Navigating to /subscription");
+                              navigate("/subscription");
+                            } else {
+                              console.log("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
+                              navigate("/customer-benefits");
+                            }
+                          }}
                           className="flex-1"
                         >
                           Subscribe Now
                         </Button>
                       ) : (
                         <Button 
-                          onClick={() => navigate('/customer-benefits')}
+                          onClick={() => {
+                            console.log("🔀 ProfilePage Upgrade to Legacy clicked");
+                            console.log("📋 Current user object:", currentUser);
+                            console.log("📋 User type:", currentUser?.type);
+                            
+                            // Route based on user type - business users to subscription, customers to benefits
+                            const userType = String(currentUser?.type).toLowerCase().trim();
+                            console.log("📋 Normalized user type:", userType);
+                            
+                            if (userType === "business") {
+                              console.log("✅ BUSINESS DETECTED - Navigating to /subscription");
+                              navigate("/subscription");
+                            } else {
+                              console.log("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
+                              navigate("/customer-benefits");
+                            }
+                          }}
                           variant="outline"
                           className="flex-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
                         >
