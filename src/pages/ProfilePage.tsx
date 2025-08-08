@@ -113,7 +113,7 @@ const ProfilePage = () => {
       <div className="flex-grow flex">
         <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        <main className="flex-1 p-6 md:p-8 md:ml-0 ml-12">
+        <main className="flex-1 p-6 md:p-8">
           <div className="max-w-4xl mx-auto">
             <WelcomeSection />
             
