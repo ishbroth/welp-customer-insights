@@ -290,8 +290,20 @@ export const scoreReview = async (
     // Use the best similarity found
     const finalSimilarity = Math.max(bestSimilarity, fullSim);
     
-    // Require much stricter threshold and proper component matching
-    if (finalSimilarity >= 0.7) { 
+    // Count exact matches for comprehensive search context
+    const exactMatches = [
+      zipMatched,
+      cityMatched,
+      phoneMatched,
+      review.customer_address && address && compareAddresses(address, review.customer_address),
+      businessState && state && compareStates(state, businessState)
+    ].filter(Boolean).length;
+    
+    // Lower threshold for comprehensive searches with multiple exact matches
+    const nameThresholdForComprehensive = exactMatches >= 4 ? 0.4 : 0.7;
+    
+    // Require much stricter threshold and proper component matching, except for comprehensive searches
+    if (finalSimilarity >= nameThresholdForComprehensive) {
       // Name scoring reduced to allow other fields more weight (40-70% of total possible score)
       let namePoints = 0;
       

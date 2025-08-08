@@ -51,7 +51,7 @@ export const calculateNameSimilarity = (searchName: string, customerName: string
     
     // Flexible component matching: allow if one component is very strong and other is reasonable
     const strongThreshold = 0.8;
-    const reasonableThreshold = 0.3;
+    const reasonableThreshold = 0.1;
     const goodThreshold = 0.6;
     
     // Case 1: Both components have good similarity
