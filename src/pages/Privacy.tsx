@@ -22,9 +22,9 @@ const Privacy = () => {
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto prose prose-lg">
-              <p>This Privacy Policy describes our policies on the collection, use, and disclosure of information about you in connection with your use of our services, including those offered through our websites, communications (e.g., emails, phone calls, and texts), and mobile applications (collectively, the "Service"). The terms "we", "us", and "Welp" refer to: (i) Welp Inc.</p>
+              <p>This Privacy Policy describes our policies on the collection, use, and disclosure of information about you in connection with your use of our services, including those offered through our websites, communications (e.g., emails, phone calls, and texts), and mobile applications (collectively, the "Service"). The terms "we", "us", and "Welp" refer to: (i) Welp. and affiliated businesses. When you use the Service, you consent to our collection, use, and disclosure of information about you as described in this Privacy Policy. We may translate this Privacy Policy into other languages for your convenience. Nevertheless, any inconsistencies among the different versions will be resolved in favor of the English version available here.</p>
 
-              <p>When you use the Service, you consent to our collection, use, and disclosure of information about you as described in this Privacy Policy. We may translate this Privacy Policy into other languages for your convenience. Nevertheless, any inconsistencies among the different versions will be resolved in favor of the English version available here.</p>
+              
 
               <h2 className="text-2xl font-bold mt-8 mb-4">TABLE OF CONTENTS</h2>
               <ul className="space-y-2">
@@ -63,26 +63,16 @@ const Privacy = () => {
               <p>We use various safeguards to protect the personal information submitted to us, both during transmission and after we receive it. However, no method of transmission over the Internet or via mobile device, or method of electronic storage, is 100% secure.</p>
               
               <h2 id="contact" className="text-2xl font-bold mt-8 mb-4">CONTACT INFORMATION</h2>
-              <p>You may contact us online concerning our Privacy Policy, or write to us at the following addresses:</p>
-              <p>If you are not a European Resident:</p>
-              <p>
-                Welp, Attn: Data Privacy Manager<br />
-                350 Mission St., 10th Floor<br />
-                San Francisco, California 94105
-              </p>
-              <p>If you are a European Resident:</p>
-              <p>
-                Welp Ireland Ltd. Attn: Data Privacy Manager<br />
-                70 Sir John Rogerson's Quay<br />
-                Dublin 2, Ireland.
-              </p>
-              <p>If you are a European Resident then you can also contact our Data Protection Officer ("DPO") by emailing dataprotection@welp.com and putting "Attention DPO" in the subject line.</p>
+              <p>You may contact us online concerning our Privacy Policy at support@mywelp.com.</p>
               
               <h2 id="modifications" className="text-2xl font-bold mt-8 mb-4">MODIFICATIONS TO THIS PRIVACY POLICY</h2>
               <p>We may modify this Privacy Policy from time to time. The most current version of the Privacy Policy will govern our collection, use, and disclosure of information about you and will be located here.</p>
               
               <h2 id="us-rights" className="text-2xl font-bold mt-8 mb-4">US: YOUR PRIVACY RIGHTS</h2>
               <p>Welp does not sell your personal information and will not do so in the future without providing you with notice and an opportunity to opt-out of such sale as required by law.</p>
+              
+              <h2 id="eu-rights" className="text-2xl font-bold mt-8 mb-4">EUROPEAN RESIDENTS: YOUR PRIVACY RIGHTS AND INTERNATIONAL DATA TRANSFER</h2>
+              <p>If you are a European Resident, you have the right to access your personal data, and the right to request that we correct, update, or delete your personal data.</p>
             </div>
           </div>
         </section>
