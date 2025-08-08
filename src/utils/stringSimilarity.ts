@@ -49,15 +49,29 @@ export const calculateNameSimilarity = (searchName: string, customerName: string
     const firstToFirst = calculateStringSimilarity(searchParts[0], customerParts[0]);
     const lastToLast = calculateStringSimilarity(searchParts[searchParts.length - 1], customerParts[customerParts.length - 1]);
     
-    // Both components must have reasonable similarity
-    const minComponentSimilarity = 0.7;
-    if (firstToFirst >= minComponentSimilarity && lastToLast >= minComponentSimilarity) {
-      // Average the component similarities for a strong match
+    // Flexible component matching: allow if one component is very strong and other is reasonable
+    const strongThreshold = 0.8;
+    const reasonableThreshold = 0.3;
+    const goodThreshold = 0.6;
+    
+    // Case 1: Both components have good similarity
+    if (firstToFirst >= goodThreshold && lastToLast >= goodThreshold) {
       return (firstToFirst + lastToLast) / 2;
     }
     
-    // If direct comparison is very strong, allow it to override weak component matches
+    // Case 2: One component is very strong, other is at least reasonable
+    if ((firstToFirst >= strongThreshold && lastToLast >= reasonableThreshold) ||
+        (lastToLast >= strongThreshold && firstToFirst >= reasonableThreshold)) {
+      return (firstToFirst + lastToLast) / 2;
+    }
+    
+    // Case 3: If direct comparison is very strong, allow it to override weak component matches
     if (directSimilarity >= 0.9) {
+      return directSimilarity;
+    }
+    
+    // Case 4: For comprehensive searches, allow lower thresholds if overall name has some similarity
+    if (directSimilarity >= 0.4 && (firstToFirst >= 0.5 || lastToLast >= 0.5)) {
       return directSimilarity;
     }
     
