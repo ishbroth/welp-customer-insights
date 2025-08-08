@@ -41,7 +41,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
       <div 
         className={`${isMobile ? 'fixed' : 'relative'} left-0 z-40 bg-white shadow-lg transition-all duration-300 ease-in-out ${
           isMobile 
-            ? `top-16 bottom-0 ${isOpen ? "w-72" : "w-12"}` 
+            ? `top-16 ${isOpen ? "w-72" : "w-12"} h-[calc(100vh-4rem-theme(spacing.20))]` 
             : "h-full w-64"
         }`}
       >
