@@ -120,8 +120,8 @@ const ProfilePage = () => {
             {/* Single Profile Overview Card */}
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <User className="h-4 w-4 md:h-5 md:w-5" />
                   Profile Information
                 </CardTitle>
                 <Link to="/profile/edit">
@@ -133,36 +133,36 @@ const ProfilePage = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-start space-x-4">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={currentUser.avatar || ""} alt={currentUser.name} />
-                    <AvatarFallback className="bg-blue-100 text-blue-800 text-lg">
-                      {currentUser.name?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                   <Avatar className="h-16 w-16 md:h-20 md:w-20">
+                     <AvatarImage src={currentUser.avatar || ""} alt={currentUser.name} />
+                     <AvatarFallback className="bg-blue-100 text-blue-800 text-sm md:text-lg">
+                       {currentUser.name?.[0]?.toUpperCase() || "U"}
+                     </AvatarFallback>
+                   </Avatar>
                   <div className="flex-1 flex">
                     <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h2 className="text-xl font-semibold">{currentUser.name}</h2>
+                      <h2 className="text-lg md:text-xl font-semibold">{currentUser.name}</h2>
                       {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) && (
                         <VerifiedBadge />
                       )}
                     </div>
-                    <div className="space-y-2 text-sm text-gray-600">
+                    <div className="space-y-2 text-xs md:text-sm text-gray-600">
                       {currentUser.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{currentUser.email}</span>
-                        </div>
+                         <div className="flex items-center gap-2">
+                           <Mail className="h-3 w-3 md:h-4 md:w-4" />
+                           <span>{currentUser.email}</span>
+                         </div>
                       )}
                       {currentUser.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{currentUser.phone}</span>
-                        </div>
+                         <div className="flex items-center gap-2">
+                           <Phone className="h-3 w-3 md:h-4 md:w-4" />
+                           <span>{currentUser.phone}</span>
+                         </div>
                       )}
                       {(currentUser.address || currentUser.city || currentUser.state || currentUser.zipCode) && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
+                         <div className="flex items-center gap-2">
+                           <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                           <div>
                             {currentUser.address && (
                               <div>{currentUser.address}</div>
@@ -177,14 +177,14 @@ const ProfilePage = () => {
                         </div>
                       )}
                       {isBusinessAccount && currentUser.businessId && (
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
-                          <span>Business ID: {currentUser.businessId}</span>
-                        </div>
+                         <div className="flex items-center gap-2">
+                           <Building className="h-3 w-3 md:h-4 md:w-4" />
+                           <span>Business ID: {currentUser.businessId}</span>
+                         </div>
                       )}
                     </div>
                     {currentUser.bio && (
-                      <p className="mt-3 text-gray-700">{currentUser.bio}</p>
+                      <p className="mt-3 text-sm md:text-base text-gray-700">{currentUser.bio}</p>
                     )}
                     </div>
                     
@@ -192,7 +192,7 @@ const ProfilePage = () => {
                     {isCustomerAccount && (
                       <div className="flex flex-col items-center justify-center min-w-[140px] ml-6">
                         <div className="text-center">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Average Rating</p>
+                          <p className="text-xs md:text-sm font-medium text-gray-700 mb-2">Average Rating</p>
                           <StarRating 
                             rating={averageRating} 
                             size="lg" 
@@ -216,20 +216,20 @@ const ProfilePage = () => {
 
             {/* Account Status */}
             <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Account Status</CardTitle>
-              </CardHeader>
+               <CardHeader>
+                 <CardTitle className="text-base md:text-lg">Account Status</CardTitle>
+               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">Account Type: {currentUser.type}</p>
-                      <p className="text-sm text-gray-600">
-                        {isBusinessAccount 
-                          ? (isVerified ? "Verified Business Account" : "Business Account - Pending Verification")
-                          : "Verified Customer Account"
-                        }
-                      </p>
+                       <p className="font-medium text-sm md:text-base">Account Type: {currentUser.type}</p>
+                       <p className="text-xs md:text-sm text-gray-600">
+                         {isBusinessAccount 
+                           ? (isVerified ? "Verified Business Account" : "Business Account - Pending Verification")
+                           : "Verified Customer Account"
+                         }
+                       </p>
                     </div>
                     <div className="text-right">
                       <div className="space-y-2">
@@ -264,13 +264,13 @@ const ProfilePage = () => {
                   <div className="border-t pt-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="font-medium">Subscription Status</p>
-                        <p className="text-sm text-gray-600">
-                          {isSubscribed || subscriptionData?.subscribed 
-                            ? `Premium subscription active${subscriptionData?.subscription_tier ? ` - ${subscriptionData.subscription_tier}` : ''}`
-                            : "No active subscription"
-                          }
-                        </p>
+                         <p className="font-medium text-sm md:text-base">Subscription Status</p>
+                         <p className="text-xs md:text-sm text-gray-600">
+                           {isSubscribed || subscriptionData?.subscribed 
+                             ? `Premium subscription active${subscriptionData?.subscription_tier ? ` - ${subscriptionData.subscription_tier}` : ''}`
+                             : "No active subscription"
+                           }
+                         </p>
                       </div>
                       <div className="text-right">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -287,10 +287,10 @@ const ProfilePage = () => {
                     {!isSubscribed && !subscriptionData?.subscribed && (
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <p className="font-medium">Credits Balance</p>
-                          <p className="text-sm text-gray-600">
-                            Available credits for one-time review access
-                          </p>
+                           <p className="font-medium text-sm md:text-base">Credits Balance</p>
+                           <p className="text-xs md:text-sm text-gray-600">
+                             Available credits for one-time review access
+                           </p>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center gap-2">
@@ -303,14 +303,14 @@ const ProfilePage = () => {
 
                     {/* Subscription Action Buttons */}
                     <div className="flex gap-2">
-                      <Button 
-                        onClick={handleBuyCredits}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Buy Credits ($3 each)
-                      </Button>
+                       <Button 
+                         onClick={handleBuyCredits}
+                         variant="outline"
+                         className="flex-1 text-sm md:text-base"
+                       >
+                         <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+                         Buy Credits ($3 each)
+                       </Button>
                       
                       {!isSubscribed && !subscriptionData?.subscribed ? (
                         <Button 
@@ -331,10 +331,10 @@ const ProfilePage = () => {
                               navigate("/customer-benefits");
                             }
                           }}
-                          className="flex-1"
-                        >
-                          Subscribe Now
-                        </Button>
+                           className="flex-1 text-sm md:text-base"
+                         >
+                           Subscribe Now
+                         </Button>
                       ) : (
                         <Button 
                           onClick={() => {
@@ -354,12 +354,12 @@ const ProfilePage = () => {
                               navigate("/customer-benefits");
                             }
                           }}
-                          variant="outline"
-                          className="flex-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
-                        >
-                          <Star className="h-4 w-4 mr-2" />
-                          Upgrade to Legacy
-                        </Button>
+                           variant="outline"
+                           className="flex-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50 text-sm md:text-base"
+                         >
+                           <Star className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+                           Upgrade to Legacy
+                         </Button>
                       )}
                     </div>
                   </div>
