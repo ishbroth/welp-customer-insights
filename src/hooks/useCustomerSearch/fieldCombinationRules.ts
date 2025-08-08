@@ -195,7 +195,7 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
       // This handles cases like name changes, married names, etc.
       return true; // Let the scoring system handle this with address similarity
     },
-    minScoreRequired: 20,
+    minScoreRequired: 15, // Reduced from 20
     description: 'Address + name combinations rely on address similarity scoring'
   },
   {
@@ -207,7 +207,7 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
       // (people move, but their name stays the same)
       return true;
     },
-    minScoreRequired: 15,
+    minScoreRequired: 10, // Reduced from 15 for comprehensive searches
     description: 'Full name searches allow location differences'
   }
 ];

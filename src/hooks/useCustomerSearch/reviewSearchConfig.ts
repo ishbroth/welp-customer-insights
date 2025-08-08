@@ -13,15 +13,16 @@ export const REVIEW_SEARCH_CONFIG = {
   MINIMUM_SCORE_MULTI_FIELD: 4.0, // Increased from 2.0 for stricter filtering
   MINIMUM_MATCHES_MULTI_FIELD: 2,
   SCORES: {
-    EXACT_ZIP_MATCH: 10,
-    PREFIX_ZIP_MATCH: 5,
-    SIMILARITY_MULTIPLIER: 3,
+    EXACT_ZIP_MATCH: 20, // Increased from 10
+    PREFIX_ZIP_MATCH: 8, // Increased from 5
+    SIMILARITY_MULTIPLIER: 4, // Increased from 3
     WORD_MATCH: 1,
-    PHONE_MATCH: 2.5,
-    ADDRESS_SIMILARITY_MULTIPLIER: 2,
-    CITY_SIMILARITY_MULTIPLIER: 1.5,
-    CITY_PROXIMITY_MULTIPLIER: 2.5,
+    PHONE_MATCH: 3, // Increased from 2.5
+    ADDRESS_SIMILARITY_MULTIPLIER: 4, // Increased from 2
+    CITY_SIMILARITY_MULTIPLIER: 2.5, // Increased from 1.5
+    CITY_PROXIMITY_MULTIPLIER: 3, // Increased from 2.5
     ADDRESS_WORD_MATCH: 0.5,
-    PROXIMITY_BASE: 2
+    PROXIMITY_BASE: 2,
+    COMPREHENSIVE_SEARCH_BONUS: 18 // New bonus for 5+ field searches with 4+ matches
   }
 };

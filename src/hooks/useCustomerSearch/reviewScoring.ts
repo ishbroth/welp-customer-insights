@@ -292,7 +292,7 @@ export const scoreReview = async (
     
     // Require much stricter threshold and proper component matching
     if (finalSimilarity >= 0.7) { 
-      // Name scoring is now the DOMINANT factor (80-90% of total possible score)
+      // Name scoring reduced to allow other fields more weight (40-70% of total possible score)
       let namePoints = 0;
       
       // If both first and last names were provided, validate component matching
@@ -303,14 +303,18 @@ export const scoreReview = async (
         // For first+last searches, use component-specific matching
         if (componentSimilarity >= 0.7) {
           if (componentSimilarity >= 0.9) {
-            namePoints = 100; // Excellent component match
+            namePoints = 70; // Reduced from 100 - Excellent component match
           } else if (componentSimilarity >= 0.8) {
-            namePoints = 80; // Very good component match
+            namePoints = 55; // Reduced from 80 - Very good component match
           } else {
-            namePoints = 60; // Good component match
+            namePoints = 40; // Reduced from 60 - Good component match
           }
+        } else if (searchFieldCount >= 5 && exactFieldMatches >= 3) {
+          // For comprehensive searches with multiple exact matches, allow weaker name matching
+          namePoints = 25; // Partial name credit for comprehensive searches
+          console.log(`[NAME_COMPREHENSIVE] Allowing weak name match due to comprehensive search with ${exactFieldMatches} exact matches`);
         } else {
-          // Component matching failed - this shouldn't match
+          // Component matching failed - reject for simpler searches
           console.log(`[NAME_COMPONENT_FAIL] Component matching failed for "${fullSearchName}" vs "${review.customer_name}" (similarity: ${componentSimilarity})`);
           return { 
             ...review, 
@@ -325,11 +329,11 @@ export const scoreReview = async (
       } else {
         // Single name component searches use regular similarity
         if (finalSimilarity >= 0.9) {
-          namePoints = 80; // Excellent single component match
+          namePoints = 55; // Reduced from 80 - Excellent single component match
         } else if (finalSimilarity >= 0.8) {
-          namePoints = 60; // Very good single component match
+          namePoints = 42; // Reduced from 60 - Very good single component match
         } else {
-          namePoints = 40; // Good single component match
+          namePoints = 28; // Reduced from 40 - Good single component match
         }
       }
       
@@ -875,6 +879,13 @@ export const scoreReview = async (
     };
   }
   
+  // Apply comprehensive search bonus for 5+ field searches with multiple exact matches
+  if (searchFieldCount >= 5 && exactFieldMatches >= 4) {
+    const comprehensiveBonus = REVIEW_SEARCH_CONFIG.SCORES.COMPREHENSIVE_SEARCH_BONUS;
+    score += comprehensiveBonus;
+    console.log(`[COMPREHENSIVE_BONUS] Added ${comprehensiveBonus} points for comprehensive search with ${exactFieldMatches} exact matches`);
+  }
+
   // Filter out weak similarity matches (like La Mesa vs San Diego)
   if (hasMajorFields && hasOnlyWeakMatches && !hasSubstantialMatch) {
     console.log(`[WEAK_MATCH_FILTER] Review ${review.id} REJECTED - Only weak matches found (state + weak city)`);
