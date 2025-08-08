@@ -5,6 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, Star, ThumbsUp, MessageSquare, Quote } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useReviewCount } from "@/hooks/useReviewCount";
 
 // Mock success stories from customers
 const customerStories = [
@@ -51,6 +52,7 @@ const customerStories = [
 ];
 
 const CustomerStories = () => {
+  const { reviewCount } = useReviewCount();
   return (
     <>
       <Header />
@@ -115,7 +117,7 @@ const CustomerStories = () => {
             </div>
             <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
               <MessageSquare className="h-5 w-5 text-welp-primary mr-2" />
-              <span className="font-medium">20,000+ Active Customers</span>
+              <span className="font-medium">{reviewCount.toLocaleString()} Reviews</span>
             </div>
             <div className="flex items-center bg-welp-bg-light px-6 py-3 rounded-full">
               <Star className="h-5 w-5 text-welp-primary mr-2" />
