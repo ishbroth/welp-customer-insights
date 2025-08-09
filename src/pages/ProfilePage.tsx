@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useLocation } from "react-router-dom";
-import Header from "@/components/Header";
+import ProfileHeader from "@/components/ProfileHeader";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import WelcomeSection from "@/components/profile/WelcomeSection";
@@ -95,7 +95,7 @@ const ProfilePage = () => {
   if (!currentUser) {
     return (
       <div className="flex flex-col min-h-screen">
-        <Header />
+        <ProfileHeader />
         <main className="flex-grow flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </main>
@@ -109,11 +109,13 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <ProfileHeader />
       <div className="flex-grow flex">
-        <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
-        
-        <main className="flex-1 p-6 md:p-8 md:ml-0 ml-12">
+        {/* Desktop sidebar - hidden on mobile */}
+        <div className="hidden md:block">
+          <ProfileSidebar isOpen={true} toggle={() => {}} />
+        </div>
+        <main className="flex-1 p-6 md:p-8">
           <div className="max-w-4xl mx-auto">
             <WelcomeSection />
             

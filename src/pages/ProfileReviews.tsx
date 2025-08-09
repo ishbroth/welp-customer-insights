@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Navigate } from "react-router-dom";
-import Header from "@/components/Header";
+import ProfileHeader from "@/components/ProfileHeader";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
@@ -28,11 +28,13 @@ const ProfileReviews = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
-      <div className="flex-grow flex flex-col md:flex-row">
-        <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
-        
-        <main className="flex-1 p-6 md:ml-0 ml-12">
+      <ProfileHeader />
+      <div className="flex-grow flex">
+        {/* Desktop sidebar - hidden on mobile */}
+        <div className="hidden md:block">
+          <ProfileSidebar isOpen={true} toggle={() => {}} />
+        </div>
+        <main className="flex-1 p-6">
           <div className="container mx-auto max-w-4xl">
             <ProfileReviewsHeader 
               title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}

@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { useBillingData } from "@/hooks/useBillingData";
 import { openCustomerPortal } from "@/services/subscriptionService";
-import Header from "@/components/Header";
+import ProfileHeader from "@/components/ProfileHeader";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import BillingPageHeader from "@/components/billing/BillingPageHeader";
@@ -50,11 +50,13 @@ const BillingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
-      <div className="flex-grow flex flex-col md:flex-row">
-        <ProfileSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
-        
-        <main className="flex-1 p-6 md:ml-0 ml-12">
+      <ProfileHeader />
+      <div className="flex-grow flex">
+        {/* Desktop sidebar - hidden on mobile */}
+        <div className="hidden md:block">
+          <ProfileSidebar isOpen={true} toggle={() => {}} />
+        </div>
+        <main className="flex-1 p-6">
           <div className="container mx-auto max-w-6xl">
             <BillingPageHeader 
               isLoadingData={isLoadingData}
