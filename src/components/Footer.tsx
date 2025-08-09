@@ -11,7 +11,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-welp-dark text-white py-4 md:py-6 mt-auto w-screen relative left-1/2 -translate-x-1/2 z-40">
+    <footer className="bg-welp-dark text-white py-4 md:py-6 mt-auto w-full mx-0 -ml-8 -mr-8 md:w-screen md:relative md:left-1/2 md:-translate-x-1/2 md:ml-0 md:mr-0 z-40">
       <div className="container mx-auto px-3 md:px-4">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-8">
           <div className="col-span-2 md:col-span-1">
