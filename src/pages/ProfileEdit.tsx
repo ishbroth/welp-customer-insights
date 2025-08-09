@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileMobileMenu from "@/components/ProfileMobileMenu";
-import MobileScaleWrapper from "@/components/MobileScaleWrapper";
+
 import { useToast } from "@/components/ui/use-toast";
 import ProfilePhotoSection from "@/components/profile/ProfilePhotoSection";
 import PhotoEditDialog from "@/components/profile/PhotoEditDialog";
@@ -83,19 +83,26 @@ const ProfileEdit = () => {
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
         <main className="flex-1 p-6">
-          <MobileScaleWrapper>
-            <div className="container mx-auto max-w-4xl">
+          <div className="container mx-auto max-w-4xl">
+            {/* Mobile: Header and Avatar Stacked */}
+            <div className="flex flex-col md:hidden space-y-6 mb-8">
+              <h1 className="text-2xl font-bold">Edit Profile</h1>
+              <ProfilePhotoSection 
+                avatarPreview={avatarPreview}
+                userName={currentUser?.name}
+                onFileChange={handleFileChange}
+              />
+            </div>
+            
+            {/* Desktop: Grid Layout */}
+            <div className="hidden md:block">
               <h1 className="text-3xl font-bold mb-8">Edit Profile</h1>
-              
               <div className="grid grid-cols-3 gap-8">
-                {/* Photo Upload Section */}
                 <ProfilePhotoSection 
                   avatarPreview={avatarPreview}
                   userName={currentUser?.name}
                   onFileChange={handleFileChange}
                 />
-                
-                {/* Profile Form Section */}
                 <div className="col-span-2">
                   <Tabs defaultValue="general" className="w-full">
                     <TabsList className="w-full grid grid-cols-2">
@@ -105,21 +112,40 @@ const ProfileEdit = () => {
                     <TabsContent value="general" className="mt-6">
                       <ProfileForm />
                     </TabsContent>
-                    
                     <TabsContent value="account" className="mt-6 space-y-6">
                       <AccountTypeSection 
                         isSubscribed={isSubscribed}
                         currentUserType={currentUser?.type}
                         setIsSubscribed={setIsSubscribed}
                       />
-                      
                       <DeleteAccountSection />
                     </TabsContent>
                   </Tabs>
                 </div>
               </div>
             </div>
-          </MobileScaleWrapper>
+            
+            {/* Mobile: Full Width Form */}
+            <div className="md:hidden">
+              <Tabs defaultValue="general" className="w-full">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="general">General Information</TabsTrigger>
+                  <TabsTrigger value="account">Account Settings</TabsTrigger>
+                </TabsList>
+                <TabsContent value="general" className="mt-6">
+                  <ProfileForm />
+                </TabsContent>
+                <TabsContent value="account" className="mt-6 space-y-6">
+                  <AccountTypeSection 
+                    isSubscribed={isSubscribed}
+                    currentUserType={currentUser?.type}
+                    setIsSubscribed={setIsSubscribed}
+                  />
+                  <DeleteAccountSection />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </main>
       </div>
       

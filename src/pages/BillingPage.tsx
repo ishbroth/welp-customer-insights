@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileMobileMenu from "@/components/ProfileMobileMenu";
-import MobileScaleWrapper from "@/components/MobileScaleWrapper";
+
 import BillingPageHeader from "@/components/billing/BillingPageHeader";
 import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
 import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
@@ -60,47 +60,45 @@ const BillingPage = () => {
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
         <main className="flex-1 p-6">
-          <MobileScaleWrapper>
-            <div className="container mx-auto max-w-6xl">
-              <BillingPageHeader 
-                isLoadingData={isLoadingData}
-                onRefresh={loadBillingData}
-              />
-              
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <CurrentSubscriptionCard
-                    isLoadingData={isLoadingData}
-                    subscriptionData={subscriptionData}
-                    hasStripeCustomer={hasStripeCustomer}
-                    isLoadingPortal={isLoadingPortal}
-                    currentUserType={currentUser?.type}
-                    currentUserEmail={currentUser?.email}
-                    onManageSubscription={handleManageSubscription}
-                    onUnsubscribe={handleUnsubscribe}
-                  />
-                  
-                  <CreditsBalanceCard />
-                </div>
+          <div className="container mx-auto max-w-6xl">
+            <BillingPageHeader 
+              isLoadingData={isLoadingData}
+              onRefresh={loadBillingData}
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <CurrentSubscriptionCard
+                  isLoadingData={isLoadingData}
+                  subscriptionData={subscriptionData}
+                  hasStripeCustomer={hasStripeCustomer}
+                  isLoadingPortal={isLoadingPortal}
+                  currentUserType={currentUser?.type}
+                  currentUserEmail={currentUser?.email}
+                  onManageSubscription={handleManageSubscription}
+                  onUnsubscribe={handleUnsubscribe}
+                />
                 
-                <div className="space-y-6">
-                  <PaymentMethodsCard
-                    isLoadingData={isLoadingData}
-                    paymentMethods={paymentMethods}
-                    hasStripeCustomer={hasStripeCustomer}
-                    isLoadingPortal={isLoadingPortal}
-                    onManageSubscription={handleManageSubscription}
-                  />
-                  
-                  <TransactionHistoryCard
-                    isLoadingData={isLoadingData}
-                    transactions={transactions}
-                    hasStripeCustomer={hasStripeCustomer}
-                  />
-                </div>
+                <CreditsBalanceCard />
+              </div>
+              
+              <div className="space-y-6">
+                <PaymentMethodsCard
+                  isLoadingData={isLoadingData}
+                  paymentMethods={paymentMethods}
+                  hasStripeCustomer={hasStripeCustomer}
+                  isLoadingPortal={isLoadingPortal}
+                  onManageSubscription={handleManageSubscription}
+                />
+                
+                <TransactionHistoryCard
+                  isLoadingData={isLoadingData}
+                  transactions={transactions}
+                  hasStripeCustomer={hasStripeCustomer}
+                />
               </div>
             </div>
-          </MobileScaleWrapper>
+          </div>
         </main>
       </div>
       <Footer />

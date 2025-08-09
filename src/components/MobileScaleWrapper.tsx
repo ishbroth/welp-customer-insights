@@ -4,9 +4,10 @@ import { useMobileScale } from '@/hooks/useMobileScale';
 interface MobileScaleWrapperProps {
   children: ReactNode;
   className?: string;
+  forceScale?: boolean; // Force scaling even for specific pages
 }
 
-const MobileScaleWrapper = ({ children, className = '' }: MobileScaleWrapperProps) => {
+const MobileScaleWrapper = ({ children, className = '', forceScale = false }: MobileScaleWrapperProps) => {
   const { shouldScale, scale, containerWidth } = useMobileScale();
 
   if (!shouldScale) {

@@ -11,7 +11,7 @@ const BusinessReviewCardContent: React.FC<BusinessReviewCardContentProps> = ({
 }) => {
   return (
     <div className="mb-4">
-      <p className="text-gray-700 whitespace-pre-line md:text-base text-sm leading-relaxed">{review.content}</p>
+      <p className="text-gray-700 whitespace-pre-line text-base md:text-base leading-relaxed">{review.content}</p>
     </div>
   );
 };

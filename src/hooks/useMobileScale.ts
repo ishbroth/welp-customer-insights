@@ -21,8 +21,8 @@ export const useMobileScale = () => {
       const desktopWidth = 1024; // Minimum desktop width we want to scale from
       const scaleRatio = Math.min(viewportWidth / desktopWidth, 1);
       
-      // Apply minimum scale to ensure readability
-      const finalScale = Math.max(scaleRatio, 0.6);
+      // Apply minimum scale to ensure readability, slightly higher for better text readability
+      const finalScale = Math.max(scaleRatio, 0.75);
       
       setScale(finalScale);
       // Adjust container width to accommodate scaled content

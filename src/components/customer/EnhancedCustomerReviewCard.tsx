@@ -155,7 +155,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`h-4 w-4 ${
+        className={`h-5 w-5 md:h-4 md:w-4 ${
           shouldShowRating && index < rating
             ? 'text-yellow-400 fill-current'
             : 'text-gray-300'
@@ -167,7 +167,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const canReport = hasSubscription || isReviewActuallyUnlocked;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border mb-4 relative">
+    <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border mb-4 relative">
       
       <div className="flex justify-between mb-4">
         <CustomerReviewCardHeader
@@ -182,7 +182,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
 
       <div className="flex items-center gap-2 mb-4">
         <div className="flex">{renderStars(review.rating)}</div>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm md:text-sm text-gray-500">
           {new Date(review.date).toLocaleDateString()}
         </span>
       </div>
