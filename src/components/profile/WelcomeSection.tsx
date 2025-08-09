@@ -59,7 +59,7 @@ const WelcomeSection = () => {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900">
           {getGreeting()}, {currentUser.name || "User"}!
         </h1>
         {shouldShowVerifiedBadge() && (
