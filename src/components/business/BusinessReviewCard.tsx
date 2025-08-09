@@ -103,7 +103,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
   return (
     <>
-      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border relative">
+      <div className="bg-white px-2 py-4 md:p-6 rounded-lg shadow-sm border relative">
         {/* Customer Header - handles claimed/unclaimed review data automatically */}
         <BusinessReviewCardHeader 
           review={review}
@@ -113,24 +113,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
           isReviewClaimed={isReviewClaimed}
         />
 
-        {/* Business info - right side (smaller) */}
-        <div className="flex justify-end mb-4">
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-10 w-10 md:h-8 md:w-8">
-              <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
-              <AvatarFallback className="bg-gray-100 text-gray-600 text-sm md:text-xs">
-                {businessInfo.initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-1">
-                <h4 className="font-medium text-base md:text-sm">{businessInfo.name}</h4>
-                {businessInfo.verified && <VerifiedBadge size="sm" />}
-              </div>
-              <p className="text-sm md:text-xs text-gray-500">Business</p>
-            </div>
-          </div>
-        </div>
 
         {/* Add star rating display */}
         <div className="mb-4">

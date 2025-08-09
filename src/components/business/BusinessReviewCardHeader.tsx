@@ -1,5 +1,6 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Review } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -106,46 +107,138 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     reviewObject: review
   });
 
+  const getInitials = (name: string) => {
+    if (name) {
+      const names = name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return "B";
+  };
+
+  const truncateBusinessName = (name: string, maxLength: number = 10) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
+  };
+
+  // Business info
+  const businessInfo = {
+    name: review.reviewerName,
+    avatar: review.reviewerAvatar,
+    verified: review.reviewerVerified
+  };
+
   return (
-    <div className="flex items-start justify-between mb-4">
-      <div className="flex items-center space-x-3">
-        {/* Customer Avatar - shows profile pic when claimed, initials when not */}
-        <Avatar 
-          className={`h-10 w-10 ${isReviewClaimed ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-          onClick={isReviewClaimed ? handleCustomerClick : undefined}
-        >
-          {customerAvatar ? (
-            <AvatarImage src={customerAvatar} alt={customerDisplayName} />
-          ) : (
-            <AvatarFallback className="bg-blue-100 text-blue-800">
-              {getCustomerInitials(customerDisplayName)}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div>
-          <h3 
-            className={`font-semibold ${
-              isReviewClaimed 
-                ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600' 
-                : 'text-gray-600'
-            }`}
-            onClick={isReviewClaimed ? handleCustomerClick : undefined}
-          >
-            {customerDisplayName}
-          </h3>
-          <p className="text-sm text-gray-500">
-            Review written on {formatDate(review.date)}
-          </p>
-          {customerPhone && (
-            <p className="text-sm text-gray-600">
-              Phone: {customerPhone}
-            </p>
-          )}
-          {formatAddress() && (
-            <p className="text-sm text-gray-600">
-              Address: {formatAddress()}
-            </p>
-          )}
+    <div className="mb-4">
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        <div className="flex items-start justify-between w-full">
+          {/* Customer side (left) - takes most space */}
+          <div className="flex items-center space-x-3 flex-1">
+            <Avatar 
+              className={`h-10 w-10 ${isReviewClaimed ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+              onClick={isReviewClaimed ? handleCustomerClick : undefined}
+            >
+              {customerAvatar ? (
+                <AvatarImage src={customerAvatar} alt={customerDisplayName} />
+              ) : (
+                <AvatarFallback className="bg-blue-100 text-blue-800">
+                  {getCustomerInitials(customerDisplayName)}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex-1">
+              <h3 
+                className={`font-semibold ${
+                  isReviewClaimed 
+                    ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600' 
+                    : 'text-gray-600'
+                }`}
+                onClick={isReviewClaimed ? handleCustomerClick : undefined}
+              >
+                {customerDisplayName}
+              </h3>
+              <p className="text-sm text-gray-500">
+                Review written on {formatDate(review.date)}
+              </p>
+              {customerPhone && (
+                <p className="text-sm text-gray-600">
+                  Phone: {customerPhone}
+                </p>
+              )}
+              {formatAddress() && (
+                <p className="text-sm text-gray-600">
+                  Address: {formatAddress()}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Business side (right) - smaller and compact */}
+          <div className="flex items-center space-x-1 ml-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
+              <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
+                {getInitials(businessInfo.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col items-end">
+              <div className="flex items-center gap-1">
+                <h4 
+                  className="font-medium text-xs"
+                  title={businessInfo.name}
+                >
+                  {truncateBusinessName(businessInfo.name)}
+                </h4>
+                {businessInfo.verified && <VerifiedBadge size="xs" />}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout - unchanged */}
+      <div className="hidden md:block">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3 flex-1">
+            {/* Customer Avatar - shows profile pic when claimed, initials when not */}
+            <Avatar 
+              className={`h-10 w-10 ${isReviewClaimed ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+              onClick={isReviewClaimed ? handleCustomerClick : undefined}
+            >
+              {customerAvatar ? (
+                <AvatarImage src={customerAvatar} alt={customerDisplayName} />
+              ) : (
+                <AvatarFallback className="bg-blue-100 text-blue-800">
+                  {getCustomerInitials(customerDisplayName)}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex-1">
+              <h3 
+                className={`font-semibold ${
+                  isReviewClaimed 
+                    ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600' 
+                    : 'text-gray-600'
+                }`}
+                onClick={isReviewClaimed ? handleCustomerClick : undefined}
+              >
+                {customerDisplayName}
+              </h3>
+              <p className="text-sm text-gray-500">
+                Review written on {formatDate(review.date)}
+              </p>
+              {customerPhone && (
+                <p className="text-sm text-gray-600">
+                  Phone: {customerPhone}
+                </p>
+              )}
+              {formatAddress() && (
+                <p className="text-sm text-gray-600">
+                  Address: {formatAddress()}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

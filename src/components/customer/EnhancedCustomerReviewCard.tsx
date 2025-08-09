@@ -167,7 +167,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const canReport = hasSubscription || isReviewActuallyUnlocked;
 
   return (
-    <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border mb-4 relative">
+    <div className="bg-white px-2 py-4 md:p-6 rounded-lg shadow-sm border mb-4 relative">
       
       <div className="flex justify-between mb-4">
         <CustomerReviewCardHeader
