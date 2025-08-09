@@ -83,7 +83,7 @@ const ProfileEdit = () => {
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
         <main className="flex-1 p-6">
-          <div className="container mx-auto max-w-4xl">
+          <div className="container mx-auto max-w-4xl px-4 md:px-6">
             {/* Mobile: Header and Avatar Stacked */}
             <div className="flex flex-col md:hidden space-y-6 mb-8">
               <h1 className="text-2xl font-bold">Edit Profile</h1>
@@ -126,11 +126,11 @@ const ProfileEdit = () => {
             </div>
             
             {/* Mobile: Full Width Form */}
-            <div className="md:hidden">
+            <div className="md:hidden max-w-none">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="w-full grid grid-cols-2">
-                  <TabsTrigger value="general">General Information</TabsTrigger>
-                  <TabsTrigger value="account">Account Settings</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-2 h-12 gap-1 p-1">
+                  <TabsTrigger value="general" className="text-xs sm:text-sm">General Information</TabsTrigger>
+                  <TabsTrigger value="account" className="text-xs sm:text-sm">Account Settings</TabsTrigger>
                 </TabsList>
                 <TabsContent value="general" className="mt-6">
                   <ProfileForm />
