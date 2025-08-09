@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import MobileScaleWrapper from "@/components/MobileScaleWrapper";
 import { 
   User, 
   Mail, 
@@ -141,10 +142,10 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <MobileScaleWrapper className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-3 gap-8">
           {/* Profile Overview */}
-          <Card className="lg:col-span-1">
+          <Card className="col-span-1">
             <CardHeader className="text-center">
               <div className="flex flex-col items-center space-y-4">
                 <Avatar className="h-24 w-24">
@@ -178,7 +179,7 @@ const Profile: React.FC = () => {
           </Card>
 
           {/* Profile Details */}
-          <Card className="lg:col-span-2">
+          <Card className="col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
@@ -187,7 +188,7 @@ const Profile: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <Mail className="h-4 w-4 text-gray-500" />
                   <div>
@@ -240,7 +241,7 @@ const Profile: React.FC = () => {
                       <h3 className="font-medium">Business Information</h3>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                    <div className="grid grid-cols-2 gap-4 ml-6">
                       {currentUser.businessInfo.business_name && (
                         <div>
                           <p className="text-sm text-gray-500">Business Name</p>
@@ -284,7 +285,7 @@ const Profile: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </MobileScaleWrapper>
     </div>
   );
 };

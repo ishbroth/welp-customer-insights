@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileMobileMenu from "@/components/ProfileMobileMenu";
+import MobileScaleWrapper from "@/components/MobileScaleWrapper";
 import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import ProfileReviewsHeader from "@/components/profile/ProfileReviewsHeader";
 import ProfileReviewsSubscriptionStatus from "@/components/profile/ProfileReviewsSubscriptionStatus";
@@ -37,27 +38,29 @@ const ProfileReviews = () => {
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
         <main className="flex-1 p-6">
-          <div className="container mx-auto max-w-4xl">
-            <ProfileReviewsHeader 
-              title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
-              description={
-                isCustomerAccount 
-                  ? "Reviews that businesses have written about you"
-                  : "Reviews you've written about your customers"
-              }
-              onRefresh={fetchCustomerReviews}
-              isLoading={isLoading}
-            />
-            
-            <ProfileReviewsSubscriptionStatus hasSubscription={isSubscribed} />
-            
-            <ProfileReviewsContent 
-              customerReviews={customerReviews}
-              isLoading={isLoading}
-              hasSubscription={isSubscribed}
-              onRefresh={fetchCustomerReviews}
-            />
-          </div>
+          <MobileScaleWrapper>
+            <div className="container mx-auto max-w-4xl">
+              <ProfileReviewsHeader 
+                title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
+                description={
+                  isCustomerAccount 
+                    ? "Reviews that businesses have written about you"
+                    : "Reviews you've written about your customers"
+                }
+                onRefresh={fetchCustomerReviews}
+                isLoading={isLoading}
+              />
+              
+              <ProfileReviewsSubscriptionStatus hasSubscription={isSubscribed} />
+              
+              <ProfileReviewsContent 
+                customerReviews={customerReviews}
+                isLoading={isLoading}
+                hasSubscription={isSubscribed}
+                onRefresh={fetchCustomerReviews}
+              />
+            </div>
+          </MobileScaleWrapper>
         </main>
       </div>
       <Footer />
