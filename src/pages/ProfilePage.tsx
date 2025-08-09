@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useLocation } from "react-router-dom";
-import ProfileHeader from "@/components/ProfileHeader";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import ProfileMobileMenu from "@/components/ProfileMobileMenu";
 import WelcomeSection from "@/components/profile/WelcomeSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ const ProfilePage = () => {
   if (!currentUser) {
     return (
       <div className="flex flex-col min-h-screen">
-        <ProfileHeader />
+        <Header />
         <main className="flex-grow flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </main>
@@ -109,7 +110,8 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <ProfileHeader />
+      <Header />
+      <ProfileMobileMenu />
       <div className="flex-grow flex">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">

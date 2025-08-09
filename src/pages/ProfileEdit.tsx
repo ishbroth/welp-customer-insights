@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProfileHeader from "@/components/ProfileHeader";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import ProfileMobileMenu from "@/components/ProfileMobileMenu";
 import { useToast } from "@/components/ui/use-toast";
 import ProfilePhotoSection from "@/components/profile/ProfilePhotoSection";
 import PhotoEditDialog from "@/components/profile/PhotoEditDialog";
@@ -73,7 +74,8 @@ const ProfileEdit = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <ProfileHeader />
+      <Header />
+      <ProfileMobileMenu />
       <div className="flex-grow flex">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">

@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Navigate } from "react-router-dom";
-import ProfileHeader from "@/components/ProfileHeader";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import ProfileMobileMenu from "@/components/ProfileMobileMenu";
 import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import ProfileReviewsHeader from "@/components/profile/ProfileReviewsHeader";
 import ProfileReviewsSubscriptionStatus from "@/components/profile/ProfileReviewsSubscriptionStatus";
@@ -28,7 +29,8 @@ const ProfileReviews = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <ProfileHeader />
+      <Header />
+      <ProfileMobileMenu />
       <div className="flex-grow flex">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">

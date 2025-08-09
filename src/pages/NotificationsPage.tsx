@@ -1,9 +1,10 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
-import ProfileHeader from "@/components/ProfileHeader";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import ProfileMobileMenu from "@/components/ProfileMobileMenu";
 import { Button } from "@/components/ui/button";
 import { Bell, BellRing, Loader2 } from "lucide-react";
 import NotificationTypes from "@/components/notifications/NotificationTypes";
@@ -25,7 +26,8 @@ const NotificationsPage = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen">
-        <ProfileHeader />
+        <Header />
+        <ProfileMobileMenu />
         <div className="flex-grow flex">
           {/* Desktop sidebar - hidden on mobile */}
           <div className="hidden md:block">
@@ -47,7 +49,8 @@ const NotificationsPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <ProfileHeader />
+      <Header />
+      <ProfileMobileMenu />
       <div className="flex-grow flex">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">

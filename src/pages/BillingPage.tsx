@@ -4,9 +4,10 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { useBillingData } from "@/hooks/useBillingData";
 import { openCustomerPortal } from "@/services/subscriptionService";
-import ProfileHeader from "@/components/ProfileHeader";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
+import ProfileMobileMenu from "@/components/ProfileMobileMenu";
 import BillingPageHeader from "@/components/billing/BillingPageHeader";
 import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCard";
 import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
@@ -50,7 +51,8 @@ const BillingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <ProfileHeader />
+      <Header />
+      <ProfileMobileMenu />
       <div className="flex-grow flex">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">
