@@ -117,8 +117,8 @@ const ProfilePage = () => {
         <div className="hidden md:block">
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
-        <main className="flex-1 p-6 md:p-8">
-          <div className="max-w-4xl mx-auto">
+        <main className="flex-1 px-3 py-6 md:px-4">
+          <div className="w-full">
             <WelcomeSection />
             
             {/* Single Profile Overview Card */}
@@ -136,17 +136,17 @@ const ProfilePage = () => {
                 </Link>
               </CardHeader>
               <CardContent>
-                <div className="flex items-start space-x-4">
-                  <Avatar className="h-20 w-20">
+                <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-4">
+                  <Avatar className="h-16 w-16 md:h-20 md:w-20">
                     <AvatarImage src={currentUser.avatar || ""} alt={currentUser.name} />
                     <AvatarFallback className="bg-blue-100 text-blue-800 text-lg">
                       {currentUser.name?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 flex">
-                    <div className="flex-1">
+                  <div className="flex-1 w-full">
+                    <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <h2 className="text-xl font-semibold">{currentUser.name}</h2>
+                      <h2 className="text-lg md:text-xl font-semibold break-words">{currentUser.name}</h2>
                       {((isBusinessAccount && isVerified) || (!isBusinessAccount && currentUser.type === 'customer')) && (
                         <VerifiedBadge />
                       )}
@@ -154,24 +154,24 @@ const ProfilePage = () => {
                     <div className="space-y-2 text-sm text-gray-600">
                       {currentUser.email && (
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{currentUser.email}</span>
+                          <Mail className="h-4 w-4 flex-shrink-0" />
+                          <span className="break-all">{currentUser.email}</span>
                         </div>
                       )}
                       {currentUser.phone && (
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{currentUser.phone}</span>
+                          <Phone className="h-4 w-4 flex-shrink-0" />
+                          <span className="break-all">{currentUser.phone}</span>
                         </div>
                       )}
                       {(currentUser.address || currentUser.city || currentUser.state || currentUser.zipCode) && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <div>
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0">
                             {currentUser.address && (
-                              <div>{currentUser.address}</div>
+                              <div className="break-words">{currentUser.address}</div>
                             )}
-                            <div>
+                            <div className="break-words">
                               {currentUser.city && currentUser.city}
                               {currentUser.city && currentUser.state && ', '}
                               {currentUser.state && currentUser.state}
@@ -182,19 +182,19 @@ const ProfilePage = () => {
                       )}
                       {isBusinessAccount && currentUser.businessId && (
                         <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
-                          <span>Business ID: {currentUser.businessId}</span>
+                          <Building className="h-4 w-4 flex-shrink-0" />
+                          <span className="break-all">Business ID: {currentUser.businessId}</span>
                         </div>
                       )}
                     </div>
                     {currentUser.bio && (
-                      <p className="mt-3 text-gray-700">{currentUser.bio}</p>
+                      <p className="mt-3 text-gray-700 break-words">{currentUser.bio}</p>
                     )}
                     </div>
                     
                     {/* Average Rating Display - Customer Accounts Only */}
                     {isCustomerAccount && (
-                      <div className="flex flex-col items-center justify-center min-w-[140px] ml-6">
+                      <div className="flex flex-col items-center justify-center w-full md:min-w-[140px] md:ml-6 mt-4 md:mt-0">
                         <div className="text-center">
                           <p className="text-sm font-medium text-gray-700 mb-2">Average Rating</p>
                           <StarRating 
@@ -306,11 +306,11 @@ const ProfilePage = () => {
                     )}
 
                     {/* Subscription Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-col md:flex-row gap-2">
                       <Button 
                         onClick={handleBuyCredits}
                         variant="outline"
-                        className="flex-1"
+                        className="flex-1 text-sm"
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         Buy Credits ($3 each)
