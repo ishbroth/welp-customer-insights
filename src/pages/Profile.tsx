@@ -142,7 +142,7 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Profile Content */}
-      <MobileScaleWrapper className="max-w-4xl mx-auto px-4 py-8">
+      <MobileScaleWrapper className="px-3 py-6 md:px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Profile Overview */}
           <Card className="md:col-span-1">
