@@ -125,7 +125,7 @@ const CreditsBalanceCard = () => {
             Loading credits...
           </div>
         ) : (
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-gray-50 p-4 rounded-lg space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-primary">
@@ -135,27 +135,28 @@ const CreditsBalanceCard = () => {
                   {isSubscribed ? "Unlimited access" : "Available credits"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={loadCreditsData}
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </Button>
-                <Button 
-                  onClick={handleBuyCredits}
-                  disabled={isSubscribed}
-                  className={isSubscribed ? "opacity-50 cursor-not-allowed" : ""}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Buy Credits ($3 each)
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadCreditsData}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
             </div>
+            
+            {!isSubscribed && (
+              <Button 
+                onClick={handleBuyCredits}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Buy Credits ($3 each)
+              </Button>
+            )}
+            
             {isSubscribed && (
-              <div className="mt-2 text-sm text-green-600">
+              <div className="text-sm text-green-600">
                 ✓ Premium subscription active - unlimited access included
               </div>
             )}
