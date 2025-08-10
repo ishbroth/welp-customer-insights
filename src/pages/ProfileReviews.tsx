@@ -37,9 +37,9 @@ const ProfileReviews = () => {
         <div className="hidden md:block">
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
-        <main className="flex-1 p-6">
+        <main className="flex-1 px-3 py-6 md:px-4">
           <MobileScaleWrapper>
-            <div className="container mx-auto max-w-7xl">
+            <div className="w-full">
               <ProfileReviewsHeader 
                 title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
                 description={
