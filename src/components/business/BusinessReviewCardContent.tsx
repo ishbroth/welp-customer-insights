@@ -10,8 +10,8 @@ const BusinessReviewCardContent: React.FC<BusinessReviewCardContentProps> = ({
   review,
 }) => {
   return (
-    <div className="mb-4">
-      <p className="text-gray-700 whitespace-pre-line text-base md:text-base leading-relaxed">{review.content}</p>
+    <div className="mb-3">
+      <p className="text-gray-700 whitespace-pre-line text-base md:text-base leading-relaxed break-words">{review.content}</p>
     </div>
   );
 };

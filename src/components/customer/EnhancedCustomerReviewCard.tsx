@@ -167,9 +167,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   const canReport = hasSubscription || isReviewActuallyUnlocked;
 
   return (
-    <div className="bg-white px-2 py-4 md:p-6 rounded-lg shadow-sm border mb-4 relative">
+    <div className="bg-white px-3 py-3 md:px-4 md:py-4 rounded-lg shadow-sm border mb-3 relative">
       
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between mb-3">
         <CustomerReviewCardHeader
           businessInfo={enhancedBusinessInfo}
           customerInfo={enhancedCustomerInfo}
@@ -180,7 +180,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         />
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         <div className="flex">{renderStars(review.rating)}</div>
         <span className="text-sm md:text-sm text-gray-500">
           {new Date(review.date).toLocaleDateString()}

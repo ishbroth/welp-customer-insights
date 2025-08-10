@@ -103,7 +103,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
   return (
     <>
-      <div className="bg-white px-2 py-4 md:p-6 rounded-lg shadow-sm border relative">
+      <div className="bg-white px-3 py-3 md:px-4 md:py-4 rounded-lg shadow-sm border relative">
         {/* Customer Header - handles claimed/unclaimed review data automatically */}
         <BusinessReviewCardHeader 
           review={review}
@@ -115,7 +115,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
 
         {/* Add star rating display */}
-        <div className="mb-4">
+        <div className="mb-3">
           <div className="flex items-center gap-2">
             <span className="text-base md:text-sm font-medium text-gray-600">Your Rating:</span>
             <StarRating rating={review.rating} />

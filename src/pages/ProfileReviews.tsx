@@ -39,7 +39,7 @@ const ProfileReviews = () => {
         </div>
         <main className="flex-1 p-6">
           <MobileScaleWrapper>
-            <div className="container mx-auto max-w-4xl">
+            <div className="container mx-auto max-w-7xl">
               <ProfileReviewsHeader 
                 title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
                 description={
