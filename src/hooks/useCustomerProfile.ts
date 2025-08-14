@@ -77,26 +77,28 @@ export const useCustomerProfile = (customerId: string | undefined) => {
 
     const fetchReviewsAboutCustomer = async (customerProfile: any) => {
       try {
-        // Get all claimed reviews for this customer
+        console.log('Fetching reviews for customer:', customerId);
+        
+        // Get all claimed reviews for this customer using JOIN query
         const { data: claimedReviews, error: claimedError } = await supabase
-          .from('review_claims')
+          .from('reviews')
           .select(`
-            review_id,
-            reviews!inner(
-              id,
-              customer_name,
-              customer_address,
-              customer_city,
-              customer_zipcode,
-              customer_phone,
-              rating,
-              content,
-              created_at,
-              business_id,
-              profiles!business_id(id, name, avatar, verified)
-            )
+            id,
+            customer_name,
+            customer_address,
+            customer_city,
+            customer_zipcode,
+            customer_phone,
+            rating,
+            content,
+            created_at,
+            business_id,
+            profiles!business_id(id, name, avatar, verified),
+            review_claims!inner(claimed_by)
           `)
-          .eq('claimed_by', customerId);
+          .eq('review_claims.claimed_by', customerId);
+
+        console.log('Claimed reviews query result:', { claimedReviews, claimedError });
 
         // Get all unclaimed reviews to check for potential matches
         const { data: allReviews, error: reviewsError } = await supabase
@@ -128,25 +130,27 @@ export const useCustomerProfile = (customerId: string | undefined) => {
 
         const globallyClaimedReviewIds = globalClaims?.map(claim => claim.review_id) || [];
 
-        // Process claimed reviews
-        const processedClaimedReviews = claimedReviews?.map(claim => ({
-          ...claim.reviews,
+        // Process claimed reviews (now using flat structure)
+        const processedClaimedReviews = claimedReviews?.map(review => ({
+          ...review,
           // Map to ReviewCard expected format
-          reviewerId: claim.reviews.business_id,
-          reviewerName: claim.reviews.profiles?.name || 'Business',
-          reviewerAvatar: claim.reviews.profiles?.avatar,
-          reviewerVerified: claim.reviews.profiles?.verified || false,
+          reviewerId: review.business_id,
+          reviewerName: review.profiles?.name || 'Business',
+          reviewerAvatar: review.profiles?.avatar,
+          reviewerVerified: review.profiles?.verified || false,
           customerId: customerId,
-          date: claim.reviews.created_at,
+          date: review.created_at,
           // Keep original fields for backwards compatibility
-          business_name: claim.reviews.profiles?.name || 'Business',
-          business_avatar: claim.reviews.profiles?.avatar,
-          business_verified: claim.reviews.profiles?.verified,
+          business_name: review.profiles?.name || 'Business',
+          business_avatar: review.profiles?.avatar,
+          business_verified: review.profiles?.verified,
           isClaimed: true,
           matchType: 'claimed',
           matchScore: 100,
           matchReasons: ['Claimed by customer']
         })) || [];
+
+        console.log('Processed claimed reviews:', processedClaimedReviews);
 
         // Check unclaimed reviews for potential matches
         const potentialMatches = allReviews
