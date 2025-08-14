@@ -163,42 +163,32 @@ const ReviewCustomerInfo = ({
           </div>
         </div>
         
-        {/* Keep existing phone, address, location info */}
+        {/* Show location info (city, state, zip) but hide sensitive data (phone, address) */}
         {customerData ? (
           <>
-            {customerData.phone && (
+            {(customerData.city || customerData.state || customerData.zipCode) && (
               <div>
-                <span className="font-medium">Phone:</span> {customerData.phone}
+                <span className="font-medium">Location:</span> {customerData.city}{customerData.city && customerData.state ? ', ' : ''}{customerData.state} {customerData.zipCode}
               </div>
             )}
-            {customerData.address && (
-              <div>
-                <span className="font-medium">Address:</span> {customerData.address}
-              </div>
-            )}
-            {customerData.city && customerData.state && (
-              <div>
-                <span className="font-medium">Location:</span> {customerData.city}, {customerData.state} {customerData.zipCode}
-              </div>
-            )}
+            {/* Show match indicators instead of sensitive data */}
+            <div className="text-xs text-green-600 space-y-1">
+              {customerData.phone && <div>✓ Phone information available</div>}
+              {customerData.address && <div>✓ Address information available</div>}
+            </div>
           </>
         ) : (
           <>
-            {review.customer_phone && (
-              <div>
-                <span className="font-medium">Phone:</span> {review.customer_phone}
-              </div>
-            )}
-            {review.customer_address && (
-              <div>
-                <span className="font-medium">Address:</span> {review.customer_address}
-              </div>
-            )}
             {(review.customer_city || review.customer_zipcode) && (
               <div>
                 <span className="font-medium">Location:</span> {review.customer_city} {review.customer_zipcode}
               </div>
             )}
+            {/* Show match indicators instead of sensitive data */}
+            <div className="text-xs text-green-600 space-y-1">
+              {review.customer_phone && <div>✓ Phone information available</div>}
+              {review.customer_address && <div>✓ Address information available</div>}
+            </div>
           </>
         )}
       </div>

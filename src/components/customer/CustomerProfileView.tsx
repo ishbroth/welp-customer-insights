@@ -97,25 +97,29 @@ const CustomerProfileView = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Hide sensitive phone information, show verification status instead */}
           {phone && (
             <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-gray-500" />
+              <Phone className="h-5 w-5 text-green-500" />
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium">{formatPhoneNumber(phone)}</p>
+                <p className="font-medium text-green-600">✓ Phone verified</p>
               </div>
             </div>
           )}
 
-          {(address || city || state || zipCode) && (
+          {/* Show location but hide sensitive address */}
+          {(city || state || zipCode) && (
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-gray-500" />
               <div>
-                <p className="text-sm text-gray-500">Address</p>
-                {address && <p className="font-medium">{address}</p>}
+                <p className="text-sm text-gray-500">Location</p>
                 <p className="font-medium">
                   {city}{city && state ? ', ' : ''}{state} {zipCode}
                 </p>
+                {address && (
+                  <p className="text-xs text-green-600 mt-1">✓ Address information available</p>
+                )}
               </div>
             </div>
           )}
