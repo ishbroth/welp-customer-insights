@@ -10,6 +10,8 @@ interface ReviewConversationSectionProps {
   reviewId: string;
   shouldShowFullReview: boolean;
   isBusinessUser?: boolean;
+  isCustomerBeingReviewed?: boolean;
+  customerId?: string;
   className?: string;
 }
 
@@ -17,6 +19,8 @@ const ReviewConversationSection: React.FC<ReviewConversationSectionProps> = ({
   reviewId,
   shouldShowFullReview,
   isBusinessUser = false,
+  isCustomerBeingReviewed = false,
+  customerId,
   className = ""
 }) => {
   const [isResponseVisible, setIsResponseVisible] = useState(false);
@@ -56,7 +60,7 @@ const ReviewConversationSection: React.FC<ReviewConversationSectionProps> = ({
 
   // Check if user can start or continue conversation
   const canUserRespond = shouldShowFullReview && currentUser && (
-    (!hasConversation && currentUser.type === 'customer') || // Customer can start conversation
+    (!hasConversation && currentUser.type === 'customer' && isCustomerBeingReviewed) || // Only customer being reviewed can start conversation
     (hasConversation && canRespond) // Any participant can continue
   );
 
