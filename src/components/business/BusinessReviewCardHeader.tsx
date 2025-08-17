@@ -160,18 +160,15 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
               <p className="text-sm text-gray-500">
                 Review written on {formatDate(review.date)}
               </p>
-              {/* Show location but hide sensitive contact info */}
-              {(customerCity || customerZipcode) && (
+              {customerPhone && (
                 <p className="text-sm text-gray-600">
-                  Location: {customerCity} {customerZipcode}
+                  Phone: {customerPhone}
                 </p>
               )}
-              {/* Show match indicators instead of sensitive data */}
-              {(customerPhone || customerAddress) && (
-                <div className="text-xs text-green-600 space-x-2">
-                  {customerPhone && <span>✓ Phone verified</span>}
-                  {customerAddress && <span>✓ Address verified</span>}
-                </div>
+              {formatAddress() && (
+                <p className="text-sm text-gray-600">
+                  Address: {formatAddress()}
+                </p>
               )}
             </div>
           </div>
@@ -230,18 +227,15 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
               <p className="text-sm text-gray-500">
                 Review written on {formatDate(review.date)}
               </p>
-              {/* Show location but hide sensitive contact info */}
-              {(customerCity || customerZipcode) && (
+              {customerPhone && (
                 <p className="text-sm text-gray-600">
-                  Location: {customerCity} {customerZipcode}
+                  Phone: {customerPhone}
                 </p>
               )}
-              {/* Show match indicators instead of sensitive data */}
-              {(customerPhone || customerAddress) && (
-                <div className="text-xs text-green-600 space-x-2">
-                  {customerPhone && <span>✓ Phone verified</span>}
-                  {customerAddress && <span>✓ Address verified</span>}
-                </div>
+              {formatAddress() && (
+                <p className="text-sm text-gray-600">
+                  Address: {formatAddress()}
+                </p>
               )}
             </div>
           </div>

@@ -108,27 +108,18 @@ const DetailedMatchInfo: React.FC<DetailedMatchInfoProps> = ({
                 </Badge>
               </div>
               <div className="text-xs space-y-1">
-                {/* Hide sensitive data (phone, address) but show match status */}
-                {match.field.toLowerCase().includes('phone') || match.field.toLowerCase().includes('address') ? (
-                  <div className="text-green-600">
-                    <span>✓ {match.field} information matched securely</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-500 font-medium">Review:</span>
-                      <span className={`break-all ${
-                        match.matchType === 'no_match' ? 'text-gray-500' : 'text-gray-700'
-                      }`}>{match.reviewValue}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-500 font-medium">Your Info:</span>
-                      <span className={`break-all ${
-                        match.matchType === 'no_match' ? 'text-gray-500' : 'text-gray-700'
-                      }`}>{match.searchValue}</span>
-                    </div>
-                  </>
-                )}
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-500 font-medium">Review:</span>
+                  <span className={`break-all ${
+                    match.matchType === 'no_match' ? 'text-gray-500' : 'text-gray-700'
+                  }`}>{match.reviewValue}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-500 font-medium">Your Info:</span>
+                  <span className={`break-all ${
+                    match.matchType === 'no_match' ? 'text-gray-500' : 'text-gray-700'
+                  }`}>{match.searchValue}</span>
+                </div>
                 {match.similarity > 0 && match.similarity < 1.0 && (
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500 font-medium">Similarity:</span>

@@ -67,18 +67,16 @@ const CustomerInfo = ({
       </div>
       
       <div className="mt-2 text-sm text-gray-600">
-        {/* Show location but hide sensitive address */}
+        {customer.address && (
+          <p>{customer.address}</p>
+        )}
         {(customer.city || customer.state || customer.zipCode) && (
           <p>
             {customer.city}{customer.city && customer.state ? ', ' : ''}{customer.state} {customer.zipCode}
           </p>
         )}
-        {/* Show data availability indicators instead of sensitive info */}
-        {(customer.address || customer.phone) && (
-          <div className="text-xs text-green-600 mt-1 space-x-2">
-            {customer.phone && <span>✓ Phone verified</span>}
-            {customer.address && <span>✓ Address verified</span>}
-          </div>
+        {customer.phone && (
+          <p className="mt-1">Phone: {formatPhoneNumber(customer.phone)}</p>
         )}
       </div>
     </div>
