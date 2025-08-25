@@ -178,7 +178,7 @@ src/
 ### Deployment Architecture
 
 #### Frontend Deployment
-- **Static site hosting** via Lovable
+- **Static site hosting**
 - **CDN distribution** for global performance
 - **Environment-based configuration**
 - **Automated deployment** on code changes

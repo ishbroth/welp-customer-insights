@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Welp. - Review Customers</string>
+    <string name="title_activity_main">Welp. - Review Customers</string>
+    <string name="package_name">com.welp.customerinsights</string>
+    <string name="custom_url_scheme">com.welp.customerinsights</string>
+</resources>

@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.01e840ab04ff4c6cb5f891237d529da9',
+  appId: 'com.welp.customerinsights',
   appName: 'Welp. - Review Customers',
   webDir: 'dist',
   server: {

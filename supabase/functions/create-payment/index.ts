@@ -127,7 +127,7 @@ serve(async (req) => {
       });
     }
 
-    const origin = req.headers.get("origin") || "https://01e840ab-04ff-4c6c-b5f8-91237d529da9.lovableproject.com";
+    const origin = req.headers.get("origin") || "https://www.mywelp.com";
     
     // Prepare success URL with parameters
     const successParams = new URLSearchParams();

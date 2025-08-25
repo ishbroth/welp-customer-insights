@@ -3,7 +3,7 @@
 
 ## App Information
 - **App Name**: Welp. - Review Customers
-- **Bundle ID**: app.lovable.01e840ab04ff4c6cb5f891237d529da9
+- **Bundle ID**: com.welp.customerinsights
 - **Version**: 1.0.0
 - **Category**: Business
 - **Age Rating**: 4+

@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Counter \"\\Memory\\Available MBytes\", \"\\Processor(_Total)\\% Processor Time\" -MaxSamples 3)",
+      "Bash(powershell:*)",
+      "Bash(npm install:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm:*)",
+      "Bash(npx npkill:*)",
+      "Bash(npx cap:*)",
+      "Bash(set ANDROID_HOME=C:UsersappliAppDataLocalAndroidSdk)",
+      "Bash(set PATH=%PATH%)",
+      "Bash(C:UsersappliAppDataLocalAndroidSdkplatform-tools)",
+      "Bash(C:UsersappliAppDataLocalAndroidSdkemulator)",
+      "Bash(\"C:\\Users\\appli\\AppData\\Local\\Android\\Sdk\\emulator\\emulator.exe\" -avd Pixel_9_Pro -no-audio -no-window -gpu host)",
+      "Bash(\"C:\\Users\\appli\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe\" devices)",
+      "Bash(dir dist)",
+      "Bash(git add:*)",
+      "Bash(del nul)",
+      "Bash(git config:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\"
+    ]
+  }
+}

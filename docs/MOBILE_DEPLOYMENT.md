@@ -59,7 +59,7 @@ npx cap open ios
 - Select "App" target
 - Go to "Signing & Capabilities"
 - Select your development team
-- Ensure bundle identifier matches: `app.lovable.01e840ab04ff4c6cb5f891237d529da9`
+- Ensure bundle identifier matches: `com.welp.customerinsights`
 
 ### 3. Update App Information
 - Set app version and build number
@@ -206,6 +206,5 @@ npx cap run android
 - [Capacitor Documentation](https://capacitorjs.com/docs)
 - [iOS App Store Guidelines](https://developer.apple.com/app-store/guidelines/)
 - [Google Play Policy](https://play.google.com/about/developer-content-policy/)
-- [Lovable Mobile Development Blog](https://lovable.dev/blogs/TODO)
 
 For additional support, consult the project documentation or reach out to the development team.
