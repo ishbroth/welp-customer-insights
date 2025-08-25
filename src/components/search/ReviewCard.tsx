@@ -315,6 +315,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           reviewId={review.id}
           shouldShowFullReview={canParticipateInConversation}
           isBusinessUser={currentUser?.type === 'business'}
+          isCustomerBeingReviewed={currentUser?.id === review.customerId}
+          customerId={review.customerId}
           className="mt-4"
         />
 

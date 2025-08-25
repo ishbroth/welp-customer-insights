@@ -133,12 +133,18 @@ export const conversationService = {
   },
 
   // Check if user can respond (conversation exists and user is participant and it's their turn)
-  async canUserRespond(reviewId: string, userId: string, userType: 'business' | 'customer'): Promise<boolean> {
+  async canUserRespond(reviewId: string, userId: string, userType: 'business' | 'customer', customerId?: string): Promise<boolean> {
     const participants = await this.getParticipants(reviewId);
     
     if (!participants) {
-      // No conversation exists - only customers can start a conversation
-      return userType === 'customer';
+      // No conversation exists - check if user can start one
+      if (userType === 'customer') {
+        // Customer can only start conversation if the review is about them
+        // If customerId is provided, check identity match, otherwise allow for backward compatibility
+        return customerId ? userId === customerId : true;
+      }
+      // Business users can't start conversations (only customers can)
+      return false;
     }
 
     // Check if user is a participant
@@ -152,8 +158,11 @@ export const conversationService = {
     const messages = await this.getConversation(reviewId);
     
     if (messages.length === 0) {
-      // No messages yet - only customer can start
-      return userType === 'customer';
+      // No messages yet - only the specific customer can start
+      if (userType === 'customer') {
+        return participants.customer_id === userId;
+      }
+      return false;
     }
 
     const lastMessage = messages[messages.length - 1];

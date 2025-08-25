@@ -1,14 +1,19 @@
 
 import { CapacitorConfig } from '@capacitor/cli';
 
+// Use production URL for production builds, development for dev mode
+const isDev = process.env.NODE_ENV === 'development';
+
 const config: CapacitorConfig = {
   appId: 'com.welp.customerinsights',
   appName: 'Welp. - Review Customers',
   webDir: 'dist',
-  server: {
-    url: 'https://www.mywelp.com',
-    cleartext: true
-  },
+  ...(isDev && {
+    server: {
+      url: 'https://01e840ab-04ff-4c6c-b5f8-91237d529da9.lovableproject.com?forceHideBadge=true',
+      cleartext: true
+    }
+  }),
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,

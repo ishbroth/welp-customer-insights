@@ -234,6 +234,8 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
         reviewId={review.id}
         shouldShowFullReview={shouldShowFullReview()}
         isBusinessUser={false}
+        isCustomerBeingReviewed={isCustomerBeingReviewed}
+        customerId={review.customerId}
         className="mt-4"
       />
 
