@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ...(isDev && {
     server: {
-      url: 'https://01e840ab-04ff-4c6c-b5f8-91237d529da9.lovableproject.com?forceHideBadge=true',
+      url: 'http://localhost:8080',
       cleartext: true
     }
   }),
