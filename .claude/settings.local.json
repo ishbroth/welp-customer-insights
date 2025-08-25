@@ -20,7 +20,9 @@
       "Bash(git config:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh workflow:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": [],
