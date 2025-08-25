@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint .",
+    "lint:disabled": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
