@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ...(isDev && {
     server: {
-      url: 'http://localhost:8080',
+      url: 'http://localhost:8082',
       cleartext: true
     }
   }),
