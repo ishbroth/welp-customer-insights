@@ -22,7 +22,9 @@
       "Bash(git pull:*)",
       "Bash(git commit:*)",
       "Bash(gh workflow:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.github.com)"
     ],
     "deny": [],
     "ask": [],
