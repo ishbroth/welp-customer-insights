@@ -2,7 +2,7 @@
 
 A React-based application for customer review management and insights.
 
-🌐 **Live Site**: [mywelp.com](https://mywelp.com) ✨ Deployed automatically via GitHub Actions
+🌐 **Live Site**: [mywelp.com](https://mywelp.com) ✨ Web deployment only - fast & clean
 
 ## How to run locally
 
