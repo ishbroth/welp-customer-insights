@@ -85,10 +85,10 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
                   </Link>
                 )}
                 
-                {/* Username and tiny avatar OR sign in link */}
+                {/* Username and tiny avatar OR sign in/up links */}
                 {currentUser ? (
-                  <Link 
-                    to="/profile" 
+                  <Link
+                    to="/profile"
                     className="flex items-center space-x-1 text-welp-dark hover:text-[#ea384c] transition-colors"
                   >
                     <span className="text-xs truncate max-w-[80px]">
@@ -103,13 +103,21 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
                     </Avatar>
                   </Link>
                 ) : (
-                  <Link 
-                    to="/login" 
-                    className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
-                  >
-                    <LogIn className="h-3 w-3 mr-1" />
-                    <span className="text-xs">sign in</span>
-                  </Link>
+                  <>
+                    <Link
+                      to="/login"
+                      className="text-welp-dark hover:text-[#ea384c] transition-colors flex items-center"
+                    >
+                      <LogIn className="h-3 w-3 mr-1" />
+                      <span className="text-xs">sign in</span>
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="bg-[#ea384c] hover:bg-[#d02e40] text-white px-2 py-1 rounded text-xs transition-colors"
+                    >
+                      sign up
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
