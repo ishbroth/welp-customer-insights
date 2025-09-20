@@ -2,6 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/sections/HeroSection";
+import ReviewCarousel from "@/components/sections/ReviewCarousel";
 import TabsSection from "@/components/sections/TabsSection";
 import FeaturesSection from "@/components/sections/FeaturesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
@@ -20,14 +21,16 @@ const Index = () => {
         <Header />
         <main className="flex-grow">
           <HeroSection />
+          <ReviewCarousel />
           <TabsSection />
           <FeaturesSection />
           <TestimonialsSection />
           <CallToActionSection />
+          <ReviewCarousel />
           {isNative && (
             <div className="mt-4">
-              <Button 
-                onClick={() => navigate('/mobile-test')} 
+              <Button
+                onClick={() => navigate('/mobile-test')}
                 className="bg-green-600 hover:bg-green-700"
               >
                 📱 Test Mobile Features
