@@ -30,9 +30,17 @@ const NewReview = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log("🚀 FORM SUBMISSION STARTED");
+    console.log("Form state data:", {
+      isEditing: formState.isEditing,
+      reviewId: formState.reviewId,
+      customerState: formState.customerState,
+      associates: formState.associates
+    });
+
     // Check for self-review first
     if (isSelfReview) {
+      console.log("❌ Blocking submission - self review detected");
       return; // Block submission if it's a self-review
     }
     
@@ -55,6 +63,8 @@ const NewReview = () => {
       }
     }
     
+    console.log("Associates data being submitted:", formState.associates);
+
     await submitReview({
       rating: formState.rating,
       comment: formState.comment,
@@ -65,6 +75,7 @@ const NewReview = () => {
       customerCity: formState.customerCity,
       customerState: formState.customerState,
       customerZipCode: formState.customerZipCode,
+      associates: formState.associates,
       photos: formState.photos
     });
   };
@@ -115,6 +126,8 @@ const NewReview = () => {
                   setComment={formState.setComment}
                   photos={formState.photos}
                   setPhotos={formState.setPhotos}
+                  associates={formState.associates}
+                  setAssociates={formState.setAssociates}
                 />
               </>
             )}

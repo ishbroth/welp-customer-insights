@@ -13,6 +13,7 @@ import ReviewDeleteDialog from "@/components/review/ReviewDeleteDialog";
 import { useBusinessReviewCardLogic } from "./useBusinessReviewCardLogic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -36,7 +37,13 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     customerName: review.customerName,
     date: review.date,
     dateType: typeof review.date,
-    dateValue: JSON.stringify(review.date)
+    dateValue: JSON.stringify(review.date),
+    associates: review.associates,
+    associatesType: typeof review.associates,
+    address: review.address,
+    city: review.city,
+    state: review.state,
+    zipCode: review.zipCode
   });
   
   const { handleCustomerClick, formatDate, getCustomerInitials, isReviewClaimed } = useBusinessReviewCardLogic(review);
@@ -62,6 +69,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   const handleEditClick = () => {
+    console.log("🔧 EDIT BUTTON CLICKED for review:", review.id);
     console.log("=== EDIT REVIEW DEBUG ===");
     console.log("Review object:", review);
     console.log("Review ID:", review.id);
@@ -76,6 +84,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       city: (review as any).customer_city || review.city || (review as any).customerCity || '',
       state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
       zipCode: (review as any).customer_zipcode || review.zipCode || (review as any).customerZipCode || (review as any).customerZipcode || '',
+      associates: review.associates || [],
     };
     
     // Navigate to new review page with customer info pre-filled and edit mode enabled
@@ -126,6 +135,20 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
         <BusinessReviewCardContent review={review} />
 
         <BusinessReviewCardPhotos reviewId={review.id} />
+
+        {/* Associates Display */}
+        {review.associates && review.associates.length > 0 && (
+          <AssociatesDisplay
+            associates={review.associates}
+            reviewData={{
+              phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
+              address: review.address || '',
+              city: review.city || '',
+              state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
+              zipCode: review.zipCode || ''
+            }}
+          />
+        )}
 
         {/* Move edit/delete actions here, right after the main review content */}
         <BusinessReviewCardActions 

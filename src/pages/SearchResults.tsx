@@ -6,6 +6,8 @@ import SearchBox from "@/components/SearchBox";
 import { useCustomerSearch } from "@/hooks/useCustomerSearch";
 import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useSearchParams } from "react-router-dom";
+// Import debug utility for testing associate functionality
+import "@/utils/testAssociateData";
 
 const SearchResults = () => {
   const { customers, isLoading, refetch } = useCustomerSearch();

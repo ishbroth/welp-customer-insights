@@ -116,10 +116,13 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           // Map database fields correctly to Review interface
           address: review.customer_address || "",
           city: review.customer_city || "",
+          state: review.customer_state || "",
           zipCode: review.customer_zipcode || "",
+          associates: review.associates || [],
           // Store additional customer fields for compatibility
           customer_address: review.customer_address || "",
           customer_city: review.customer_city || "",
+          customer_state: review.customer_state || "",
           customer_zipcode: review.customer_zipcode || "",
           customer_phone: review.customer_phone || "",
           reactions: { like: [], funny: [], ohNo: [] },

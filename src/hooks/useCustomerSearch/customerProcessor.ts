@@ -82,18 +82,49 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ") || "";
     
+    // For associate matches, use associate name and preserve original customer data
+    const isAssociateMatch = mostCompleteReview.isAssociateMatch || false;
+    let finalFirstName = firstName;
+    let finalLastName = lastName;
+    let finalPhone = mostCompleteReview.customer_phone || "";
+    let finalAddress = mostCompleteReview.customer_address || "";
+    let finalCity = mostCompleteReview.customer_city || "";
+    let finalZipCode = mostCompleteReview.customer_zipcode || "";
+
+    console.log(`Processing review customer: ${fullName}, isAssociateMatch: ${isAssociateMatch}`);
+
+    if (isAssociateMatch && mostCompleteReview.associateData) {
+      // Use associate name for display
+      finalFirstName = mostCompleteReview.associateData.firstName || "";
+      finalLastName = mostCompleteReview.associateData.lastName || "";
+
+      // For associate matches, we keep the original customer location data
+      // since the associate doesn't have their own location data
+      console.log(`Associate match: Using ${finalFirstName} ${finalLastName} with original customer location`);
+    }
+
     // Create customer with enhanced review data that includes ALL customer info
     const customer: Customer = {
       id: `review-customer-${mostCompleteReview.id}`,
-      firstName,
-      lastName,
-      phone: mostCompleteReview.customer_phone || "",
-      address: mostCompleteReview.customer_address || "",
-      city: mostCompleteReview.customer_city || "",
+      firstName: finalFirstName,
+      lastName: finalLastName,
+      phone: finalPhone,
+      address: finalAddress,
+      city: finalCity,
       state: "", // State comes from business profile, not customer data
-      zipCode: mostCompleteReview.customer_zipcode || "",
+      zipCode: finalZipCode,
       avatar: "",
       verified: false,
+      // Associate match metadata
+      isAssociateMatch,
+      associateData: mostCompleteReview.associateData,
+      originalCustomerInfo: isAssociateMatch ? {
+        name: mostCompleteReview.original_customer_name,
+        phone: mostCompleteReview.original_customer_phone,
+        address: mostCompleteReview.original_customer_address,
+        city: mostCompleteReview.original_customer_city,
+        zipCode: mostCompleteReview.original_customer_zipcode
+      } : undefined,
       reviews: reviews.map(review => ({
         id: review.id,
         reviewerId: review.business_id || "",
@@ -108,7 +139,16 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
         customer_phone: review.customer_phone,
         customer_address: review.customer_address,
         customer_city: review.customer_city,
-        customer_zipcode: review.customer_zipcode
+        customer_zipcode: review.customer_zipcode,
+        // CRITICAL: Include associate match metadata in each review
+        isAssociateMatch: review.isAssociateMatch,
+        associateData: review.associateData,
+        original_customer_name: review.original_customer_name,
+        original_customer_phone: review.original_customer_phone,
+        original_customer_address: review.original_customer_address,
+        original_customer_city: review.original_customer_city,
+        original_customer_zipcode: review.original_customer_zipcode,
+        customerName: `${finalFirstName} ${finalLastName}`.trim()
       }))
     };
     

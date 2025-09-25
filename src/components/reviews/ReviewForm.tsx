@@ -5,6 +5,7 @@ import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
 import RatingInput from "@/components/reviews/RatingInput";
 import ReviewTextInput from "@/components/reviews/ReviewTextInput";
 import PhotoUpload from "@/components/reviews/PhotoUpload";
+import AssociatesInput from "@/components/reviews/AssociatesInput";
 import { AddressComponents } from "@/utils/addressExtraction";
 
 interface ReviewFormProps {
@@ -44,6 +45,11 @@ interface ReviewFormProps {
   // Photo props
   photos: Array<{ file: File; caption: string; preview: string }>;
   setPhotos: React.Dispatch<React.SetStateAction<Array<{ file: File; caption: string; preview: string }>>>;
+
+  // Associates props
+  associates: Array<{ firstName: string; lastName: string }>;
+  setAssociates: (associates: Array<{ firstName: string; lastName: string }>) => void;
+
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({
@@ -75,6 +81,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   setComment,
   photos,
   setPhotos,
+  associates,
+  setAssociates,
 }) => {
   const navigate = useNavigate();
 
@@ -135,11 +143,17 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         />
         
         {/* Photo Upload */}
-        <PhotoUpload 
+        <PhotoUpload
           photos={photos}
           setPhotos={setPhotos}
         />
-        
+
+        {/* Associates */}
+        <AssociatesInput
+          associates={associates}
+          setAssociates={setAssociates}
+        />
+
         <div className="pt-4 space-y-3">
           <Button
             type="submit"

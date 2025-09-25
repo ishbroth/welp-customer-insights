@@ -39,6 +39,15 @@ export interface ReviewData {
   reviewerName?: string;
   reviewerAvatar?: string;
   reviewerVerified?: boolean;
+  associates?: Array<{ firstName: string; lastName: string }>;
+  // Associate match metadata
+  isAssociateMatch?: boolean;
+  associateData?: { firstName: string; lastName: string };
+  original_customer_name?: string;
+  original_customer_address?: string;
+  original_customer_city?: string;
+  original_customer_zipcode?: string;
+  original_customer_phone?: string;
 }
 
 export interface GroupedReviewData extends ReviewData {

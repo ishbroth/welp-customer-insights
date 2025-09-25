@@ -160,8 +160,10 @@ export const useProfileReviewsFetching = () => {
             customer_name,
             customer_address,
             customer_city,
+            customer_state,
             customer_zipcode,
             customer_phone,
+            associates,
             rating,
             content,
             created_at,
@@ -186,8 +188,15 @@ export const useProfileReviewsFetching = () => {
           customer_name: review.customer_name, // Keep snake_case for backward compatibility
           customer_address: review.customer_address,
           customer_city: review.customer_city,
+          customer_state: review.customer_state,
           customer_zipcode: review.customer_zipcode,
           customer_phone: review.customer_phone,
+          associates: review.associates || [],
+          // Map to camelCase for component compatibility
+          address: review.customer_address,
+          city: review.customer_city,
+          state: review.customer_state,
+          zipCode: review.customer_zipcode,
           business_id: review.business_id,
           // Include customerId from review claims if available
           customerId: review.review_claims?.[0]?.claimed_by || null,

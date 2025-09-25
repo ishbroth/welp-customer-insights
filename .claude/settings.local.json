@@ -24,7 +24,14 @@
       "Bash(gh workflow:*)",
       "Bash(git log:*)",
       "WebSearch",
-      "WebFetch(domain:docs.github.com)"
+      "WebFetch(domain:docs.github.com)",
+      "Bash(nslookup:*)",
+      "Bash(C:UsersappliAppDataLocalAndroidSdkemulatoremulator.exe -list-avds)",
+      "Bash(\"C:\\Users\\appli\\AppData\\Local\\Android\\Sdk\\emulator\\emulator.exe\" -list-avds)",
+      "Bash(\"C:\\Users\\appli\\AppData\\Local\\Android\\Sdk\\emulator\\emulator.exe\" -avd Pixel_9_Pro -no-audio -gpu host)",
+      "Bash(timeout:*)",
+      "Bash(chmod:*)",
+      "Bash(where java)"
     ],
     "deny": [],
     "ask": [],

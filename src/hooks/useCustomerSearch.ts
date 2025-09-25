@@ -91,7 +91,16 @@ export const useCustomerSearch = () => {
         business_profile: review.business_profile,
         reviewerName: review.reviewerName,
         reviewerAvatar: review.reviewerAvatar,
-        reviewerVerified: review.reviewerVerified
+        reviewerVerified: review.reviewerVerified,
+        associates: review.associates,
+        // Preserve associate match metadata
+        isAssociateMatch: review.isAssociateMatch,
+        associateData: review.associateData,
+        original_customer_name: review.original_customer_name,
+        original_customer_address: review.original_customer_address,
+        original_customer_city: review.original_customer_city,
+        original_customer_zipcode: review.original_customer_zipcode,
+        original_customer_phone: review.original_customer_phone
       }));
       
       // Process review customers (now with grouping logic)

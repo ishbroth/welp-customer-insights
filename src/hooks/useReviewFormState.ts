@@ -36,6 +36,7 @@ export const useReviewFormState = () => {
   const [customerZipCode, setCustomerZipCode] = useState("");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [photos, setPhotos] = useState<Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>>([]);
+  const [associates, setAssociates] = useState<Array<{ firstName: string; lastName: string }>>([]);
   
   // Duplicate review check states
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -57,6 +58,7 @@ export const useReviewFormState = () => {
         setRating(0);
         setComment("");
         setPhotos([]);
+        setAssociates([{ firstName: "", lastName: "" }, { firstName: "", lastName: "" }, { firstName: "", lastName: "" }]);
       }
       
       // Handle pre-filling data if we're editing
@@ -77,6 +79,18 @@ export const useReviewFormState = () => {
         setCustomerCity(reviewData.city || "");
         setCustomerState(reviewData.state || "");
         setCustomerZipCode(reviewData.zipCode || "");
+
+        // Load associates data from reviewData
+        if (reviewData.associates && Array.isArray(reviewData.associates)) {
+          // Ensure we have exactly 3 associates slots, filling empty ones
+          const loadedAssociates = reviewData.associates.slice(0, 3);
+          while (loadedAssociates.length < 3) {
+            loadedAssociates.push({ firstName: "", lastName: "" });
+          }
+          setAssociates(loadedAssociates);
+        } else {
+          setAssociates([{ firstName: "", lastName: "" }, { firstName: "", lastName: "" }, { firstName: "", lastName: "" }]);
+        }
 
         // Load existing photos when editing
         if (reviewId) {
@@ -123,7 +137,7 @@ export const useReviewFormState = () => {
         try {
           const { data: review, error } = await supabase
             .from('reviews')
-            .select('*')
+            .select('id, business_id, content, rating, customer_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
             .eq('id', reviewId)
             .maybeSingle();
 
@@ -144,9 +158,20 @@ export const useReviewFormState = () => {
             setCustomerPhone(review.customer_phone || "");
             setCustomerAddress(review.customer_address || "");
             setCustomerCity(review.customer_city || "");
-            // Note: customer_state doesn't exist in the database, so we'll leave it empty
-            setCustomerState("");
+            setCustomerState(review.customer_state || "");
             setCustomerZipCode(review.customer_zipcode || "");
+
+            // Load associates data
+            if (review.associates && Array.isArray(review.associates)) {
+              // Ensure we have exactly 3 associates slots, filling empty ones
+              const loadedAssociates = review.associates.slice(0, 3);
+              while (loadedAssociates.length < 3) {
+                loadedAssociates.push({ firstName: "", lastName: "" });
+              }
+              setAssociates(loadedAssociates);
+            } else {
+              setAssociates([{ firstName: "", lastName: "" }, { firstName: "", lastName: "" }, { firstName: "", lastName: "" }]);
+            }
 
             // Load existing photos
             const { data: existingPhotos, error: photosError } = await supabase
@@ -255,7 +280,9 @@ export const useReviewFormState = () => {
     setIsNewCustomer,
     photos,
     setPhotos,
-    
+    associates,
+    setAssociates,
+
     // Duplicate dialog state
     showDuplicateDialog,
     setShowDuplicateDialog,

@@ -3,10 +3,16 @@ export const formatReviewData = (review: any) => {
   // Extract business profile information
   const businessProfile = review.profiles || {};
   const customerProfile = review.customer_profile || {};
-  
+
+  // For associate matches, use original customer name for display
+  const displayCustomerName = review.isAssociateMatch && review.original_customer_name
+    ? review.original_customer_name
+    : review.customer_name;
+
   return {
     id: review.id,
-    customer_name: review.customer_name,
+    customer_name: review.customer_name, // Keep original for search/scoring
+    customerName: displayCustomerName,   // Use for UI display
     customer_address: review.customer_address,
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
@@ -22,6 +28,10 @@ export const formatReviewData = (review: any) => {
     reviewerVerified: false, // This will be set in the search function
     customerVerified: customerProfile?.verified || false,
     searchScore: 0,
-    matchCount: 0
+    matchCount: 0,
+    // Pass through associate match metadata
+    isAssociateMatch: review.isAssociateMatch,
+    associateData: review.associateData,
+    original_customer_name: review.original_customer_name
   };
 };

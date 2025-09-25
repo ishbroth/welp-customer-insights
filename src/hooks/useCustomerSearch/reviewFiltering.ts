@@ -209,12 +209,20 @@ export const filterAndSortReviews = (
       // PRIMARY SORT: Claimed/Unlocked reviews come first
       const aIsClaimed = unlockedReviews?.includes(a.id) || false;
       const bIsClaimed = unlockedReviews?.includes(b.id) || false;
-      
+
       if (aIsClaimed !== bIsClaimed) {
         return bIsClaimed ? 1 : -1; // Claimed reviews first
       }
-      
-      // SECONDARY SORT: Conditional based on whether name fields were searched
+
+      // SECONDARY SORT: Direct customer matches before associate matches
+      const aIsAssociate = (a as any).isAssociateMatch || false;
+      const bIsAssociate = (b as any).isAssociateMatch || false;
+
+      if (aIsAssociate !== bIsAssociate) {
+        return aIsAssociate ? 1 : -1; // Direct matches (not associate) come first
+      }
+
+      // TERTIARY SORT: Conditional based on whether name fields were searched
       if (searchContext?.hasName) {
         // If name fields were searched: Sort by searchScore (highest first)
         const scoreComparison = b.searchScore - a.searchScore;
@@ -222,7 +230,7 @@ export const filterAndSortReviews = (
           return scoreComparison;
         }
         
-        // TERTIARY SORT: Date (newest first) when name was searched
+        // QUATERNARY SORT: Date (newest first) when name was searched
         if (a.created_at && b.created_at) {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         }
@@ -233,7 +241,7 @@ export const filterAndSortReviews = (
           return scoreComparison;
         }
         
-        // TERTIARY SORT: Alphabetical by customer name when no name was searched
+        // QUATERNARY SORT: Alphabetical by customer name when no name was searched
         const aName = (a.customer_name || '').toLowerCase();
         const bName = (b.customer_name || '').toLowerCase();
         const nameComparison = aName.localeCompare(bName);

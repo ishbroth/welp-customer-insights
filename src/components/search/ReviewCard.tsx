@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { Star, MessageCircle, Lock } from "lucide-react";
+import { Star, MessageCircle, Lock, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
+import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 
 interface ReviewCardProps {
   review: {
@@ -35,6 +36,10 @@ interface ReviewCardProps {
     city?: string;
     state?: string;
     zipCode?: string;
+    associates?: Array<{ firstName: string; lastName: string }>;
+    isAssociateMatch?: boolean;
+    original_customer_name?: string;
+    associateData?: { firstName: string; lastName: string };
   };
   hasSubscription: boolean;
   isOneTimeUnlocked: boolean;
@@ -71,7 +76,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     ? (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor) && customerCanAccessReview
     : (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor);
 
-  // Use the customer info system
+  // customerName should now always contain the original customer name
   const customerInfo = useCustomerInfo({
     customer_name: review.customerName,
     customer_phone: review.customer_phone,
@@ -270,45 +275,75 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <p className="text-gray-700 leading-relaxed md:text-base text-sm">
                 {getPreviewText(review.content)}
               </p>
-              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                <div className="flex items-center text-gray-600 mb-2">
-                  <Lock className="h-4 w-4 mr-2" />
-                  <span className="text-sm">Full review locked</span>
-                </div>
-                <p className="text-xs text-gray-500 mb-3">
-                  Customers may track their own reviews only.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  {customerCanAccessReview && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleOneTimeAccess}
-                        className="flex-1 text-xs sm:text-sm px-2 py-1"
-                      >
-                        <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        <span className="truncate">Unlock ($3)</span>
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleSubscriptionAccess}
-                        className="flex-1 text-xs sm:text-sm px-2 py-1"
-                      >
-                        <span className="truncate">Subscribe</span>
-                      </Button>
-                    </>
-                  )}
-                  {!customerCanAccessReview && (
-                    <p className="text-xs text-gray-500 italic">
-                      This review does not match your profile information
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
           )}
         </div>
+
+        {/* Associate Match Indicator - show when this result came from searching for an associate */}
+        {review.isAssociateMatch && review.associateData && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">
+                Found via associate: {`${review.associateData.firstName} ${review.associateData.lastName}`.trim()}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Lock/Unlock UI for non-accessible content */}
+        {!canViewFullContent && (
+          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <div className="flex items-center text-gray-600 mb-2">
+              <Lock className="h-4 w-4 mr-2" />
+              <span className="text-sm">Full review locked</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Customers may track their own reviews only.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              {customerCanAccessReview && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleOneTimeAccess}
+                    className="flex-1 text-xs sm:text-sm px-2 py-1"
+                  >
+                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="truncate">Unlock ($3)</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSubscriptionAccess}
+                    className="flex-1 text-xs sm:text-sm px-2 py-1"
+                  >
+                    <span className="truncate">Subscribe</span>
+                  </Button>
+                </>
+              )}
+              {!customerCanAccessReview && (
+                <p className="text-xs text-gray-500 italic">
+                  This review does not match your profile information
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Associates Display - show when associates exist and this isn't an associate search result */}
+        {review.associates && review.associates.length > 0 && !review.isAssociateMatch && (
+          <AssociatesDisplay
+            associates={review.associates}
+            reviewData={{
+              phone: review.customer_phone || '',
+              address: review.customer_address || review.address || '',
+              city: review.customer_city || review.city || '',
+              state: review.state || '',
+              zipCode: review.customer_zipcode || review.zipCode || ''
+            }}
+          />
+        )}
 
         {/* Conversation Section */}
         <ReviewConversationSection 

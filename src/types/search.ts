@@ -10,6 +10,16 @@ export interface Customer {
   zipCode?: string;
   avatar?: string;
   verified?: boolean; // Add verification status
+  // Associate match metadata
+  isAssociateMatch?: boolean;
+  associateData?: { firstName: string; lastName: string };
+  originalCustomerInfo?: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    zipCode?: string;
+  };
   reviews?: Array<{
     id: string;
     reviewerId: string;

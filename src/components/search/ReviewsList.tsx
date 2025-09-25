@@ -17,18 +17,42 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
 
   return (
     <div className="space-y-3">
-      {reviews.map((review, index) => (
-        <ReviewCard
-          key={`review-${review.id || index}`}
-          review={{
-            ...review,
-            // Map customer_name to customerName for proper display
-            customerName: review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer'
-          }}
-          hasSubscription={hasFullAccess(customerData.id)}
-          isOneTimeUnlocked={false}
-        />
-      ))}
+      {reviews.map((review, index) => {
+        // Debug what we're getting from the search results
+        console.log("ReviewsList: Processing review", {
+          id: review.id,
+          isAssociateMatch: review.isAssociateMatch,
+          original_customer_name: review.original_customer_name,
+          customer_name: review.customer_name,
+          customerName: review.customerName,
+          associateData: review.associateData
+        });
+
+        console.log("ReviewsList: Logic check", {
+          isAssociateMatch: review.isAssociateMatch,
+          hasOriginalName: !!review.original_customer_name,
+          originalName: review.original_customer_name,
+          willUseOriginal: review.isAssociateMatch && review.original_customer_name
+        });
+
+        const finalCustomerName = review.isAssociateMatch && review.original_customer_name
+          ? review.original_customer_name
+          : (review.customerName || review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer');
+
+        console.log("ReviewsList: Final customer name set to:", finalCustomerName);
+
+        return (
+          <ReviewCard
+            key={`review-${review.id || index}`}
+            review={{
+              ...review,
+              customerName: finalCustomerName
+            }}
+            hasSubscription={hasFullAccess(customerData.id)}
+            isOneTimeUnlocked={false}
+          />
+        );
+      })}
     </div>
   );
 };

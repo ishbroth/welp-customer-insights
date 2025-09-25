@@ -8,6 +8,120 @@ import { formatReviewData } from "./reviewDataFormatter";
 import { initializeGeocodingForSearch, cleanupAfterSearch } from "@/utils/cityProximity";
 import { normalizeState } from "@/utils/stateNormalization";
 
+// Search for associates within reviews and return transformed results
+const searchAssociatesInReviews = async (searchParams: SearchParams) => {
+  const { firstName, lastName } = searchParams;
+
+  console.log("=== ASSOCIATE SEARCH START ===");
+  console.log("Searching for associates:", { firstName, lastName });
+
+  // If no name provided, skip associate search
+  if (!firstName && !lastName) {
+    console.log("No name provided for associate search");
+    return [];
+  }
+
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
+  console.log("Full name for associate search:", fullName);
+
+  try {
+    // Use a simpler approach - get all reviews with associates and filter in JavaScript
+    // This avoids complex JSONB query syntax issues
+    console.log("Fetching all reviews with associates for JavaScript filtering...");
+
+    const { data: associateReviews, error } = await supabase
+      .from('reviews')
+      .select(`
+        id,
+        customer_name,
+        customer_address,
+        customer_city,
+        customer_zipcode,
+        customer_phone,
+        rating,
+        content,
+        created_at,
+        business_id,
+        associates
+      `)
+      .not('associates', 'is', null)
+      .neq('associates', '[]')
+      .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
+
+    if (error) {
+      console.error("Associate search error:", error);
+      return [];
+    }
+
+    if (!associateReviews || associateReviews.length === 0) {
+      console.log("No reviews found with matching associates");
+      return [];
+    }
+
+    console.log(`Found ${associateReviews.length} reviews with potential associate matches`);
+
+    // Transform each review for each matching associate
+    const transformedReviews = [];
+
+    for (const review of associateReviews) {
+      if (!review.associates || !Array.isArray(review.associates)) {
+        continue;
+      }
+
+      // Find matching associates in this review
+      const matchingAssociates = review.associates.filter(associate => {
+        if (!associate || typeof associate !== 'object') return false;
+
+        const associateFirstName = (associate.firstName || '').toLowerCase();
+        const associateLastName = (associate.lastName || '').toLowerCase();
+        const associateFullName = `${associateFirstName} ${associateLastName}`.trim();
+
+        // Check for matches
+        const firstNameMatch = !firstName || associateFirstName.includes(firstName.toLowerCase());
+        const lastNameMatch = !lastName || associateLastName.includes(lastName.toLowerCase());
+        const fullNameMatch = associateFullName.includes(fullName);
+
+        return firstNameMatch && lastNameMatch || fullNameMatch;
+      });
+
+      // Create a transformed review for each matching associate
+      for (const matchingAssociate of matchingAssociates) {
+        const associateName = `${matchingAssociate.firstName || ''} ${matchingAssociate.lastName || ''}`.trim();
+
+        const transformedReview = {
+          ...review,
+          // Replace customer data with associate data
+          customer_name: associateName,
+          // Keep original customer data for reference
+          original_customer_name: review.customer_name,
+          original_customer_address: review.customer_address,
+          original_customer_city: review.customer_city,
+          original_customer_zipcode: review.customer_zipcode,
+          original_customer_phone: review.customer_phone,
+          // Mark as associate match
+          isAssociateMatch: true,
+          associateData: matchingAssociate,
+          // Use associate name for location data if main customer location not available
+          customer_address: review.customer_address,
+          customer_city: review.customer_city,
+          customer_zipcode: review.customer_zipcode,
+          customer_phone: review.customer_phone,
+        };
+
+        transformedReviews.push(transformedReview);
+        console.log(`Created associate match: ${associateName} from review ${review.id}`);
+      }
+    }
+
+    console.log(`=== ASSOCIATE SEARCH COMPLETE: ${transformedReviews.length} matches ===`);
+    return transformedReviews;
+
+  } catch (error) {
+    console.error("Error in associate search:", error);
+    return [];
+  }
+};
+
 export const searchReviews = async (searchParams: SearchParams, unlockedReviews?: string[]) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
@@ -21,16 +135,17 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
   const { data: allReviews, error } = await supabase
     .from('reviews')
     .select(`
-      id, 
-      customer_name, 
-      customer_address, 
-      customer_city, 
-      customer_zipcode, 
-      customer_phone, 
+      id,
+      customer_name,
+      customer_address,
+      customer_city,
+      customer_zipcode,
+      customer_phone,
       rating,
       content,
       created_at,
-      business_id
+      business_id,
+      associates
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
@@ -174,22 +289,111 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
 
   // Wait for all scoring to complete
   const scoredReviews = await Promise.all(scoringPromises);
-  
+
+  // Search for associate matches if name provided
+  let associateMatches = [];
+  if (firstName || lastName) {
+    console.log("🔍 Starting associate search for:", { firstName, lastName });
+    const rawAssociateMatches = await searchAssociatesInReviews(searchParams);
+    console.log("🔍 Raw associate matches found:", rawAssociateMatches.length);
+
+    // Process associate matches through the same business profile enrichment and scoring
+    const associateScoringPromises = rawAssociateMatches.map(async review => {
+      // Add the business profile data to the associate match review
+      const businessProfile = businessProfilesMap.get(review.business_id);
+
+      console.log(`🔍 Processing associate match ${review.id} - Business ID: ${review.business_id}`);
+
+      const reviewWithProfile = {
+        ...review,
+        profiles: businessProfile || null
+      };
+
+      const formattedReview = formatReviewData(reviewWithProfile);
+
+      // Set verification status properly
+      const verificationStatus = businessProfile?.verified || businessVerificationMap.get(review.business_id) || false;
+      formattedReview.reviewerVerified = verificationStatus;
+
+      // Use business_name from business_info if available, otherwise use profile name
+      if (businessProfile?.business_name) {
+        formattedReview.reviewerName = businessProfile.business_name;
+      } else if (businessProfile?.name) {
+        formattedReview.reviewerName = businessProfile.name;
+      }
+
+      // Set the avatar from the profile
+      if (businessProfile?.avatar) {
+        formattedReview.reviewerAvatar = businessProfile.avatar;
+      }
+
+      // Preserve associate match metadata (now handled in formatReviewData)
+      formattedReview.isAssociateMatch = review.isAssociateMatch;
+      formattedReview.associateData = review.associateData;
+      formattedReview.original_customer_name = review.original_customer_name;
+
+      console.log(`✅ ASSOCIATE MATCH: Business ID ${review.business_id}:`, {
+        reviewerName: formattedReview.reviewerName,
+        reviewerVerified: formattedReview.reviewerVerified,
+        associateName: formattedReview.customer_name,
+        originalCustomer: formattedReview.original_customer_name
+      });
+
+      const scoredReview = await scoreReview(formattedReview, {
+        firstName,
+        lastName,
+        phone,
+        address,
+        city,
+        state,
+        zipCode
+      }, businessProfile?.business_state || businessProfile?.state || null);
+
+      console.log(`Associate match ${review.id}: Score: ${scoredReview.searchScore}, Associate: ${formattedReview.customer_name}, Business: ${formattedReview.reviewerName}`);
+
+      return scoredReview;
+    });
+
+    // Wait for all associate scoring to complete
+    associateMatches = await Promise.all(associateScoringPromises);
+    console.log(`🔍 Processed ${associateMatches.length} associate matches`);
+  }
+
+  // Combine regular reviews and associate matches
+  // Allow both direct and associate matches to coexist - they represent different search perspectives
+  const allScoredReviews = [...scoredReviews, ...associateMatches];
+
+  console.log(`🔍 SEARCH DEBUG: Combined results for search`);
+  console.log(`🔍 Direct matches (${scoredReviews.length}):`, scoredReviews.map(r => ({
+    id: r.id,
+    name: r.customer_name,
+    score: r.searchScore,
+    isAssociate: r.isAssociateMatch
+  })));
+  console.log(`🔍 Associate matches (${associateMatches.length}):`, associateMatches.map(r => ({
+    id: r.id,
+    name: r.customer_name,
+    score: r.searchScore,
+    isAssociate: r.isAssociateMatch
+  })));
+  console.log(`🔍 Total combined: ${allScoredReviews.length}`);
+
   // Debug: Log all CA reviews after business profile enrichment
-  const caReviews = scoredReviews.filter(review => {
+  const caReviews = allScoredReviews.filter(review => {
     const businessProfile = businessProfilesMap.get(review.business_id);
     const businessState = businessProfile?.business_state || businessProfile?.state;
     const normalizedState = businessState ? normalizeState(businessState) : null;
     return normalizedState === 'CA';
   });
-  console.log(`🔍 Found ${caReviews.length} reviews with CA business state after enrichment:`, caReviews.map(r => ({
+  console.log(`🔍 Found ${caReviews.length} reviews with CA business state after enrichment (including associates):`, caReviews.map(r => ({
     id: r.id,
     name: r.customer_name,
     city: r.customer_city,
     business_id: r.business_id,
     business_state: businessProfilesMap.get(r.business_id)?.business_state,
     score: r.searchScore,
-    matches: r.matchCount
+    matches: r.matchCount,
+    isAssociate: r.isAssociateMatch || false
   })));
 
   // Detect search context for filtering
@@ -205,17 +409,17 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
     isAddressWithState: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address) && Boolean(state)
   };
 
-  // Filter and sort the results
-  const filteredReviews = isSingleFieldSearch 
-    ? scoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
-    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext, unlockedReviews, {
-        firstName, 
-        lastName, 
-        phone, 
-        address, 
-        city, 
-        state, 
-        zipCode 
+  // Filter and sort the results (now includes associate matches)
+  const filteredReviews = isSingleFieldSearch
+    ? allScoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
+    : filterAndSortReviews(allScoredReviews, isSingleFieldSearch, searchContext, unlockedReviews, {
+        firstName,
+        lastName,
+        phone,
+        address,
+        city,
+        state,
+        zipCode
       });
 
   logSearchResults(filteredReviews);

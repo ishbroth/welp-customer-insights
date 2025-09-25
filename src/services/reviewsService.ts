@@ -21,8 +21,8 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       .from('review_claims')
       .select(`
         reviews (
-          id, business_id, rating, content, customer_name, customer_address, 
-          customer_city, customer_zipcode, customer_phone, created_at, updated_at
+          id, business_id, rating, content, customer_name, customer_address,
+          customer_city, customer_state, customer_zipcode, customer_phone, created_at, updated_at
         )
       `)
       .eq('claimed_by', currentUser.id);
@@ -41,7 +41,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       
       const { data: nameReviews, error: nameError } = await supabaseSimple
         .from('reviews')
-        .select('*')
+        .select('id, business_id, content, rating, customer_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
         .ilike('customer_name', `%${currentUser.name}%`)
         .order('created_at', { ascending: false });
 
@@ -134,7 +134,9 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
         date: review.created_at,
         address: review.customer_address || "",
         city: review.customer_city || "",
+        state: review.customer_state || "",
         zipCode: review.customer_zipcode || "",
+        associates: review.associates || [],
         reactions: { like: [], funny: [], useful: [], ohNo: [] },
         responses: reviewResponses.map((resp: any) => ({
           id: resp.id,
@@ -156,7 +158,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     
     const { data: businessReviews, error: businessError } = await supabaseSimple
       .from('reviews')
-      .select('*')
+      .select('id, business_id, content, rating, customer_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
       .eq('business_id', currentUser.id)
       .order('created_at', { ascending: false });
 
@@ -166,6 +168,29 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     }
 
     console.log("Business reviews found:", businessReviews?.length || 0);
-    return businessReviews || [];
+    console.log("Raw business reviews from database:", businessReviews);
+
+    // Transform business reviews to match expected format
+    const transformedBusinessReviews = (businessReviews || []).map((review: any) => ({
+      id: review.id,
+      reviewerId: currentUser.id,
+      reviewerName: currentUser.name || "Business Owner",
+      reviewerAvatar: currentUser.avatar || "",
+      reviewerVerified: Boolean(currentUser.verified),
+      customerId: null,
+      customerName: review.customer_name || "Customer",
+      rating: review.rating,
+      content: review.content,
+      date: review.created_at,
+      address: review.customer_address || "",
+      city: review.customer_city || "",
+      state: review.customer_state || "",
+      zipCode: review.customer_zipcode || "",
+      associates: review.associates || [],
+      reactions: { like: [], funny: [], useful: [], ohNo: [] },
+      responses: []
+    }));
+
+    return transformedBusinessReviews;
   }
 };

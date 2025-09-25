@@ -17,7 +17,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="bg-[#ea384c] text-white py-12 md:py-16 lg:py-24">
+    <section className="bg-[#ea384c] text-white py-10 md:py-13 lg:py-19">
       <div className="container mx-auto px-3 md:px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold mb-3 md:mb-4">Welp.</h1>

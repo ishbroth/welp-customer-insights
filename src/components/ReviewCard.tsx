@@ -7,6 +7,7 @@ import ReviewReactions from "@/components/ReviewReactions";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileShareButton from "@/components/mobile/MobileShareButton";
+import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 
 interface ReviewCardProps {
   review: Review;
@@ -15,9 +16,9 @@ interface ReviewCardProps {
   viewerType?: "business" | "customer";
 }
 
-const ReviewCard = ({ 
-  review, 
-  onReactionToggle, 
+const ReviewCard = ({
+  review,
+  onReactionToggle,
   showCustomerInfo = true,
   viewerType = "business"
 }: ReviewCardProps) => {
@@ -134,6 +135,20 @@ const ReviewCard = ({
           </p>
         </div>
 
+        {/* Associates Display */}
+        {review.associates && review.associates.length > 0 && (
+          <AssociatesDisplay
+            associates={review.associates}
+            reviewData={{
+              phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
+              address: review.address || '',
+              city: review.city || '',
+              state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
+              zipCode: review.zipCode || ''
+            }}
+          />
+        )}
+
         {/* Customer Address Info (only show if customer is on the left side) */}
         {isBusinessViewer && showCustomerInfo && (review.address || review.city || review.zipCode) && (
           <div className={`bg-gray-50 rounded-lg ${isMobile ? "mb-3 p-3" : "mb-4 p-3"}`}>
@@ -142,6 +157,7 @@ const ReviewCard = ({
             </p>
           </div>
         )}
+
 
         {/* Reactions */}
         {onReactionToggle && (

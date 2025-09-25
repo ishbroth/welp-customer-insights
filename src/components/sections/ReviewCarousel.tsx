@@ -159,7 +159,7 @@ const ReviewCarousel = () => {
 
   if (loading) {
     return (
-      <section className="py-6 bg-gray-50">
+      <section className="py-6 bg-welp-dark">
         <div className="container mx-auto px-3 md:px-4">
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#ea384c]"></div>
@@ -169,12 +169,24 @@ const ReviewCarousel = () => {
     );
   }
 
+  // Calculate dynamic animation duration based on number of reviews
+  // Each review should be visible for approximately 3.6 seconds
+  const secondsPerReview = 3.6;
+  const animationDuration = reviews.length * secondsPerReview;
+
   return (
-    <section className="py-6 bg-gray-50">
+    <section className="py-6 bg-welp-dark">
       <div className="container mx-auto px-3 md:px-4">
         {/* Scrolling carousel container */}
         <div className="relative overflow-hidden">
-          <div className="flex animate-scroll space-x-3 w-max">
+          <div
+            className="flex space-x-3 w-max"
+            style={{
+              animation: `scroll ${animationDuration}s linear infinite`
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.animationPlayState = 'paused'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = 'running'; }}
+          >
             {/* Duplicate the reviews array to create seamless infinite scroll */}
             {[...reviews, ...reviews].map((review, index) => (
               <Card key={`${review.id}-${index}`} className="flex-shrink-0 w-60 h-48 shadow-sm hover:shadow-md transition-shadow">
@@ -258,13 +270,6 @@ const ReviewCarousel = () => {
           }
         }
 
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-
-        .animate-scroll:hover {
-          animation-play-state: paused;
-        }
 
         .blur-text {
           filter: blur(2px);

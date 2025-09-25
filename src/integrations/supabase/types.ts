@@ -759,6 +759,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          associates: Json | null
           business_id: string | null
           content: string
           created_at: string
@@ -773,6 +774,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          associates?: Json | null
           business_id?: string | null
           content: string
           created_at?: string
@@ -787,6 +789,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          associates?: Json | null
           business_id?: string | null
           content?: string
           created_at?: string

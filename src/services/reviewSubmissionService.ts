@@ -11,6 +11,7 @@ export interface ReviewSubmissionData {
   customerCity?: string;
   customerState?: string;
   customerZipCode?: string;
+  associates?: Array<{ firstName: string; lastName: string }>;
 }
 
 export const submitReviewToDatabase = async (
@@ -77,6 +78,11 @@ export const submitReviewToDatabase = async (
     }
   }
 
+  // Filter out empty associates and limit to maximum 3
+  const filteredAssociates = (reviewData.associates || [])
+    .filter(associate => associate.firstName.trim() !== '' || associate.lastName.trim() !== '')
+    .slice(0, 3); // Ensure maximum 3 associates
+
   const supabaseReviewData = {
     business_id: businessId,
     rating: reviewData.rating,
@@ -84,13 +90,22 @@ export const submitReviewToDatabase = async (
     customer_name: fullName,
     customer_address: reviewData.customerAddress,
     customer_city: reviewData.customerCity,
+    customer_state: reviewData.customerState,
     customer_zipcode: reviewData.customerZipCode,
     customer_phone: reviewData.customerPhone,
+    associates: filteredAssociates,
     // Clear deleted_at when editing to make the review visible again
     ...(isEditing && { deleted_at: null })
   };
   
-  console.log("Submitting review with data:", supabaseReviewData);
+  console.log("=== REVIEW SUBMISSION DEBUG ===");
+  console.log("Raw associates input:", reviewData.associates);
+  console.log("Filtered associates (max 3):", filteredAssociates);
+  console.log("Customer state being saved:", reviewData.customerState);
+  console.log("Full submission data:", supabaseReviewData);
+  console.log("Is editing:", isEditing);
+  console.log("Review ID:", reviewId);
+  console.log("Associates in submission data:", supabaseReviewData.associates);
   
   let result;
   let finalReviewId = reviewId;

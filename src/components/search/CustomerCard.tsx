@@ -109,10 +109,10 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h3 
+                <h3
                   className={`font-semibold text-lg ${
-                    hasViewableProfile() 
-                      ? "cursor-pointer hover:text-blue-600 transition-colors" 
+                    hasViewableProfile()
+                      ? "cursor-pointer hover:text-blue-600 transition-colors"
                       : "text-gray-400"
                   }`}
                   onClick={hasViewableProfile() ? handleViewProfile : undefined}
@@ -120,7 +120,18 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
                   {customer.firstName} {customer.lastName}
                 </h3>
                 {customer.verified && <VerifiedBadge size="sm" />}
+                {customer.isAssociateMatch && (
+                  <Badge variant="secondary" className="text-xs">
+                    Associate Match
+                  </Badge>
+                )}
               </div>
+
+              {customer.isAssociateMatch && customer.originalCustomerInfo && (
+                <div className="text-xs text-gray-500 mb-2">
+                  Found as associate of: {customer.originalCustomerInfo.name}
+                </div>
+              )}
               
               <div className="flex flex-wrap gap-2 text-sm text-gray-600">
                 {customer.phone && (
