@@ -70,6 +70,8 @@ const NewReview = () => {
       comment: formState.comment,
       customerFirstName: formState.customerFirstName,
       customerLastName: formState.customerLastName,
+      customerNickname: formState.customerNickname,
+      customerBusinessName: formState.customerBusinessName,
       customerPhone: formState.customerPhone,
       customerAddress: formState.customerAddress,
       customerCity: formState.customerCity,
@@ -108,6 +110,10 @@ const NewReview = () => {
                   setCustomerFirstName={formState.setCustomerFirstName}
                   customerLastName={formState.customerLastName}
                   setCustomerLastName={formState.setCustomerLastName}
+                  customerNickname={formState.customerNickname}
+                  setCustomerNickname={formState.setCustomerNickname}
+                  customerBusinessName={formState.customerBusinessName}
+                  setCustomerBusinessName={formState.setCustomerBusinessName}
                   customerPhone={formState.customerPhone}
                   setCustomerPhone={formState.setCustomerPhone}
                   customerAddress={formState.customerAddress}

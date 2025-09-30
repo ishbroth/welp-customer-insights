@@ -14,6 +14,7 @@ import { useBusinessReviewCardLogic } from "./useBusinessReviewCardLogic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
+import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -35,6 +36,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   console.log("BusinessReviewCard: Received review data:", {
     id: review.id,
     customerName: review.customerName,
+    customer_business_name: review.customer_business_name,
+    customer_nickname: review.customer_nickname,
     date: review.date,
     dateType: typeof review.date,
     dateValue: JSON.stringify(review.date),
@@ -136,18 +139,43 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
 
         <BusinessReviewCardPhotos reviewId={review.id} />
 
-        {/* Associates Display */}
-        {review.associates && review.associates.length > 0 && (
-          <AssociatesDisplay
-            associates={review.associates}
-            reviewData={{
-              phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
-              address: review.address || '',
-              city: review.city || '',
-              state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
-              zipCode: review.zipCode || ''
-            }}
-          />
+        {/* Associates and Business Display - split layout */}
+        {((review.associates && review.associates.length > 0) || review.customer_business_name) && (
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Associates on the left */}
+            {(review.associates && review.associates.length > 0) && (
+              <div className="flex-1">
+                <AssociatesDisplay
+                  associates={review.associates}
+                  showBusinessName={false}
+                  reviewData={{
+                    phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
+                    address: review.address || '',
+                    city: review.city || '',
+                    state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
+                    zipCode: review.zipCode || ''
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Business name on the right */}
+            {review.customer_business_name && (
+              <div className="flex-1">
+                <div className="mt-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500 mt-0.5">🏢</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-600 mb-2">Business or Employment:</p>
+                      <span className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium">
+                        🏢 {review.customer_business_name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Move edit/delete actions here, right after the main review content */}

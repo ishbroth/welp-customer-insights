@@ -151,13 +151,15 @@ export const useProfileReviewsFetching = () => {
           console.log("Formatted reviews:", formattedReviews);
       } else {
         // For business users, use existing logic from the old file
-        console.log("Fetching reviews for business account...");
+        console.log("🔍 PROFILE FETCHING - Fetching reviews for business account...");
         
         const { data: businessReviews, error: businessError } = await supabase
           .from('reviews')
           .select(`
             id,
             customer_name,
+            customer_nickname,
+            customer_business_name,
             customer_address,
             customer_city,
             customer_state,
@@ -178,6 +180,10 @@ export const useProfileReviewsFetching = () => {
           return [];
         }
 
+        console.log("🔍 PROFILE FETCHING - Raw business reviews:", businessReviews);
+        console.log("🔍 PROFILE FETCHING - First review nickname:", businessReviews?.[0]?.customer_nickname);
+        console.log("🔍 PROFILE FETCHING - First review business name:", businessReviews?.[0]?.customer_business_name);
+
         // Add business profile data to business reviews
         const reviewsWithBusinessProfile = (businessReviews || []).map(review => ({
           id: review.id,
@@ -186,6 +192,8 @@ export const useProfileReviewsFetching = () => {
           date: review.created_at,
           customerName: review.customer_name, // Map to camelCase for component compatibility
           customer_name: review.customer_name, // Keep snake_case for backward compatibility
+          customer_nickname: review.customer_nickname, // Include nickname field
+          customer_business_name: review.customer_business_name, // Include business name field
           customer_address: review.customer_address,
           customer_city: review.customer_city,
           customer_state: review.customer_state,
@@ -207,6 +215,9 @@ export const useProfileReviewsFetching = () => {
             avatar: currentUser.avatar
           }
         }));
+
+        console.log("🔍 PROFILE FETCHING - Transformed reviews:", reviewsWithBusinessProfile);
+        console.log("🔍 PROFILE FETCHING - First transformed review:", reviewsWithBusinessProfile?.[0]);
 
         setCustomerReviews(reviewsWithBusinessProfile);
       }

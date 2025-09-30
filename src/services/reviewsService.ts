@@ -41,7 +41,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       
       const { data: nameReviews, error: nameError } = await supabaseSimple
         .from('reviews')
-        .select('id, business_id, content, rating, customer_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
+        .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
         .ilike('customer_name', `%${currentUser.name}%`)
         .order('created_at', { ascending: false });
 
@@ -129,6 +129,8 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
         reviewerVerified: isVerified,
         customerId: currentUser.id,
         customerName: review.customer_name || currentUser.name,
+        customer_business_name: review.customer_business_name,
+        customer_nickname: review.customer_nickname,
         rating: review.rating,
         content: review.content,
         date: review.created_at,
@@ -158,7 +160,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     
     const { data: businessReviews, error: businessError } = await supabaseSimple
       .from('reviews')
-      .select('id, business_id, content, rating, customer_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
+      .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
       .eq('business_id', currentUser.id)
       .order('created_at', { ascending: false });
 
@@ -169,16 +171,27 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
 
     console.log("Business reviews found:", businessReviews?.length || 0);
     console.log("Raw business reviews from database:", businessReviews);
+    console.log("🔍 REVIEWS SERVICE - First review nickname:", businessReviews?.[0]?.customer_nickname);
+    console.log("🔍 REVIEWS SERVICE - First review business name:", businessReviews?.[0]?.customer_business_name);
 
     // Transform business reviews to match expected format
-    const transformedBusinessReviews = (businessReviews || []).map((review: any) => ({
-      id: review.id,
-      reviewerId: currentUser.id,
-      reviewerName: currentUser.name || "Business Owner",
-      reviewerAvatar: currentUser.avatar || "",
-      reviewerVerified: Boolean(currentUser.verified),
+    console.log("🔍 REVIEWS SERVICE - Transforming reviews, first review data:", businessReviews?.[0]);
+    const transformedBusinessReviews = (businessReviews || []).map((review: any) => {
+      console.log("🔍 REVIEWS SERVICE - Transforming review:", {
+        id: review.id,
+        customer_nickname: review.customer_nickname,
+        customer_business_name: review.customer_business_name
+      });
+      return {
+        id: review.id,
+        reviewerId: currentUser.id,
+        reviewerName: currentUser.name || "Business Owner",
+        reviewerAvatar: currentUser.avatar || "",
+        reviewerVerified: Boolean(currentUser.verified),
       customerId: null,
       customerName: review.customer_name || "Customer",
+      customer_business_name: review.customer_business_name,
+      customer_nickname: review.customer_nickname,
       rating: review.rating,
       content: review.content,
       date: review.created_at,
@@ -189,7 +202,8 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       associates: review.associates || [],
       reactions: { like: [], funny: [], useful: [], ohNo: [] },
       responses: []
-    }));
+      };
+    });
 
     return transformedBusinessReviews;
   }

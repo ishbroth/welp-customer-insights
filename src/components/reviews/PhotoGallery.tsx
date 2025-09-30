@@ -64,7 +64,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, hasAccess }) => {
               <img
                 src={photo.photo_url}
                 alt={photo.caption || `Photo ${index + 1}`}
-                className="h-12 w-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                className="h-20 w-20 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => openGallery(index)}
               />
               {photo.caption && (

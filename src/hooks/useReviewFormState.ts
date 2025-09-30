@@ -29,6 +29,8 @@ export const useReviewFormState = () => {
   const [comment, setComment] = useState("");
   const [customerFirstName, setCustomerFirstName] = useState("");
   const [customerLastName, setCustomerLastName] = useState("");
+  const [customerNickname, setCustomerNickname] = useState("");
+  const [customerBusinessName, setCustomerBusinessName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerCity, setCustomerCity] = useState("");
@@ -74,6 +76,11 @@ export const useReviewFormState = () => {
         
         setCustomerFirstName(firstName);
         setCustomerLastName(lastName);
+        console.log("🔍 EDIT FORM - Loading reviewData:", reviewData);
+        console.log("🔍 EDIT FORM - customer_nickname:", reviewData.customer_nickname);
+        console.log("🔍 EDIT FORM - customer_business_name:", reviewData.customer_business_name);
+        setCustomerNickname(reviewData.customer_nickname || "");
+        setCustomerBusinessName(reviewData.customer_business_name || "");
         setCustomerPhone(reviewData.phone || "");
         setCustomerAddress(reviewData.address || "");
         setCustomerCity(reviewData.city || "");
@@ -137,7 +144,7 @@ export const useReviewFormState = () => {
         try {
           const { data: review, error } = await supabase
             .from('reviews')
-            .select('id, business_id, content, rating, customer_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
+            .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
             .eq('id', reviewId)
             .maybeSingle();
 
@@ -155,6 +162,11 @@ export const useReviewFormState = () => {
             
             setCustomerFirstName(firstName);
             setCustomerLastName(lastName);
+            console.log("🔍 EDIT FORM - Loading from database review:", review);
+            console.log("🔍 EDIT FORM - DB customer_nickname:", review.customer_nickname);
+            console.log("🔍 EDIT FORM - DB customer_business_name:", review.customer_business_name);
+            setCustomerNickname(review.customer_nickname || "");
+            setCustomerBusinessName(review.customer_business_name || "");
             setCustomerPhone(review.customer_phone || "");
             setCustomerAddress(review.customer_address || "");
             setCustomerCity(review.customer_city || "");
@@ -266,6 +278,10 @@ export const useReviewFormState = () => {
     setCustomerFirstName,
     customerLastName,
     setCustomerLastName,
+    customerNickname,
+    setCustomerNickname,
+    customerBusinessName,
+    setCustomerBusinessName,
     customerPhone,
     setCustomerPhone,
     customerAddress,

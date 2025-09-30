@@ -40,6 +40,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           content,
           created_at,
           customer_name,
+          customer_nickname,
+          customer_business_name,
           customer_address,
           customer_city,
           customer_zipcode,
@@ -52,6 +54,9 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         .is('deleted_at', null) // Only get non-deleted reviews
 
       console.log("BusinessReviews: Query result:", { reviewsData, error });
+      console.log("🔍 RAW QUERY DATA - First review:", reviewsData?.[0]);
+      console.log("🔍 RAW QUERY DATA - Customer nickname:", reviewsData?.[0]?.customer_nickname);
+      console.log("🔍 RAW QUERY DATA - Customer business name:", reviewsData?.[0]?.customer_business_name);
 
       if (error) {
         throw error;
@@ -95,6 +100,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         console.log("BusinessReviews: Processing review:", {
           id: review.id,
           customer_name: review.customer_name,
+          customer_nickname: review.customer_nickname,
+          customer_business_name: review.customer_business_name,
           created_at: review.created_at,
           reviewDate: reviewDate,
           review_claims: review.review_claims,
@@ -125,6 +132,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_state: review.customer_state || "",
           customer_zipcode: review.customer_zipcode || "",
           customer_phone: review.customer_phone || "",
+          customer_nickname: review.customer_nickname || "",
+          customer_business_name: review.customer_business_name || "",
           reactions: { like: [], funny: [], ohNo: [] },
           responses: []
         };
@@ -135,6 +144,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         console.log("BusinessReviews: Formatted review:", {
           id: formattedReview.id,
           customerName: formattedReview.customerName,
+          customer_nickname: formattedReview.customer_nickname,
+          customer_business_name: formattedReview.customer_business_name,
           date: formattedReview.date,
           sortPriority: (formattedReview as any)._sortPriority
         });

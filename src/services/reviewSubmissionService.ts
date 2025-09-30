@@ -6,6 +6,8 @@ export interface ReviewSubmissionData {
   comment: string;
   customerFirstName: string;
   customerLastName: string;
+  customerNickname?: string;
+  customerBusinessName?: string;
   customerPhone?: string;
   customerAddress?: string;
   customerCity?: string;
@@ -20,6 +22,10 @@ export const submitReviewToDatabase = async (
   isEditing: boolean,
   reviewId?: string | null
 ): Promise<string> => {
+  console.log("🔍 SUBMISSION START - Raw reviewData:", reviewData);
+  console.log("🔍 SUBMISSION - customerNickname:", reviewData.customerNickname);
+  console.log("🔍 SUBMISSION - customerBusinessName:", reviewData.customerBusinessName);
+
   // Create or find customer profile
   let customerId = null;
   const fullName = `${reviewData.customerFirstName} ${reviewData.customerLastName}`.trim();
@@ -88,6 +94,8 @@ export const submitReviewToDatabase = async (
     rating: reviewData.rating,
     content: reviewData.comment,
     customer_name: fullName,
+    customer_nickname: reviewData.customerNickname || null,
+    customer_business_name: reviewData.customerBusinessName || null,
     customer_address: reviewData.customerAddress,
     customer_city: reviewData.customerCity,
     customer_state: reviewData.customerState,
@@ -101,6 +109,8 @@ export const submitReviewToDatabase = async (
   console.log("=== REVIEW SUBMISSION DEBUG ===");
   console.log("Raw associates input:", reviewData.associates);
   console.log("Filtered associates (max 3):", filteredAssociates);
+  console.log("Nickname being saved:", reviewData.customerNickname);
+  console.log("Business name being saved:", reviewData.customerBusinessName);
   console.log("Customer state being saved:", reviewData.customerState);
   console.log("Full submission data:", supabaseReviewData);
   console.log("Is editing:", isEditing);
@@ -112,18 +122,24 @@ export const submitReviewToDatabase = async (
   
   if (isEditing && reviewId) {
     // Update existing review
+    console.log("🔄 UPDATING review with ID:", reviewId);
+    console.log("🔄 UPDATE data:", supabaseReviewData);
     result = await supabase
       .from('reviews')
       .update(supabaseReviewData)
       .eq('id', reviewId);
+    console.log("🔄 UPDATE result:", result);
   } else {
     // Insert new review
+    console.log("➕ INSERTING new review");
+    console.log("➕ INSERT data:", supabaseReviewData);
     result = await supabase
       .from('reviews')
       .insert([supabaseReviewData])
       .select()
       .single();
-    
+    console.log("➕ INSERT result:", result);
+
     if (result.data) {
       finalReviewId = result.data.id;
     }

@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { Star } from "lucide-react";
+import { Star, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Review } from "@/types";
-import { fetchCarouselReviews } from "@/services/carouselReviewsService";
+import { fetchCarouselReviews, getFallbackReviews } from "@/services/carouselReviewsService";
+import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 
 const ReviewCarousel = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false since we'll show fake reviews immediately
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to shuffle array randomly
@@ -27,7 +28,20 @@ const ReviewCarousel = () => {
 
       const carouselReviews = await fetchCarouselReviews();
       const shuffledReviews = shuffleArray(carouselReviews);
-      setReviews(shuffledReviews);
+
+      // For smoother transitions, only update if we have significantly different content
+      if (!isInitialLoad && reviews.length > 0) {
+        // Only update if we have different reviews or significantly more content
+        const currentIds = new Set(reviews.map(r => r.id));
+        const newIds = new Set(shuffledReviews.map(r => r.id));
+        const hasNewContent = shuffledReviews.some(r => !currentIds.has(r.id));
+
+        if (hasNewContent || shuffledReviews.length > reviews.length + 3) {
+          setReviews(shuffledReviews);
+        }
+      } else {
+        setReviews(shuffledReviews);
+      }
     } catch (error) {
       console.error("Error loading carousel reviews:", error);
     } finally {
@@ -36,14 +50,21 @@ const ReviewCarousel = () => {
   };
 
   useEffect(() => {
-    // Initial load
-    loadReviews(true);
+    // Immediately show fake reviews for instant loading
+    const fakeReviews = getFallbackReviews();
+    const shuffledFakes = shuffleArray(fakeReviews);
+    setReviews(shuffledFakes);
 
-    // Set up interval to refresh reviews every 2 minutes (120,000ms)
+    // Then load real reviews in background after a brief delay
+    setTimeout(() => {
+      loadReviews(false);
+    }, 500); // Small delay to let fake reviews render first
+
+    // Set up interval to refresh reviews every 10 minutes (600,000ms)
     // This will fetch new reviews and re-shuffle the existing ones
     intervalRef.current = setInterval(() => {
       loadReviews(false);
-    }, 120000); // 2 minutes
+    }, 600000); // 10 minutes
 
     // Cleanup interval on component unmount
     return () => {
@@ -85,7 +106,74 @@ const ReviewCarousel = () => {
     return content.substring(0, maxLength) + "...";
   };
 
+  // Calculate content complexity and determine appropriate scaling
+  const getContentScale = (review: any) => {
+    let contentSections = 0;
+    let hasLongContent = false;
+
+    // Count content sections and assess complexity
+    if (review.content) {
+      contentSections++;
+      hasLongContent = review.content.length > 200;
+    }
+    if (review.associates && review.associates.length > 0) contentSections++;
+    if (review.customer_business_name) contentSections++;
+    if (review.conversations && review.conversations.length > 0) contentSections++;
+
+    // Determine scale based on content complexity - less aggressive to utilize vertical space better
+    if (contentSections <= 1) {
+      return hasLongContent ? 'scale-90' : 'scale-100'; // Simple reviews with long/short text
+    }
+    if (contentSections === 2) return 'scale-85'; // Two sections = slightly smaller
+    if (contentSections === 3) return 'scale-80'; // Three sections = moderately smaller
+    return 'scale-75'; // Four+ sections = smaller but still readable
+  };
+
+  // Truncate review content to fit available space
+  const truncateToLines = (content: string, scale: string) => {
+    // Estimate characters per line based on scale and available lines
+    const baseCharsPerLine = 50;
+    const scaleMultiplier = scale === 'scale-100' ? 1 :
+                           scale === 'scale-90' ? 0.9 :
+                           scale === 'scale-85' ? 0.85 :
+                           scale === 'scale-80' ? 0.8 : 0.75;
+
+    // Reduce max lines for complex reviews to prevent overflow
+    const maxLines = scale === 'scale-100' ? 5 :
+                     scale === 'scale-90' ? 4 :
+                     scale === 'scale-85' ? 3 :
+                     scale === 'scale-80' ? 2 : 2;
+
+    const charsPerLine = Math.floor(baseCharsPerLine * scaleMultiplier);
+    const maxChars = charsPerLine * maxLines;
+
+    if (content.length <= maxChars) return content;
+    return content.substring(0, maxChars) + "...";
+  };
+
   // Privacy protection functions for carousel display
+  const renderBlurredPhone = (phone: string) => {
+    if (!phone) return phone;
+
+    // Show only the area code, blur the rest
+    const cleaned = phone.replace(/\D/g, ''); // Remove non-digits
+    if (cleaned.length >= 10) {
+      const areaCode = cleaned.substring(0, 3);
+      const blurredPart = cleaned.substring(3);
+      return (
+        <span>
+          ({areaCode}) <span className="blur-text">{blurredPart.substring(0, 3)}-{blurredPart.substring(3)}</span>
+        </span>
+      );
+    }
+    // If format is different, blur everything after first 3 digits
+    return (
+      <span>
+        {phone.substring(0, 4)}<span className="blur-text">{phone.substring(4)}</span>
+      </span>
+    );
+  };
+
   const renderBlurredName = (fullName: string) => {
     if (!fullName) return <span>{fullName}</span>;
 
@@ -169,9 +257,9 @@ const ReviewCarousel = () => {
     );
   }
 
-  // Calculate dynamic animation duration based on number of reviews
-  // Each review should be visible for approximately 3.6 seconds
-  const secondsPerReview = 3.6;
+  // Calculate dynamic animation duration for seamless infinite scroll
+  // Each review should be visible for approximately 4 seconds
+  const secondsPerReview = 4;
   const animationDuration = reviews.length * secondsPerReview;
 
   return (
@@ -180,7 +268,7 @@ const ReviewCarousel = () => {
         {/* Scrolling carousel container */}
         <div className="relative overflow-hidden">
           <div
-            className="flex space-x-3 w-max"
+            className="flex space-x-3 w-max carousel-container"
             style={{
               animation: `scroll ${animationDuration}s linear infinite`
             }}
@@ -188,73 +276,215 @@ const ReviewCarousel = () => {
             onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = 'running'; }}
           >
             {/* Duplicate the reviews array to create seamless infinite scroll */}
-            {[...reviews, ...reviews].map((review, index) => (
-              <Card key={`${review.id}-${index}`} className="flex-shrink-0 w-60 h-48 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-3 h-full flex flex-col">
-                  {/* Header with business and customer info */}
-                  <div className="flex items-start justify-between mb-2">
-                    {/* Customer (left side) */}
-                    <div className="flex items-center space-x-1.5">
-                      <Avatar className="h-6 w-6">
+            {[...reviews, ...reviews].map((review, index) => {
+              const contentScale = getContentScale(review);
+              return (
+              <Card key={`${review.id}-${index}`} className="flex-shrink-0 w-80 h-72 shadow-sm hover:shadow-md transition-shadow rounded-none border bg-white overflow-hidden">
+                <CardContent className={`h-full flex flex-col ${contentScale} origin-top-left`} style={{
+                  padding: contentScale === 'scale-100' ? '12px' :
+                           contentScale === 'scale-90' ? '10px' :
+                           contentScale === 'scale-85' ? '14px' :
+                           contentScale === 'scale-80' ? '15px' : '16px',
+                  width: contentScale === 'scale-100' ? '100%' :
+                         contentScale === 'scale-90' ? '111%' :
+                         contentScale === 'scale-85' ? '118%' :
+                         contentScale === 'scale-80' ? '125%' : '133%',
+                  height: contentScale === 'scale-100' ? '100%' :
+                          contentScale === 'scale-90' ? '111%' :
+                          contentScale === 'scale-85' ? '118%' :
+                          contentScale === 'scale-80' ? '125%' : '133%'
+                }}>
+                  {/* Header with customer and business info - matching real review cards */}
+                  <div className={`flex items-start justify-between min-w-0 ${
+                    contentScale === 'scale-100' ? 'mb-3' :
+                    contentScale === 'scale-90' ? 'mb-3' :
+                    contentScale === 'scale-85' ? 'mb-2' :
+                    contentScale === 'scale-80' ? 'mb-2' : 'mb-1'
+                  }`}>
+                    {/* Customer side (left) - takes most space */}
+                    <div className="flex items-start space-x-2 flex-1 min-w-0 max-w-[60%]">
+                      <Avatar className="h-7 w-7 flex-shrink-0">
                         <AvatarImage src={review.customerAvatar} alt={review.customerName} />
                         <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
                           {getInitials(review.customerName)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <h4 className="font-medium text-xs">{renderBlurredName(review.customerName)}</h4>
-                        <p className="text-xs text-gray-500">Customer</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-lg text-gray-600 truncate">
+                          {renderBlurredName(review.customerName)}
+                        </h3>
+                        <p className="text-base text-gray-500 truncate">
+                          {formatDate(review.date)}
+                        </p>
+                        {/* Customer contact info */}
+                        {(review as any).customer_phone && (
+                          <p className={`text-gray-600 truncate ${
+                            contentScale === 'scale-100' ? 'text-sm' :
+                            contentScale === 'scale-90' ? 'text-sm' :
+                            contentScale === 'scale-85' ? 'text-xs' :
+                            contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                          }`}>
+                            {renderBlurredPhone((review as any).customer_phone)}
+                          </p>
+                        )}
+                        {(review.address || review.city || review.zipCode) && (
+                          <p className={`text-gray-600 truncate ${
+                            contentScale === 'scale-100' ? 'text-sm' :
+                            contentScale === 'scale-90' ? 'text-sm' :
+                            contentScale === 'scale-85' ? 'text-xs' :
+                            contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                          }`}>
+                            {review.address && renderBlurredAddress(review.address)}
+                            {review.address && (review.city || review.zipCode) && ', '}
+                            {review.city}{review.city && review.zipCode && ', '}
+                            {review.zipCode}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Business (right side) */}
-                    <div className="flex items-center space-x-1">
-                      <Avatar className="h-5 w-5">
+                    {/* Business side (right) - smaller and compact */}
+                    <div className="flex items-start space-x-1 ml-2 flex-shrink-0 max-w-[35%]">
+                      <Avatar className="h-5 w-5 flex-shrink-0">
                         <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
-                        <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                        <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
                           {getInitials(review.reviewerName)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <h5 className="font-medium text-xs">{review.reviewerName}</h5>
-                          {review.reviewerVerified && <VerifiedBadge size="xs" />}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col">
+                          <h4 className={`font-medium text-sm leading-tight ${contentScale === 'scale-80' || contentScale === 'scale-75' ? 'line-clamp-2' : 'truncate'}`} title={review.reviewerName}>
+                            {review.reviewerName}
+                          </h4>
+                          {review.reviewerVerified && (
+                            <div className="flex justify-end">
+                              <VerifiedBadge size="xs" className="flex-shrink-0 mt-0.5" />
+                            </div>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-500">Business</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Rating and date */}
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className="flex">{renderStars(review.rating)}</div>
-                    <span className="text-xs text-gray-500">
-                      {formatDate(review.date)}
-                    </span>
+                  {/* Rating section - matching real review cards */}
+                  <div className={`${
+                    contentScale === 'scale-100' ? 'mb-3' :
+                    contentScale === 'scale-90' ? 'mb-3' :
+                    contentScale === 'scale-85' ? 'mb-2' :
+                    contentScale === 'scale-80' ? 'mb-1' : 'mb-1'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-medium text-gray-600 ${
+                        contentScale === 'scale-100' ? 'text-sm' :
+                        contentScale === 'scale-90' ? 'text-sm' :
+                        contentScale === 'scale-85' ? 'text-xs' :
+                        contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                      }`}>Rating:</span>
+                      <div className="flex">{renderStars(review.rating)}</div>
+                      <span className={`text-gray-500 ${
+                        contentScale === 'scale-100' ? 'text-sm' :
+                        contentScale === 'scale-90' ? 'text-sm' :
+                        contentScale === 'scale-85' ? 'text-xs' :
+                        contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                      }`}>({review.rating}/5)</span>
+                    </div>
                   </div>
 
                   {/* Review content */}
-                  <div className="flex-grow">
-                    <p className="text-xs text-gray-700 leading-relaxed">
-                      {truncateContent(review.content, 90)}
+                  <div className={`${
+                    contentScale === 'scale-100' ? 'mb-3' :
+                    contentScale === 'scale-90' ? 'mb-3' :
+                    contentScale === 'scale-85' ? 'mb-2' :
+                    contentScale === 'scale-80' ? 'mb-1' : 'mb-1'
+                  }`}>
+                    <p className={`text-gray-700 leading-snug ${
+                      contentScale === 'scale-100' ? 'text-base' :
+                      contentScale === 'scale-90' ? 'text-base' :
+                      contentScale === 'scale-85' ? 'text-sm' :
+                      contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                    }`}>
+                      {truncateToLines(review.content, contentScale)}
                     </p>
                   </div>
 
-                  {/* Customer address info */}
-                  {(review.address || review.city || review.zipCode) && (
-                    <div className="bg-gray-50 rounded p-1.5 mt-1.5">
-                      <p className="text-xs text-gray-600">
-                        <strong>Customer:</strong>{' '}
-                        {review.address && renderBlurredAddress(review.address)}
-                        {review.address && (review.city || review.zipCode) && ', '}
-                        {review.city}{review.city && review.zipCode && ', '}
-                        {review.zipCode}
-                      </p>
+                  {/* Associates and Business Display - matching real review cards */}
+                  {((review.associates && review.associates.length > 0) || (review as any).customer_business_name) && (
+                    <div className={`flex flex-col mb-1 ${
+                      contentScale === 'scale-100' ? 'gap-2' :
+                      contentScale === 'scale-90' ? 'gap-2' :
+                      contentScale === 'scale-85' ? 'gap-1' :
+                      contentScale === 'scale-80' ? 'gap-1' : 'gap-0.5'
+                    }`}>
+                      {/* Associates section */}
+                      {(review.associates && review.associates.length > 0) && (
+                        <div>
+                          <AssociatesDisplay
+                            associates={review.associates}
+                            showBusinessName={false}
+                            reviewData={{
+                              phone: (review as any).customer_phone || '',
+                              address: review.address || '',
+                              city: review.city || '',
+                              state: (review as any).customer_state || '',
+                              zipCode: review.zipCode || ''
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Business name section */}
+                      {(review as any).customer_business_name && (
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500">🏢</span>
+                            <span className={`text-gray-700 bg-gray-50 px-1 py-0.5 rounded font-medium truncate ${
+                              contentScale === 'scale-100' ? 'text-sm' :
+                              contentScale === 'scale-90' ? 'text-sm' :
+                              contentScale === 'scale-85' ? 'text-xs' :
+                              contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                            }`}>
+                              {(review as any).customer_business_name}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mini conversation preview - ONE LINE ONLY for carousel thumbnails */}
+                  {(review as any).conversations && (review as any).conversations.length > 0 && (
+                    <div className={`border-t border-gray-100 ${
+                      contentScale === 'scale-100' ? 'pt-2 mt-2' :
+                      contentScale === 'scale-90' ? 'pt-2 mt-2' :
+                      contentScale === 'scale-85' ? 'pt-1 mt-1' :
+                      contentScale === 'scale-80' ? 'pt-1 mt-1' : 'pt-0.5 mt-0.5'
+                    }`}>
+                      <div className={`flex items-center gap-1 ${
+                        contentScale === 'scale-100' ? 'text-sm' :
+                        contentScale === 'scale-90' ? 'text-sm' :
+                        contentScale === 'scale-85' ? 'text-xs' :
+                        contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
+                      }`}>
+                        <MessageCircle className={`text-blue-600 flex-shrink-0 ${
+                          contentScale === 'scale-100' ? 'h-4 w-4' :
+                          contentScale === 'scale-90' ? 'h-4 w-4' :
+                          contentScale === 'scale-85' ? 'h-3 w-3' :
+                          contentScale === 'scale-80' ? 'h-3 w-3' : 'h-3 w-3'
+                        }`} />
+                        <span className="font-medium text-gray-600 flex-shrink-0">Chat:</span>
+                        <span className="text-gray-700 truncate">
+                          {(review as any).conversations[0].content}
+                        </span>
+                        {(review as any).conversations.length > 1 && (
+                          <span className="text-gray-400 flex-shrink-0">+{(review as any).conversations.length - 1}</span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -270,12 +500,33 @@ const ReviewCarousel = () => {
           }
         }
 
+        /* Ensure smooth infinite scrolling */
+        .carousel-container {
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+          will-change: transform;
+        }
+
+        .scale-85 {
+          transform: scale(0.85);
+        }
+
+        .scale-80 {
+          transform: scale(0.80);
+        }
 
         .blur-text {
-          filter: blur(2px);
-          color: rgba(107, 114, 128, 0.6);
-          text-shadow: 0 0 3px rgba(107, 114, 128, 0.4);
+          filter: blur(4px);
+          color: rgba(107, 114, 128, 0.4);
+          text-shadow: 0 0 6px rgba(107, 114, 128, 0.6);
           user-select: none;
+        }
+
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </section>

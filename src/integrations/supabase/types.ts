@@ -764,8 +764,10 @@ export type Database = {
           content: string
           created_at: string
           customer_address: string | null
+          customer_business_name: string | null
           customer_city: string | null
           customer_name: string | null
+          customer_nickname: string | null
           customer_phone: string | null
           customer_zipcode: string | null
           deleted_at: string | null
@@ -779,8 +781,10 @@ export type Database = {
           content: string
           created_at?: string
           customer_address?: string | null
+          customer_business_name?: string | null
           customer_city?: string | null
           customer_name?: string | null
+          customer_nickname?: string | null
           customer_phone?: string | null
           customer_zipcode?: string | null
           deleted_at?: string | null
@@ -794,8 +798,10 @@ export type Database = {
           content?: string
           created_at?: string
           customer_address?: string | null
+          customer_business_name?: string | null
           customer_city?: string | null
           customer_name?: string | null
+          customer_nickname?: string | null
           customer_phone?: string | null
           customer_zipcode?: string | null
           deleted_at?: string | null

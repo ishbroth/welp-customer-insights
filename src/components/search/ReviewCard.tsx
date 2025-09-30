@@ -15,6 +15,8 @@ import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
+import BusinessReviewCardPhotos from "@/components/business/BusinessReviewCardPhotos";
+import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
 
 interface ReviewCardProps {
   review: {
@@ -32,6 +34,7 @@ interface ReviewCardProps {
     customer_address?: string;
     customer_city?: string;
     customer_zipcode?: string;
+    customer_business_name?: string;
     address?: string;
     city?: string;
     state?: string;
@@ -50,6 +53,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   hasSubscription,
   isOneTimeUnlocked,
 }) => {
+  console.log("🔍 SEARCH ReviewCard - Review data:", {
+    id: review.id,
+    customer_business_name: review.customer_business_name,
+    associates: review.associates,
+    isAssociateMatch: review.isAssociateMatch
+  });
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
   const { balance, useCredits: useCreditsFn, loadCreditsData } = useCredits();
@@ -76,9 +85,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     ? (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor) && customerCanAccessReview
     : (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor);
 
-  // customerName should now always contain the original customer name
+  // Format customer name with nickname before passing to useCustomerInfo
+  const formattedCustomerName = formatCustomerNameWithNickname(
+    review.customerName,
+    review.customer_nickname
+  );
+
   const customerInfo = useCustomerInfo({
-    customer_name: review.customerName,
+    customer_name: formattedCustomerName,
     customer_phone: review.customer_phone,
     customer_address: review.customer_address || review.address,
     customer_city: review.customer_city || review.city,
@@ -279,6 +293,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           )}
         </div>
 
+        {/* Review Photos */}
+        <BusinessReviewCardPhotos reviewId={review.id} />
+
         {/* Associate Match Indicator - show when this result came from searching for an associate */}
         {review.isAssociateMatch && review.associateData && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
@@ -331,18 +348,43 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           </div>
         )}
 
-        {/* Associates Display - show when associates exist and this isn't an associate search result */}
-        {review.associates && review.associates.length > 0 && !review.isAssociateMatch && (
-          <AssociatesDisplay
-            associates={review.associates}
-            reviewData={{
-              phone: review.customer_phone || '',
-              address: review.customer_address || review.address || '',
-              city: review.customer_city || review.city || '',
-              state: review.state || '',
-              zipCode: review.customer_zipcode || review.zipCode || ''
-            }}
-          />
+        {/* Associates and Business Display - split layout (similar to BusinessReviewCard) */}
+        {((review.associates && review.associates.length > 0) || review.customer_business_name) && !review.isAssociateMatch && (
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Associates on the left */}
+            {(review.associates && review.associates.length > 0) && (
+              <div className="flex-1">
+                <AssociatesDisplay
+                  associates={review.associates}
+                  showBusinessName={false}
+                  reviewData={{
+                    phone: review.customer_phone || '',
+                    address: review.customer_address || review.address || '',
+                    city: review.customer_city || review.city || '',
+                    state: review.state || '',
+                    zipCode: review.customer_zipcode || review.zipCode || ''
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Business name on the right */}
+            {review.customer_business_name && (
+              <div className="flex-1">
+                <div className="mt-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500 mt-0.5">🏢</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-600 mb-2">Business or Employment:</p>
+                      <span className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium">
+                        🏢 {review.customer_business_name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Conversation Section */}

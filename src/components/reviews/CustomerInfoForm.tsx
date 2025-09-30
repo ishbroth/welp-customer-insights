@@ -10,6 +10,8 @@ import LocationInfoSection from "./LocationInfoSection";
 interface CustomerInfoFormProps {
   customerFirstName: string;
   customerLastName: string;
+  customerNickname: string;
+  customerBusinessName: string;
   customerPhone: string;
   customerAddress: string;
   customerApartmentSuite?: string;
@@ -20,6 +22,8 @@ interface CustomerInfoFormProps {
   customer: any;
   setCustomerFirstName: (value: string) => void;
   setCustomerLastName: (string) => void;
+  setCustomerNickname: (value: string) => void;
+  setCustomerBusinessName: (value: string) => void;
   setCustomerPhone: (value: string) => void;
   setCustomerAddress: (value: string) => void;
   setCustomerApartmentSuite?: (value: string) => void;
@@ -37,6 +41,8 @@ interface CustomerInfoFormProps {
 const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customerFirstName,
   customerLastName,
+  customerNickname,
+  customerBusinessName,
   customerPhone,
   customerAddress,
   customerApartmentSuite,
@@ -47,6 +53,8 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   customer,
   setCustomerFirstName,
   setCustomerLastName,
+  setCustomerNickname,
+  setCustomerBusinessName,
   setCustomerPhone,
   setCustomerAddress,
   setCustomerApartmentSuite,
@@ -113,10 +121,14 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
       <PersonalInfoSection
         customerFirstName={customerFirstName}
         customerLastName={customerLastName}
+        customerNickname={customerNickname}
+        customerBusinessName={customerBusinessName}
         isNewCustomer={isNewCustomer}
         customer={customer}
         setCustomerFirstName={setCustomerFirstName}
         setCustomerLastName={setCustomerLastName}
+        setCustomerNickname={setCustomerNickname}
+        setCustomerBusinessName={setCustomerBusinessName}
       />
       
       <ContactInfoSection

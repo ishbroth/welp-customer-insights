@@ -49,6 +49,7 @@ const calculateCompletenessScore = (review: ReviewData): number => {
 const detectSearchContext = (searchParams: {
   firstName?: string;
   lastName?: string;
+  businessName?: string;
   phone?: string;
   address?: string;
   city?: string;
@@ -56,20 +57,24 @@ const detectSearchContext = (searchParams: {
   zipCode?: string;
 }) => {
   const hasName = Boolean(searchParams.firstName || searchParams.lastName);
+  const hasBusinessName = Boolean(searchParams.businessName);
+  const hasAnyName = hasName || hasBusinessName;
   const hasLocation = Boolean(searchParams.address || searchParams.city || searchParams.zipCode);
   const hasPhone = Boolean(searchParams.phone);
   const hasAddress = Boolean(searchParams.address);
-  
+
   return {
     hasName,
+    hasBusinessName,
+    hasAnyName,
     hasLocation,
     hasPhone,
     hasAddress,
-    isNameFocused: hasName && (hasLocation || hasPhone),
-    isLocationOnly: !hasName && !hasPhone && hasLocation,
-    isPhoneOnly: !hasName && hasPhone && !hasLocation,
-    isPhoneWithLocation: !hasName && hasPhone && hasLocation,
-    isAddressWithState: !hasName && !hasPhone && hasAddress && searchParams.state
+    isNameFocused: hasAnyName && (hasLocation || hasPhone),
+    isLocationOnly: !hasAnyName && !hasPhone && hasLocation,
+    isPhoneOnly: !hasAnyName && hasPhone && !hasLocation,
+    isPhoneWithLocation: !hasAnyName && hasPhone && hasLocation,
+    isAddressWithState: !hasAnyName && !hasPhone && hasAddress && searchParams.state
   };
 };
 
@@ -78,6 +83,7 @@ export const scoreReview = async (
   searchParams: {
     firstName?: string;
     lastName?: string;
+    businessName?: string;
     phone?: string;
     address?: string;
     city?: string;
@@ -86,17 +92,32 @@ export const scoreReview = async (
   },
   businessState?: string | null
 ): Promise<ScoredReview> => {
-  const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
+  console.log(`🔍 SCORING REVIEW ${review.id} (${review.customer_name})`);
+  console.log(`🔍 Search params:`, searchParams);
+  console.log(`🔍 Review data:`, {
+    customer_name: review.customer_name,
+    customer_nickname: review.customer_nickname,
+    customer_city: review.customer_city,
+    customer_zipcode: review.customer_zipcode,
+    customer_address: review.customer_address
+  });
+  console.log(`🔍 Business state:`, businessState);
+
+  const { firstName, lastName, businessName, phone, address, city, state, zipCode } = searchParams;
   const searchContext = detectSearchContext(searchParams);
   
   let score = 0;
   let matches = 0;
   let exactFieldMatches = 0;
-  
+
   // Declare match tracking variables early
   let phoneMatched = false;
   let cityMatched = false;
   let zipMatched = false;
+
+  // Store the best component similarities for later use
+  let bestFirstNameSimilarity = 0;
+  let bestLastNameSimilarity = 0;
   
   const exactMatchDetails: Array<{
     field: string;
@@ -154,7 +175,20 @@ export const scoreReview = async (
     if (firstName) {
       const firstNameSim = calculateNameSimilarity(firstName, review.customer_name);
       console.log(`[NAME_VALIDATION] First name: "${firstName}" vs "${review.customer_name}" = ${firstNameSim.toFixed(3)}`);
-      totalNameSimilarity += firstNameSim;
+
+      let bestFirstNameSim = firstNameSim;
+
+      // Also check nickname if available
+      if (review.customer_nickname) {
+        const nicknameSim = calculateNameSimilarity(firstName, review.customer_nickname);
+        console.log(`[NAME_VALIDATION] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
+        if (nicknameSim > bestFirstNameSim) {
+          bestFirstNameSim = nicknameSim;
+          console.log(`[NAME_VALIDATION] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
+        }
+      }
+
+      totalNameSimilarity += bestFirstNameSim;
       nameCount++;
     }
     
@@ -185,7 +219,7 @@ export const scoreReview = async (
   }
   
   // Count non-empty search parameters for dynamic validation
-  const searchFieldCount = [firstName, lastName, phone, address, city, state, zipCode]
+  const searchFieldCount = [firstName, lastName, businessName, phone, address, city, state, zipCode]
     .filter(field => field && field.trim().length > 0).length;
   
   console.log(`[FIELD_COUNT] Total search fields: ${searchFieldCount}`);
@@ -212,14 +246,22 @@ export const scoreReview = async (
     console.log(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
     console.log(`[NAME_DEBUG] Using name threshold: ${nameThreshold} (based on ${searchFieldCount} fields)`);
     
-    let bestFirstNameSimilarity = 0;
-    let bestLastNameSimilarity = 0;
-    
     if (firstName) {
       bestFirstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
       console.log(`[NAME_DEBUG] First name similarity: "${firstName}" vs "${review.customer_name}" = ${bestFirstNameSimilarity}`);
+
+      // Also check nickname if available
+      if (review.customer_nickname) {
+        const nicknameSimilarity = calculateNameSimilarity(firstName, review.customer_nickname);
+        console.log(`[NAME_DEBUG] Nickname similarity: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSimilarity}`);
+        // Use the better of the two scores
+        if (nicknameSimilarity > bestFirstNameSimilarity) {
+          bestFirstNameSimilarity = nicknameSimilarity;
+          console.log(`[NAME_DEBUG] Using nickname similarity: ${nicknameSimilarity}`);
+        }
+      }
     }
-    
+
     if (lastName) {
       bestLastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
       console.log(`[NAME_DEBUG] Last name similarity: "${lastName}" vs "${review.customer_name}" = ${bestLastNameSimilarity}`);
@@ -269,8 +311,21 @@ export const scoreReview = async (
     if (firstName) {
       const firstSim = calculateNameSimilarity(firstName, review.customer_name);
       console.log(`[NAME_SCORING] First name: "${firstName}" vs "${review.customer_name}" = ${firstSim.toFixed(3)}`);
-      if (firstSim > bestSimilarity) {
-        bestSimilarity = firstSim;
+
+      let bestFirstSim = firstSim;
+
+      // Also check nickname if available
+      if (review.customer_nickname) {
+        const nicknameSim = calculateNameSimilarity(firstName, review.customer_nickname);
+        console.log(`[NAME_SCORING] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
+        if (nicknameSim > bestFirstSim) {
+          bestFirstSim = nicknameSim;
+          console.log(`[NAME_SCORING] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
+        }
+      }
+
+      if (bestFirstSim > bestSimilarity) {
+        bestSimilarity = bestFirstSim;
       }
     }
     
@@ -311,16 +366,22 @@ export const scoreReview = async (
       if (firstName && lastName) {
         const fullSearchName = `${firstName} ${lastName}`;
         const componentSimilarity = calculateNameSimilarity(fullSearchName, review.customer_name);
-        
+
+        // Check if we already validated strong component matches (including nickname)
+        const hasStrongComponentMatch = nameComponentMatched && (bestFirstNameSimilarity >= 0.8 || bestLastNameSimilarity >= 0.8);
+
+        console.log(`[NAME_COMPONENT_CHECK] componentSimilarity=${componentSimilarity}, hasStrongComponentMatch=${hasStrongComponentMatch}, nameComponentMatched=${nameComponentMatched}`);
+
         // For first+last searches, use component-specific matching
-        if (componentSimilarity >= 0.7) {
-          if (componentSimilarity >= 0.9) {
-            namePoints = 70; // Reduced from 100 - Excellent component match
+        if (componentSimilarity >= 0.7 || hasStrongComponentMatch) {
+          if (componentSimilarity >= 0.9 || hasStrongComponentMatch) {
+            namePoints = 70; // Excellent component match (including nickname matches)
           } else if (componentSimilarity >= 0.8) {
-            namePoints = 55; // Reduced from 80 - Very good component match
+            namePoints = 55; // Very good component match
           } else {
-            namePoints = 40; // Reduced from 60 - Good component match
+            namePoints = 40; // Good component match
           }
+          console.log(`[NAME_COMPONENT_SUCCESS] Using namePoints=${namePoints} (componentSimilarity=${componentSimilarity}, hasStrongComponentMatch=${hasStrongComponentMatch})`);
         } else if (searchFieldCount >= 5 && exactFieldMatches >= 3) {
           // For comprehensive searches with multiple exact matches, allow weaker name matching
           namePoints = 25; // Partial name credit for comprehensive searches
@@ -328,9 +389,9 @@ export const scoreReview = async (
         } else {
           // Component matching failed - reject for simpler searches
           console.log(`[NAME_COMPONENT_FAIL] Component matching failed for "${fullSearchName}" vs "${review.customer_name}" (similarity: ${componentSimilarity})`);
-          return { 
-            ...review, 
-            searchScore: 0, 
+          return {
+            ...review,
+            searchScore: 0,
             matchCount: 0,
             completenessScore,
             exactFieldMatches: 0,
@@ -401,6 +462,83 @@ export const scoreReview = async (
             const wordSimilarity = calculateStringSimilarity(searchWord, nameWord);
             if (wordSimilarity > 0.8) {
               score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * wordSimilarity;
+              matches++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Business name matching with high priority
+  if (businessName && review.customer_business_name) {
+    const businessSimilarity = calculateStringSimilarity(
+      businessName.toLowerCase(),
+      review.customer_business_name.toLowerCase()
+    );
+
+    console.log(`[BUSINESS_NAME] Comparing "${businessName}" vs "${review.customer_business_name}" = ${businessSimilarity.toFixed(3)}`);
+
+    // Business name matching gets high weight since it's likely to be specific and accurate
+    if (businessSimilarity >= 0.7) {
+      let businessPoints = 0;
+
+      if (businessSimilarity >= 0.9) {
+        businessPoints = 60; // High score for excellent business name match
+      } else if (businessSimilarity >= 0.8) {
+        businessPoints = 45; // Good score for very good match
+      } else {
+        businessPoints = 30; // Moderate score for decent match
+      }
+
+      // Context-aware bonus for business-focused searches
+      if (searchContext.hasBusinessName && !searchContext.hasName) {
+        businessPoints *= 1.3; // 30% bonus for business-name-only searches
+      }
+
+      score += businessPoints;
+      matches++;
+
+      // Check for exact business name match
+      if (businessSimilarity >= 0.9) {
+        exactFieldMatches++;
+        exactMatchDetails.push({ field: 'business_name', isExact: true });
+      }
+
+      console.log(`[BUSINESS_NAME] Added ${businessPoints.toFixed(1)} points (similarity: ${businessSimilarity.toFixed(3)})`);
+
+      detailedMatches.push({
+        field: 'Business Name',
+        reviewValue: review.customer_business_name,
+        searchValue: businessName,
+        similarity: businessSimilarity,
+        matchType: businessSimilarity >= 0.9 ? 'exact' : businessSimilarity >= 0.7 ? 'partial' : 'fuzzy'
+      });
+    }
+
+    // Word-by-word matching for business names
+    const businessWords = businessName.toLowerCase().split(/\s+/);
+    const reviewBusinessWords = review.customer_business_name.toLowerCase().split(/\s+/);
+
+    for (const searchWord of businessWords) {
+      if (searchWord.length >= REVIEW_SEARCH_CONFIG.MIN_WORD_LENGTH) {
+        for (const reviewWord of reviewBusinessWords) {
+          // Exact word match
+          if (reviewWord === searchWord) {
+            score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * 1.5; // 50% bonus for business word matches
+            matches++;
+          }
+          // Partial word match
+          else if (searchWord.length >= 4 && reviewWord.length >= 4 &&
+                   (reviewWord.includes(searchWord) || searchWord.includes(reviewWord))) {
+            score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * 1.2;
+            matches++;
+          }
+          // Fuzzy word match
+          else {
+            const wordSimilarity = calculateStringSimilarity(searchWord, reviewWord);
+            if (wordSimilarity > 0.8) {
+              score += REVIEW_SEARCH_CONFIG.SCORES.WORD_MATCH * wordSimilarity * 1.2;
               matches++;
             }
           }
@@ -804,6 +942,10 @@ export const scoreReview = async (
     maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.SIMILARITY_MULTIPLIER * 1.5;
     fieldsWithData++;
   }
+  if (review.customer_business_name) {
+    maxPossibleScore += 60 * 1.3; // Business name gets high weight
+    fieldsWithData++;
+  }
   if (review.customer_phone) {
     maxPossibleScore += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 2;
     fieldsWithData++;
@@ -868,7 +1010,7 @@ export const scoreReview = async (
   }
 
   // Enhanced state-only filter - prevent weak matches from passing
-  const hasMajorFields = (firstName || lastName || phone || address);
+  const hasMajorFields = (firstName || lastName || businessName || phone || address);
   const hasSubstantialMatch = phoneMatched || nameComponentMatched || addressMatched || cityMatched || zipMatched;
   
   // Check for truly weak matches (only state + weak city similarity)

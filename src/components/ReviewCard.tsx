@@ -135,10 +135,11 @@ const ReviewCard = ({
           </p>
         </div>
 
-        {/* Associates Display */}
-        {review.associates && review.associates.length > 0 && (
+        {/* Associates Display - show when associates exist OR business name exists */}
+        {((review.associates && review.associates.length > 0) || review.customer_business_name) && (
           <AssociatesDisplay
             associates={review.associates}
+            businessName={review.customer_business_name}
             reviewData={{
               phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
               address: review.address || '',

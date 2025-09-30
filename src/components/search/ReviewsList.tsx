@@ -40,6 +40,12 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
           : (review.customerName || review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer');
 
         console.log("ReviewsList: Final customer name set to:", finalCustomerName);
+        console.log("🔍 REVIEWS LIST - Passing to ReviewCard:", {
+          associates: review.associates,
+          customer_business_name: review.customer_business_name,
+          customer_nickname: review.customer_nickname,
+          isAssociateMatch: review.isAssociateMatch
+        });
 
         return (
           <ReviewCard

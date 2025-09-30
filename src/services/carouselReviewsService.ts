@@ -69,8 +69,12 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
         address: review.customer_address || "",
         city: review.customer_city || "",
         zipCode: review.customer_zipcode || "",
+        customer_phone: review.customer_phone || "",
+        customer_business_name: review.customer_business_name || "",
+        associates: review.associates || [],
+        conversations: review.conversations || [],
         reactions: { like: [], funny: [], ohNo: [] }
-      };
+      } as any;
     });
 
     // Combine database reviews with fallback reviews
@@ -101,59 +105,115 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
 };
 
 // Fallback sample reviews for when database is empty or unavailable
-const getFallbackReviews = (): Review[] => {
+export const getFallbackReviews = (): Review[] => {
   return [
     {
       id: "sample-1",
       reviewerId: "business-1",
       reviewerName: "Mike's Plumbing Service",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-1",
       customerName: "Sarah Johnson",
-      customerAvatar: "",
+      customerAvatar: "https://images.unsplash.com/photo-1494790108755-2616b612b1ab?w=150&h=150&fit=crop&crop=face",
       rating: 5,
       content: "Sarah was an excellent customer! She was ready when we arrived, had cleared the work area, and was very respectful throughout the service call. Payment was quick and easy. Would definitely work with her again!",
       date: new Date().toISOString(),
       address: "123 Main St",
       city: "Irvine, TX",
       zipCode: "75060",
+      customer_business_name: "Johnson Real Estate",
+      associates: [
+        { firstName: "Emily", lastName: "Johnson" },
+        { firstName: "Mark", lastName: "Thompson" }
+      ],
+      conversations: [
+        {
+          authorName: "Sarah Johnson",
+          authorType: "customer",
+          avatar: "",
+          content: "Thank you so much for the excellent service! Really appreciate your professionalism."
+        },
+        {
+          authorName: "Mike's Plumbing Service",
+          authorType: "business",
+          avatar: "",
+          content: "You're very welcome Sarah! It was a pleasure working with you."
+        }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-2",
       reviewerId: "business-2",
       reviewerName: "Elite Auto Repair",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-2",
       customerName: "Robert Chen",
-      customerAvatar: "",
+      customerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
       rating: 4,
       content: "Robert brought his car in for brake service. He was punctual for his appointment and understood the work needed. Great communication throughout the process. The only minor issue was payment took a bit longer than expected.",
       date: new Date(Date.now() - 86400000).toISOString(),
       address: "456 Oak Ave",
       city: "Fort Wayne, IN",
       zipCode: "46805",
+      associates: [
+        { firstName: "Linda", lastName: "Chen" }
+      ],
+      conversations: [
+        {
+          authorName: "Robert Chen",
+          authorType: "customer",
+          avatar: "",
+          content: "Just wanted to follow up - the brakes feel great now. Thanks for the quality work!"
+        }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-3",
       reviewerId: "business-3",
       reviewerName: "Fresh Clean Housekeeping",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: false,
       customerId: "customer-3",
       customerName: "Maria Rodriguez",
-      customerAvatar: "",
+      customerAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
       rating: 5,
       content: "Maria is a dream client! Her home was well-organized before we arrived, she provided clear instructions about her preferences, and she's always been flexible with scheduling. Highly recommend working with her!",
       date: new Date(Date.now() - 172800000).toISOString(),
       address: "789 Pine St",
       city: "Orlando, FL",
       zipCode: "32801",
+      customer_business_name: "Rodriguez Marketing Solutions",
+      associates: [
+        { firstName: "Carlos", lastName: "Rodriguez" },
+        { firstName: "Sofia", lastName: "Martinez" },
+        { firstName: "Diego", lastName: "Rivera" }
+      ],
+      conversations: [
+        {
+          authorName: "Maria Rodriguez",
+          authorType: "customer",
+          avatar: "",
+          content: "Your team did an amazing job! The house looks spotless. Thank you!"
+        },
+        {
+          authorName: "Fresh Clean Housekeeping",
+          authorType: "business",
+          avatar: "",
+          content: "Thank you Maria! Your home is always a pleasure to clean. See you next month!"
+        },
+        {
+          authorName: "Maria Rodriguez",
+          authorType: "customer",
+          avatar: "",
+          content: "Absolutely! I've already scheduled the next appointment. You guys are the best!"
+        }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-4",
       reviewerId: "business-4",
@@ -175,19 +235,24 @@ const getFallbackReviews = (): Review[] => {
       id: "sample-5",
       reviewerId: "business-5",
       reviewerName: "TechFix Computer Repair",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-5",
       customerName: "Jennifer Adams",
-      customerAvatar: "",
+      customerAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
       rating: 5,
       content: "Jennifer brought in her laptop for virus removal. She was patient while we explained the process, provided all necessary passwords promptly, and picked up exactly when scheduled. Professional and courteous throughout!",
       date: new Date(Date.now() - 345600000).toISOString(),
       address: "654 Birch Ln",
       city: "Seattle, WA",
       zipCode: "98101",
+      customer_business_name: "Pacific Northwest Tech Solutions",
+      associates: [
+        { firstName: "Michael", lastName: "Adams" },
+        { firstName: "Sara", lastName: "Wilson" }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-6",
       reviewerId: "business-6",
@@ -203,25 +268,43 @@ const getFallbackReviews = (): Review[] => {
       address: "987 Cedar Dr",
       city: "Denver, CO",
       zipCode: "80201",
+      conversations: [
+        {
+          authorName: "Michael Brown",
+          authorType: "customer",
+          avatar: "",
+          content: "Could you touch up a few spots where the coverage looks thin? I see some areas near the baseboards."
+        },
+        {
+          authorName: "Perfect Paint Pro",
+          authorType: "business",
+          avatar: "",
+          content: "Of course! We'll come back tomorrow to address those areas. Thanks for pointing them out."
+        }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
       id: "sample-7",
       reviewerId: "business-7",
       reviewerName: "Sunny Side Café",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-7",
       customerName: "Emily Watson",
-      customerAvatar: "",
+      customerAvatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=150&h=150&fit=crop&crop=face",
       rating: 5,
       content: "Emily is a regular customer who always brightens our day! She's polite to staff, keeps her table tidy, and tips generously. A pleasure to serve!",
       date: new Date(Date.now() - 518400000).toISOString(),
       address: "412 Maple Ave",
       city: "Nashville, TN",
       zipCode: "37201",
+      customer_business_name: "Watson Creative Design Agency",
+      associates: [
+        { firstName: "David", lastName: "Watson" }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-8",
       reviewerId: "business-8",
@@ -243,17 +326,31 @@ const getFallbackReviews = (): Review[] => {
       id: "sample-9",
       reviewerId: "business-9",
       reviewerName: "Bella Vista Salon",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1586297135537-94bc9ba060aa?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: false,
       customerId: "customer-9",
       customerName: "Amanda Foster",
-      customerAvatar: "",
+      customerAvatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=150&h=150&fit=crop&crop=face",
       rating: 5,
       content: "Amanda is an ideal client! Always on time, communicates her preferences clearly, and is easy to work with. She appreciates our work and refers friends regularly.",
       date: new Date(Date.now() - 691200000).toISOString(),
       address: "159 Rose Street",
       city: "Atlanta, GA",
       zipCode: "30301",
+      conversations: [
+        {
+          authorName: "Amanda Foster",
+          authorType: "customer",
+          avatar: "",
+          content: "I love the new style! Thank you so much. I've already booked my next appointment."
+        },
+        {
+          authorName: "Bella Vista Salon",
+          authorType: "business",
+          avatar: "",
+          content: "You're so welcome Amanda! Looking forward to seeing you next month. Thanks for being such a wonderful client!"
+        }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -277,7 +374,7 @@ const getFallbackReviews = (): Review[] => {
       id: "sample-11",
       reviewerId: "business-11",
       reviewerName: "Riverside Pet Grooming",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-11",
       customerName: "Lisa Harper",
@@ -288,8 +385,12 @@ const getFallbackReviews = (): Review[] => {
       address: "724 Sunset Blvd",
       city: "San Diego, CA",
       zipCode: "92101",
+      associates: [
+        { firstName: "James", lastName: "Harper" },
+        { firstName: "Max", lastName: "Rodriguez" }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-12",
       reviewerId: "business-12",
@@ -311,7 +412,7 @@ const getFallbackReviews = (): Review[] => {
       id: "sample-13",
       reviewerId: "business-13",
       reviewerName: "Downtown Dental",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-13",
       customerName: "Rachel Kim",
@@ -345,7 +446,7 @@ const getFallbackReviews = (): Review[] => {
       id: "sample-15",
       reviewerId: "business-15",
       reviewerName: "Harbor View Photography",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: false,
       customerId: "customer-15",
       customerName: "Nicole Davis",
@@ -356,6 +457,26 @@ const getFallbackReviews = (): Review[] => {
       address: "926 Oceanview Dr",
       city: "Miami, FL",
       zipCode: "33101",
+      conversations: [
+        {
+          authorName: "Nicole Davis",
+          authorType: "customer",
+          avatar: "",
+          content: "Just received the photos and they're absolutely stunning! Thank you for capturing our special day so beautifully."
+        },
+        {
+          authorName: "Harbor View Photography",
+          authorType: "business",
+          avatar: "",
+          content: "It was our pleasure Nicole! Your wedding was magical and you made our job so easy. Congratulations again!"
+        },
+        {
+          authorName: "Nicole Davis",
+          authorType: "customer",
+          avatar: "",
+          content: "We'll definitely recommend you to all our friends. Thank you again for everything!"
+        }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -379,7 +500,7 @@ const getFallbackReviews = (): Review[] => {
       id: "sample-17",
       reviewerId: "business-17",
       reviewerName: "Artisan Bakery",
-      reviewerAvatar: "",
+      reviewerAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
       reviewerVerified: true,
       customerId: "customer-17",
       customerName: "Sophie Chen",
@@ -390,8 +511,11 @@ const getFallbackReviews = (): Review[] => {
       address: "678 Harbor Street",
       city: "Halifax, NS",
       zipCode: "B3H 1A1",
+      associates: [
+        { firstName: "Michael", lastName: "Chen" }
+      ],
       reactions: { like: [], funny: [], ohNo: [] }
-    },
+    } as any,
     {
       id: "sample-18",
       reviewerId: "business-18",

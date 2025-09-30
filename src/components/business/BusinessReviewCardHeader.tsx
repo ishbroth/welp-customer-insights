@@ -4,6 +4,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Review } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
 
 interface BusinessReviewCardHeaderProps {
   review: Review;
@@ -52,16 +53,17 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   let customerAddress = review.customer_address || '';
   let customerCity = review.customer_city || '';
   let customerZipcode = review.customer_zipcode || '';
-  
+
   console.log("BusinessReviewCardHeader: Initial customer data:", {
     reviewCustomerName: review.customerName,
     customerDisplayName,
+    customer_nickname: (review as any).customer_nickname,
     reviewObject: review
   });
 
   if (customerProfile) {
     customerAvatar = customerProfile.avatar || '';
-    
+
     // Construct name from profile - prioritize first_name + last_name for customers
     if (customerProfile.first_name && customerProfile.last_name) {
       customerDisplayName = `${customerProfile.first_name} ${customerProfile.last_name}`;
@@ -80,6 +82,9 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     customerCity = customerProfile.city || customerCity;
     customerZipcode = customerProfile.zipcode || customerZipcode;
   }
+
+  // Apply nickname formatting to the display name
+  customerDisplayName = formatCustomerNameWithNickname(customerDisplayName, (review as any).customer_nickname);
 
   // Format the address display
   const formatAddress = () => {

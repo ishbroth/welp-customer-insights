@@ -92,6 +92,11 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     let finalZipCode = mostCompleteReview.customer_zipcode || "";
 
     console.log(`Processing review customer: ${fullName}, isAssociateMatch: ${isAssociateMatch}`);
+    console.log("🔍 CUSTOMER PROCESSOR - Original review data:", {
+      associates: mostCompleteReview.associates,
+      customer_business_name: mostCompleteReview.customer_business_name,
+      customer_nickname: mostCompleteReview.customer_nickname
+    });
 
     if (isAssociateMatch && mostCompleteReview.associateData) {
       // Use associate name for display
@@ -140,6 +145,9 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
         customer_address: review.customer_address,
         customer_city: review.customer_city,
         customer_zipcode: review.customer_zipcode,
+        customer_nickname: review.customer_nickname,
+        customer_business_name: review.customer_business_name,
+        associates: review.associates,
         // CRITICAL: Include associate match metadata in each review
         isAssociateMatch: review.isAssociateMatch,
         associateData: review.associateData,
@@ -151,7 +159,19 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
         customerName: `${finalFirstName} ${finalLastName}`.trim()
       }))
     };
-    
+
+    console.log("🔍 CUSTOMER PROCESSOR - Final customer with reviews:", {
+      id: customer.id,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      reviewCount: customer.reviews.length,
+      firstReviewData: customer.reviews[0] ? {
+        associates: customer.reviews[0].associates,
+        customer_business_name: customer.reviews[0].customer_business_name,
+        customer_nickname: customer.reviews[0].customer_nickname
+      } : null
+    });
+
     customers.push(customer);
   });
   

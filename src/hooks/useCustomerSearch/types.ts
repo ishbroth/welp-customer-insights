@@ -2,6 +2,7 @@
 export interface SearchParams {
   lastName: string;
   firstName: string;
+  businessName: string;
   phone: string;
   address: string;
   city: string;
@@ -27,6 +28,8 @@ export interface ProfileCustomer {
 export interface ReviewData {
   id: string;
   customer_name?: string;
+  customer_nickname?: string;
+  customer_business_name?: string;
   customer_address?: string;
   customer_city?: string;
   customer_zipcode?: string;

@@ -13,10 +13,13 @@ export const formatReviewData = (review: any) => {
     id: review.id,
     customer_name: review.customer_name, // Keep original for search/scoring
     customerName: displayCustomerName,   // Use for UI display
+    customer_nickname: review.customer_nickname, // Include nickname
+    customer_business_name: review.customer_business_name, // Include business name
     customer_address: review.customer_address,
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
     customer_phone: review.customer_phone,
+    associates: review.associates, // Include associates
     rating: review.rating,
     content: review.content,
     created_at: review.created_at,

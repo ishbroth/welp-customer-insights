@@ -50,6 +50,7 @@ export interface Review {
   customer_city?: string;
   customer_zipcode?: string;
   customer_phone?: string;
+  customer_business_name?: string;
   associates?: Array<{ firstName: string; lastName: string }>;
   reactions?: {
     like: string[];

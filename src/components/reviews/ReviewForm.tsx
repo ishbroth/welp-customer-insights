@@ -21,6 +21,10 @@ interface ReviewFormProps {
   setCustomerFirstName: (value: string) => void;
   customerLastName: string;
   setCustomerLastName: (value: string) => void;
+  customerNickname: string;
+  setCustomerNickname: (value: string) => void;
+  customerBusinessName: string;
+  setCustomerBusinessName: (value: string) => void;
   customerPhone: string;
   setCustomerPhone: (value: string) => void;
   customerAddress: string;
@@ -63,6 +67,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   setCustomerFirstName,
   customerLastName,
   setCustomerLastName,
+  customerNickname,
+  setCustomerNickname,
+  customerBusinessName,
+  setCustomerBusinessName,
   customerPhone,
   setCustomerPhone,
   customerAddress,
@@ -108,9 +116,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     <form onSubmit={onSubmit}>
       <div className="space-y-6">
         {/* Customer Information */}
-        <CustomerInfoForm 
+        <CustomerInfoForm
           customerFirstName={customerFirstName}
           customerLastName={customerLastName}
+          customerNickname={customerNickname}
+          customerBusinessName={customerBusinessName}
           customerPhone={customerPhone}
           customerAddress={customerAddress}
           customerCity={customerCity}
@@ -120,6 +130,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           customer={customer}
           setCustomerFirstName={setCustomerFirstName}
           setCustomerLastName={setCustomerLastName}
+          setCustomerNickname={setCustomerNickname}
+          setCustomerBusinessName={setCustomerBusinessName}
           setCustomerPhone={setCustomerPhone}
           setCustomerAddress={setCustomerAddress}
           setCustomerCity={setCustomerCity}

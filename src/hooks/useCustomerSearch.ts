@@ -27,6 +27,7 @@ export const useCustomerSearch = () => {
   const searchParameters: SearchParams = useMemo(() => ({
     lastName: searchParams.get("lastName") || "",
     firstName: searchParams.get("firstName") || "",
+    businessName: searchParams.get("businessName") || "",
     phone: searchParams.get("phone") || "",
     address: searchParams.get("address") || "",
     city: searchParams.get("city") || "",
@@ -80,6 +81,8 @@ export const useCustomerSearch = () => {
       const cleanReviewsData: ReviewData[] = reviewsData.map(review => ({
         id: review.id,
         customer_name: review.customer_name,
+        customer_nickname: review.customer_nickname,
+        customer_business_name: review.customer_business_name,
         customer_address: review.customer_address,
         customer_city: review.customer_city,
         customer_zipcode: review.customer_zipcode,

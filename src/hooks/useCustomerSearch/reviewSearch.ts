@@ -34,6 +34,8 @@ const searchAssociatesInReviews = async (searchParams: SearchParams) => {
       .select(`
         id,
         customer_name,
+        customer_nickname,
+        customer_business_name,
         customer_address,
         customer_city,
         customer_zipcode,
@@ -123,7 +125,7 @@ const searchAssociatesInReviews = async (searchParams: SearchParams) => {
 };
 
 export const searchReviews = async (searchParams: SearchParams, unlockedReviews?: string[]) => {
-  const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
+  const { firstName, lastName, businessName, phone, address, city, state, zipCode } = searchParams;
 
   console.log("=== REVIEW SEARCH START ===");
   console.log("Search parameters:", searchParams);
@@ -137,6 +139,8 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
     .select(`
       id,
       customer_name,
+      customer_nickname,
+      customer_business_name,
       customer_address,
       customer_city,
       customer_zipcode,
@@ -160,6 +164,28 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
   }
 
   console.log(`Found ${allReviews.length} total reviews in database`);
+  console.log("🔍 REVIEW SEARCH - Sample review data from DB:", allReviews[0] ? {
+    id: allReviews[0].id,
+    customer_name: allReviews[0].customer_name,
+    customer_business_name: allReviews[0].customer_business_name,
+    customer_nickname: allReviews[0].customer_nickname,
+    associates: allReviews[0].associates
+  } : "No reviews found");
+
+  console.log("🔍 REVIEW SEARCH - Looking for Salvatore Sardina review:");
+  const salvatoreReview = allReviews.find(r => r.customer_name?.toLowerCase().includes('salvatore'));
+  if (salvatoreReview) {
+    console.log("🔍 FOUND SALVATORE REVIEW:", {
+      id: salvatoreReview.id,
+      customer_name: salvatoreReview.customer_name,
+      customer_nickname: salvatoreReview.customer_nickname,
+      customer_city: salvatoreReview.customer_city,
+      customer_zipcode: salvatoreReview.customer_zipcode,
+      customer_address: salvatoreReview.customer_address
+    });
+  } else {
+    console.log("🔍 SALVATORE REVIEW NOT FOUND in fetched reviews");
+  }
   
   // Debug: Will check CA reviews after business profile enrichment since state comes from business profile
 
@@ -272,14 +298,15 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       reviewerAvatar: formattedReview.reviewerAvatar ? 'Present' : 'Missing'
     });
     
-    const scoredReview = await scoreReview(formattedReview, { 
-      firstName, 
-      lastName, 
-      phone, 
-      address, 
-      city, 
-      state, 
-      zipCode 
+    const scoredReview = await scoreReview(formattedReview, {
+      firstName,
+      lastName,
+      businessName,
+      phone,
+      address,
+      city,
+      state,
+      zipCode
     }, businessProfile?.business_state || businessProfile?.state || null);
     
     console.log(`Review ${review.id}: Score: ${scoredReview.searchScore}, Business: ${formattedReview.reviewerName}, Verified: ${formattedReview.reviewerVerified}`);
@@ -342,6 +369,7 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       const scoredReview = await scoreReview(formattedReview, {
         firstName,
         lastName,
+        businessName,
         phone,
         address,
         city,
