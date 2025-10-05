@@ -8,6 +8,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileShareButton from "@/components/mobile/MobileShareButton";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
+import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
 
 interface ReviewCardProps {
   review: Review;
@@ -60,7 +61,11 @@ const ReviewCard = ({
     initials: getInitials(review.customerName),
     type: "Customer"
   } : {
-    name: review.reviewerName,
+    name: getReviewerDisplayName(
+      review.is_anonymous || false,
+      review.reviewerName,
+      review.reviewerBusinessCategory
+    ),
     avatar: review.reviewerAvatar,
     initials: getInitials(review.reviewerName),
     type: "Business",
@@ -68,7 +73,11 @@ const ReviewCard = ({
   };
 
   const rightSideInfo = isBusinessViewer ? {
-    name: review.reviewerName,
+    name: getReviewerDisplayName(
+      review.is_anonymous || false,
+      review.reviewerName,
+      review.reviewerBusinessCategory
+    ),
     avatar: review.reviewerAvatar,
     initials: getInitials(review.reviewerName),
     type: "Business",

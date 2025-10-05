@@ -44,6 +44,10 @@ interface EnhancedCustomerReviewCardProps {
   hasSubscription: boolean;
   onPurchase: (reviewId: string) => void;
   onReactionToggle: (reviewId: string, reactionType: string) => void;
+  // Props for anonymous business masking
+  maskBusinessName?: boolean;
+  businessCategory?: string;
+  actualBusinessName?: string;
 }
 
 const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
@@ -52,6 +56,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
   hasSubscription,
   onPurchase,
   onReactionToggle,
+  maskBusinessName = false,
+  businessCategory,
+  actualBusinessName,
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -78,6 +85,9 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
     hasSubscription,
     onPurchase,
     onReactionToggle,
+    maskBusinessName,
+    businessCategory,
+    actualBusinessName,
   });
 
   const handleSubscribeClick = () => {

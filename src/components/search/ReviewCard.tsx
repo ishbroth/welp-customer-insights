@@ -17,6 +17,7 @@ import { doesReviewMatchUser } from "@/utils/reviewMatching";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import BusinessReviewCardPhotos from "@/components/business/BusinessReviewCardPhotos";
 import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
+import { getReviewerDisplayName, canParticipateInConversation } from "@/utils/anonymousReviewUtils";
 
 interface ReviewCardProps {
   review: {
@@ -25,6 +26,7 @@ interface ReviewCardProps {
     reviewerName: string;
     reviewerAvatar?: string;
     reviewerVerified?: boolean;
+    reviewerBusinessCategory?: string;
     rating: number;
     content: string;
     date: string;
@@ -43,6 +45,7 @@ interface ReviewCardProps {
     isAssociateMatch?: boolean;
     original_customer_name?: string;
     associateData?: { firstName: string; lastName: string };
+    is_anonymous?: boolean;
   };
   hasSubscription: boolean;
   isOneTimeUnlocked: boolean;
@@ -66,6 +69,20 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   // Check if current user is the business that wrote this review
   const isReviewAuthor = currentUser?.type === 'business' && currentUser?.id === review.reviewerId;
+
+  // Get display name for reviewer (anonymous logic)
+  const displayReviewerName = getReviewerDisplayName(
+    review.is_anonymous || false,
+    review.reviewerName,
+    review.reviewerBusinessCategory,
+    isReviewAuthor
+  );
+
+  // Check if reviewer can participate in conversations (anonymous reviews cannot)
+  const reviewerCanParticipate = canParticipateInConversation(
+    review.is_anonymous || false,
+    isReviewAuthor
+  );
   
   // Check if customer user can access this review (only if it matches their profile)
   const customerCanAccessReview = currentUser?.type === 'customer' 
@@ -80,10 +97,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     ? (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor) && customerCanAccessReview
     : (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor);
   
-  // For conversation participation: same rule as content viewing
-  const canParticipateInConversation = currentUser?.type === 'customer'
+  // For conversation participation: same rule as content viewing, but also check anonymous restrictions
+  const canParticipateInConversationBase = currentUser?.type === 'customer'
     ? (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor) && customerCanAccessReview
     : (isSubscribed || isReviewActuallyUnlocked || isReviewAuthor);
+
+  const canParticipateInConversationFinal = canParticipateInConversationBase && reviewerCanParticipate;
 
   // Format customer name with nickname before passing to useCustomerInfo
   const formattedCustomerName = formatCustomerNameWithNickname(
@@ -101,15 +120,23 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   });
 
   const handleBusinessNameClick = () => {
+    // Don't allow navigation if the review is anonymous
+    if (review.is_anonymous) {
+      return;
+    }
+
     // If current user is the business owner of this review, go to their own profile
     if (currentUser?.id === review.reviewerId) {
       navigate('/profile');
     } else {
       navigate(`/business-profile/${review.reviewerId}`, {
-        state: { 
+        state: {
           readOnly: true,
           showRespondButton: currentUser?.type === 'customer',
-          reviewId: review.id
+          reviewId: review.id,
+          isAnonymous: review.is_anonymous || false,
+          businessCategory: review.reviewerBusinessCategory,
+          actualBusinessName: review.reviewerName
         }
       });
     }
@@ -229,13 +256,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </Avatar>
             <div>
               <div className="flex items-center gap-1">
-                <h4 
-                  className="font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                  onClick={handleBusinessNameClick}
+                <h4
+                  className={review.is_anonymous
+                    ? "font-medium text-gray-700"
+                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                  }
+                  onClick={review.is_anonymous ? undefined : handleBusinessNameClick}
                 >
-                  {review.reviewerName}
+                  {displayReviewerName}
                 </h4>
-                {review.reviewerVerified && <VerifiedBadge size="xs" />}
+                {review.reviewerVerified && <VerifiedBadge size="sm" />}
               </div>
               <p className="text-sm text-gray-500">Business</p>
             </div>
@@ -308,6 +338,45 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           </div>
         )}
 
+        {/* Associates and Business Display - split layout (similar to BusinessReviewCard) */}
+        {((review.associates && review.associates.length > 0) || review.customer_business_name) && !review.isAssociateMatch && (
+          <div className="flex flex-row gap-2 sm:gap-4 mb-4">
+            {/* Associates on the left */}
+            {(review.associates && review.associates.length > 0) && (
+              <div className="flex-1 min-w-0">
+                <AssociatesDisplay
+                  associates={review.associates}
+                  showBusinessName={false}
+                  reviewData={{
+                    phone: review.customer_phone || '',
+                    address: review.customer_address || review.address || '',
+                    city: review.customer_city || review.city || '',
+                    state: review.state || '',
+                    zipCode: review.customer_zipcode || review.zipCode || ''
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Business name on the right */}
+            {review.customer_business_name && (
+              <div className="flex-1 min-w-0">
+                <div className="mt-3">
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500 mt-0.5">🏢</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-600 mb-2">Business or Employment:</p>
+                      <span className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium break-words">
+                        🏢 {review.customer_business_name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Lock/Unlock UI for non-accessible content */}
         {!canViewFullContent && (
           <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
@@ -348,49 +417,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           </div>
         )}
 
-        {/* Associates and Business Display - split layout (similar to BusinessReviewCard) */}
-        {((review.associates && review.associates.length > 0) || review.customer_business_name) && !review.isAssociateMatch && (
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Associates on the left */}
-            {(review.associates && review.associates.length > 0) && (
-              <div className="flex-1">
-                <AssociatesDisplay
-                  associates={review.associates}
-                  showBusinessName={false}
-                  reviewData={{
-                    phone: review.customer_phone || '',
-                    address: review.customer_address || review.address || '',
-                    city: review.customer_city || review.city || '',
-                    state: review.state || '',
-                    zipCode: review.customer_zipcode || review.zipCode || ''
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Business name on the right */}
-            {review.customer_business_name && (
-              <div className="flex-1">
-                <div className="mt-3">
-                  <div className="flex items-start gap-2">
-                    <span className="text-gray-500 mt-0.5">🏢</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-600 mb-2">Business or Employment:</p>
-                      <span className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium">
-                        🏢 {review.customer_business_name}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Conversation Section */}
-        <ReviewConversationSection 
+        <ReviewConversationSection
           reviewId={review.id}
-          shouldShowFullReview={canParticipateInConversation}
+          shouldShowFullReview={canParticipateInConversationFinal}
           isBusinessUser={currentUser?.type === 'business'}
           isCustomerBeingReviewed={currentUser?.id === review.customerId}
           customerId={review.customerId}
@@ -398,14 +428,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         />
 
         {/* Conversation Access Prompt - Show when review content is visible but conversation participation needs unlock */}
-        {canViewFullContent && !canParticipateInConversation && (
+        {canViewFullContent && !canParticipateInConversationFinal && (
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div className="flex items-center text-gray-600 mb-2">
               <MessageCircle className="h-4 w-4 mr-2" />
               <span className="text-sm">Unlock conversation to participate</span>
             </div>
             <p className="text-xs text-gray-500 mb-3">
-              {isReviewAuthor 
+              {!reviewerCanParticipate && isReviewAuthor
+                ? "Anonymous reviewers cannot participate in conversations. Edit your review to uncheck the anonymous option to participate."
+                : isReviewAuthor
                 ? "Even as the review author, you need to unlock or subscribe to participate in conversations"
                 : "Subscribe or use credits to participate in the conversation"
               }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
 
 interface DetailedMatch {
   field: string;
@@ -25,6 +26,9 @@ export const useEnhancedCustomerReviewCard = ({
   hasSubscription,
   onPurchase,
   onReactionToggle,
+  maskBusinessName = false,
+  businessCategory,
+  actualBusinessName,
 }: any) => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
@@ -83,8 +87,16 @@ export const useEnhancedCustomerReviewCard = ({
   const isBusinessVerified = businessProfile?.verified || false;
   const isCustomerVerified = customerProfile?.verified || false;
 
-  const finalBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || "";
+  // Mask business avatar when requested
+  const rawBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || "";
+  const finalBusinessAvatar = maskBusinessName ? "" : rawBusinessAvatar;
   const finalCustomerAvatar = customerProfile?.avatar || review.customerAvatar || "";
+
+  // Get the business name to display (masked or actual)
+  const rawBusinessName = actualBusinessName || businessProfile?.business_info?.business_name || businessProfile?.name || review.reviewerName || 'Business';
+  const displayBusinessName = maskBusinessName
+    ? getReviewerDisplayName(true, rawBusinessName, businessCategory)
+    : rawBusinessName;
 
   // Check if review is actually claimed by checking customerId field
   const isReviewClaimed = !!review.customerId;
@@ -141,10 +153,13 @@ export const useEnhancedCustomerReviewCard = ({
     } else {
       // Navigate to business profile with read-only view
       navigate(`/business-profile/${review.reviewerId}`, {
-        state: { 
+        state: {
           readOnly: true,
           showRespondButton: currentUser?.type === 'customer',
-          reviewId: review.id
+          reviewId: review.id,
+          isAnonymous: review.is_anonymous || false,
+          businessCategory: review.reviewerBusinessCategory,
+          actualBusinessName: review.reviewerName
         }
       });
     }
@@ -172,5 +187,7 @@ export const useEnhancedCustomerReviewCard = ({
     handleClaimCancel,
     handleReactionToggle,
     handleBusinessNameClick,
+    displayBusinessName,
+    maskBusinessName,
   };
 };

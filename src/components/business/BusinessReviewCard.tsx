@@ -15,6 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
+import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
+import { useAuth } from "@/contexts/auth";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -32,6 +34,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   onReactionToggle,
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { currentUser } = useAuth();
   
   console.log("BusinessReviewCard: Received review data:", {
     id: review.id,
@@ -48,6 +51,23 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     state: review.state,
     zipCode: review.zipCode
   });
+
+  console.log("🔍 BUSINESS REVIEW CARD - is_anonymous field:", review.is_anonymous);
+  console.log("🔍 BUSINESS REVIEW CARD - all review fields:", Object.keys(review));
+  console.log("🔍 BUSINESS REVIEW CARD - complete review object:", review);
+  console.log("🔍 BUSINESS REVIEW CARD - business_category:", currentUser?.business_category);
+
+  // Business info for right side (smaller) - on "My Customer Reviews" page, always show actual business name
+  // since the user is viewing their own reviews
+  const isOwnReview = currentUser?.id === review.reviewerId;
+  const displayName = getReviewerDisplayName(
+    review.is_anonymous || false,
+    review.reviewerName,
+    currentUser?.business_category,
+    isOwnReview
+  );
+
+  console.log("🔍 BUSINESS REVIEW CARD - displayName:", displayName, "for review:", review.id);
   
   const { handleCustomerClick, formatDate, getCustomerInitials, isReviewClaimed } = useBusinessReviewCardLogic(review);
   const navigate = useNavigate();
@@ -88,6 +108,7 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       state: (review as any).customer_state || (review as any).customerState || (review as any).state || '',
       zipCode: (review as any).customer_zipcode || review.zipCode || (review as any).customerZipCode || (review as any).customerZipcode || '',
       associates: review.associates || [],
+      is_anonymous: review.is_anonymous || false,
     };
     
     // Navigate to new review page with customer info pre-filled and edit mode enabled
@@ -105,11 +126,10 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     });
   };
 
-  // Business info for right side (smaller) 
   const businessInfo = {
-    name: review.reviewerName,
+    name: displayName,
     avatar: review.reviewerAvatar,
-    initials: getInitials(review.reviewerName),
+    initials: getInitials(displayName),
     verified: review.reviewerVerified
   };
 

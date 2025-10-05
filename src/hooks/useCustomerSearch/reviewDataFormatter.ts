@@ -20,6 +20,7 @@ export const formatReviewData = (review: any) => {
     customer_zipcode: review.customer_zipcode,
     customer_phone: review.customer_phone,
     associates: review.associates, // Include associates
+    is_anonymous: review.is_anonymous, // Include anonymous flag
     rating: review.rating,
     content: review.content,
     created_at: review.created_at,
@@ -28,7 +29,8 @@ export const formatReviewData = (review: any) => {
     business_profile: businessProfile,
     reviewerName: businessProfile?.business_name || businessProfile?.name || "Anonymous Business",
     reviewerAvatar: businessProfile?.avatar || "", // Include avatar from profile
-    reviewerVerified: false, // This will be set in the search function
+    reviewerVerified: businessProfile?.verified || false, // Get verified status from profile
+    reviewerBusinessCategory: businessProfile?.business_category || "", // Include business category
     customerVerified: customerProfile?.verified || false,
     searchScore: 0,
     matchCount: 0,

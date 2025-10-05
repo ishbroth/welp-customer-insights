@@ -59,6 +59,10 @@ export interface Review {
   };
   responses?: ReviewResponse[];
   location?: string;
+  // Anonymous review functionality
+  is_anonymous?: boolean;
+  reviewerBusinessCategory?: string;
+  reviewerBusinessSubcategory?: string;
   // Extended properties for business profile reviews
   isClaimed?: boolean;
   isUnlocked?: boolean;

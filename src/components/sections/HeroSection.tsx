@@ -30,7 +30,7 @@ const HeroSection = () => {
             {/* Desktop: One line */}
             <p className="hidden md:block">Review your customers. Because businesses are people too.</p>
           </div>
-          <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
+          <div className="flex flex-row justify-center gap-3 md:gap-4">
             {currentUser ? (
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>

@@ -31,7 +31,8 @@ const DuplicateReviewHandler: React.FC<DuplicateReviewHandlerProps> = ({
         address: existingReview.customer_address || "",
         city: existingReview.customer_city || "",
         zipCode: existingReview.customer_zipcode || "",
-        phone: existingReview.customer_phone || ""
+        phone: existingReview.customer_phone || "",
+        is_anonymous: existingReview.is_anonymous || false
       };
       
       navigate(`/new-review?edit=true&reviewId=${existingReview.id}`, {

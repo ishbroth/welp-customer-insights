@@ -758,12 +758,38 @@ export const scoreReview = async (
       
       console.log(`[CITY_MATCH] String match found: "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
     }
-    
-    // DISABLED: Geographic proximity checks removed to enforce customer-only data matching
-    // Geographic proximity was using business state data which caused false positives
-    console.log(`[CITY_MATCHING] Only using customer city data: "${review.customer_city}" vs search "${city}"`);
-    
-    
+
+    // Geographic proximity check - only if string matching didn't work
+    if (!cityMatchedLocal && state && REVIEW_SEARCH_CONFIG.CITY_GEOCODING_ENABLED) {
+      // Derive review state from customer data or business state
+      const reviewState = review.customer_state || businessState || state; // Use search state as fallback
+
+      if (reviewState) {
+        try {
+          const proximityResult = await areCitiesInProximity(
+            city,
+            state,
+            review.customer_city,
+            reviewState
+          );
+
+          if (proximityResult.isInProximity) {
+            const proximityPoints = calculateProximityScore(proximityResult.distance || 0);
+            points = proximityPoints;
+            cityMatched = true;
+            cityMatchedLocal = true;
+            matchType = 'proximity';
+            console.log(`[CITY_PROXIMITY] Cities within proximity: "${city}, ${state}" and "${review.customer_city}, ${reviewState}" (${proximityResult.distance?.toFixed(1)} miles)`);
+          }
+        } catch (error) {
+          console.error('[CITY_PROXIMITY] Error checking proximity:', error);
+        }
+      }
+    }
+
+    console.log(`[CITY_MATCHING] Customer city data: "${review.customer_city}" vs search "${city}"`);
+
+
     if (cityMatchedLocal) {
       score += points;
       matches++;

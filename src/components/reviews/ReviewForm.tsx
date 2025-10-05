@@ -1,5 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import CustomerInfoForm from "@/components/reviews/CustomerInfoForm";
 import RatingInput from "@/components/reviews/RatingInput";
@@ -54,6 +56,10 @@ interface ReviewFormProps {
   associates: Array<{ firstName: string; lastName: string }>;
   setAssociates: (associates: Array<{ firstName: string; lastName: string }>) => void;
 
+  // Anonymous review props
+  isAnonymous: boolean;
+  setIsAnonymous: (value: boolean) => void;
+
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({
@@ -91,6 +97,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   setPhotos,
   associates,
   setAssociates,
+  isAnonymous,
+  setIsAnonymous,
 }) => {
   const navigate = useNavigate();
 
@@ -139,7 +147,29 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           setCustomerZipCode={setCustomerZipCode}
           onAddressComponentsExtracted={handleAddressComponentsExtracted}
         />
-        
+
+        {/* Anonymous Review Option */}
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="anonymous"
+              checked={isAnonymous}
+              onCheckedChange={setIsAnonymous}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <Label htmlFor="anonymous" className="text-sm font-medium cursor-pointer">
+                Review Anonymously
+              </Label>
+              <p className="text-xs text-gray-600 mt-1">
+                Your review will show your business type instead of your business name.
+                <br />
+                <strong>Note:</strong> Anonymous reviewers cannot participate in conversations until they uncheck this option in the edit review form.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Rating */}
         <RatingInput 
           rating={rating}

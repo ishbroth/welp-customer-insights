@@ -34,7 +34,11 @@ const Signup = () => {
         <div className="container mx-auto px-3 md:px-4">
           <Card className="max-w-2xl mx-auto p-4 md:p-6">
             <h1 className="text-2xl md:text-3xl font-bold text-center mb-4 md:mb-6">Create Your Welp. Account</h1>
-            
+
+            <p className="text-sm text-gray-600 text-center mb-4 md:mb-6">
+              Business owners please sign up to access customer reviews and write your own, it's free to add a review of a customer! If you're not a business owner, please sign up as a customer to find and access reviews that businesses have written about you!
+            </p>
+
             {/* Show unlock explanation banner if coming from review unlock */}
             {isUnlockFlow && <UnlockExplanationBanner />}
             

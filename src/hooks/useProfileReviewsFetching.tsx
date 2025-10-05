@@ -166,6 +166,7 @@ export const useProfileReviewsFetching = () => {
             customer_zipcode,
             customer_phone,
             associates,
+            is_anonymous,
             rating,
             content,
             created_at,
@@ -183,6 +184,7 @@ export const useProfileReviewsFetching = () => {
         console.log("🔍 PROFILE FETCHING - Raw business reviews:", businessReviews);
         console.log("🔍 PROFILE FETCHING - First review nickname:", businessReviews?.[0]?.customer_nickname);
         console.log("🔍 PROFILE FETCHING - First review business name:", businessReviews?.[0]?.customer_business_name);
+        console.log("🔍 PROFILE FETCHING - First review is_anonymous:", businessReviews?.[0]?.is_anonymous);
 
         // Add business profile data to business reviews
         const reviewsWithBusinessProfile = (businessReviews || []).map(review => ({
@@ -200,6 +202,7 @@ export const useProfileReviewsFetching = () => {
           customer_zipcode: review.customer_zipcode,
           customer_phone: review.customer_phone,
           associates: review.associates || [],
+          is_anonymous: review.is_anonymous || false,
           // Map to camelCase for component compatibility
           address: review.customer_address,
           city: review.customer_city,

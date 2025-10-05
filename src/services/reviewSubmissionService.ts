@@ -14,6 +14,7 @@ export interface ReviewSubmissionData {
   customerState?: string;
   customerZipCode?: string;
   associates?: Array<{ firstName: string; lastName: string }>;
+  isAnonymous?: boolean;
 }
 
 export const submitReviewToDatabase = async (
@@ -89,6 +90,20 @@ export const submitReviewToDatabase = async (
     .filter(associate => associate.firstName.trim() !== '' || associate.lastName.trim() !== '')
     .slice(0, 3); // Ensure maximum 3 associates
 
+  // Check if is_anonymous column exists by making a test query
+  let hasAnonymousColumn = false;
+  try {
+    const { data: testData, error: testError } = await supabase
+      .from('reviews')
+      .select('is_anonymous')
+      .limit(1);
+
+    hasAnonymousColumn = !testError;
+    console.log("Anonymous column check:", hasAnonymousColumn ? "EXISTS" : "MISSING");
+  } catch (e) {
+    console.warn("Could not check for is_anonymous column, proceeding without it");
+  }
+
   const supabaseReviewData = {
     business_id: businessId,
     rating: reviewData.rating,
@@ -102,6 +117,8 @@ export const submitReviewToDatabase = async (
     customer_zipcode: reviewData.customerZipCode,
     customer_phone: reviewData.customerPhone,
     associates: filteredAssociates,
+    // Only include is_anonymous if column exists
+    ...(hasAnonymousColumn && { is_anonymous: reviewData.isAnonymous || false }),
     // Clear deleted_at when editing to make the review visible again
     ...(isEditing && { deleted_at: null })
   };
@@ -112,6 +129,7 @@ export const submitReviewToDatabase = async (
   console.log("Nickname being saved:", reviewData.customerNickname);
   console.log("Business name being saved:", reviewData.customerBusinessName);
   console.log("Customer state being saved:", reviewData.customerState);
+  console.log("Anonymous flag being saved:", reviewData.isAnonymous);
   console.log("Full submission data:", supabaseReviewData);
   console.log("Is editing:", isEditing);
   console.log("Review ID:", reviewId);
@@ -147,7 +165,11 @@ export const submitReviewToDatabase = async (
   
   if (result.error) {
     console.error("Database error:", result.error);
-    throw new Error(result.error.message);
+    console.error("Error details:", JSON.stringify(result.error, null, 2));
+    console.error("Error code:", result.error.code);
+    console.error("Error hint:", result.error.hint);
+    console.error("Error details specific:", result.error.details);
+    throw new Error(`Database error: ${result.error.message} (Code: ${result.error.code})`);
   }
 
   if (!finalReviewId) {

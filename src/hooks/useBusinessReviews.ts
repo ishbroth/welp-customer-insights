@@ -44,8 +44,11 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           customer_business_name,
           customer_address,
           customer_city,
+          customer_state,
           customer_zipcode,
           customer_phone,
+          associates,
+          is_anonymous,
           review_claims(claimed_by),
           conversation_participants(id),
           responses(id)
@@ -57,6 +60,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       console.log("🔍 RAW QUERY DATA - First review:", reviewsData?.[0]);
       console.log("🔍 RAW QUERY DATA - Customer nickname:", reviewsData?.[0]?.customer_nickname);
       console.log("🔍 RAW QUERY DATA - Customer business name:", reviewsData?.[0]?.customer_business_name);
+      console.log("🔍 RAW QUERY DATA - is_anonymous:", reviewsData?.[0]?.is_anonymous);
+      console.log("🔍 RAW QUERY DATA - associates:", reviewsData?.[0]?.associates);
 
       if (error) {
         throw error;
@@ -126,6 +131,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           state: review.customer_state || "",
           zipCode: review.customer_zipcode || "",
           associates: review.associates || [],
+          is_anonymous: review.is_anonymous || false,
           // Store additional customer fields for compatibility
           customer_address: review.customer_address || "",
           customer_city: review.customer_city || "",

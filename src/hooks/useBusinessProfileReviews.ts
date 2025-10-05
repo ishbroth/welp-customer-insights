@@ -27,6 +27,7 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         .from('reviews')
         .select('*')
         .eq('business_id', businessId)
+        .or('is_anonymous.is.null,is_anonymous.eq.false')
         .order('created_at', { ascending: false });
       
       if (error) {

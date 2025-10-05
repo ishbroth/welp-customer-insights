@@ -44,7 +44,8 @@ const searchAssociatesInReviews = async (searchParams: SearchParams) => {
         content,
         created_at,
         business_id,
-        associates
+        associates,
+        is_anonymous
       `)
       .not('associates', 'is', null)
       .neq('associates', '[]')
@@ -133,7 +134,7 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
   // Initialize geocoding for the search
   initializeGeocodingForSearch();
   
-  // Get all reviews with business profile data
+  // Get all reviews
   const { data: allReviews, error } = await supabase
     .from('reviews')
     .select(`
@@ -149,7 +150,8 @@ export const searchReviews = async (searchParams: SearchParams, unlockedReviews?
       content,
       created_at,
       business_id,
-      associates
+      associates,
+      is_anonymous
     `)
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 

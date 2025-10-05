@@ -5,6 +5,7 @@ import { Review } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
+import { Eye } from "lucide-react";
 
 interface BusinessReviewCardHeaderProps {
   review: Review;
@@ -112,6 +113,13 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     reviewObject: review
   });
 
+  console.log('🔍 BusinessReviewCardHeader: is_anonymous check:', {
+    reviewId: review.id,
+    customerName: review.customerName,
+    is_anonymous: review.is_anonymous,
+    is_anonymous_type: typeof review.is_anonymous
+  });
+
   const getInitials = (name: string) => {
     if (name) {
       const names = name.split(' ');
@@ -133,13 +141,21 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 relative">
+      {/* Anonymous badge - positioned at top right for both mobile and desktop */}
+      {review.is_anonymous && (
+        <div className="absolute top-0 right-0 inline-flex items-center gap-1.5 bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-medium">
+          <span className="text-base">🕵️</span>
+          <span>Reviewed Anonymously</span>
+        </div>
+      )}
+
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <div className="flex items-start justify-between w-full">
+        <div className="flex items-start justify-between w-full pr-24">
           {/* Customer side (left) - takes most space */}
           <div className="flex items-center space-x-3 flex-1">
-            <Avatar 
+            <Avatar
               className={`h-10 w-10 ${isReviewClaimed ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
               onClick={isReviewClaimed ? handleCustomerClick : undefined}
             >
@@ -152,10 +168,10 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
               )}
             </Avatar>
             <div className="flex-1">
-              <h3 
+              <h3
                 className={`font-semibold ${
-                  isReviewClaimed 
-                    ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600' 
+                  isReviewClaimed
+                    ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600'
                     : 'text-gray-600'
                 }`}
                 onClick={isReviewClaimed ? handleCustomerClick : undefined}
@@ -188,7 +204,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
             </Avatar>
             <div className="flex flex-col items-end">
               <div className="flex items-center gap-1">
-                <h4 
+                <h4
                   className="font-medium text-xs"
                   title={businessInfo.name}
                 >
@@ -201,12 +217,12 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
         </div>
       </div>
 
-      {/* Desktop Layout - unchanged */}
+      {/* Desktop Layout */}
       <div className="hidden md:block">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between pr-28">
           <div className="flex items-center space-x-3 flex-1">
             {/* Customer Avatar - shows profile pic when claimed, initials when not */}
-            <Avatar 
+            <Avatar
               className={`h-10 w-10 ${isReviewClaimed ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
               onClick={isReviewClaimed ? handleCustomerClick : undefined}
             >
@@ -219,10 +235,10 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
               )}
             </Avatar>
             <div className="flex-1">
-              <h3 
+              <h3
                 className={`font-semibold ${
-                  isReviewClaimed 
-                    ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600' 
+                  isReviewClaimed
+                    ? 'cursor-pointer hover:text-blue-600 transition-colors text-blue-600'
                     : 'text-gray-600'
                 }`}
                 onClick={isReviewClaimed ? handleCustomerClick : undefined}

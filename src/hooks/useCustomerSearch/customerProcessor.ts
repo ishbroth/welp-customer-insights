@@ -135,10 +135,12 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
         reviewerId: review.business_id || "",
         reviewerName: review.reviewerName || "Unknown Business",
         reviewerAvatar: review.reviewerAvatar || "",
+        reviewerBusinessCategory: review.reviewerBusinessCategory || "",
         rating: review.rating || 0,
         content: review.content || "",
         date: review.created_at || "",
         reviewerVerified: review.reviewerVerified || false,
+        is_anonymous: review.is_anonymous || false,
         // CRITICAL: Include ALL customer information in each review
         // This ensures it's visible in search results regardless of auth status
         customer_phone: review.customer_phone,

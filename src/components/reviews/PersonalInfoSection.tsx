@@ -84,7 +84,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               disabled={!isNewCustomer && !!customer}
             />
             <label htmlFor="isBusinessCustomer" className="text-sm font-medium">
-              Is this person also a business?
+              Is this customer affiliated with a business?
             </label>
           </div>
         </div>

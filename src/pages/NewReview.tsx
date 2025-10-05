@@ -35,7 +35,8 @@ const NewReview = () => {
       isEditing: formState.isEditing,
       reviewId: formState.reviewId,
       customerState: formState.customerState,
-      associates: formState.associates
+      associates: formState.associates,
+      isAnonymous: formState.isAnonymous
     });
 
     // Check for self-review first
@@ -78,7 +79,8 @@ const NewReview = () => {
       customerState: formState.customerState,
       customerZipCode: formState.customerZipCode,
       associates: formState.associates,
-      photos: formState.photos
+      photos: formState.photos,
+      isAnonymous: formState.isAnonymous
     });
   };
 
@@ -134,6 +136,8 @@ const NewReview = () => {
                   setPhotos={formState.setPhotos}
                   associates={formState.associates}
                   setAssociates={formState.setAssociates}
+                  isAnonymous={formState.isAnonymous}
+                  setIsAnonymous={formState.setIsAnonymous}
                 />
               </>
             )}

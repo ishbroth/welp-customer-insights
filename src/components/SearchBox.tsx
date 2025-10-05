@@ -54,7 +54,7 @@ const SearchBox = React.memo(({
         )}
         
         <p className={`text-center font-semibold text-gray-700 mb-4 ${isMobile ? "text-base px-2" : "text-lg"}`}>
-          Search for Customer Reviews with any piece of information.
+          SEARCH HERE! Find out if your customer has been reviewed by other businesses.
         </p>
         
         <div className={`${isMobile ? "space-y-2" : "space-y-3"}`}>

@@ -247,7 +247,7 @@ const ReviewCarousel = () => {
 
   if (loading) {
     return (
-      <section className="py-6 bg-welp-dark">
+      <section className="py-3 bg-welp-dark">
         <div className="container mx-auto px-3 md:px-4">
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#ea384c]"></div>
@@ -263,7 +263,7 @@ const ReviewCarousel = () => {
   const animationDuration = reviews.length * secondsPerReview;
 
   return (
-    <section className="py-6 bg-welp-dark">
+    <section className="py-3 bg-welp-dark">
       <div className="container mx-auto px-3 md:px-4">
         {/* Scrolling carousel container */}
         <div className="relative overflow-hidden">
@@ -279,12 +279,12 @@ const ReviewCarousel = () => {
             {[...reviews, ...reviews].map((review, index) => {
               const contentScale = getContentScale(review);
               return (
-              <Card key={`${review.id}-${index}`} className="flex-shrink-0 w-80 h-72 shadow-sm hover:shadow-md transition-shadow rounded-none border bg-white overflow-hidden">
+              <Card key={`${review.id}-${index}`} className="flex-shrink-0 w-64 h-56 shadow-sm hover:shadow-md transition-shadow rounded-none border bg-white overflow-hidden">
                 <CardContent className={`h-full flex flex-col ${contentScale} origin-top-left`} style={{
-                  padding: contentScale === 'scale-100' ? '12px' :
-                           contentScale === 'scale-90' ? '10px' :
-                           contentScale === 'scale-85' ? '14px' :
-                           contentScale === 'scale-80' ? '15px' : '16px',
+                  padding: contentScale === 'scale-100' ? '8px' :
+                           contentScale === 'scale-90' ? '6px' :
+                           contentScale === 'scale-85' ? '10px' :
+                           contentScale === 'scale-80' ? '11px' : '12px',
                   width: contentScale === 'scale-100' ? '100%' :
                          contentScale === 'scale-90' ? '111%' :
                          contentScale === 'scale-85' ? '118%' :
@@ -296,31 +296,31 @@ const ReviewCarousel = () => {
                 }}>
                   {/* Header with customer and business info - matching real review cards */}
                   <div className={`flex items-start justify-between min-w-0 ${
-                    contentScale === 'scale-100' ? 'mb-3' :
-                    contentScale === 'scale-90' ? 'mb-3' :
-                    contentScale === 'scale-85' ? 'mb-2' :
-                    contentScale === 'scale-80' ? 'mb-2' : 'mb-1'
+                    contentScale === 'scale-100' ? 'mb-2' :
+                    contentScale === 'scale-90' ? 'mb-2' :
+                    contentScale === 'scale-85' ? 'mb-1' :
+                    contentScale === 'scale-80' ? 'mb-1' : 'mb-0.5'
                   }`}>
                     {/* Customer side (left) - takes most space */}
                     <div className="flex items-start space-x-2 flex-1 min-w-0 max-w-[60%]">
-                      <Avatar className="h-7 w-7 flex-shrink-0">
+                      <Avatar className="h-5 w-5 flex-shrink-0">
                         <AvatarImage src={review.customerAvatar} alt={review.customerName} />
                         <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
                           {getInitials(review.customerName)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-lg text-gray-600 truncate">
+                        <h3 className="font-semibold text-sm text-gray-600 truncate">
                           {renderBlurredName(review.customerName)}
                         </h3>
-                        <p className="text-base text-gray-500 truncate">
+                        <p className="text-xs text-gray-500 truncate">
                           {formatDate(review.date)}
                         </p>
                         {/* Customer contact info */}
                         {(review as any).customer_phone && (
                           <p className={`text-gray-600 truncate ${
-                            contentScale === 'scale-100' ? 'text-sm' :
-                            contentScale === 'scale-90' ? 'text-sm' :
+                            contentScale === 'scale-100' ? 'text-xs' :
+                            contentScale === 'scale-90' ? 'text-xs' :
                             contentScale === 'scale-85' ? 'text-xs' :
                             contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                           }`}>
@@ -329,8 +329,8 @@ const ReviewCarousel = () => {
                         )}
                         {(review.address || review.city || review.zipCode) && (
                           <p className={`text-gray-600 truncate ${
-                            contentScale === 'scale-100' ? 'text-sm' :
-                            contentScale === 'scale-90' ? 'text-sm' :
+                            contentScale === 'scale-100' ? 'text-xs' :
+                            contentScale === 'scale-90' ? 'text-xs' :
                             contentScale === 'scale-85' ? 'text-xs' :
                             contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                           }`}>
@@ -345,7 +345,7 @@ const ReviewCarousel = () => {
 
                     {/* Business side (right) - smaller and compact */}
                     <div className="flex items-start space-x-1 ml-2 flex-shrink-0 max-w-[35%]">
-                      <Avatar className="h-5 w-5 flex-shrink-0">
+                      <Avatar className="h-3 w-3 flex-shrink-0">
                         <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
                         <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
                           {getInitials(review.reviewerName)}
@@ -353,7 +353,7 @@ const ReviewCarousel = () => {
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-col">
-                          <h4 className={`font-medium text-sm leading-tight ${contentScale === 'scale-80' || contentScale === 'scale-75' ? 'line-clamp-2' : 'truncate'}`} title={review.reviewerName}>
+                          <h4 className={`font-medium text-xs leading-tight ${contentScale === 'scale-80' || contentScale === 'scale-75' ? 'line-clamp-2' : 'truncate'}`} title={review.reviewerName}>
                             {review.reviewerName}
                           </h4>
                           {review.reviewerVerified && (
@@ -368,22 +368,22 @@ const ReviewCarousel = () => {
 
                   {/* Rating section - matching real review cards */}
                   <div className={`${
-                    contentScale === 'scale-100' ? 'mb-3' :
-                    contentScale === 'scale-90' ? 'mb-3' :
-                    contentScale === 'scale-85' ? 'mb-2' :
-                    contentScale === 'scale-80' ? 'mb-1' : 'mb-1'
+                    contentScale === 'scale-100' ? 'mb-2' :
+                    contentScale === 'scale-90' ? 'mb-2' :
+                    contentScale === 'scale-85' ? 'mb-1' :
+                    contentScale === 'scale-80' ? 'mb-0.5' : 'mb-0.5'
                   }`}>
                     <div className="flex items-center gap-2">
                       <span className={`font-medium text-gray-600 ${
-                        contentScale === 'scale-100' ? 'text-sm' :
-                        contentScale === 'scale-90' ? 'text-sm' :
+                        contentScale === 'scale-100' ? 'text-xs' :
+                        contentScale === 'scale-90' ? 'text-xs' :
                         contentScale === 'scale-85' ? 'text-xs' :
                         contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                       }`}>Rating:</span>
                       <div className="flex">{renderStars(review.rating)}</div>
                       <span className={`text-gray-500 ${
-                        contentScale === 'scale-100' ? 'text-sm' :
-                        contentScale === 'scale-90' ? 'text-sm' :
+                        contentScale === 'scale-100' ? 'text-xs' :
+                        contentScale === 'scale-90' ? 'text-xs' :
                         contentScale === 'scale-85' ? 'text-xs' :
                         contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                       }`}>({review.rating}/5)</span>
@@ -392,15 +392,15 @@ const ReviewCarousel = () => {
 
                   {/* Review content */}
                   <div className={`${
-                    contentScale === 'scale-100' ? 'mb-3' :
-                    contentScale === 'scale-90' ? 'mb-3' :
-                    contentScale === 'scale-85' ? 'mb-2' :
-                    contentScale === 'scale-80' ? 'mb-1' : 'mb-1'
+                    contentScale === 'scale-100' ? 'mb-1' :
+                    contentScale === 'scale-90' ? 'mb-1' :
+                    contentScale === 'scale-85' ? 'mb-1' :
+                    contentScale === 'scale-80' ? 'mb-0.5' : 'mb-0.5'
                   }`}>
-                    <p className={`text-gray-700 leading-snug ${
-                      contentScale === 'scale-100' ? 'text-base' :
-                      contentScale === 'scale-90' ? 'text-base' :
-                      contentScale === 'scale-85' ? 'text-sm' :
+                    <p className={`text-gray-700 leading-tight ${
+                      contentScale === 'scale-100' ? 'text-xs' :
+                      contentScale === 'scale-90' ? 'text-xs' :
+                      contentScale === 'scale-85' ? 'text-xs' :
                       contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                     }`}>
                       {truncateToLines(review.content, contentScale)}
@@ -438,8 +438,8 @@ const ReviewCarousel = () => {
                           <div className="flex items-center gap-2">
                             <span className="text-gray-500">🏢</span>
                             <span className={`text-gray-700 bg-gray-50 px-1 py-0.5 rounded font-medium truncate ${
-                              contentScale === 'scale-100' ? 'text-sm' :
-                              contentScale === 'scale-90' ? 'text-sm' :
+                              contentScale === 'scale-100' ? 'text-xs' :
+                              contentScale === 'scale-90' ? 'text-xs' :
                               contentScale === 'scale-85' ? 'text-xs' :
                               contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                             }`}>
@@ -454,20 +454,20 @@ const ReviewCarousel = () => {
                   {/* Mini conversation preview - ONE LINE ONLY for carousel thumbnails */}
                   {(review as any).conversations && (review as any).conversations.length > 0 && (
                     <div className={`border-t border-gray-100 ${
-                      contentScale === 'scale-100' ? 'pt-2 mt-2' :
-                      contentScale === 'scale-90' ? 'pt-2 mt-2' :
+                      contentScale === 'scale-100' ? 'pt-1 mt-1' :
+                      contentScale === 'scale-90' ? 'pt-1 mt-1' :
                       contentScale === 'scale-85' ? 'pt-1 mt-1' :
                       contentScale === 'scale-80' ? 'pt-1 mt-1' : 'pt-0.5 mt-0.5'
                     }`}>
                       <div className={`flex items-center gap-1 ${
-                        contentScale === 'scale-100' ? 'text-sm' :
-                        contentScale === 'scale-90' ? 'text-sm' :
+                        contentScale === 'scale-100' ? 'text-xs' :
+                        contentScale === 'scale-90' ? 'text-xs' :
                         contentScale === 'scale-85' ? 'text-xs' :
                         contentScale === 'scale-80' ? 'text-xs' : 'text-xs'
                       }`}>
                         <MessageCircle className={`text-blue-600 flex-shrink-0 ${
-                          contentScale === 'scale-100' ? 'h-4 w-4' :
-                          contentScale === 'scale-90' ? 'h-4 w-4' :
+                          contentScale === 'scale-100' ? 'h-3 w-3' :
+                          contentScale === 'scale-90' ? 'h-3 w-3' :
                           contentScale === 'scale-85' ? 'h-3 w-3' :
                           contentScale === 'scale-80' ? 'h-3 w-3' : 'h-3 w-3'
                         }`} />

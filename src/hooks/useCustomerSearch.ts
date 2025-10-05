@@ -96,6 +96,7 @@ export const useCustomerSearch = () => {
         reviewerAvatar: review.reviewerAvatar,
         reviewerVerified: review.reviewerVerified,
         associates: review.associates,
+        is_anonymous: review.is_anonymous,
         // Preserve associate match metadata
         isAssociateMatch: review.isAssociateMatch,
         associateData: review.associateData,

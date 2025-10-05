@@ -56,29 +56,11 @@ const ReviewMatchInfo: React.FC<ReviewMatchInfoProps> = ({
         )}
       </div>
       
-      {detailedMatches && detailedMatches.length > 0 ? (
-        <DetailedMatchInfo 
+      {detailedMatches && detailedMatches.length > 0 && (
+        <DetailedMatchInfo
           detailedMatches={detailedMatches}
           matchScore={matchScore || 0}
         />
-      ) : (
-        <div className="text-sm text-blue-700">
-          {matchScore > 0 && (
-            <div className="mb-2">
-              <strong>Match score:</strong> {matchScore}%
-            </div>
-          )}
-          <div>
-            <strong>Match reasons:</strong>
-            <ul className="list-disc list-inside mt-1 ml-2">
-              {matchReasons.length > 0 ? matchReasons.map((reason, index) => (
-                <li key={index}>{reason}</li>
-              )) : (
-                <li>This review appears to be about you</li>
-              )}
-            </ul>
-          </div>
-        </div>
       )}
     </div>
   );

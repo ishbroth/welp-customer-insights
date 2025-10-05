@@ -39,7 +39,10 @@ export const useReviewFormState = () => {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [photos, setPhotos] = useState<Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>>([]);
   const [associates, setAssociates] = useState<Array<{ firstName: string; lastName: string }>>([]);
-  
+
+  // Anonymous review state
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
   // Duplicate review check states
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [existingReview, setExistingReview] = useState<any>(null);
@@ -61,11 +64,13 @@ export const useReviewFormState = () => {
         setComment("");
         setPhotos([]);
         setAssociates([{ firstName: "", lastName: "" }, { firstName: "", lastName: "" }, { firstName: "", lastName: "" }]);
+        setIsAnonymous(false);
       }
       
       // Handle pre-filling data if we're editing
       if (isEditing && reviewData) {
-        console.log("Setting form data from reviewData:", reviewData);
+        console.log("🔍 EDIT FORM - Setting form data from reviewData:", reviewData);
+        console.log("🔍 EDIT FORM - reviewData.is_anonymous:", reviewData.is_anonymous);
         setRating(reviewData.rating);
         setComment(reviewData.content);
         
@@ -86,6 +91,11 @@ export const useReviewFormState = () => {
         setCustomerCity(reviewData.city || "");
         setCustomerState(reviewData.state || "");
         setCustomerZipCode(reviewData.zipCode || "");
+
+        // Load anonymous state from reviewData
+        console.log("🔍 EDIT FORM - Loading anonymous state from reviewData:", reviewData.is_anonymous);
+        setIsAnonymous(reviewData.is_anonymous || false);
+        console.log("🔍 EDIT FORM - Set isAnonymous to:", reviewData.is_anonymous || false);
 
         // Load associates data from reviewData
         if (reviewData.associates && Array.isArray(reviewData.associates)) {
@@ -144,14 +154,15 @@ export const useReviewFormState = () => {
         try {
           const { data: review, error } = await supabase
             .from('reviews')
-            .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
+            .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, is_anonymous, created_at, updated_at, deleted_at')
             .eq('id', reviewId)
             .maybeSingle();
 
           if (error) {
             console.error("Error fetching review for editing:", error);
           } else if (review) {
-            console.log("Fetched review data:", review);
+            console.log("🔍 EDIT FORM - Fetched review data from database:", review);
+            console.log("🔍 EDIT FORM - Database review.is_anonymous:", review.is_anonymous);
             setRating(review.rating);
             setComment(review.content);
             
@@ -172,6 +183,11 @@ export const useReviewFormState = () => {
             setCustomerCity(review.customer_city || "");
             setCustomerState(review.customer_state || "");
             setCustomerZipCode(review.customer_zipcode || "");
+
+            // Load anonymous state
+            console.log("🔍 EDIT FORM - Loading anonymous state from database:", review.is_anonymous);
+            setIsAnonymous(review.is_anonymous || false);
+            console.log("🔍 EDIT FORM - Set isAnonymous to:", review.is_anonymous || false);
 
             // Load associates data
             if (review.associates && Array.isArray(review.associates)) {
@@ -298,6 +314,8 @@ export const useReviewFormState = () => {
     setPhotos,
     associates,
     setAssociates,
+    isAnonymous,
+    setIsAnonymous,
 
     // Duplicate dialog state
     showDuplicateDialog,

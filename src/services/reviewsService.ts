@@ -41,7 +41,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       
       const { data: nameReviews, error: nameError } = await supabaseSimple
         .from('reviews')
-        .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
+        .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, is_anonymous, created_at, updated_at, deleted_at')
         .ilike('customer_name', `%${currentUser.name}%`)
         .order('created_at', { ascending: false });
 
@@ -71,7 +71,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       // Fetch business profiles
       const { data: businessProfiles, error: profileError } = await supabaseSimple
         .from('profiles')
-        .select('*')
+        .select('*, business_category')
         .in('id', businessIds)
         .eq('type', 'business');
 
@@ -127,6 +127,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
         reviewerName: businessProfile?.name || "Unknown Business",
         reviewerAvatar: businessProfile?.avatar || "",
         reviewerVerified: isVerified,
+        reviewerBusinessCategory: businessProfile?.business_category,
         customerId: currentUser.id,
         customerName: review.customer_name || currentUser.name,
         customer_business_name: review.customer_business_name,
@@ -139,6 +140,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
         state: review.customer_state || "",
         zipCode: review.customer_zipcode || "",
         associates: review.associates || [],
+        is_anonymous: review.is_anonymous || false,
         reactions: { like: [], funny: [], useful: [], ohNo: [] },
         responses: reviewResponses.map((resp: any) => ({
           id: resp.id,
@@ -160,7 +162,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     
     const { data: businessReviews, error: businessError } = await supabaseSimple
       .from('reviews')
-      .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, created_at, updated_at, deleted_at')
+      .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, is_anonymous, created_at, updated_at, deleted_at')
       .eq('business_id', currentUser.id)
       .order('created_at', { ascending: false });
 
@@ -173,6 +175,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     console.log("Raw business reviews from database:", businessReviews);
     console.log("🔍 REVIEWS SERVICE - First review nickname:", businessReviews?.[0]?.customer_nickname);
     console.log("🔍 REVIEWS SERVICE - First review business name:", businessReviews?.[0]?.customer_business_name);
+    console.log("🔍 REVIEWS SERVICE - First review is_anonymous:", businessReviews?.[0]?.is_anonymous);
 
     // Transform business reviews to match expected format
     console.log("🔍 REVIEWS SERVICE - Transforming reviews, first review data:", businessReviews?.[0]);
@@ -180,7 +183,8 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       console.log("🔍 REVIEWS SERVICE - Transforming review:", {
         id: review.id,
         customer_nickname: review.customer_nickname,
-        customer_business_name: review.customer_business_name
+        customer_business_name: review.customer_business_name,
+        is_anonymous: review.is_anonymous
       });
       return {
         id: review.id,
@@ -188,20 +192,22 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
         reviewerName: currentUser.name || "Business Owner",
         reviewerAvatar: currentUser.avatar || "",
         reviewerVerified: Boolean(currentUser.verified),
-      customerId: null,
-      customerName: review.customer_name || "Customer",
-      customer_business_name: review.customer_business_name,
-      customer_nickname: review.customer_nickname,
-      rating: review.rating,
-      content: review.content,
-      date: review.created_at,
-      address: review.customer_address || "",
-      city: review.customer_city || "",
-      state: review.customer_state || "",
-      zipCode: review.customer_zipcode || "",
-      associates: review.associates || [],
-      reactions: { like: [], funny: [], useful: [], ohNo: [] },
-      responses: []
+        reviewerBusinessCategory: currentUser.business_category,
+        customerId: null,
+        customerName: review.customer_name || "Customer",
+        customer_business_name: review.customer_business_name,
+        customer_nickname: review.customer_nickname,
+        rating: review.rating,
+        content: review.content,
+        date: review.created_at,
+        address: review.customer_address || "",
+        city: review.customer_city || "",
+        state: review.customer_state || "",
+        zipCode: review.customer_zipcode || "",
+        associates: review.associates || [],
+        is_anonymous: review.is_anonymous || false,
+        reactions: { like: [], funny: [], useful: [], ohNo: [] },
+        responses: []
       };
     });
 

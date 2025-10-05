@@ -22,7 +22,7 @@ const TabsSection = () => {
   };
 
   return (
-    <section className="py-8 md:py-16 bg-welp-bg-light">
+    <section className="py-4 md:py-6 bg-welp-bg-light">
       <div className="container mx-auto px-3 md:px-4">
         <div className="max-w-3xl mx-auto">
           <Tabs

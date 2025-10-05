@@ -14,16 +14,20 @@ import Footer from "@/components/Footer";
 import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
 import SubscriptionButton from "@/components/profile/SubscriptionButton";
 import { useProfileReviewsActions } from "@/components/profile/hooks/useProfileReviewsActions";
+import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
 
 const BusinessProfile: React.FC = () => {
   const { businessId } = useParams<{ businessId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
-  
+
   // Get state from navigation
   const isReadOnly = location.state?.readOnly || false;
   const showRespondButton = location.state?.showRespondButton || false;
+  const isAnonymous = location.state?.isAnonymous || false;
+  const businessCategory = location.state?.businessCategory;
+  const actualBusinessName = location.state?.actualBusinessName;
 
   // For read-only view, everyone should have access to see the reviews (but content access is controlled separately)
   const hasAccess = true;
@@ -50,7 +54,15 @@ const BusinessProfile: React.FC = () => {
     return nameParts.map(part => part[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const displayName = businessProfile?.business_info?.business_name || businessProfile?.name || 'Business';
+  // Use actual business name for masking, or fall back to profile name
+  const rawBusinessName = actualBusinessName || businessProfile?.business_info?.business_name || businessProfile?.name || 'Business';
+
+  // Get display name - masked if anonymous
+  const displayName = getReviewerDisplayName(
+    isAnonymous,
+    rawBusinessName,
+    businessCategory
+  );
 
   if (isLoading) {
     return (
@@ -94,61 +106,65 @@ const BusinessProfile: React.FC = () => {
           <CardHeader>
             <div className="flex items-start gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={businessProfile.avatar} alt={displayName} />
+                {/* Hide avatar image when anonymous */}
+                {!isAnonymous && <AvatarImage src={businessProfile.avatar} alt={displayName} />}
                 <AvatarFallback className="text-lg bg-primary/10 text-primary">
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h1 className="text-2xl font-bold">{displayName}</h1>
-                  {businessProfile.verified && <VerifiedBadge />}
+                  {/* Hide verified badge when anonymous */}
+                  {!isAnonymous && businessProfile.verified && <VerifiedBadge />}
                   <Badge variant="secondary">Business</Badge>
                 </div>
-                
-                {/* Business bio */}
-                {businessProfile.bio && (
+
+                {/* Business bio - hide when anonymous */}
+                {!isAnonymous && businessProfile.bio && (
                   <div className="text-sm text-muted-foreground mb-3">
                     <span>{businessProfile.bio}</span>
                   </div>
                 )}
 
-                {/* Contact Information */}
-                <div className="space-y-1 mb-3">
-                  {businessProfile.phone && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Phone: {businessProfile.phone}</span>
-                    </div>
-                  )}
+                {/* Contact Information - hide when anonymous */}
+                {!isAnonymous && (
+                  <div className="space-y-1 mb-3">
+                    {businessProfile.phone && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Phone: {businessProfile.phone}</span>
+                      </div>
+                    )}
 
-                  {businessProfile.address && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>
-                        {businessProfile.address}
-                        {businessProfile.city && `, ${businessProfile.city}`}
-                        {businessProfile.state && `, ${businessProfile.state}`}
-                        {businessProfile.zipcode && ` ${businessProfile.zipcode}`}
-                      </span>
-                    </div>
-                  )}
+                    {businessProfile.address && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>
+                          {businessProfile.address}
+                          {businessProfile.city && `, ${businessProfile.city}`}
+                          {businessProfile.state && `, ${businessProfile.state}`}
+                          {businessProfile.zipcode && ` ${businessProfile.zipcode}`}
+                        </span>
+                      </div>
+                    )}
 
-                  {businessProfile.business_info?.website && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Website: </span>
-                      <a 
-                        href={businessProfile.business_info.website.startsWith('http') ? businessProfile.business_info.website : `https://${businessProfile.business_info.website}`}
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {businessProfile.business_info.website}
-                      </a>
-                    </div>
-                  )}
-                </div>
+                    {businessProfile.business_info?.website && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Website: </span>
+                        <a
+                          href={businessProfile.business_info.website.startsWith('http') ? businessProfile.business_info.website : `https://${businessProfile.business_info.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {businessProfile.business_info.website}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Business Details */}
+                {/* Business Details - show category even when anonymous */}
                 <div className="space-y-1 mb-3">
                   {businessProfile.business_info?.business_category && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -160,8 +176,8 @@ const BusinessProfile: React.FC = () => {
                   )}
                 </div>
 
-                {/* License Information */}
-                {businessProfile.business_info && (
+                {/* License Information - hide when anonymous */}
+                {!isAnonymous && businessProfile.business_info && (
                   <div className="space-y-1 mb-3">
                     {businessProfile.business_info.license_type && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -171,13 +187,13 @@ const BusinessProfile: React.FC = () => {
                         )}
                       </div>
                     )}
-                    
+
                     {businessProfile.business_info.license_number && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>License #: {businessProfile.business_info.license_number}</span>
                       </div>
                     )}
-                    
+
                     {businessProfile.business_info.license_status && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>Status: </span>
@@ -198,8 +214,8 @@ const BusinessProfile: React.FC = () => {
                   </div>
                 )}
 
-                {/* Additional Information */}
-                {businessProfile.business_info?.additional_info && (
+                {/* Additional Information - hide when anonymous */}
+                {!isAnonymous && businessProfile.business_info?.additional_info && (
                   <div className="text-sm text-muted-foreground mb-3">
                     <span className="font-medium">Additional Info: </span>
                     <span>{businessProfile.business_info.additional_info}</span>

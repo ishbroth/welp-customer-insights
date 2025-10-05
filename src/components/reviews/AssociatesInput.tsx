@@ -12,11 +12,14 @@ const AssociatesInput: React.FC<AssociatesInputProps> = ({
   setAssociates,
 }) => {
   const handleAssociateChange = (index: number, field: 'firstName' | 'lastName', value: string) => {
+    // Remove spaces from the input, but allow hyphens
+    const sanitizedValue = value.replace(/\s/g, '');
+
     const newAssociates = [...associates];
     if (!newAssociates[index]) {
       newAssociates[index] = { firstName: '', lastName: '' };
     }
-    newAssociates[index][field] = value;
+    newAssociates[index][field] = sanitizedValue;
     setAssociates(newAssociates);
   };
 
