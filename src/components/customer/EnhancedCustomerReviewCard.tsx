@@ -187,6 +187,7 @@ const EnhancedCustomerReviewCard: React.FC<EnhancedCustomerReviewCardProps> = ({
           shouldBusinessNameBeClickable={true}
           onBusinessNameClick={handleBusinessNameClick}
           onCustomerClick={handleCustomerClick}
+          isAnonymous={review.is_anonymous || false}
         />
       </div>
 

@@ -86,7 +86,16 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
     };
     
     console.log("Search initiated with params:", searchParams);
-    
+
+    // Scroll down to show the search results area
+    // Use a small delay to allow the page to start rendering results
+    setTimeout(() => {
+      window.scrollTo({
+        top: window.innerHeight * 0.6, // Scroll to 60% of viewport height
+        behavior: 'smooth'
+      });
+    }, 100);
+
     if (onSearch) {
       // Use the custom search handler if provided
       onSearch(searchParams);

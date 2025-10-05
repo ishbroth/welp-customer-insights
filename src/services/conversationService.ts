@@ -134,8 +134,20 @@ export const conversationService = {
 
   // Check if user can respond (conversation exists and user is participant and it's their turn)
   async canUserRespond(reviewId: string, userId: string, userType: 'business' | 'customer', customerId?: string): Promise<boolean> {
+    // First, check if the review is anonymous
+    const { data: review } = await supabase
+      .from('reviews')
+      .select('is_anonymous, business_id')
+      .eq('id', reviewId)
+      .single();
+
+    // If review is anonymous and user is the business owner, they cannot participate
+    if (review?.is_anonymous && userType === 'business' && review.business_id === userId) {
+      return false;
+    }
+
     const participants = await this.getParticipants(reviewId);
-    
+
     if (!participants) {
       // No conversation exists - check if user can start one
       if (userType === 'customer') {
@@ -148,10 +160,10 @@ export const conversationService = {
     }
 
     // Check if user is a participant
-    const isParticipant = userType === 'customer' 
+    const isParticipant = userType === 'customer'
       ? participants.customer_id === userId
       : participants.business_id === userId;
-    
+
     if (!isParticipant) return false;
 
     // Get the last message to determine whose turn it is

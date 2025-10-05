@@ -249,9 +249,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           {/* Business info - left side */}
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+              {!review.is_anonymous && <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />}
               <AvatarFallback className="bg-blue-100 text-blue-800">
-                {getInitials(review.reviewerName)}
+                {review.is_anonymous ? "AB" : getInitials(review.reviewerName)}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -442,41 +442,44 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 : "Subscribe or use credits to participate in the conversation"
               }
             </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              {customerCanAccessReview && balance > 0 ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleUseCreditClick}
-                  className="flex-1 text-xs sm:text-sm px-2 py-1"
-                >
-                  <span className="truncate">Unlock (1 Credit)</span>
-                </Button>
-              ) : customerCanAccessReview ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleOneTimeAccess}
-                  className="flex-1 text-xs sm:text-sm px-2 py-1"
-                >
-                  <span className="truncate">Unlock ($3)</span>
-                </Button>
-              ) : null}
-              {customerCanAccessReview && (
-                <Button
-                  size="sm"
-                  onClick={handleSubscriptionAccess}
-                  className="flex-1 text-xs sm:text-sm px-2 py-1"
-                >
-                  <span className="truncate">Subscribe</span>
-                </Button>
-              )}
-              {!customerCanAccessReview && (
-                <p className="text-xs text-gray-500 italic">
-                  This review does not match your profile information
-                </p>
-              )}
-            </div>
+            {/* Only show unlock/subscribe buttons if user is NOT an anonymous review author */}
+            {!(!reviewerCanParticipate && isReviewAuthor) && (
+              <div className="flex flex-col sm:flex-row gap-2">
+                {customerCanAccessReview && balance > 0 ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleUseCreditClick}
+                    className="flex-1 text-xs sm:text-sm px-2 py-1"
+                  >
+                    <span className="truncate">Unlock (1 Credit)</span>
+                  </Button>
+                ) : customerCanAccessReview ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleOneTimeAccess}
+                    className="flex-1 text-xs sm:text-sm px-2 py-1"
+                  >
+                    <span className="truncate">Unlock ($3)</span>
+                  </Button>
+                ) : null}
+                {customerCanAccessReview && (
+                  <Button
+                    size="sm"
+                    onClick={handleSubscriptionAccess}
+                    className="flex-1 text-xs sm:text-sm px-2 py-1"
+                  >
+                    <span className="truncate">Subscribe</span>
+                  </Button>
+                )}
+                {!customerCanAccessReview && (
+                  <p className="text-xs text-gray-500 italic">
+                    This review does not match your profile information
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

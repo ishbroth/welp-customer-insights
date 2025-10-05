@@ -197,9 +197,9 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
           {/* Business side (right) - smaller and compact */}
           <div className="flex items-center space-x-1 ml-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
+              {!review.is_anonymous && <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />}
               <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-                {getInitials(businessInfo.name)}
+                {review.is_anonymous ? "AB" : getInitials(businessInfo.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-end">

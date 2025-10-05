@@ -22,12 +22,14 @@ interface CustomerReviewCardHeaderProps {
   shouldBusinessNameBeClickable: boolean;
   onBusinessNameClick: () => void;
   onCustomerClick: () => void;
+  isAnonymous?: boolean;
 }
 
 const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
   businessInfo,
   customerInfo,
   reviewDate,
+  isAnonymous = false,
   shouldBusinessNameBeClickable,
   onBusinessNameClick,
   onCustomerClick,
@@ -91,9 +93,9 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
           {/* Business side (right) - smaller and compact */}
           <div className="flex items-center space-x-1 ml-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
+              {!isAnonymous && <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />}
               <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-                {getInitials(businessInfo.name)}
+                {isAnonymous ? "AB" : getInitials(businessInfo.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-end">
@@ -146,9 +148,9 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
         {/* Business side (right) */}
         <div className="flex items-center space-x-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />
+            {!isAnonymous && <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />}
             <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-              {getInitials(businessInfo.name)}
+              {isAnonymous ? "AB" : getInitials(businessInfo.name)}
             </AvatarFallback>
           </Avatar>
           <div>

@@ -346,9 +346,9 @@ const ReviewCarousel = () => {
                     {/* Business side (right) - smaller and compact */}
                     <div className="flex items-start space-x-1 ml-2 flex-shrink-0 max-w-[35%]">
                       <Avatar className="h-3 w-3 flex-shrink-0">
-                        <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+                        {!(review as any).is_anonymous && <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />}
                         <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-                          {getInitials(review.reviewerName)}
+                          {(review as any).is_anonymous ? "AB" : getInitials(review.reviewerName)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
