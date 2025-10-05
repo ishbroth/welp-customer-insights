@@ -73,13 +73,6 @@ const SearchBox = React.memo(({
           />
 
           <SearchField
-            placeholder="Business Name"
-            value={formValues.businessName}
-            onChange={(e) => setters.setBusinessName(e.target.value)}
-            required={false}
-          />
-
-          <SearchField
             type="tel"
             placeholder="Phone Number"
             value={formValues.phone}
