@@ -73,6 +73,7 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
         customer_business_name: review.customer_business_name || "",
         associates: review.associates || [],
         conversations: review.conversations || [],
+        is_anonymous: review.is_anonymous || false,
         reactions: { like: [], funny: [], ohNo: [] }
       } as any;
     });
@@ -84,17 +85,20 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
 
     if (databaseCount >= totalDesired) {
       // Enough database reviews, use only database reviews
-      console.log(`Using ${databaseCount} database reviews only`);
+      console.log(`[CAROUSEL] Using ${databaseCount} database reviews only`);
       return formattedDatabaseReviews.slice(0, totalDesired);
     } else {
       // Mix database and fallback reviews
       const fallbackNeeded = totalDesired - databaseCount;
       const selectedFallbackReviews = fallbackReviews.slice(0, fallbackNeeded);
 
-      console.log(`Mixing ${databaseCount} database reviews with ${selectedFallbackReviews.length} fallback reviews`);
+      console.log(`[CAROUSEL] Mixing ${databaseCount} database reviews with ${selectedFallbackReviews.length} fallback reviews`);
+      console.log(`[CAROUSEL] Database review IDs:`, formattedDatabaseReviews.map(r => r.id));
+      console.log(`[CAROUSEL] Fallback review IDs:`, selectedFallbackReviews.map(r => r.id));
 
       // Combine and shuffle for variety
       const combinedReviews = [...formattedDatabaseReviews, ...selectedFallbackReviews];
+      console.log(`[CAROUSEL] Combined total:`, combinedReviews.length);
       return combinedReviews;
     }
 
@@ -122,6 +126,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "123 Main St",
       city: "Irvine, TX",
       zipCode: "75060",
+      customer_phone: "(972) 555-0123",
       customer_business_name: "Johnson Real Estate",
       associates: [
         { firstName: "Emily", lastName: "Johnson" },
@@ -141,6 +146,7 @@ export const getFallbackReviews = (): Review[] => {
           content: "You're very welcome Sarah! It was a pleasure working with you."
         }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -158,6 +164,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "456 Oak Ave",
       city: "Fort Wayne, IN",
       zipCode: "46805",
+      customer_phone: "(260) 555-0456",
       associates: [
         { firstName: "Linda", lastName: "Chen" }
       ],
@@ -169,6 +176,7 @@ export const getFallbackReviews = (): Review[] => {
           content: "Just wanted to follow up - the brakes feel great now. Thanks for the quality work!"
         }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -186,6 +194,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "789 Pine St",
       city: "Orlando, FL",
       zipCode: "32801",
+      customer_phone: "(407) 555-0789",
       customer_business_name: "Rodriguez Marketing Solutions",
       associates: [
         { firstName: "Carlos", lastName: "Rodriguez" },
@@ -212,6 +221,7 @@ export const getFallbackReviews = (): Review[] => {
           content: "Absolutely! I've already scheduled the next appointment. You guys are the best!"
         }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -229,6 +239,9 @@ export const getFallbackReviews = (): Review[] => {
       address: "321 Elm St",
       city: "Phoenix, AZ",
       zipCode: "85001",
+      customer_phone: "(602) 555-0321",
+      is_anonymous: false,
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -251,6 +264,7 @@ export const getFallbackReviews = (): Review[] => {
         { firstName: "Michael", lastName: "Adams" },
         { firstName: "Sara", lastName: "Wilson" }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -282,6 +296,7 @@ export const getFallbackReviews = (): Review[] => {
           content: "Of course! We'll come back tomorrow to address those areas. Thanks for pointing them out."
         }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -303,6 +318,7 @@ export const getFallbackReviews = (): Review[] => {
       associates: [
         { firstName: "David", lastName: "Watson" }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -320,6 +336,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "738 Willow Rd",
       city: "Portland, OR",
       zipCode: "97201",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -351,6 +368,7 @@ export const getFallbackReviews = (): Review[] => {
           content: "You're so welcome Amanda! Looking forward to seeing you next month. Thanks for being such a wonderful client!"
         }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -368,6 +386,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "863 Valley Dr",
       city: "Toronto, ON",
       zipCode: "M5V 1A1",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -389,6 +408,7 @@ export const getFallbackReviews = (): Review[] => {
         { firstName: "James", lastName: "Harper" },
         { firstName: "Max", lastName: "Rodriguez" }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -406,6 +426,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "395 Hillcrest Ave",
       city: "Vancouver, BC",
       zipCode: "V6B 1A1",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -423,6 +444,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "582 Commerce St",
       city: "Austin, TX",
       zipCode: "73301",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -440,6 +462,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "147 Grove Lane",
       city: "Boston, MA",
       zipCode: "02101",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -477,6 +500,7 @@ export const getFallbackReviews = (): Review[] => {
           content: "We'll definitely recommend you to all our friends. Thank you again for everything!"
         }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -494,6 +518,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "341 Industrial Blvd",
       city: "Chicago, IL",
       zipCode: "60601",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -514,6 +539,7 @@ export const getFallbackReviews = (): Review[] => {
       associates: [
         { firstName: "Michael", lastName: "Chen" }
       ],
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     } as any,
     {
@@ -531,6 +557,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "253 Mountain View Rd",
       city: "Salt Lake City, UT",
       zipCode: "84101",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -548,6 +575,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "847 Executive Plaza",
       city: "Minneapolis, MN",
       zipCode: "55401",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -565,6 +593,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "492 Suburban Lane",
       city: "Calgary, AB",
       zipCode: "T2P 1A1",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -582,6 +611,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "615 Fashion Ave",
       city: "Las Vegas, NV",
       zipCode: "89101",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -599,6 +629,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "823 Summit Dr",
       city: "Albuquerque, NM",
       zipCode: "87101",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -616,6 +647,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "457 Downtown Blvd",
       city: "Richmond, VA",
       zipCode: "23218",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {
@@ -633,6 +665,7 @@ export const getFallbackReviews = (): Review[] => {
       address: "392 Riverside Dr",
       city: "Winnipeg, MB",
       zipCode: "R3B 1A1",
+      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     }
   ];

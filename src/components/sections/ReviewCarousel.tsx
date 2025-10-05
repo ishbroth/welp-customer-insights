@@ -353,10 +353,16 @@ const ReviewCarousel = () => {
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-col">
-                          <h4 className={`font-medium text-xs leading-tight ${contentScale === 'scale-80' || contentScale === 'scale-75' ? 'line-clamp-2' : 'truncate'}`} title={review.reviewerName}>
-                            {review.reviewerName}
-                          </h4>
-                          {review.reviewerVerified && (
+                          {(review as any).is_anonymous ? (
+                            <h4 className={`font-medium text-xs leading-tight text-gray-500 italic ${contentScale === 'scale-80' || contentScale === 'scale-75' ? 'line-clamp-2' : 'truncate'}`}>
+                              Anonymous
+                            </h4>
+                          ) : (
+                            <h4 className={`font-medium text-xs leading-tight ${contentScale === 'scale-80' || contentScale === 'scale-75' ? 'line-clamp-2' : 'truncate'}`} title={review.reviewerName}>
+                              {review.reviewerName}
+                            </h4>
+                          )}
+                          {!((review as any).is_anonymous) && review.reviewerVerified && (
                             <div className="flex justify-end">
                               <VerifiedBadge size="xs" className="flex-shrink-0 mt-0.5" />
                             </div>
