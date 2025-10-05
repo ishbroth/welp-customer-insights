@@ -12,6 +12,23 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Supabase temporary files
+supabase/.temp/
+
+# Claude Code configuration
+.claude/
+
+# Alternative package managers
+bun.lockb
+
+# Test/dev files
+stripe-secret-form.html
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

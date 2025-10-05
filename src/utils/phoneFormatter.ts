@@ -24,19 +24,19 @@ export const formatPhoneNumber = (phone: string | undefined | null): string => {
 };
 
 /**
- * Convert phone number to E.164 format for Twilio (+1XXXXXXXXXX)
+ * Convert phone number to E.164 format (+1XXXXXXXXXX)
  */
-export const formatPhoneForTwilio = (phone: string | undefined | null): string => {
+export const formatPhoneForE164 = (phone: string | undefined | null): string => {
   if (!phone) return '';
-  
+
   // Decode URL-encoded characters first
   const decoded = decodeURIComponent(phone);
-  console.log("🌐 Formatting for Twilio - input:", phone, "decoded:", decoded);
-  
+  console.log("🌐 Formatting to E.164 - input:", phone, "decoded:", decoded);
+
   // Remove all non-digits
   const cleaned = decoded.replace(/\D/g, '');
   console.log("🌐 Cleaned digits:", cleaned);
-  
+
   // Handle different number lengths
   let e164 = '';
   if (cleaned.length === 10) {
@@ -49,7 +49,7 @@ export const formatPhoneForTwilio = (phone: string | undefined | null): string =
     // Default to US format
     e164 = '+1' + cleaned;
   }
-  
+
   console.log("🌐 E.164 result:", e164);
   return e164;
 };

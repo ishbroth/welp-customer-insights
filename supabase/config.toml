@@ -70,8 +70,7 @@ max_client_conn = 100
 
 [realtime]
 enabled = true
-ip_version = "ipv6"
-port = 54324
+ip_version = "IPv6"
 max_header_length = 4096
 
 [studio]
@@ -80,42 +79,27 @@ port = 54323
 api_url = "http://127.0.0.1:54321"
 openai_api_key = "env(OPENAI_API_KEY)"
 
-[inbound_smtp]
-enabled = false
-port = 54325
-mailname = "localhost"
 
 [storage]
 enabled = true
-port = 54326
 file_size_limit = "50MiB"
-s3_max_path_length = 1024
 
 [auth]
 enabled = true
-port = 54327
 site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = ["https://127.0.0.1:3000"]
 jwt_expiry = 3600
 enable_signup = true
-enable_email_confirmations = false
-enable_email_change_confirmations = true
-enable_phone_confirmations = false
-enable_phone_change_confirmations = true
 
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
-template_path = ""
-secure_email_change_enabled = true
-enable_reauthentication = false
 max_frequency = "1s"
 
 [auth.sms]
 enable_signup = false
 enable_confirmations = false
-template_path = ""
 max_frequency = "5s"
 
 [auth.external.apple]
@@ -246,9 +230,7 @@ redirect_uri = ""
 
 [edge_runtime]
 enabled = true
-port = 54328
-ip_version = "ipv6"
-policy = "per_request"
+policy = "per_worker"
 inspector_port = 8083
 
 [analytics]

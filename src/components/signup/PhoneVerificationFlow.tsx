@@ -54,8 +54,8 @@ export const PhoneVerificationFlow = ({
       // Generate a random 6-digit code for demo purposes
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       setSentVerificationCode(code);
-      
-      // In a real app, this would send an SMS via Twilio or similar service
+
+      // In a real app, this would send an SMS via a service
       // For demo purposes, we'll just show the code in a toast
       toast({
         title: "Verification Code Sent",
