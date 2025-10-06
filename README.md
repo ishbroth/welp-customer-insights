@@ -4,6 +4,16 @@ A React-based application for customer review management and insights.
 
 🌐 **Live Site**: [mywelp.com](https://mywelp.com) ✨ Web deployment only - fast & clean
 
+## Documentation
+
+**For AI Agents**: Start with [docs/README.md](docs/README.md) - Complete documentation hub with 4-step startup workflow
+
+**For Developers**: See [docs/](docs/) for:
+- Database schema (28 tables)
+- Edge Functions (32 functions)
+- AI coding guidelines
+- Quick reference guides
+
 ## How to run locally
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)

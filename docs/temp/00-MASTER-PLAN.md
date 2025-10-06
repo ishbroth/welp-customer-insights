@@ -74,20 +74,21 @@ The work is organized into phases that build upon each other logically.
 ---
 
 ## Phase 4: Communication Systems
-**Goal**: Complete email and notification infrastructure
+**Goal**: Email notifications and cleanup
 
 ### 4.1 Email Encapsulation (Plan 07)
-**Why first**: Simpler than push notifications
+**Why first**: Primary notification channel
 - Centralize email utilities
 - Create email templates
 - Update Edge Functions
+- This is our notification system
 
-### 4.2 Push Notifications Completion (Plan 13)
-**Why second**: Depends on email patterns
-- Set up FCM and APNs
-- Rewrite Edge Function
-- Implement client handlers
-- Test on devices
+### 4.2 Push Notifications Removal (Plan 13)
+**Why second**: Clean up unused code
+- Remove push notification plugin
+- Delete incomplete Edge Function
+- Remove client-side push code
+- Keep email notifications only
 
 ---
 
@@ -182,7 +183,7 @@ Plan 04 (Database) ─→ Plan 05 (Dialogs)
 
 Plan 05 (Dialogs) ─→ Plan 01 (Theme)
 
-Plan 07 (Email) ─→ Plan 13 (Push Notifications)
+Plan 07 (Email) ─→ Plan 13 (Push Removal)
 
 Plan 08 (Encapsulations) ─→ Plan 09 (iOS)
 
@@ -220,7 +221,7 @@ Can be worked on simultaneously by different people:
 - Person B: Plan 08 (Encapsulations)
 
 **Week 7**:
-- Person A: Plan 13 (Push Notifications)
+- Person A: Plan 13 (Push Removal)
 - Person B: Plan 09 (iOS Setup)
 
 **Week 8-9**:
@@ -249,6 +250,7 @@ After completing all phases:
 - ✓ All utilities consolidated
 - ✓ iOS project ready
 - ✓ Zero console.log statements
+- ✓ Push notification code removed (email only)
 - ✓ Organized documentation
 - ✓ i18n infrastructure ready
 

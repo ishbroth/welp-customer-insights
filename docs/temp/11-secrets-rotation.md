@@ -3,11 +3,34 @@
 ## Overview
 Remove exposed secrets from `.env`, rotate all compromised keys, and properly configure environment variables across different deployment environments.
 
+## IMPORTANT: Supabase Client Configuration Decision (2025-10-05)
+
+**Current Setup (Correct for GitHub Pages):**
+- `src/integrations/supabase/client.ts` uses **hardcoded** `SUPABASE_URL` and `SUPABASE_ANON_KEY`
+- This is CORRECT and SAFE for the following reasons:
+  - GitHub Pages deployment is a **static site** with no access to environment variables during build
+  - The anon key is **PUBLIC by design** - it's meant to be embedded in frontend code
+  - Security is enforced by **Row Level Security (RLS) policies** on the Supabase backend
+  - This is the standard pattern for frontend Supabase applications
+
+**Why Environment Variables Broke Production:**
+- Attempted to use `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`
+- GitHub Actions workflow (`.github/workflows/build-web.yml`) runs `npm run build` without env vars
+- No `.env` file or GitHub Actions secrets configured in CI
+- Build resulted in `undefined` values → complete app failure
+
+**DO NOT change this unless:**
+- Moving to a deployment platform that supports build-time environment variables (Vercel, Netlify, etc.)
+- AND configuring those environment variables in the deployment platform
+- AND updating the GitHub Actions workflow to pass them during build
+
 ## Current State - Exposed Secrets
 The following secrets are exposed in `.env` (committed to Git):
 - ❌ `STRIPE_SECRET_KEY` - Should NEVER be client-side
 - ❌ `VITE_SUPABASE_SERVICE_ROLE_KEY` - Should ONLY be in Edge Functions
 - ⚠️ `RESEND_API_KEY` - Should be in Edge Functions only
+- ✅ `VITE_SUPABASE_URL` - PUBLIC (safe to expose, also hardcoded in client)
+- ✅ `VITE_SUPABASE_ANON_KEY` - PUBLIC (safe to expose, also hardcoded in client)
 
 ## Work to be Done
 
@@ -49,7 +72,9 @@ git commit -m "Remove .env from version control"
 #### Client-Side (.env for Vite)
 **Only public, non-sensitive values:**
 ```bash
-# Supabase Public
+# Supabase Public (ALSO hardcoded in src/integrations/supabase/client.ts)
+# NOTE: These are NOT used in GitHub Pages builds - the hardcoded values are used instead
+# Keep these for local development only
 VITE_SUPABASE_URL=https://yftvcixhifvrovwhtgtj.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon_key>
 
@@ -69,10 +94,14 @@ VITE_LOG_LEVEL=error
 - `FCM_SERVER_KEY` (for push notifications)
 
 #### GitHub Pages/Static Hosting
-Since this is a static site:
-- Only `VITE_*` prefixed variables are bundled
-- Never expose secret keys
-- Use Edge Functions for any server-side operations
+**IMPORTANT: GitHub Pages does NOT support environment variables during build**
+- The workflow runs `npm run build` without any environment variables
+- Supabase credentials are **hardcoded** in `src/integrations/supabase/client.ts`
+- This is SAFE because the anon key is public and protected by RLS
+- DO NOT change to environment variables unless:
+  1. Switching to a platform that supports build-time env vars (Vercel, Netlify)
+  2. Configuring those env vars in the deployment platform
+  3. Updating the GitHub Actions workflow to inject them
 
 ### 4. Configure Supabase Edge Function Secrets
 
@@ -125,10 +154,22 @@ Document environment variable usage:
 - Local development setup
 
 ### 8. CI/CD Pipeline
-Update GitHub Actions if used:
-- Use GitHub Secrets for deployment
-- Never log environment variables
-- Use Supabase CLI to set secrets during deployment
+**Current State: GitHub Pages with hardcoded Supabase credentials**
+- `.github/workflows/build-web.yml` runs `npm run build` without env vars
+- Supabase credentials hardcoded in `src/integrations/supabase/client.ts` (correct approach)
+- No GitHub Secrets needed for Supabase (anon key is public)
+
+**If switching to environment variables in the future:**
+- Add GitHub Secrets: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Update workflow to inject during build:
+  ```yaml
+  - name: Build application
+    run: npm run build
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+  ```
+- Update `src/integrations/supabase/client.ts` to use `import.meta.env.*`
 
 ### 9. Local Development
 For local development:

@@ -31,7 +31,9 @@
       "Bash(\"C:\\Users\\appli\\AppData\\Local\\Android\\Sdk\\emulator\\emulator.exe\" -avd Pixel_9_Pro -no-audio -gpu host)",
       "Bash(timeout:*)",
       "Bash(chmod:*)",
-      "Bash(where java)"
+      "Bash(where java)",
+      "Bash(xcodebuild:*)",
+      "Bash(git show:*)"
     ],
     "deny": [],
     "ask": [],
