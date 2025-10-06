@@ -202,10 +202,7 @@ Manages the business verification process:
 
 ### Used In
 
-- `src/pages/BusinessVerification.tsx` - Verification request form
-- `src/components/business/VerificationBadge.tsx` - Display verified status
-- `src/hooks/useVerificationRequest.ts` - Request logic
-- Admin panel for verification review
+- Business verification features
 
 ### Verification Workflow
 
@@ -250,6 +247,7 @@ Security event logging for audit and compliance.
 ### Constraints
 
 - **Primary Key**: `id`
+- **Foreign Keys**: None - `user_id` is nullable with no foreign key constraint
 
 ### Indexes
 
@@ -290,9 +288,7 @@ Comprehensive security event logging for:
 
 ### Used In
 
-- `src/services/authService.ts` - Log auth events
-- Security monitoring tools
-- Admin security dashboard
+- Security monitoring and audit trail
 
 ### Related Tables
 

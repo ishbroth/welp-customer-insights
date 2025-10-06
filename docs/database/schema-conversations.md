@@ -47,9 +47,8 @@ Conversation threads attached to reviews, allowing businesses and customers to c
 
 ### Used In
 
-- `src/pages/Conversation.tsx` - Conversation UI
-- `src/components/conversations/ConversationThread.tsx` - Message display
-- `src/components/conversations/MessageInput.tsx` - Message composition
+- `src/components/conversation/ConversationThread.tsx` - Message display
+- `src/components/conversation/ConversationInput.tsx` - Message composition
 - `src/hooks/useConversation.ts` - Conversation logic
 - `src/services/conversationService.ts` - Message operations
 

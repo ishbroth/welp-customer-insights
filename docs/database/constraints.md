@@ -1,184 +1,190 @@
 # Database Constraints
 
-Complete reference of all foreign keys, unique constraints, and check constraints across all 28 tables.
+Complete reference of all foreign keys, unique constraints, and check constraints across all 28 tables in the database.
 
 ## Foreign Keys
 
 Foreign keys define relationships between tables. Format: `source_table.column → target_table(column)`
 
-### From profiles
+### Auth Schema Foreign Keys
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `profiles.id` | `auth.users(id)` | CASCADE | Link to Supabase Auth |
+#### auth.identities
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | Link identity to auth user |
 
-### From business_info
+#### auth.mfa_amr_claims
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `session_id` | `auth.sessions(id)` | Link MFA claim to session |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `business_info.user_id` | `profiles(id)` | CASCADE | Business owner |
+#### auth.mfa_challenges
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `factor_id` | `auth.mfa_factors(id)` | Link challenge to MFA factor |
 
-### From reviews
+#### auth.mfa_factors
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | Link MFA factor to user |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `reviews.business_id` | `business_info(id)` | CASCADE | Business being reviewed |
-| `reviews.customer_id` | `profiles(id)` | SET NULL | Customer who wrote review (nullable for anonymous) |
+#### auth.one_time_tokens
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | Link token to user |
 
-### From responses
+#### auth.refresh_tokens
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `session_id` | `auth.sessions(id)` | Link refresh token to session |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `responses.review_id` | `reviews(id)` | CASCADE | Review being responded to |
-| `responses.user_id` | `profiles(id)` | CASCADE | Business owner responding |
+#### auth.saml_providers
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `sso_provider_id` | `auth.sso_providers(id)` | Link SAML provider to SSO provider |
 
-### From review_photos
+#### auth.saml_relay_states
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `flow_state_id` | `auth.flow_state(id)` | Link relay state to flow state |
+| `sso_provider_id` | `auth.sso_providers(id)` | Link relay state to SSO provider |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `review_photos.review_id` | `reviews(id)` | CASCADE | Review photos belong to |
+#### auth.sessions
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | Link session to user |
 
-### From verification_codes
+#### auth.sso_domains
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `sso_provider_id` | `auth.sso_providers(id)` | Link domain to SSO provider |
 
-No foreign keys (standalone verification table)
+### Public Schema Foreign Keys
 
-### From email_verification_codes
+#### profiles
+**NO FOREIGN KEYS** - `id` is a primary key only, NOT a foreign key to auth.users
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `email_verification_codes.user_id` | `profiles(id)` | CASCADE | User being verified (nullable) |
+#### business_info
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `id` | `profiles(id)` | One-to-one link to profile |
 
-### From auth_rate_limits
+#### reviews
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `business_id` | `profiles(id)` | Business being reviewed |
 
-No foreign keys (tracks by identifier string, not user_id)
+#### responses
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review being responded to |
+| `author_id` | `auth.users(id)` | User who wrote response |
 
-### From account_lockout
+#### review_photos
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review photos belong to |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `account_lockout.user_id` | `profiles(id)` | CASCADE | User whose account is locked |
+#### subscriptions
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `profiles(id)` | User with subscription |
 
-### From user_sessions
+#### customer_access
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `business_id` | `profiles(id)` | Business granting access |
+| `customer_id` | `profiles(id)` | Customer receiving access |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `user_sessions.user_id` | `profiles(id)` | CASCADE | User who owns session |
+#### verification_codes
+**NO FOREIGN KEYS** - Standalone verification table
 
-### From credits
+#### notification_preferences
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | User's notification preferences |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `credits.user_id` | `profiles(id)` | CASCADE | User who owns credits |
+#### notifications_log
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | Recipient user |
 
-### From credit_transactions
+#### credits
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | User who owns credits |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `credit_transactions.user_id` | `profiles(id)` | CASCADE | User this transaction belongs to |
+#### credit_transactions
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | User this transaction belongs to |
 
-### From subscriptions
+#### verification_requests
+**NO FOREIGN KEYS** - Standalone request tracking
 
-No foreign keys (Stripe is source of truth, linked via subscribers table)
+#### user_sessions
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | User who owns session |
 
-### From subscribers
+#### user_review_notifications
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | User who was notified |
+| `review_id` | `reviews(id)` | Review that triggered notification |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `subscribers.user_id` | `profiles(id)` | CASCADE | User who owns subscription |
-| `subscribers.subscription_id` | `subscriptions(id)` | CASCADE | Subscription record |
+#### review_claim_history
+**NO FOREIGN KEYS** - Standalone history tracking
 
-### From notification_preferences
+#### review_reports
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review being reported |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `notification_preferences.user_id` | `profiles(id)` | CASCADE | User these preferences belong to |
+#### device_tokens
+**NO FOREIGN KEYS** - No foreign key constraint
 
-### From notifications_log
+#### guest_access
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review accessible via token |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `notifications_log.user_id` | `profiles(id)` | CASCADE | Recipient user |
+#### email_verification_codes
+**NO FOREIGN KEYS** - Standalone email verification
 
-### From device_tokens
+#### auth_rate_limits
+**NO FOREIGN KEYS** - Tracks by identifier string, not user_id
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `device_tokens.user_id` | `profiles(id)` | CASCADE | User this token belongs to |
+#### account_lockout
+**NO FOREIGN KEYS** - Tracks by identifier string, not user_id
 
-### From user_review_notifications
+#### security_audit_log
+**NO FOREIGN KEYS** - Audit log with nullable user_id
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `user_review_notifications.user_id` | `profiles(id)` | CASCADE | User who was notified |
-| `user_review_notifications.review_id` | `reviews(id)` | CASCADE | Review that triggered notification |
+#### customer_review_associations
+**NO FOREIGN KEYS** - Association tracking
 
-### From review_claims
+#### review_claims
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review being claimed |
+| `claimed_by` | `auth.users(id)` | User claiming review |
+| `credit_transaction_id` | `credit_transactions(id)` | Associated credit transaction |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `review_claims.review_id` | `reviews(id)` | CASCADE | Review being claimed |
-| `review_claims.business_id` | `business_info(id)` | CASCADE | Business making claim |
+#### review_conversations
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review this conversation is about |
 
-### From review_claim_history
+#### conversation_participants
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `review_id` | `reviews(id)` | Review conversation is about |
 
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `review_claim_history.claim_id` | `review_claims(id)` | CASCADE | Claim this history entry belongs to |
-| `review_claim_history.changed_by` | `profiles(id)` | SET NULL | User who made change (nullable) |
-
-### From review_reports
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `review_reports.review_id` | `reviews(id)` | CASCADE | Review being reported |
-| `review_reports.reported_by` | `profiles(id)` | CASCADE | User who reported |
-
-### From customer_review_associations
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `customer_review_associations.customer_id` | `profiles(id)` | CASCADE | Customer who wrote review |
-| `customer_review_associations.review_id` | `reviews(id)` | CASCADE | Review that was written |
-
-### From review_conversations
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `review_conversations.review_id` | `reviews(id)` | CASCADE | Review this conversation is about |
-| `review_conversations.sender_id` | `profiles(id)` | CASCADE | User who sent message |
-
-### From conversation_participants
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `conversation_participants.review_id` | `reviews(id)` | CASCADE | Review conversation is about |
-| `conversation_participants.user_id` | `profiles(id)` | CASCADE | Participant user |
-
-### From customer_access
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `customer_access.business_id` | `business_info(id)` | CASCADE | Business granting access |
-| `customer_access.customer_id` | `profiles(id)` | CASCADE | Customer receiving access |
-
-### From guest_access
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `guest_access.review_id` | `reviews(id)` | CASCADE | Review accessible via token |
-
-### From verification_requests
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `verification_requests.user_id` | `profiles(id)` | CASCADE | Business owner requesting verification |
-| `verification_requests.reviewed_by` | `profiles(id)` | SET NULL | Admin who reviewed (nullable) |
-
-### From security_audit_log
-
-| Source Column | Target | On Delete | Purpose |
-|---------------|--------|-----------|---------|
-| `security_audit_log.user_id` | `profiles(id)` | SET NULL | User involved (nullable) |
+#### subscribers
+| Source Column | Target | Purpose |
+|---------------|--------|---------|
+| `user_id` | `auth.users(id)` | User who subscribed |
 
 ---
 
@@ -186,107 +192,114 @@ No foreign keys (Stripe is source of truth, linked via subscribers table)
 
 Unique constraints ensure no duplicate values.
 
-### profiles
-- `id` (Primary Key)
-- `email` (Case-insensitive unique)
-- `phone_number` (Unique)
+### Auth Schema
 
-### business_info
-- `id` (Primary Key)
-- `user_id` (One business per user)
-- `license_number` (If provided, must be unique)
+#### auth.users
+- `phone` - Unique phone number
 
-### reviews
-- `id` (Primary Key)
+#### auth.refresh_tokens
+- `token` - Unique refresh token
 
-### responses
-- `id` (Primary Key)
-- `review_id` (One response per review)
+#### auth.saml_providers
+- `entity_id` - Unique SAML entity ID
 
-### review_photos
-- `id` (Primary Key)
+#### auth.oauth_clients
+- `client_id` - Unique OAuth client ID
 
-### verification_codes
-- `id` (Primary Key)
+### Public Schema
 
-### email_verification_codes
-- `id` (Primary Key)
+#### profiles
+- `id` (Primary Key only)
 
-### auth_rate_limits
-- `id` (Primary Key)
-- `(identifier, action)` (One rate limit per identifier+action combination)
+#### business_info
+- `id` (Primary Key only)
 
-### account_lockout
-- `id` (Primary Key)
-- `user_id` (One lockout per user at a time)
+#### reviews
+- `id` (Primary Key only)
 
-### user_sessions
-- `id` (Primary Key)
-- `session_token` (Unique session identifier)
+#### responses
+- `id` (Primary Key only)
 
-### credits
-- `id` (Primary Key)
-- `user_id` (One credit record per user)
+#### review_photos
+- `id` (Primary Key only)
 
-### credit_transactions
-- `id` (Primary Key)
+#### verification_codes
+- `id` (Primary Key only)
+- `phone` - Unique phone number per verification
 
-### subscriptions
-- `id` (Primary Key)
-- `stripe_subscription_id` (Unique Stripe ID)
+#### email_verification_codes
+- `id` (Primary Key only)
+- `email` - Unique email per verification
 
-### subscribers
-- `id` (Primary Key)
-- `(user_id, subscription_id)` (Prevent duplicate subscriptions)
+#### auth_rate_limits
+- `id` (Primary Key only)
 
-### notification_preferences
-- `id` (Primary Key)
-- `user_id` (One preference record per user)
+#### account_lockout
+- `id` (Primary Key only)
+- `(identifier, lockout_type)` - Unique composite constraint (one lockout per identifier/type)
 
-### notifications_log
-- `id` (Primary Key)
+#### user_sessions
+- `id` (Primary Key only)
 
-### device_tokens
-- `id` (Primary Key)
-- `token` (Unique device token)
+#### credits
+- `id` (Primary Key only)
+- `user_id` - One credit record per user
 
-### user_review_notifications
-- `id` (Primary Key)
-- `(user_id, review_id, notification_type)` (Prevent duplicate notifications)
+#### credit_transactions
+- `id` (Primary Key only)
 
-### review_claims
-- `id` (Primary Key)
+#### subscriptions
+- `id` (Primary Key only)
 
-### review_claim_history
-- `id` (Primary Key)
+#### subscribers
+- `id` (Primary Key only)
+- `email` - Unique email
 
-### review_reports
-- `id` (Primary Key)
+#### notification_preferences
+- `id` (Primary Key only)
+- `user_id` - One preference record per user
 
-### customer_review_associations
-- `id` (Primary Key)
-- `(customer_id, review_id)` (One association per customer-review pair)
+#### notifications_log
+- `id` (Primary Key only)
 
-### review_conversations
-- `id` (Primary Key)
+#### device_tokens
+- `id` (Primary Key only)
 
-### conversation_participants
-- `id` (Primary Key)
-- `(review_id, user_id)` (One participation per user-review pair)
+#### user_review_notifications
+- `id` (Primary Key only)
 
-### customer_access
-- `id` (Primary Key)
-- `(business_id, customer_id)` (One access grant per business-customer pair)
+#### review_claims
+- `id` (Primary Key only)
+- `review_id` - One claim per review
 
-### guest_access
-- `id` (Primary Key)
-- `access_token` (Unique access token)
+#### review_claim_history
+- `id` (Primary Key only)
 
-### verification_requests
-- `id` (Primary Key)
+#### review_reports
+- `id` (Primary Key only)
 
-### security_audit_log
-- `id` (Primary Key)
+#### customer_review_associations
+- `id` (Primary Key only)
+
+#### review_conversations
+- `id` (Primary Key only)
+
+#### conversation_participants
+- `id` (Primary Key only)
+- `review_id` - One participant record per review
+
+#### customer_access
+- `id` (Primary Key only)
+
+#### guest_access
+- `id` (Primary Key only)
+- `access_token` - Unique access token
+
+#### verification_requests
+- `id` (Primary Key only)
+
+#### security_audit_log
+- `id` (Primary Key only)
 
 ---
 
@@ -294,125 +307,143 @@ Unique constraints ensure no duplicate values.
 
 Check constraints enforce data validation rules.
 
-### profiles
-- `role IN ('customer', 'business')`
+### Auth Schema
 
-### reviews
-- `rating >= 1 AND rating <= 5`
-- `anonymous = false OR customer_id IS NULL` (Anonymous reviews can't have customer_id)
+#### auth.one_time_tokens
+- `char_length(token_hash) > 0` - Token hash must not be empty
 
-### verification_codes
-- `LENGTH(code) = 6` (6-digit OTP)
-- `attempts >= 0`
+#### auth.users
+- `email_change_confirm_status >= 0 AND email_change_confirm_status <= 2` - Valid email change status
 
-### email_verification_codes
-- `LENGTH(code) = 6` (6-digit OTP)
+#### auth.saml_providers
+- `char_length(entity_id) > 0` - Entity ID must not be empty
+- `char_length(metadata_xml) > 0` - Metadata XML must not be empty
+- `metadata_url = NULL::text OR char_length(metadata_url) > 0` - Metadata URL must be null or non-empty
 
-### auth_rate_limits
-- `attempt_count > 0`
+#### auth.saml_relay_states
+- `char_length(request_id) > 0` - Request ID must not be empty
 
-### credits
-- `balance >= 0` (Cannot go negative)
+#### auth.sso_providers
+- `resource_id = NULL::text OR char_length(resource_id) > 0` - Resource ID must be null or non-empty
 
-### credit_transactions
-- `amount != 0` (Must be positive or negative, not zero)
-- `transaction_type IN ('purchase', 'usage', 'refund', 'admin_adjustment')`
+#### auth.oauth_clients
+- `char_length(client_name) <= 1024` - Client name max length
+- `char_length(client_uri) <= 2048` - Client URI max length
+- `char_length(logo_uri) <= 2048` - Logo URI max length
 
-### subscriptions
-- `status IN ('active', 'canceled', 'past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'trialing')`
+### Public Schema
 
-### notifications_log
-- `channel IN ('email', 'push', 'sms')`
-- `notification_type IN ('review_created', 'response_created', 'conversation_message', 'verification_approved', 'subscription_status', 'credit_purchase')`
+#### credit_transactions
+- `type = ANY (ARRAY['purchase'::text, 'usage'::text, 'refund'::text])` - Valid transaction types
 
-### device_tokens
-- `platform IN ('ios', 'android', 'web')`
+#### customer_review_associations
+- `association_type = ANY (ARRAY['purchased'::text, 'responded'::text])` - Valid association types
 
-### user_review_notifications
-- `notification_type IN ('review_created', 'response_created')`
+#### review_claims
+- `claim_type = ANY (ARRAY['credit_unlock'::text, 'subscription_response'::text, 'direct_claim'::text, 'conversation_response'::text])` - Valid claim types
 
-### review_claims
-- `status IN ('pending', 'approved', 'rejected')`
-
-### review_claim_history
-- `old_status IN ('pending', 'approved', 'rejected')` (Nullable)
-- `new_status IN ('pending', 'approved', 'rejected')`
-
-### review_reports
-- `status IN ('pending', 'resolved', 'dismissed')`
-- `reason IN ('spam', 'offensive', 'inappropriate', 'fake', 'other')`
-
-### guest_access
-- `accessed_count >= 0`
-
-### verification_requests
-- `status IN ('pending', 'approved', 'rejected')`
-
-### security_audit_log
-- `event_type IN ('login', 'logout', 'failed_login', 'password_change', 'email_change', 'account_created', 'account_deleted', 'suspicious_activity', 'rate_limit_exceeded', 'access_denied')`
-- `severity IN ('info', 'warning', 'critical')`
+#### review_conversations
+- `author_type = ANY (ARRAY['business'::text, 'customer'::text])` - Valid author types
 
 ---
 
-## Cascade Behavior Summary
+## Notable Absence of Constraints
 
-**ON DELETE CASCADE** (child deleted when parent deleted):
-- All `profiles` relationships cascade (deleting user deletes all their data)
-- All `business_info` relationships cascade
-- All `reviews` relationships cascade
-- Most table relationships follow cascade pattern for data integrity
+These constraints were documented but DO NOT EXIST in the actual database:
 
-**ON DELETE SET NULL** (child remains, FK set to null):
-- `reviews.customer_id` → `profiles(id)` (review persists if customer deleted)
-- `email_verification_codes.user_id` → `profiles(id)` (code persists for audit)
-- `review_claim_history.changed_by` → `profiles(id)` (history persists, admin reference cleared)
-- `verification_requests.reviewed_by` → `profiles(id)` (request persists, admin reference cleared)
-- `security_audit_log.user_id` → `profiles(id)` (log persists for security audit)
+### Non-existent Foreign Keys
+- ❌ profiles.id → auth.users(id) - profiles.id is just a UUID primary key
+- ❌ business_info.user_id → profiles(id) - actual FK is business_info.id → profiles(id)
+- ❌ reviews.customer_id - this column doesn't exist
+- ❌ responses.user_id → profiles(id) - actual FK is responses.author_id → auth.users(id)
+- ❌ email_verification_codes.user_id - this column doesn't exist
+- ❌ account_lockout.user_id - this table exists but has no foreign keys
+- ❌ device_tokens.user_id - this table has no foreign keys
+- ❌ review_reports.reported_by - this column doesn't exist
+- ❌ subscribers.subscription_id - this column doesn't exist
+- ❌ verification_requests.reviewed_by - this column doesn't exist
+- ❌ review_claim_history.claim_id - this column doesn't exist
+- ❌ review_claim_history.changed_by - this column doesn't exist
+- ❌ review_conversations.sender_id - this column doesn't exist
+- ❌ conversation_participants.user_id - this column doesn't exist
+- ❌ customer_access non-existent columns
+- ❌ security_audit_log.user_id - nullable column with no foreign key
 
----
+### Non-existent Unique Constraints
+- ❌ profiles.email - no unique constraint exists
+- ❌ profiles.phone_number - column doesn't exist (it's just 'phone' with no unique constraint)
+- ❌ business_info.user_id - column doesn't exist
+- ❌ business_info.license_number - no unique constraint
+- ❌ responses.review_id - no unique constraint (one-to-many allowed)
+- ❌ auth_rate_limits (identifier, action) - no composite unique
+- ❌ account_lockout.user_id - no unique constraint
+- ❌ user_sessions.session_token - column doesn't exist
+- ❌ subscriptions.stripe_subscription_id - column doesn't exist
+- ❌ subscribers (user_id, subscription_id) - subscription_id column doesn't exist
+- ❌ device_tokens.token - no unique constraint
+- ❌ user_review_notifications (user_id, review_id, notification_type) - no composite unique, notification_type doesn't exist
+- ❌ customer_review_associations (customer_id, review_id) - no composite unique
+- ❌ conversation_participants (review_id, user_id) - user_id doesn't exist
+- ❌ customer_access (business_id, customer_id) - no composite unique
 
-## Indexes
-
-All foreign keys have indexes for performance. Additional notable indexes:
-
-### Performance-Critical Indexes
-- `reviews.business_id` - Lookup reviews for business
-- `reviews.customer_id` - Lookup reviews by customer
-- `reviews.created_at` - Chronological ordering
-- `notifications_log.sent_at` - Chronological ordering
-- `credit_transactions.created_at` - Transaction history
-- `subscriptions.current_period_end` - Find expiring subscriptions
-- `guest_access.access_token` - Fast token validation
-- `user_sessions.session_token` - Fast session lookup
-
-See individual schema files for complete index details.
+### Non-existent Check Constraints
+- ❌ profiles.role - no check constraint
+- ❌ reviews.rating >= 1 AND rating <= 5 - no check constraint
+- ❌ reviews.anonymous = false OR customer_id IS NULL - no check constraint
+- ❌ verification_codes.LENGTH(code) = 6 - no check constraint
+- ❌ verification_codes.attempts >= 0 - no check constraint
+- ❌ email_verification_codes.LENGTH(code) = 6 - no check constraint
+- ❌ auth_rate_limits.attempt_count > 0 - no check constraint
+- ❌ credits.balance >= 0 - no check constraint
+- ❌ credit_transactions.amount != 0 - no check constraint
+- ❌ credit_transactions includes 'admin_adjustment' - actual constraint only has purchase/usage/refund
+- ❌ subscriptions.status check - no check constraint
+- ❌ notifications_log.channel - no check constraint
+- ❌ notifications_log.notification_type - no check constraint
+- ❌ device_tokens.platform - no check constraint
+- ❌ user_review_notifications.notification_type - no check constraint
+- ❌ review_claims.status - no check constraint
+- ❌ review_claim_history.old_status - no check constraint
+- ❌ review_claim_history.new_status - no check constraint
+- ❌ review_reports.status - no check constraint
+- ❌ review_reports.reason - no check constraint
+- ❌ guest_access.accessed_count >= 0 - no check constraint
+- ❌ verification_requests.status - no check constraint
+- ❌ security_audit_log.event_type - no check constraint
+- ❌ security_audit_log.severity - no check constraint
 
 ---
 
 ## Relationship Map
 
 **Central Tables**:
-- `profiles` - Referenced by almost everything
+- `auth.users` - Referenced by many public schema tables
+- `profiles` - Referenced by business_info, reviews, subscriptions, customer_access
 - `reviews` - Hub for review system
-- `business_info` - Business data and relationships
 
 **1-to-1 Relationships**:
-- `profiles` ↔ `business_info` (one business per user)
-- `profiles` ↔ `credits` (one credit balance per user)
-- `profiles` ↔ `notification_preferences` (one preference set per user)
-- `reviews` ↔ `responses` (one response per review)
+- `profiles` ↔ `business_info` (one business per profile via id)
+- `auth.users` ↔ `credits` (one credit balance per user via user_id unique)
+- `auth.users` ↔ `notification_preferences` (one preference set per user via user_id unique)
+- `reviews` ↔ `review_claims` (one claim per review via review_id unique)
+- `reviews` ↔ `conversation_participants` (one participant per review via review_id unique)
 
 **1-to-Many Relationships**:
-- `profiles` → many `reviews`
-- `business_info` → many `reviews`
+- `auth.users` → many `auth.sessions`
+- `auth.users` → many `responses` (via author_id)
+- `auth.users` → many `notifications_log`
+- `auth.users` → many `credit_transactions`
+- `auth.users` → many `user_sessions`
+- `auth.users` → many `subscribers`
+- `profiles` → many `reviews` (via business_id)
+- `profiles` → many `subscriptions`
 - `reviews` → many `review_photos`
 - `reviews` → many `review_conversations`
-- `profiles` → many `credit_transactions`
-- `subscriptions` → many `subscribers`
+- `reviews` → many `review_reports`
+- `reviews` → many `guest_access`
 
-**Many-to-Many Relationships** (via junction tables):
-- `profiles` ↔ `reviews` via `customer_review_associations` (anonymous review tracking)
-- `profiles` ↔ `reviews` via `conversation_participants` (conversation access)
+**Many-to-Many Relationships**:
+- None via junction tables currently
 
 ---
 

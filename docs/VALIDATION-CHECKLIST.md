@@ -36,7 +36,7 @@ This checklist is **NOT OPTIONAL**. It is the enforcement mechanism that keeps o
 - [ ] **No Twilio references** remain in database docs
 
 **Files to check/update:**
-- `docs/database/schema-[domain].md`
+- `docs/database/schema-[domain].md` (schema-core, schema-reviews, schema-notifications)
 - `docs/database/constraints.md`
 - `docs/database/rls-policies.md`
 - `docs/QUICK-REFERENCE.md`
@@ -61,7 +61,7 @@ This checklist is **NOT OPTIONAL**. It is the enforcement mechanism that keeps o
 - [ ] **No Twilio functions** remain in docs or deployment
 
 **Files to check/update:**
-- `docs/edge-functions/[group].md` (auth, reviews, business, associates)
+- `docs/edge-functions/[group].md` (auth, billing, user, email, notification)
 - `docs/edge-functions/README.md`
 - Relevant `docs/architecture/deep-dive-*.md`
 - `docs/QUICK-REFERENCE.md`
@@ -86,8 +86,9 @@ This checklist is **NOT OPTIONAL**. It is the enforcement mechanism that keeps o
 **Files to check/update:**
 - `docs/architecture/deep-dive-auth.md`
 - `docs/architecture/deep-dive-reviews.md`
-- `docs/architecture/deep-dive-business.md`
-- `docs/architecture/deep-dive-associates.md`
+- `docs/architecture/deep-dive-billing.md`
+- `docs/architecture/deep-dive-search.md`
+- `docs/architecture/deep-dive-conversations.md`
 - `docs/QUICK-REFERENCE.md`
 
 ---
@@ -107,7 +108,7 @@ This checklist is **NOT OPTIONAL**. It is the enforcement mechanism that keeps o
 
 **Files to check/update:**
 - `docs/architecture/deep-dive-auth.md`
-- `docs/database/schema-auth.md`
+- `docs/database/schema-core.md`
 - `docs/edge-functions/auth-functions.md`
 - `docs/database/rls-policies.md`
 - `docs/QUICK-REFERENCE.md`
@@ -233,9 +234,8 @@ Parameters: { "project_id": "yftvcixhifvrovwhtgtj" }
 
 Compare output to:
 - docs/database/schema-reviews.md
-- docs/database/schema-associates.md
-- docs/database/schema-business.md
-- docs/database/schema-auth.md
+- docs/database/schema-core.md
+- docs/database/schema-notifications.md
 
 Every table in output should have documentation.
 Every table in docs should exist in output.
@@ -249,9 +249,10 @@ Parameters: { "project_id": "yftvcixhifvrovwhtgtj" }
 Compare output to:
 - docs/edge-functions/README.md
 - docs/edge-functions/auth-functions.md
-- docs/edge-functions/review-functions.md
-- docs/edge-functions/business-functions.md
-- docs/edge-functions/associate-functions.md
+- docs/edge-functions/billing-functions.md
+- docs/edge-functions/user-functions.md
+- docs/edge-functions/email-functions.md
+- docs/edge-functions/notification-functions.md
 
 Every deployed function should have documentation.
 Every function in docs should exist in deployment.

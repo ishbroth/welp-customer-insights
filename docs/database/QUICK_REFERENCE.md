@@ -9,7 +9,6 @@ Fast lookup guide for finding the right tables for common tasks.
 - `verification_codes` - Phone verification OTPs
 - `email_verification_codes` - Email verification OTPs
 - `auth_rate_limits` - Prevent brute force attacks
-- `account_lockout` - Track locked accounts
 - `user_sessions` - Active login sessions
 
 ### Business Information
@@ -162,7 +161,7 @@ All tables use UTC timestamps:
 - `updated_at` - Last modification (auto-updated via trigger)
 - `expires_at` - For time-limited resources (guest access, OTPs)
 
-See `docs/temp/03-utc-date-handling.md` for date handling standards.
+All date/time fields use UTC timezone. Always convert to local timezone in the UI layer.
 
 ## RLS (Row Level Security)
 

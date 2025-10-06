@@ -9,11 +9,11 @@ Profile management, account operations, and admin utilities.
 Create user profile after signup.
 
 - **Path**: `supabase/functions/create-profile/index.ts`
-- **Auth Required**: No (called during signup)
-- **Parameters**: `{ user_id: string, email: string, role: 'customer' | 'business', full_name?: string }`
-- **Returns**: `{ success: boolean, profile_id: string }`
-- **Database**: Insert into `profiles`
-- **Called From**: Signup flow, auth triggers
+- **Auth Required**: No (uses service role internally)
+- **Parameters**: `{ userId: string, name?: string, phone?: string, type: 'customer' | 'business', businessId?: string, licenseType?: string, verified?: boolean }`
+- **Returns**: `{ success: boolean, message: string, data: object }`
+- **Database**: Insert/update `profiles`, create/update `business_info` (if business type)
+- **Called From**: Signup flow, profile update flow
 
 **Flow**:
 1. Validate inputs
@@ -34,7 +34,7 @@ Delete user account and all associated data.
 - **Parameters**: `{ confirm: boolean }`
 - **Returns**: `{ success: boolean }`
 - **Database**: Deletes from `profiles` (cascades to all related tables)
-- **Called From**: `src/pages/DeleteAccount.tsx`
+- **Called From**: `src/hooks/useAccountDeletion.ts`, `src/utils/forceDeleteAccount.ts`
 
 **Flow**:
 1. Verify JWT
@@ -65,7 +65,7 @@ Verify business license number (external API lookup).
 - **Returns**: `{ valid: boolean, business_name?: string }`
 - **External API**: State business license database
 - **Database**: None (read-only lookup)
-- **Called From**: `src/pages/BusinessVerification.tsx`
+- **Called From**: Business verification flow (verify-business-license not currently in use)
 
 **Flow**:
 1. Verify JWT
@@ -102,19 +102,20 @@ Check for duplicate businesses or users.
 
 ### get-secret
 
-Retrieve secret from Edge Function environment (admin utility).
+Retrieve secret from Supabase Vault or environment variables.
 
 - **Path**: `supabase/functions/get-secret/index.ts`
-- **Auth Required**: Yes (Service role)
-- **Parameters**: `{ secret_name: string }`
-- **Returns**: `{ value: string }`
-- **Database**: None
+- **Auth Required**: No (uses service role internally)
+- **Parameters**: `{ secretName: string }`
+- **Returns**: `{ secret: string }`
+- **Database**: Queries `vault.secrets` table, falls back to environment variables
 - **Called From**: Other Edge Functions (shared secret access)
 
 **Flow**:
-1. Verify service role
-2. Return `Deno.env.get(secret_name)`
-3. Used for sharing secrets between functions
+1. Try to retrieve from Supabase Vault (`vault.secrets`)
+2. If not found, fall back to `Deno.env.get(secretName)`
+3. Return secret value or error
+4. Used for sharing secrets between functions
 
 ---
 
@@ -128,7 +129,7 @@ Hard delete a review and all associated data with credit refunds.
 - **Returns**: `{ success: boolean, message: string }`
 - **Database**: Deletes from `reviews`, `review_photos`, `review_reports`, `guest_access`, `user_review_notifications`, `customer_review_associations`
 - **Credits**: Refunds credits to users who purchased access via `update_user_credits` RPC
-- **Called From**: `src/pages/ReviewManagement.tsx`
+- **Called From**: `src/hooks/useBusinessReviews.ts`
 
 **Flow**:
 1. Verify JWT and ownership (business_id matches user)
@@ -192,31 +193,33 @@ Geocode city and state to coordinates using Google Maps API.
 
 ---
 
-## Functions Marked for Deletion
+## Functions Marked as Obsolete
 
-### get-twilio-info (OBSOLETE)
+The following functions are still deployed but are no longer used in the application. They should be deleted manually via the Supabase Dashboard (cannot be deleted via MCP).
 
-**Status**: Twilio no longer used
+### get-twilio-info (OBSOLETE - NOT IN USE)
+
+**Status**: Deployed but unused
 
 - **Path**: `supabase/functions/get-twilio-info/index.ts`
-- **Reason**: Switched to AWS SNS for SMS, Resend for email
-- **Action**: Delete this function (cannot delete via MCP)
+- **Reason**: Twilio integration removed; replaced with AWS SNS for SMS and Resend for email
+- **Action**: Safe to delete this function manually via Supabase Dashboard
 
-### send-push-notification (OBSOLETE)
+### send-push-notification (OBSOLETE - NOT IN USE)
 
-**Status**: Push notifications removed
+**Status**: Deployed but unused
 
 - **Path**: `supabase/functions/send-push-notification/index.ts`
-- **Reason**: Push notifications removed (see `docs/temp/13-push-notifications-removal.md`)
-- **Action**: Delete this function (cannot delete via MCP)
+- **Reason**: Push notification functionality removed from the application (see `docs/temp/13-push-notifications-removal.md`)
+- **Action**: Safe to delete this function manually via Supabase Dashboard
 
-### send-sms-verification (OBSOLETE)
+### send-sms-verification (OBSOLETE - NOT IN USE)
 
-**Status**: Twilio SMS sender
+**Status**: Deployed but unused
 
 - **Path**: `supabase/functions/send-sms-verification/index.ts`
-- **Reason**: Uses Twilio for SMS; replaced by verify-phone (AWS SNS)
-- **Action**: Delete this function (cannot delete via MCP)
+- **Reason**: Twilio SMS sender; replaced by verify-phone function which uses AWS SNS
+- **Action**: Safe to delete this function manually via Supabase Dashboard
 
 ---
 

@@ -27,7 +27,7 @@ Overview of all 32 deployed Supabase Edge Functions (Deno runtime).
 | confirm-email | Yes | Yes | No |
 | **Billing Functions** | | | |
 | check-subscription | Yes | Yes | No |
-| create-checkout | Yes | Yes | No |
+| create-checkout | Yes | Yes | No ($11.99/mo hardcoded) |
 | create-payment | Yes | Yes | No |
 | create-credit-payment | Yes | Yes | No |
 | create-legacy-payment | Yes | Yes | No |
@@ -38,13 +38,13 @@ Overview of all 32 deployed Supabase Edge Functions (Deno runtime).
 | stripe-webhook | No | Stripe signature | System |
 | **Email Functions** | | | |
 | send-verification-request | Yes | Yes | No |
-| verify-business | No | No | Yes |
-| send-support-email | No | No | Yes |
+| verify-business | No | Token-based | Yes |
+| send-support-email | Yes | Yes | No |
 | **Notification Functions** | | | |
 | send-notification | Yes | Yes | No |
 | conversation-notification | Yes | Yes | No |
 | **User Functions** | | | |
-| create-profile | Yes | Yes | No |
+| create-profile | No | Service role | System |
 | delete-account | Yes | Yes | No |
 | verify-business-license | Yes | Yes | No |
 | delete-review | Yes | Yes | No |

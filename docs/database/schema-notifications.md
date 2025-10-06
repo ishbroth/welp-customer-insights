@@ -33,7 +33,7 @@ User notification settings (email only).
 ### Constraints
 
 - **Primary Key**: `id`
-- **Foreign Key**: `user_id` → `auth.users(id)` ON DELETE CASCADE
+- **Foreign Key**: `user_id` → `auth.users(id)`
 - **Unique**: `user_id` (one preference record per user)
 
 ### RLS
@@ -43,7 +43,6 @@ User notification settings (email only).
 
 ### Used In
 
-- `src/pages/NotificationSettings.tsx` - Preference management
 - `src/hooks/useNotificationPreferences.ts` - Preference access
 
 ### Email Notifications Sent For
@@ -87,7 +86,7 @@ History of all sent notifications.
 ### Constraints
 
 - **Primary Key**: `id`
-- **Foreign Key**: `user_id` → `auth.users(id)` ON DELETE CASCADE
+- **Foreign Key**: `user_id` → `auth.users(id)`
 
 ### Indexes
 
@@ -109,8 +108,7 @@ History of all sent notifications.
 
 ### Used In
 
-- `src/pages/NotificationHistory.tsx` - View notification history
-- `src/hooks/useNotificationLog.ts` - Log access
+- Notification history features
 
 ### Related Tables
 
@@ -137,6 +135,7 @@ Reserved for future web push or in-app notifications.
 ### Constraints
 
 - **Primary Key**: `id`
+- **Foreign Keys**: None - No foreign key constraint on user_id
 
 ### RLS
 
@@ -172,8 +171,8 @@ Track which review notifications have been sent to prevent duplicates.
 ### Constraints
 
 - **Primary Key**: `id`
-- **Foreign Key**: `user_id` → `auth.users(id)` ON DELETE CASCADE
-- **Foreign Key**: `review_id` → `reviews(id)` ON DELETE CASCADE
+- **Foreign Key**: `user_id` → `auth.users(id)`
+- **Foreign Key**: `review_id` → `reviews(id)`
 
 ### Indexes
 

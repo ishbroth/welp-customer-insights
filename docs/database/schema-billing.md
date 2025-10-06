@@ -38,9 +38,7 @@ User credit balances for unlocking review response capabilities.
 
 ### Used In
 
-- `src/pages/Credits.tsx` - Credit balance display
 - `src/hooks/useCredits.ts` - Credit balance access
-- `src/services/creditService.ts` - Credit operations
 
 ### Credit Usage
 
@@ -97,9 +95,7 @@ Credit purchase and usage history.
 
 ### Used In
 
-- `src/pages/TransactionHistory.tsx` - Display transaction history
-- `src/hooks/useCreditTransactions.ts` - Transaction access
-- `src/services/creditService.ts` - Transaction creation
+- Credit transaction features
 
 ### Credit Balance Calculation
 
@@ -156,7 +152,6 @@ Stripe subscription management.
 ### Used In
 
 - `src/pages/Subscription.tsx` - Subscription management
-- `src/hooks/useSubscription.ts` - Subscription access
 
 ### Access Control
 
@@ -206,7 +201,6 @@ Subscription relationships linking users to subscription status.
 
 ### Used In
 
-- `src/hooks/useSubscription.ts` - Check if user has active subscription
 - `src/services/subscriptionService.ts` - Subscription access control
 
 ### Subscription Check

@@ -209,6 +209,8 @@ false
 
 **RLS Enabled**: ✅ Yes
 
+**Note**: This table exists but is not actively used in the current authentication flow.
+
 **Policies**:
 - **All operations**: Service role only
 

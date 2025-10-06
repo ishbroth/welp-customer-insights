@@ -24,7 +24,6 @@ Email and phone verification systems:
 - `verification_codes` - Phone verification codes
 - `email_verification_codes` - Email verification codes
 - `auth_rate_limits` - Rate limiting for auth operations
-- `account_lockout` - Account lockout tracking
 - `user_sessions` - Active user sessions
 
 ### Billing Schema (`schema-billing.md`)
@@ -85,7 +84,7 @@ When working on a task:
 | Domain | File | Tables | Primary Use Cases |
 |--------|------|--------|-------------------|
 | Core | [schema-core.md](schema-core.md) | 5 tables | Reviews, profiles, business info |
-| Auth | [schema-auth.md](schema-auth.md) | 5 tables | Verification, sessions, security |
+| Auth | [schema-auth.md](schema-auth.md) | 4 tables | Verification, sessions, security |
 | Billing | [schema-billing.md](schema-billing.md) | 4 tables | Credits, subscriptions |
 | Notifications | [schema-notifications.md](schema-notifications.md) | 4 tables | Email notifications |
 | Reviews | [schema-reviews.md](schema-reviews.md) | 4 tables | Review claims, reports |
@@ -95,7 +94,7 @@ When working on a task:
 ## Important Notes
 
 - **All tables have RLS enabled** - Access control is enforced at database level
-- **All timestamps are UTC** - See `docs/temp/03-utc-date-handling.md` for date handling standards
+- **All timestamps are UTC** - All date/time fields use UTC timezone
 - **Foreign keys are documented** - See `constraints.md` for complete relationship map
 - **No legacy references** - Documentation reflects current state only
 - **Real code pointers included** - File paths show where tables are used

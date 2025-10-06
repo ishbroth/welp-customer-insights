@@ -16,7 +16,7 @@ The conversation system allows customers and businesses to have back-and-forth m
 6. Review is automatically claimed (no credit required)
 7. Conversation participants record created
 8. First message added to conversation
-9. Business receives push notification (if enabled)
+9. Business receives email notification
 10. Customer can now view full review
 
 ### User Journey (Business - Cannot Start)
@@ -78,12 +78,12 @@ The conversation system allows customers and businesses to have back-and-forth m
 - Triggered after message creation
 - Input: `{ reviewId, messageId, authorId, authorType, content }`
 - Logic:
-  1. Get conversation participants (line 29-45)
+  1. Get conversation participants
   2. Determine recipient: If author is customer, notify business, and vice versa
-  3. Check notification preferences (line 52-66)
-  4. Get author profile for display name (line 69-89)
-  5. Send push notification if enabled (line 96-129)
-  6. Log notification to `notifications_log` (line 132-141)
+  3. Check notification preferences
+  4. Get author profile for display name
+  5. Send email notification via Resend
+  6. Log notification to `notifications_log`
 
 ### Database Operations
 
@@ -115,7 +115,7 @@ The conversation system allows customers and businesses to have back-and-forth m
 {
   user_id: UUID (recipient),
   notification_type: 'conversation_response',
-  channel: 'push',
+  channel: 'email',
   subject: "New response from {name}",
   content: "{name} responded: {preview}",
   status: 'sent' | 'failed'
@@ -124,24 +124,12 @@ The conversation system allows customers and businesses to have back-and-forth m
 
 ### Notifications
 
-**Push Notification** (Mobile only):
-- Title: "New response from {authorName}"
+**Email Notification**:
+- Sent via Resend email service
+- Subject: "New response from {authorName}"
 - Body: "{authorName} responded to a review conversation: {contentPreview}"
-- Data payload:
-  ```json
-  {
-    "type": "conversation_response",
-    "reviewId": "...",
-    "messageId": "...",
-    "authorId": "..."
-  }
-  ```
-- Sent to all registered devices for recipient
-
-**Email Notification** (TODO - not yet implemented):
-- Should send email via Resend
-- Subject: "New response to your review"
-- Currently only push notifications are sent
+- Contains link to view conversation
+- Sent based on user notification preferences
 
 ---
 
@@ -314,22 +302,21 @@ Users can control whether they receive conversation notifications.
 ```sql
 user_id (uuid, PK, FK to profiles)
 email_notifications (boolean, default true)
-push_notifications (boolean, default true)
 review_responses (boolean, default true) -- Conversation notifications
 new_reviews (boolean, default true)
 customer_responses (boolean, default true)
 ```
 
 ### Check Before Sending
-Edge function checks `review_responses` preference before sending notification (line 52-66 in conversation-notification/index.ts):
+Edge function checks `review_responses` preference before sending notification:
 ```typescript
 const { data: preferences } = await supabase
   .from('notification_preferences')
-  .select('review_responses, push_notifications, email_notifications')
+  .select('review_responses, email_notifications')
   .eq('user_id', recipientId)
   .single();
 
-if (!preferences || !preferences.review_responses) {
+if (!preferences || !preferences.review_responses || !preferences.email_notifications) {
   // Skip notification
   return;
 }

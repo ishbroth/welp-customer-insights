@@ -41,7 +41,7 @@ User accounts for both business owners and customers.
 ### Constraints
 
 - **Primary Key**: `id`
-- **No foreign key to auth.users** - `id` is just a uuid, not a foreign key
+- **Foreign Keys**: None - `id` is just a UUID primary key, NOT a foreign key to auth.users
 
 ### RLS
 
@@ -51,9 +51,6 @@ User accounts for both business owners and customers.
 ### Used In
 
 - `src/pages/Profile.tsx` - Profile management
-- `src/hooks/useProfile.ts` - Profile data access
-- `src/components/auth/SignUpForm.tsx` - Registration
-- `src/services/authService.ts` - Authentication
 
 ### Related Tables
 
@@ -96,9 +93,6 @@ Business details and verification status.
 ### Used In
 
 - `src/pages/BusinessProfile.tsx` - Business profile management
-- `src/hooks/useBusinessInfo.ts` - Business data access
-- `src/components/business/BusinessCard.tsx` - Display business info
-- `src/pages/Home.tsx` - Business directory/search
 
 ### Related Tables
 
@@ -126,7 +120,7 @@ Customer reviews of businesses.
 | customer_name | text | YES | NULL | Customer name |
 | customer_address | text | YES | NULL | Customer street address |
 | customer_city | text | YES | NULL | Customer city |
-| customer_state | varchar | YES | NULL | Customer US state abbreviation |
+| customer_state | character varying | YES | NULL | Customer US state abbreviation |
 | customer_zipcode | text | YES | NULL | Customer ZIP code |
 | customer_business_name | text | YES | NULL | Customer business name (if B2B) |
 | customer_nickname | text | YES | NULL | Customer nickname for search |
@@ -136,8 +130,8 @@ Customer reviews of businesses.
 ### Constraints
 
 - **Primary Key**: `id`
-- **Foreign Key**: `business_id` → `profiles(id)` ON DELETE SET NULL
-- **Check**: `rating >= 1 AND rating <= 5` (implied by business logic)
+- **Foreign Key**: `business_id` → `profiles(id)`
+- **Note**: No check constraint on rating (enforced by application logic)
 
 ### Indexes
 
@@ -156,7 +150,6 @@ Customer reviews of businesses.
 
 - `src/pages/NewReview.tsx` - Review submission
 - `src/pages/BusinessProfile.tsx` - Display reviews for business
-- `src/components/reviews/ReviewCard.tsx` - Review display
 - `src/hooks/useReviewSubmission.ts` - Review creation
 - `src/services/reviewSubmissionService.ts` - Review logic
 
@@ -185,8 +178,8 @@ Business responses to customer reviews.
 ### Constraints
 
 - **Primary Key**: `id`
-- **Foreign Key**: `review_id` → `reviews(id)` ON DELETE CASCADE
-- **Foreign Key**: `author_id` → `auth.users(id)` ON DELETE CASCADE
+- **Foreign Key**: `review_id` → `reviews(id)`
+- **Foreign Key**: `author_id` → `auth.users(id)`
 
 ### RLS
 
@@ -198,10 +191,7 @@ Business responses to customer reviews.
 
 ### Used In
 
-- `src/pages/ReviewResponse.tsx` - Create/edit response
-- `src/components/reviews/ResponseCard.tsx` - Display response
-- `src/hooks/useReviewResponse.ts` - Response logic
-- `src/services/reviewResponseService.ts` - Response creation
+- Review response features
 
 ### Access Control
 
@@ -236,7 +226,7 @@ Photos attached to reviews.
 ### Constraints
 
 - **Primary Key**: `id`
-- **Foreign Key**: `review_id` → `reviews(id)` ON DELETE CASCADE
+- **Foreign Key**: `review_id` → `reviews(id)`
 
 ### RLS
 
@@ -253,8 +243,6 @@ Photos stored in Supabase Storage bucket: `review-photos`
 
 - `src/components/reviews/PhotoUpload.tsx` - Photo upload UI
 - `src/services/photoUploadService.ts` - Upload logic
-- `src/components/reviews/ReviewCard.tsx` - Display photos
-- `src/hooks/usePhotoUpload.ts` - Photo management
 
 ### Related Tables
 

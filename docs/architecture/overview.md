@@ -225,7 +225,7 @@ src/
 supabase/functions/      # Edge Functions (Deno)
 ├── verify-email-code/   # Email verification & account creation
 ├── send-notification/   # Email notifications via Resend
-├── conversation-notification/  # Conversation push notifications
+├── conversation-notification/  # Conversation email notifications
 ├── stripe-webhook/      # Stripe payment webhooks
 ├── process-credit-purchase/    # Credit purchase processing
 ├── create-checkout/     # Stripe checkout session creation

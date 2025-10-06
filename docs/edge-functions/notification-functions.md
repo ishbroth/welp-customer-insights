@@ -4,44 +4,39 @@ Email notifications for reviews and conversations. No push notifications.
 
 ## send-notification
 
-Send email notification for reviews and responses.
+Send email notification for review reports.
 
 - **Path**: `supabase/functions/send-notification/index.ts`
-- **Auth Required**: No (Service role)
-- **Parameters**: `{ user_id: string, notification_type: string, metadata: object }`
+- **Auth Required**: Yes (JWT verified)
+- **Parameters**: `{ type: string, recipientEmail: string, data: object }`
 - **Returns**: `{ success: boolean }`
 - **Email**: Sends via Resend
-- **Database**: Check `notification_preferences`, insert `notifications_log`, insert `user_review_notifications`
-- **Called From**: Backend triggers, other Edge Functions
+- **Database**: None (direct email sending)
+- **Called From**: Frontend forms, other Edge Functions
 
 **Notification Types**:
-- `review_created` - New review on business
-- `response_created` - Business responded to your review
+- `review_report` - Review report submitted
 
 **Flow**:
-1. Check `notification_preferences.email_notifications` for user
-2. If disabled, skip
-3. Check `user_review_notifications` for duplicate (review notifications only)
-4. If already sent, skip
-5. Send email via Resend with notification content
-6. Insert into `notifications_log`
-7. Insert into `user_review_notifications` (if review notification)
-8. Return success
+1. Receive notification request with type and data
+2. Generate email subject and HTML content based on type
+3. Send email via Resend API
+4. Return success/failure response
 
-**Metadata Examples**:
+**Metadata Example**:
 ```json
-// Review created
+// Review report
 {
-  "review_id": "uuid",
-  "business_name": "Business Name",
-  "rating": 5,
-  "review_content": "Great service!"
-}
-
-// Response created
-{
-  "review_id": "uuid",
-  "response_content": "Thank you for the feedback!"
+  "type": "review_report",
+  "recipientEmail": "support@mywelp.com",
+  "data": {
+    "reviewId": "uuid",
+    "reporterName": "John Doe",
+    "reporterEmail": "john@example.com",
+    "reporterPhone": "+1234567890",
+    "isAboutReporter": true,
+    "complaint": "This review is defamatory"
+  }
 }
 ```
 
@@ -52,9 +47,9 @@ Send email notification for reviews and responses.
 Send email notification for conversation messages.
 
 - **Path**: `supabase/functions/conversation-notification/index.ts`
-- **Auth Required**: No (Service role)
-- **Parameters**: `{ user_id: string, conversation_id: string, message_preview: string, sender_name: string }`
-- **Returns**: `{ success: boolean }`
+- **Auth Required**: Yes (JWT verified)
+- **Parameters**: `{ reviewId: string, messageId: string, authorId: string, authorType: 'business' | 'customer', content: string }`
+- **Returns**: `{ message: string, recipientId: string, authorName: string }`
 - **Email**: Sends via Resend
 - **Database**: Check `notification_preferences`, insert `notifications_log`
 - **Called From**: After new conversation message created

@@ -12,7 +12,7 @@ Send business verification request email.
 - **Returns**: `{ success: boolean }`
 - **Email**: Sends to admin email via Resend
 - **Database**: Insert into `verification_requests`
-- **Called From**: `src/pages/BusinessVerification.tsx`
+- **Called From**: `src/components/verification/VerificationFormWrapper.tsx`
 
 **Flow**:
 1. Verify user JWT
@@ -24,27 +24,27 @@ Send business verification request email.
 
 ## verify-business
 
-Approve/reject business verification.
+Approve business verification via token link.
 
 - **Path**: `supabase/functions/verify-business/index.ts`
-- **Auth Required**: Yes (Admin only)
-- **Parameters**: `{ request_id: string, action: 'approve' | 'reject', rejection_reason?: string }`
-- **Returns**: `{ success: boolean }`
-- **Email**: Sends result to business owner via Resend
-- **Database**: Updates `verification_requests`, `business_info.verified`
-- **Called From**: Admin panel
+- **Auth Required**: No (token-based verification)
+- **Parameters**: `{ token: string }` (query parameter)
+- **Returns**: HTML response (success or error page)
+- **Email**: Sends approval email to business owner via Resend
+- **Database**: Updates `verification_requests`, `profiles.verified`, `business_info.verified`
+- **Called From**: Email verification link (admin clicks link in email)
 
 **Flow**:
-1. Verify admin JWT
-2. Lookup verification request
-3. If approved:
-   - Update `business_info.verified = true`
+1. Verify token from query parameter
+2. Lookup verification request by token
+3. If valid and pending:
    - Update `verification_requests.status = 'approved'`
-   - Send approval email
-4. If rejected:
-   - Update `verification_requests.status = 'rejected'`
-   - Send rejection email with reason
-5. Return success
+   - Update `profiles.verified = true`
+   - Update `business_info` with verified status
+   - Send congratulatory email to business owner
+4. Return HTML success page
+5. If invalid/expired:
+   - Return HTML error page
 
 ---
 
@@ -53,11 +53,11 @@ Approve/reject business verification.
 Send support/contact form email.
 
 - **Path**: `supabase/functions/send-support-email/index.ts`
-- **Auth Required**: No
-- **Parameters**: `{ from_email: string, from_name: string, subject: string, message: string }`
-- **Returns**: `{ success: boolean }`
-- **Email**: Sends to support email via Resend
-- **Database**: None (could log to support tickets table)
+- **Auth Required**: Yes (JWT verified)
+- **Parameters**: `{ name: string, email: string, issueType: string, message: string }`
+- **Returns**: `{ success: boolean, message: string }`
+- **Email**: Sends to support@mywelp.com via Resend
+- **Database**: None (direct email sending)
 - **Called From**: `src/pages/Contact.tsx`
 
 **Flow**:

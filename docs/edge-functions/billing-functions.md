@@ -12,7 +12,7 @@ Check and update user subscription status from Stripe.
 - **Returns**: `{ subscribed: boolean, subscription_end?: string, subscription_tier?: string, user_type: string }`
 - **Stripe**: Queries customer and active subscriptions
 - **Database**: Upserts into `subscribers` table with current status
-- **Called From**: `src/hooks/useSubscription.ts`
+- **Called From**: Frontend subscription components
 
 **Flow**:
 1. Get user from JWT token
@@ -30,11 +30,17 @@ Create Stripe checkout session for subscription.
 
 - **Path**: `supabase/functions/create-checkout/index.ts`
 - **Auth Required**: Yes (JWT verified)
-- **Parameters**: `{ price_id: string }`
-- **Returns**: `{ session_id, url }`
-- **Stripe**: Creates checkout session
-- **Database**: None (webhook handles fulfillment)
+- **Parameters**: `{ userType?: 'customer' | 'business' }` (defaults to 'customer')
+- **Returns**: `{ url: string }`
+- **Stripe**: Creates checkout session with hardcoded $11.99/month price for both plan types
+- **Database**: Reads `credits` for metadata only
 - **Called From**: `src/pages/Subscription.tsx`
+
+**Flow**:
+1. Get or create Stripe customer
+2. Read user credit balance for metadata
+3. Create checkout session ($11.99/month for both business and customer plans)
+4. Return checkout URL
 
 ---
 
@@ -62,7 +68,7 @@ Create Stripe checkout session for credit purchase.
 - **Returns**: `{ session_id, url }`
 - **Stripe**: Creates checkout session ($3 per credit)
 - **Database**: None (webhook handles fulfillment)
-- **Called From**: `src/pages/Credits.tsx`
+- **Called From**: `src/pages/BuyCredits.tsx`
 
 ---
 
@@ -149,7 +155,7 @@ Get user's Stripe billing information.
 - **Returns**: `{ payment_methods: [], transactions: [] }`
 - **Stripe**: Fetches payment methods and recent charges
 - **Database**: None
-- **Called From**: `src/pages/Billing.tsx`
+- **Called From**: `src/hooks/useBillingData.ts`
 
 **Flow**:
 1. Find Stripe customer by email

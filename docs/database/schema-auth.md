@@ -7,8 +7,8 @@ Email and phone verification systems, rate limiting, account lockout, and sessio
 1. `verification_codes` - Phone verification OTP codes
 2. `email_verification_codes` - Email verification OTP codes
 3. `auth_rate_limits` - Rate limiting for authentication operations
-4. `account_lockout` - Account lockout tracking
-5. `user_sessions` - Active user sessions
+4. `user_sessions` - Active user sessions
+5. `account_lockout` - Account lockout tracking (not actively used)
 
 ---
 
@@ -33,7 +33,7 @@ Phone verification OTP codes sent via Resend email.
 ### Constraints
 
 - **Primary Key**: `id`
-- **Unique**: `phone` (if provided)
+- **Unique**: `phone` (unique constraint exists)
 
 ### Indexes
 
@@ -52,7 +52,7 @@ Codes expire based on `expires_at` field.
 ### Used In
 
 - `src/components/signup/PhoneVerificationFlow.tsx` - Phone verification UI
-- `src/hooks/usePhoneVerification.ts` - Verification logic
+- `src/hooks/usePhoneVerification.ts` - Phone verification logic
 
 ### Security
 
@@ -99,8 +99,7 @@ Email verification OTP codes sent via Resend.
 
 ### Used In
 
-- `src/components/auth/EmailVerification.tsx` - Email verification UI
-- `src/hooks/useEmailVerification.ts` - Verification logic
+- `src/hooks/useEmailVerification.ts` - Email verification logic
 
 ### Related Tables
 
@@ -144,54 +143,11 @@ Rate limiting for authentication operations to prevent brute force attacks.
 
 ### Used In
 
-- Authentication Edge Functions
 - Rate limit checking before auth operations
 
 ### Cleanup
 
 Rate limit windows reset after configured time period.
-
-### Related Tables
-
-- **References**: None
-- **Referenced by**: None
-
----
-
-## account_lockout
-
-Account lockout tracking for security.
-
-### Columns
-
-| Column | Type | Nullable | Default | Description |
-|--------|------|----------|---------|-------------|
-| id | uuid | NO | gen_random_uuid() | Primary key |
-| identifier | text | NO | - | User identifier (email, phone, etc) |
-| lockout_type | text | NO | - | Type of lockout |
-| locked_until | timestamptz | NO | - | When lock expires (UTC) |
-| attempts | integer | NO | 0 | Number of failed attempts |
-| created_at | timestamptz | NO | now() | Lockout creation (UTC) |
-
-### Constraints
-
-- **Primary Key**: `id`
-
-### RLS
-
-- **Enabled**: Yes
-- **Policies**: Service role only
-
-### Used In
-
-- Authentication services
-- Prevent login for locked accounts
-
-### Lockout Scenarios
-
-- Too many failed login attempts
-- Suspicious activity detected
-- Manual admin lockout
 
 ### Related Tables
 
@@ -229,8 +185,7 @@ Active user sessions for tracking logged-in users.
 
 ### Used In
 
-- `src/services/authService.ts` - Session management
-- `src/hooks/useAuth.ts` - Check active session
+- Session management features
 
 ### Session Management
 
@@ -245,9 +200,60 @@ Active user sessions for tracking logged-in users.
 
 ---
 
+## account_lockout
+
+Account lockout tracking for preventing unauthorized access attempts.
+
+### Columns
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| id | uuid | NO | gen_random_uuid() | Primary key |
+| identifier | text | NO | - | IP address or user identifier being locked |
+| lockout_type | text | NO | - | Type of lockout (e.g., 'login', 'verification') |
+| locked_until | timestamptz | NO | - | When lockout expires (UTC) |
+| attempts | integer | NO | 0 | Number of failed attempts |
+| created_at | timestamptz | NO | now() | Lockout creation (UTC) |
+
+### Constraints
+
+- **Primary Key**: `id`
+- **Unique**: `(identifier, lockout_type)` (one lockout record per identifier/type combination)
+- **Foreign Keys**: None
+
+### Indexes
+
+- Unique composite index on `(identifier, lockout_type)`
+
+### RLS
+
+- **Enabled**: Yes
+- **Policies**: Service role only (not user-accessible)
+
+### Purpose
+
+This table provides enhanced account lockout functionality to prevent brute force attacks. When an identifier (IP address or user) exceeds the maximum number of failed authentication attempts, they are locked out until the `locked_until` timestamp expires.
+
+### Status
+
+**Currently Not Actively Used**
+
+The table exists in the database and has a corresponding `check_rate_limit_with_lockout()` function, but the current authentication flow uses the simpler `auth_rate_limits` table instead. This table is reserved for future enhanced security features.
+
+### Used In
+
+- Reserved for future use
+
+### Related Tables
+
+- **References**: None
+- **Referenced by**: None
+
+---
+
 ## Summary
 
-**Total Tables**: 5
+**Total Tables**: 5 (4 actively used, 1 reserved)
 
 **Key Relationships**:
 - `auth.users` ← `user_sessions.user_id` (one-to-many)

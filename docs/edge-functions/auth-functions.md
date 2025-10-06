@@ -77,7 +77,7 @@ Verify email with OTP code.
 - **Parameters**: `{ email: string, code: string }`
 - **Returns**: `{ success: boolean }`
 - **Database**: Updates `email_verification_codes.verified = true`
-- **Called From**: `src/components/auth/EmailVerification.tsx`
+- **Called From**: `src/utils/emailUtils.ts`
 
 **Flow**:
 1. Check code exists in `email_verification_codes` for email
@@ -97,7 +97,7 @@ Send email verification code via Resend.
 - **Returns**: `{ success: boolean, message: string }`
 - **Database**: Upsert into `email_verification_codes` with 10-minute expiry
 - **Email**: Send code via Resend API
-- **Called From**: `src/components/auth/EmailVerification.tsx`
+- **Called From**: `src/utils/emailUtils.ts`
 
 **Flow**:
 1. Generate 6-digit OTP
