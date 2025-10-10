@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -93,7 +92,8 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
             </div>
           )}
           
-          <div className="flex-1 py-4">
+          {/* Navigation and Logout Button Container - on mobile, no flex-1 to prevent pushing down */}
+          <div className={isMobile ? "py-4" : "flex-1 py-4"}>
             <nav className={`space-y-1 ${isMobile && !isOpen ? "px-1" : "px-4"}`}>
               <Link 
                 to="/profile" 
@@ -251,23 +251,26 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 {(!isMobile || isOpen) && "Notifications"}
               </Link>
             </nav>
+            
+            {/* Logout Button - directly under nav items when expanded on mobile */}
+            {(!isMobile || isOpen) && (
+              <div className={`${isMobile ? "px-4 pt-4" : "px-4 pt-2"}`}>
+                <Button 
+                  variant="outline" 
+                  className={`w-full transition-colors ${isMobile ? "h-12 text-base" : "h-10 text-sm"}`}
+                  onClick={() => {
+                    logout();
+                    if (isMobile) toggle();
+                  }}
+                >
+                  Log Out
+                </Button>
+              </div>
+            )}
           </div>
           
-          {/* Footer - only show in desktop or mobile expanded mode */}
-          {(!isMobile || isOpen) && (
-            <div className={`border-t ${isMobile ? "p-4" : "p-4"}`}>
-              <Button 
-                variant="outline" 
-                className={`w-full transition-colors ${isMobile ? "h-12 text-base" : "h-10 text-sm"}`}
-                onClick={() => {
-                  logout();
-                  if (isMobile) toggle();
-                }}
-              >
-                Log Out
-              </Button>
-            </div>
-          )}
+          {/* Spacer for desktop to push content down - only on desktop */}
+          {!isMobile && <div className="flex-1"></div>}
         </div>
       </div>
       

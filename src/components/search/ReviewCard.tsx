@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import BusinessReviewCardPhotos from "@/components/business/BusinessReviewCardPhotos";
-import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
+import { formatCustomerNameWithNickname, getNameInitials } from "@/utils/nameFormatter";
 import { getReviewerDisplayName, canParticipateInConversation } from "@/utils/anonymousReviewUtils";
 
 interface ReviewCardProps {
@@ -153,13 +153,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     });
   };
 
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -250,8 +244,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               {!review.is_anonymous && <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />}
-              <AvatarFallback className="bg-blue-100 text-blue-800">
-                {review.is_anonymous ? "AB" : getInitials(review.reviewerName)}
+              <AvatarFallback className={review.is_anonymous ? "bg-purple-100 text-purple-800 text-xl" : "bg-blue-100 text-blue-800"}>
+                {review.is_anonymous ? "🕵️" : getNameInitials(review.reviewerName)}
               </AvatarFallback>
             </Avatar>
             <div>

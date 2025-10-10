@@ -102,6 +102,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       rating: review.rating,
       content: review.content,
       customerName: review.customerName,
+      customer_nickname: (review as any).customer_nickname || '',
+      customer_business_name: (review as any).customer_business_name || '',
       phone: (review as any).customer_phone || (review as any).phone || (review as any).customerPhone || '',
       address: (review as any).customer_address || review.address || (review as any).customerAddress || '',
       city: (review as any).customer_city || review.city || (review as any).customerCity || '',

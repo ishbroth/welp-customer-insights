@@ -22,33 +22,58 @@ export const processProfileCustomers = async (profilesData: any[]): Promise<Cust
 
 export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] => {
   console.log("Processing review customers:", reviewsData.length);
-  
-  // Group reviews by customer identity (name + phone combination for better accuracy)
+
+  // Group reviews by customer identity - prioritize exact name matches
   const customerGroups = new Map<string, ReviewData[]>();
-  
+
   reviewsData.forEach(review => {
     if (!review.customer_name) return;
-    
-    // Create a more sophisticated grouping key
-    const phone = review.customer_phone?.replace(/\D/g, '') || '';
+
     const name = review.customer_name.toLowerCase().trim();
-    
-    // Use name + phone if phone exists, otherwise just name + address
-    let groupKey: string;
-    if (phone) {
-      groupKey = `${name}|${phone}`;
-    } else {
-      const address = review.customer_address?.toLowerCase().trim() || '';
-      const city = review.customer_city?.toLowerCase().trim() || '';
-      groupKey = `${name}|${address}|${city}`;
+    const phone = review.customer_phone?.replace(/\D/g, '') || '';
+    const address = review.customer_address?.toLowerCase().trim() || '';
+    const city = review.customer_city?.toLowerCase().trim() || '';
+
+    // Check if we already have a group with this exact name
+    let foundExistingGroup = false;
+    for (const [existingKey, existingReviews] of customerGroups.entries()) {
+      const existingName = existingReviews[0].customer_name.toLowerCase().trim();
+
+      // If names match exactly, check if we should group them together
+      if (existingName === name) {
+        const existingPhone = existingReviews[0].customer_phone?.replace(/\D/g, '') || '';
+        const existingAddress = existingReviews[0].customer_address?.toLowerCase().trim() || '';
+        const existingCity = existingReviews[0].customer_city?.toLowerCase().trim() || '';
+
+        // Group together if: same phone, OR same address+city, OR both have no phone/address
+        const phoneMatch = phone && existingPhone && phone === existingPhone;
+        const addressMatch = address && existingAddress && city && existingCity &&
+                           address === existingAddress && city === existingCity;
+        const bothMissingInfo = !phone && !existingPhone && !address && !existingAddress;
+
+        if (phoneMatch || addressMatch || bothMissingInfo) {
+          customerGroups.get(existingKey)!.push(review);
+          foundExistingGroup = true;
+          break;
+        }
+      }
     }
-    
-    if (!customerGroups.has(groupKey)) {
-      customerGroups.set(groupKey, []);
+
+    // If no existing group found, create a new one
+    if (!foundExistingGroup) {
+      let groupKey: string;
+      if (phone) {
+        groupKey = `${name}|${phone}`;
+      } else if (address && city) {
+        groupKey = `${name}|${address}|${city}`;
+      } else {
+        groupKey = `${name}|${Math.random()}`; // Fallback to prevent collisions
+      }
+
+      customerGroups.set(groupKey, [review]);
     }
-    customerGroups.get(groupKey)!.push(review);
   });
-  
+
   console.log(`Grouped ${reviewsData.length} reviews into ${customerGroups.size} customer groups`);
   
   // Convert groups to Customer objects

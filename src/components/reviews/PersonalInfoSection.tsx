@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,7 +29,12 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
   setCustomerNickname,
   setCustomerBusinessName,
 }) => {
-  const [isBusinessCustomer, setIsBusinessCustomer] = useState(false);
+  const [isBusinessCustomer, setIsBusinessCustomer] = useState(!!customerBusinessName);
+
+  // Sync checkbox state when customerBusinessName changes (e.g., when loading edit data)
+  useEffect(() => {
+    setIsBusinessCustomer(!!customerBusinessName);
+  }, [customerBusinessName]);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

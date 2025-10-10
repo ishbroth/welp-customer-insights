@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReviewMatchQualityScore from "@/components/customer/ReviewMatchQualityScore";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getNameInitials } from "@/utils/nameFormatter";
 
 interface CustomerInfo {
   name: string;
@@ -79,13 +80,7 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
       zipCode: customerProfile.zipcode || customerInfo.zipCode
     };
   }, [customerInfo, customerProfile]);
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "C";
-  };
+
 
   const getSizeClasses = () => {
     switch (size) {
@@ -120,7 +115,7 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
           <AvatarImage src={enhancedCustomerInfo.avatar} alt={enhancedCustomerInfo.name} />
         ) : null}
         <AvatarFallback className="bg-gray-100 text-gray-600">
-          {getInitials(enhancedCustomerInfo.name)}
+          {getNameInitials(enhancedCustomerInfo.name)}
         </AvatarFallback>
       </Avatar>
       

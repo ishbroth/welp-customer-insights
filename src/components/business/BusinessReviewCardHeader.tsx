@@ -4,7 +4,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Review } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
+import { formatCustomerNameWithNickname, getNameInitials } from "@/utils/nameFormatter";
 import { Eye } from "lucide-react";
 
 interface BusinessReviewCardHeaderProps {
@@ -120,13 +120,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     is_anonymous_type: typeof review.is_anonymous
   });
 
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "B";
-  };
+
 
   const truncateBusinessName = (name: string, maxLength: number = 10) => {
     if (name.length <= maxLength) return name;
@@ -198,8 +192,8 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
           <div className="flex items-center space-x-1 ml-2">
             <Avatar className="h-6 w-6">
               {!review.is_anonymous && <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />}
-              <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-                {review.is_anonymous ? "AB" : getInitials(businessInfo.name)}
+              <AvatarFallback className={review.is_anonymous ? "bg-purple-100 text-purple-800 text-sm" : "bg-blue-100 text-blue-800 text-xs"}>
+                {review.is_anonymous ? "🕵️" : getNameInitials(businessInfo.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-end">

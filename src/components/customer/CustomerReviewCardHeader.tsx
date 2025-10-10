@@ -1,7 +1,7 @@
-
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { getNameInitials } from "@/utils/nameFormatter";
 
 interface BusinessInfo {
   name: string;
@@ -34,13 +34,7 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
   onBusinessNameClick,
   onCustomerClick,
 }) => {
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -71,7 +65,7 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
                 <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
               ) : null}
               <AvatarFallback className="bg-gray-100 text-gray-600">
-                {getInitials(customerInfo.name)}
+                {getNameInitials(customerInfo.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -94,8 +88,8 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
           <div className="flex items-center space-x-1 ml-2">
             <Avatar className="h-6 w-6">
               {!isAnonymous && <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />}
-              <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-                {isAnonymous ? "AB" : getInitials(businessInfo.name)}
+              <AvatarFallback className={isAnonymous ? "bg-purple-100 text-purple-800 text-sm" : "bg-blue-100 text-blue-800 text-xs"}>
+                {isAnonymous ? "🕵️" : getNameInitials(businessInfo.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-end">
@@ -126,7 +120,7 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
               <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
             ) : null}
             <AvatarFallback className="bg-gray-100 text-gray-600">
-              {getInitials(customerInfo.name)}
+            {getNameInitials(customerInfo.name)}
             </AvatarFallback>
           </Avatar>
           <div>
@@ -149,8 +143,8 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
         <div className="flex items-center space-x-2">
           <Avatar className="h-8 w-8">
             {!isAnonymous && <AvatarImage src={businessInfo.avatar} alt={businessInfo.name} />}
-            <AvatarFallback className="bg-blue-100 text-blue-800 text-xs">
-              {isAnonymous ? "AB" : getInitials(businessInfo.name)}
+            <AvatarFallback className={isAnonymous ? "bg-purple-100 text-purple-800 text-base" : "bg-blue-100 text-blue-800 text-xs"}>
+              {isAnonymous ? "🕵️" : getNameInitials(businessInfo.name)}
             </AvatarFallback>
           </Avatar>
           <div>
