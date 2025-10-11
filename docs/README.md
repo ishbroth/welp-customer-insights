@@ -22,6 +22,7 @@ Every AI agent working on this project MUST follow this exact workflow before wr
 - Supabase backend (PostgreSQL, Auth, Storage)
 - Stripe for billing
 - Resend for all email (NO Twilio)
+- **Logging: Use logger utility (src/utils/logger.ts) - NO console.log**
 
 ### Step 2: Ask User for Task
 
@@ -163,6 +164,9 @@ From AI-CODING-GUIDELINES.md:
 - Add legacy comments ("used to be...")
 - Reference Twilio (we use Resend)
 - Create pointless documentation
+- **Use console.log, console.debug, console.info (use logger utility)**
+- Add fallback mechanisms or backwards compatibility code
+- Add test files or unit test frameworks
 
 ✅ **ALWAYS**:
 - Verify with MCP before documenting
@@ -172,6 +176,9 @@ From AI-CODING-GUIDELINES.md:
 - Use real code pointers (exact file paths)
 - Run VALIDATION-CHECKLIST.md after every task
 - Complete tasks fully
+- **Use logger utility for all logging (import from '@/utils/logger')**
+- **Create contextual loggers: const logger = logger.withContext('ComponentName')**
+- **Use appropriate log levels: debug(), info(), warn(), error()**
 
 ---
 

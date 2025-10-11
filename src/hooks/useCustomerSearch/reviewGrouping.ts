@@ -1,6 +1,9 @@
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { ReviewData } from "./types";
+import { logger } from "@/utils/logger";
+
+const hookLogger = logger.withContext('ReviewGrouping');
 
 interface GroupedReview extends ReviewData {
   matchingReviews: ReviewData[];
@@ -42,31 +45,31 @@ const areReviewsForSameCustomer = (review1: ReviewData, review2: ReviewData): bo
   // NEW LOGIC: Group reviews if ANY strong matching criteria is met
   // Phone match alone is sufficient (strong identifier)
   if (phoneMatch) {
-    console.log(`Phone match found between reviews: ${cleanPhone1}`);
+    hookLogger.debug(`Phone match found between reviews: ${cleanPhone1}`);
     return true;
   }
-  
+
   // Address + zip match is sufficient (location-based matching)
   if (addressMatch && zipMatch) {
-    console.log(`Address + zip match found: ${address1} in ${zip1}`);
+    hookLogger.debug(`Address + zip match found: ${address1} in ${zip1}`);
     return true;
   }
-  
+
   // Name + address match is sufficient
   if (nameMatch && addressMatch) {
-    console.log(`Name + address match found: ${name1} at ${address1}`);
+    hookLogger.debug(`Name + address match found: ${name1} at ${address1}`);
     return true;
   }
-  
+
   // Name + zip match is sufficient
   if (nameMatch && zipMatch) {
-    console.log(`Name + zip match found: ${name1} in ${zip1}`);
+    hookLogger.debug(`Name + zip match found: ${name1} in ${zip1}`);
     return true;
   }
-  
+
   // Name + phone match is sufficient
   if (nameMatch && phoneMatch) {
-    console.log(`Name + phone match found: ${name1} with ${cleanPhone1}`);
+    hookLogger.debug(`Name + phone match found: ${name1} with ${cleanPhone1}`);
     return true;
   }
   
@@ -108,8 +111,8 @@ const mergeCustomerData = (reviews: ReviewData[]): Partial<ReviewData> => {
 export const groupReviewsByCustomer = (reviews: ReviewData[]): GroupedReview[] => {
   const groupedReviews: GroupedReview[] = [];
   const processedReviewIds = new Set<string>();
-  
-  console.log(`Starting review grouping for ${reviews.length} reviews`);
+
+  hookLogger.debug(`Starting review grouping for ${reviews.length} reviews`);
   
   for (const review of reviews) {
     // Skip if this review has already been processed
@@ -147,13 +150,13 @@ export const groupReviewsByCustomer = (reviews: ReviewData[]): GroupedReview[] =
       // Update the rating to be the average
       rating: averageRating
     };
-    
-    console.log(`Grouped ${matchingReviews.length} reviews for customer: ${mergedCustomerData.customer_name || 'Unknown'}, Phone: ${mergedCustomerData.customer_phone || 'N/A'}, Address: ${mergedCustomerData.customer_address || 'N/A'}, Average rating: ${averageRating.toFixed(1)}`);
-    
+
+    hookLogger.debug(`Grouped ${matchingReviews.length} reviews for customer: ${mergedCustomerData.customer_name || 'Unknown'}, Phone: ${mergedCustomerData.customer_phone || 'N/A'}, Address: ${mergedCustomerData.customer_address || 'N/A'}, Average rating: ${averageRating.toFixed(1)}`);
+
     groupedReviews.push(groupedReview);
   }
-  
-  console.log(`Review grouping complete: ${reviews.length} reviews grouped into ${groupedReviews.length} customers`);
+
+  hookLogger.debug(`Review grouping complete: ${reviews.length} reviews grouped into ${groupedReviews.length} customers`);
   
   return groupedReviews;
 };

@@ -244,7 +244,6 @@ export const getFallbackReviews = (): Review[] => {
       zipCode: "85001",
       customer_phone: "(602) 555-0321",
       is_anonymous: false,
-      is_anonymous: false,
       reactions: { like: [], funny: [], ohNo: [] }
     },
     {

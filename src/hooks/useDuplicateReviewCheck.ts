@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Review } from "@/types";
 import { compareAddresses } from "@/utils/addressNormalization";
+import { logger } from "@/utils/logger";
 
 interface ExistingReview {
   id: string;
@@ -38,6 +39,7 @@ const phonesMatch = (phone1: string | null | undefined, phone2: string | null | 
 };
 
 export const useDuplicateReviewCheck = () => {
+  const hookLogger = logger.withContext('DuplicateReviewCheck');
   const { currentUser } = useAuth();
   const [isChecking, setIsChecking] = useState(false);
 
@@ -73,60 +75,60 @@ export const useDuplicateReviewCheck = () => {
         .ilike('customer_name', `%${customerName}%`);
 
       if (error) {
-        console.error("Error checking for duplicate review:", error);
+        hookLogger.error("Error checking for duplicate review:", error);
         return null;
       }
 
       // If we find a review with matching name and other details, consider it a duplicate
       if (existingReviews && existingReviews.length > 0) {
-        console.log("=== DUPLICATE REVIEW CHECK DEBUG ===");
-        console.log("Customer data:", customerData);
-        console.log("Existing reviews found:", existingReviews.length);
-        
+        hookLogger.debug("=== DUPLICATE REVIEW CHECK DEBUG ===");
+        hookLogger.debug("Customer data:", customerData);
+        hookLogger.debug("Existing reviews found:", existingReviews.length);
+
         const match = existingReviews.find(review => {
-          console.log("Checking review:", {
+          hookLogger.debug("Checking review:", {
             id: review.id,
             customer_name: review.customer_name,
             customer_phone: review.customer_phone,
             customer_address: review.customer_address
           });
-          
+
           const nameMatch = review.customer_name?.toLowerCase().includes(customerName.toLowerCase());
-          console.log("Name match:", nameMatch);
-          
+          hookLogger.debug("Name match:", nameMatch);
+
           // Use enhanced phone matching
           const phoneMatch = phonesMatch(review.customer_phone, customerData.phone);
-          console.log("Phone match:", phoneMatch, {
+          hookLogger.debug("Phone match:", phoneMatch, {
             existing: review.customer_phone,
             new: customerData.phone
           });
-          
+
           // Use fuzzy address matching with 80% similarity threshold
           const addressMatch = compareAddresses(
-            review.customer_address || '', 
-            customerData.address, 
+            review.customer_address || '',
+            customerData.address,
             0.8
           );
-          console.log("Address match:", addressMatch, {
+          hookLogger.debug("Address match:", addressMatch, {
             existing: review.customer_address,
             new: customerData.address
           });
-          
+
           const isMatch = nameMatch && (phoneMatch || addressMatch);
-          console.log("Overall match result:", isMatch);
-          
+          hookLogger.debug("Overall match result:", isMatch);
+
           return isMatch;
         });
 
-        console.log("Final match result:", match ? "DUPLICATE FOUND" : "NO DUPLICATE");
-        console.log("=== DUPLICATE REVIEW CHECK DEBUG END ===");
+        hookLogger.debug("Final match result:", match ? "DUPLICATE FOUND" : "NO DUPLICATE");
+        hookLogger.debug("=== DUPLICATE REVIEW CHECK DEBUG END ===");
         
         return match || null;
       }
 
       return null;
     } catch (error) {
-      console.error("Error checking for duplicate review:", error);
+      hookLogger.error("Error checking for duplicate review:", error);
       return null;
     } finally {
       setIsChecking(false);

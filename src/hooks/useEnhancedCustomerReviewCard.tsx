@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
+import { logger } from "@/utils/logger";
 
 interface DetailedMatch {
   field: string;
@@ -30,6 +31,7 @@ export const useEnhancedCustomerReviewCard = ({
   businessCategory,
   actualBusinessName,
 }: any) => {
+  const hookLogger = logger.withContext('EnhancedCustomerReviewCard');
   const { toast } = useToast();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -55,7 +57,7 @@ export const useEnhancedCustomerReviewCard = ({
           .single();
 
         if (businessError) {
-          console.error("Error fetching business profile:", businessError);
+          hookLogger.error("Error fetching business profile:", businessError);
         } else {
           setBusinessProfile(businessData);
         }
@@ -69,7 +71,7 @@ export const useEnhancedCustomerReviewCard = ({
           .single();
 
         if (customerError) {
-          console.error("Error fetching customer profile:", customerError);
+          hookLogger.error("Error fetching customer profile:", customerError);
         } else {
           setCustomerProfile(customerData);
         }
@@ -126,7 +128,7 @@ export const useEnhancedCustomerReviewCard = ({
         description: "This review is now linked to your profile.",
       });
     } catch (error) {
-      console.error("Error claiming review:", error);
+      hookLogger.error("Error claiming review:", error);
       toast({
         title: "Error",
         description: "Failed to claim this review.",

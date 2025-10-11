@@ -1,6 +1,9 @@
 
 import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { analyzeFieldCombination } from "./fieldCombinationRules";
+import { logger } from "@/utils/logger";
+
+const hookLogger = logger.withContext('ReviewFiltering');
 
 interface ScoredReview {
   searchScore: number;
@@ -103,12 +106,12 @@ export const filterAndSortReviews = (
     minMatches = REVIEW_SEARCH_CONFIG.MINIMUM_MATCHES_MULTI_FIELD;
   }
 
-  console.log(`🔍 Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}, fieldCombination=${fieldCombination?.combinationType}`);
-  console.log(`🔍 Total reviews to filter: ${scoredReviews.length}`);
+  hookLogger.debug(`Review filtering: minScore=${minScore}, minMatches=${minMatches}, isSingleField=${isSingleFieldSearch}, context=${JSON.stringify(searchContext)}, fieldCombination=${fieldCombination?.combinationType}`);
+  hookLogger.debug(`Total reviews to filter: ${scoredReviews.length}`);
 
   const filteredReviews = scoredReviews
     .filter(review => {
-      console.log(`🔍 Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}", city="${review.customer_city}", state="${review.customer_state}"`);
+      hookLogger.debug(`Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}", city="${review.customer_city}", state="${review.customer_state}"`);
       
       // Special handling for address+state searches
       if (searchContext?.isAddressWithState) {
@@ -116,13 +119,14 @@ export const filterAndSortReviews = (
         const hasAddressInDetailedMatches = review.detailedMatches?.some(match => 
           match.field === 'Address' && match.similarity >= 0.6
         );
-        
+
+
         if (hasAddressInDetailedMatches) {
-          console.log(`✅ Review ${review.id} passes (address+state search with address match)`);
+          hookLogger.debug(`Review ${review.id} passes (address+state search with address match)`);
           return true;
         } else {
           // Reject reviews that don't have meaningful address matches
-          console.log(`❌ Review ${review.id} filtered out (address+state search, no substantial address match)`);
+          hookLogger.debug(`Review ${review.id} filtered out (address+state search, no substantial address match)`);
           return false;
         }
       }
@@ -132,16 +136,17 @@ export const filterAndSortReviews = (
         // Prioritize exact phone matches heavily
         const hasPhoneMatch = searchParams?.phone && review.customer_phone && 
           review.customer_phone.replace(/\D/g, '') === searchParams.phone.replace(/\D/g, '');
-        
+
+
         if (hasPhoneMatch) {
           // Allow any phone match through, regardless of location score
-          console.log(`✅ Review ${review.id} passes (exact phone match)`);
+          hookLogger.debug(`Review ${review.id} passes (exact phone match)`);
           return true;
         } else {
           // For non-phone matches in phone+location searches, require very high location scores
           const passes = review.searchScore >= 30 && review.matchCount >= minMatches;
           if (!passes) {
-            console.log(`❌ Review ${review.id} filtered out (phone+location search, no phone match, low location score: ${review.searchScore})`);
+            hookLogger.debug(`Review ${review.id} filtered out (phone+location search, no phone match, low location score: ${review.searchScore})`);
           }
           return passes;
         }
@@ -152,7 +157,7 @@ export const filterAndSortReviews = (
         // For strict location-only searches, require BOTH high score AND matches
         const passes = review.searchScore >= minScore && review.matchCount >= minMatches;
         if (!passes) {
-          console.log(`❌ Review ${review.id} filtered out (location-only strict: score ${review.searchScore} < ${minScore} OR matches ${review.matchCount} < ${minMatches})`);
+          hookLogger.debug(`Review ${review.id} filtered out (location-only strict: score ${review.searchScore} < ${minScore} OR matches ${review.matchCount} < ${minMatches})`);
         }
         return passes;
       }
@@ -161,7 +166,7 @@ export const filterAndSortReviews = (
       if (isSingleFieldSearch) {
         const passes = review.searchScore >= minScore || review.matchCount >= minMatches;
         if (!passes) {
-          console.log(`❌ Review ${review.id} filtered out (single field)`);
+          hookLogger.debug(`Review ${review.id} filtered out (single field)`);
         }
         return passes;
       }
@@ -173,11 +178,11 @@ export const filterAndSortReviews = (
         if (searchContext?.hasName) {
           const hasExactNameMatch = review.exactMatchDetails?.find(m => m.field === 'name')?.isExact;
           if (hasExactNameMatch) {
-            console.log(`✅ Review ${review.id} AUTO-QUALIFIED: ${review.exactFieldMatches} exact field matches including name`);
+            hookLogger.debug(`Review ${review.id} AUTO-QUALIFIED: ${review.exactFieldMatches} exact field matches including name`);
             return true; // Auto-qualify: 3+ exact matches including name
           }
         } else {
-          console.log(`✅ Review ${review.id} AUTO-QUALIFIED: ${review.exactFieldMatches} exact field matches (no name required)`);
+          hookLogger.debug(`Review ${review.id} AUTO-QUALIFIED: ${review.exactFieldMatches} exact field matches (no name required)`);
           return true; // Auto-qualify: 3+ exact matches, no name required
         }
       }
@@ -191,9 +196,10 @@ export const filterAndSortReviews = (
         const hasCityMatch = review.detailedMatches?.some(match => 
           match.field === 'City' && (match.similarity >= 0.3 || match.matchType === 'proximity')
         );
-        
+
+
         if (!hasCityMatch) {
-          console.log(`❌ Review ${review.id} rejected - City "${searchParams.city}" required but not matched`);
+          hookLogger.debug(`Review ${review.id} rejected - City "${searchParams.city}" required but not matched`);
           return false;
         }
       }
@@ -201,7 +207,7 @@ export const filterAndSortReviews = (
       // For name-focused and multi-field searches, require both minimum score AND minimum matches
       const passes = review.searchScore >= minScore && review.matchCount >= minMatches;
       if (!passes) {
-        console.log(`❌ Review ${review.id} filtered out (score: ${review.searchScore} < ${minScore} OR matches: ${review.matchCount} < ${minMatches})`);
+        hookLogger.debug(`Review ${review.id} filtered out (score: ${review.searchScore} < ${minScore} OR matches: ${review.matchCount} < ${minMatches})`);
       }
       return passes;
     })
@@ -263,8 +269,8 @@ export const filterAndSortReviews = (
 };
 
 export const logSearchResults = (reviews: ScoredReview[]): void => {
-  console.log("Enhanced review search results:", reviews.length);
+  hookLogger.debug("Enhanced review search results:", reviews.length);
   reviews.forEach((review, index) => {
-    console.log(`${index + 1}. Review: ${review.customer_name}, Score: ${review.searchScore}, Matches: ${review.matchCount}, Completeness: ${review.completenessScore}%, Business Verified: ${review.reviewerVerified || false}, Customer Verified: ${review.customerVerified || false}, Date: ${review.created_at}`);
+    hookLogger.debug(`${index + 1}. Review: ${review.customer_name}, Score: ${review.searchScore}, Matches: ${review.matchCount}, Completeness: ${review.completenessScore}%, Business Verified: ${review.reviewerVerified || false}, Customer Verified: ${review.customerVerified || false}, Date: ${review.created_at}`);
   });
 };

@@ -1,4 +1,7 @@
 import { calculateStringSimilarity, calculateNameSimilarity } from "@/utils/stringSimilarity";
+import { logger } from "@/utils/logger";
+
+const hookLogger = logger.withContext('FieldCombinationRules');
 
 export interface FieldCombinationContext {
   searchParams: {
@@ -117,40 +120,40 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
     validate: (context, reviewData) => {
       // Single name + location requires HIGH name similarity AND EXACT location match
       const searchName = (context.hasFirstName ? context.searchParams.firstName : context.searchParams.lastName) || '';
-      const nameSimilarity = reviewData.customer_name ? 
+      const nameSimilarity = reviewData.customer_name ?
         calculateNameSimilarity(searchName, reviewData.customer_name) : 0;
-      
-      console.log(`[SINGLE_NAME_LOCATION] Name similarity: "${searchName}" vs "${reviewData.customer_name}" = ${nameSimilarity}`);
-      
+
+      hookLogger.debug(`[SINGLE_NAME_LOCATION] Name similarity: "${searchName}" vs "${reviewData.customer_name}" = ${nameSimilarity}`);
+
       // Higher threshold for single name searches to prevent wrong matches like "Isaac Wiley"
       if (nameSimilarity < 0.75) {
-        console.log(`[SINGLE_NAME_LOCATION] Name similarity ${nameSimilarity} below threshold 0.75 - REJECTED`);
+        hookLogger.debug(`[SINGLE_NAME_LOCATION] Name similarity ${nameSimilarity} below threshold 0.75 - REJECTED`);
         return false;
       }
-      
+
       // Require EXACT location matches for single name searches
       let hasExactLocationMatch = false;
-      
+
       // Exact ZIP match
       if (context.hasZipCode && reviewData.customer_zipcode) {
         const searchZip = context.searchParams.zipCode?.replace(/\D/g, '') || '';
         const reviewZip = reviewData.customer_zipcode.replace(/\D/g, '');
         if (searchZip && reviewZip && searchZip === reviewZip) {
-          console.log(`[SINGLE_NAME_LOCATION] Exact ZIP match: ${searchZip}`);
+          hookLogger.debug(`[SINGLE_NAME_LOCATION] Exact ZIP match: ${searchZip}`);
           hasExactLocationMatch = true;
         }
       }
-      
+
       // Exact state match
       if (context.hasState && reviewData.business_state) {
         const searchState = context.searchParams.state?.toLowerCase().trim() || '';
         const businessState = reviewData.business_state.toLowerCase().trim();
         if (searchState === businessState) {
-          console.log(`[SINGLE_NAME_LOCATION] Exact state match: ${searchState}`);
+          hookLogger.debug(`[SINGLE_NAME_LOCATION] Exact state match: ${searchState}`);
           hasExactLocationMatch = true;
         }
       }
-      
+
       // High city similarity (still allow some fuzzy matching for cities)
       if (context.hasCity && reviewData.customer_city) {
         const citySimilarity = calculateStringSimilarity(
@@ -158,17 +161,17 @@ export const FIELD_COMBINATION_RULES: FieldCombinationRule[] = [
           reviewData.customer_city.toLowerCase()
         );
         if (citySimilarity >= 0.9) {
-          console.log(`[SINGLE_NAME_LOCATION] High city similarity: ${citySimilarity}`);
+          hookLogger.debug(`[SINGLE_NAME_LOCATION] High city similarity: ${citySimilarity}`);
           hasExactLocationMatch = true;
         }
       }
-      
+
       if (!hasExactLocationMatch) {
-        console.log(`[SINGLE_NAME_LOCATION] No exact location match found - REJECTED`);
+        hookLogger.debug(`[SINGLE_NAME_LOCATION] No exact location match found - REJECTED`);
         return false;
       }
-      
-      console.log(`[SINGLE_NAME_LOCATION] ACCEPTED - Name: ${nameSimilarity}, Location match: true`);
+
+      hookLogger.debug(`[SINGLE_NAME_LOCATION] ACCEPTED - Name: ${nameSimilarity}, Location match: true`);
       return true;
     },
     minScoreRequired: 20,

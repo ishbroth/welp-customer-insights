@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
+import { logger } from "@/utils/logger";
 
 export const useProfileReviewsData = (customerReviews: any[], currentUser: any) => {
+  const hookLogger = logger.withContext('ProfileReviewsData');
   const [localReviews, setLocalReviews] = useState(customerReviews);
   const { isReviewUnlocked } = useReviewAccess();
   
@@ -11,7 +13,7 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
 
   // Update local reviews when customerReviews prop changes
   useEffect(() => {
-    console.log('🎯 useProfileReviewsData: Updating local reviews with new data', {
+    hookLogger.debug('useProfileReviewsData: Updating local reviews with new data', {
       newReviewsCount: customerReviews.length,
       claimedCount: customerReviews.filter(r => r.isClaimed).length
     });
@@ -39,7 +41,7 @@ export const useProfileReviewsData = (customerReviews: any[], currentUser: any) 
     claimedReviews = reviewsWithClaimStatus.filter(review => review.isClaimed === true);
     unclaimedReviews = reviewsWithClaimStatus.filter(review => review.isClaimed !== true);
 
-    console.log('🎯 useProfileReviewsData: Review categorization', {
+    hookLogger.debug('useProfileReviewsData: Review categorization', {
       totalReviews: localReviews.length,
       claimedReviews: claimedReviews.length,
       unclaimedReviews: unclaimedReviews.length,

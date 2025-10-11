@@ -563,15 +563,22 @@ try {
 
 ---
 
-### Console Logs
+### Logging
 
-**Never use console.log in production:**
-- ❌ `console.log()` statements in committed code
-- ❌ Debugging console statements left behind
-- ✅ Use proper logging utility if available
-- ✅ Remove all console statements before committing
+**ALWAYS use the logger utility (src/utils/logger.ts):**
+- ❌ `console.log()` - NEVER use this
+- ❌ `console.debug()` - NEVER use this
+- ❌ `console.info()` - NEVER use this
+- ❌ `console.error()` - Use logger.error() instead
+- ✅ `import { logger } from '@/utils/logger'`
+- ✅ Create contextual logger: `const moduleLogger = logger.withContext('ModuleName')`
+- ✅ Use appropriate levels: `logger.debug()`, `logger.info()`, `logger.warn()`, `logger.error()`
 
-**Exception:** `console.error()` for critical errors is acceptable if no logging utility exists.
+**Configuration:**
+- Dev log level: Configured in `src/config/logging.ts` (default: 'debug')
+- Production: Always 'error' level only (automatic)
+
+**NO exceptions. NO fallbacks. Use the logger utility.**
 
 ---
 
@@ -813,8 +820,10 @@ Before finishing any task, ask yourself:
 - [ ] Did I verify changes with MCP tools?
 - [ ] Did I remove any Twilio references?
 - [ ] Did I delete temp planning files?
-- [ ] Did I remove console.log statements?
+- [ ] Did I use logger utility (NO console.log/debug/info)?
 - [ ] Did I avoid adding severity labels?
+- [ ] Did I avoid creating unit tests or test files?
+- [ ] Did I avoid adding legacy comments or fallback code?
 - [ ] Did I use TypeScript strictly (no `any`)?
 - [ ] Did I handle errors gracefully?
 - [ ] Did I use real code pointers in docs?
