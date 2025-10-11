@@ -1,45 +1,47 @@
 /**
  * Centralized Logging Configuration
  *
- * Control log levels for the entire application from one place.
- * Change LOG_LEVEL here when troubleshooting issues.
+ * Environment-aware logging that automatically adjusts verbosity:
+ * - Local development (localhost): Verbose debug logging
+ * - GitHub/Deployed: Errors only
  *
  * Log Levels (from most to least verbose):
  * - 'debug': Everything (detailed debugging)
  * - 'info': General information + warnings + errors
  * - 'warn': Warnings + errors only
  * - 'error': Errors only
- *
- * Usage:
- *   Development: Uses LOG_LEVEL setting below (default: 'debug')
- *   Production: Always 'error' (cannot be changed)
  */
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 /**
- * CHANGE THIS WHEN TROUBLESHOOTING
- *
- * Set to desired log level for development:
- * - 'debug' - See everything (default for development)
- * - 'info' - See info, warnings, and errors
- * - 'warn' - See only warnings and errors
- * - 'error' - See only errors
+ * Detect if running on local development machine
+ * Returns true only when running on localhost (developer machine)
+ * Returns false for all deployed environments (GitHub, production, etc.)
  */
-export const DEV_LOG_LEVEL: LogLevel = 'debug';
+function isLocalDevelopment(): boolean {
+  // Check if in development mode
+  const isDevelopmentMode = import.meta.env.MODE === 'development' || import.meta.env.DEV;
 
-/**
- * Production always uses 'error' level - cannot be changed
- * Only errors will appear in production builds
- */
-export const PROD_LOG_LEVEL: LogLevel = 'error';
+  // Check if running on localhost
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.') ||
+    window.location.hostname.startsWith('10.') ||
+    window.location.hostname.endsWith('.local')
+  );
+
+  return isDevelopmentMode && isLocalhost;
+}
 
 /**
  * Get the current log level based on environment
+ * - Local development: 'debug' (verbose)
+ * - All other environments: 'error' (errors only)
  */
 export function getCurrentLogLevel(): LogLevel {
-  const isDevelopment = import.meta.env.MODE === 'development' || import.meta.env.DEV;
-  return isDevelopment ? DEV_LOG_LEVEL : PROD_LOG_LEVEL;
+  return isLocalDevelopment() ? 'debug' : 'error';
 }
 
 /**
