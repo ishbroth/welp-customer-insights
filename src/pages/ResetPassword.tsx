@@ -9,8 +9,10 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 const ResetPassword = () => {
+  const pageLogger = logger.withContext('ResetPassword');
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,32 +23,32 @@ const ResetPassword = () => {
 
   // Check if we have a valid reset session on component mount
   useEffect(() => {
-    console.log("ResetPassword component mounted");
-    console.log("Current URL:", window.location.href);
-    console.log("Search params:", Object.fromEntries(searchParams.entries()));
-    
+    pageLogger.debug("ResetPassword component mounted");
+    pageLogger.debug("Current URL:", window.location.href);
+    pageLogger.debug("Search params:", Object.fromEntries(searchParams.entries()));
+
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log("Current session:", session);
-        console.log("Session error:", error);
-        
+        pageLogger.debug("Current session:", session);
+        pageLogger.debug("Session error:", error);
+
         if (error) {
-          console.error("Session error:", error);
+          pageLogger.error("Session error:", error);
           setIsValidSession(false);
           return;
         }
-        
+
         // For password reset, we need an active session
         if (session && session.user) {
-          console.log("Valid reset session found for user:", session.user.email);
+          pageLogger.debug("Valid reset session found for user:", session.user.email);
           setIsValidSession(true);
         } else {
-          console.log("No valid session for password reset");
+          pageLogger.debug("No valid session for password reset");
           setIsValidSession(false);
         }
       } catch (error) {
-        console.error("Error checking session:", error);
+        pageLogger.error("Error checking session:", error);
         setIsValidSession(false);
       }
     };
@@ -55,16 +57,16 @@ const ResetPassword = () => {
 
     // Also listen for auth state changes in case the session is established after component mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
-      
+      pageLogger.debug("Auth state changed:", event, session);
+
       if (event === 'PASSWORD_RECOVERY') {
-        console.log("Password recovery event detected");
+        pageLogger.debug("Password recovery event detected");
         setIsValidSession(true);
       } else if (session && session.user) {
-        console.log("Session established for user:", session.user.email);
+        pageLogger.debug("Session established for user:", session.user.email);
         setIsValidSession(true);
       } else if (event === 'SIGNED_OUT') {
-        console.log("User signed out");
+        pageLogger.debug("User signed out");
         setIsValidSession(false);
       }
     });
@@ -108,9 +110,9 @@ const ResetPassword = () => {
       const { error } = await supabase.auth.updateUser({
         password: password
       });
-      
+
       if (error) {
-        console.error("Password update error:", error);
+        pageLogger.error("Password update error:", error);
         toast({
           title: "Error",
           description: error.message,
@@ -121,7 +123,7 @@ const ResetPassword = () => {
           title: "Password Updated",
           description: "Your password has been successfully updated.",
         });
-        
+
         // Redirect to login page after successful password reset
         navigate("/login", {
           state: {
@@ -130,7 +132,7 @@ const ResetPassword = () => {
         });
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      pageLogger.error("Unexpected error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

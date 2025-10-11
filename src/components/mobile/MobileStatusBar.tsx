@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { useTheme } from 'next-themes';
+import { logger } from '@/utils/logger';
 
 interface MobileStatusBarProps {
   backgroundColor?: string;
@@ -12,6 +13,7 @@ const MobileStatusBar: React.FC<MobileStatusBarProps> = ({
   backgroundColor,
   overlay = false
 }) => {
+  const componentLogger = logger.withContext('MobileStatusBar');
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -34,7 +36,7 @@ const MobileStatusBar: React.FC<MobileStatusBarProps> = ({
         // Configure overlay mode
         await StatusBar.setOverlaysWebView({ overlay });
       } catch (error) {
-        console.error('StatusBar configuration error:', error);
+        componentLogger.error('StatusBar configuration error', { error });
       }
     };
 

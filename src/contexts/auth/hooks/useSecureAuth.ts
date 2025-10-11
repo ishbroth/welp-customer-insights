@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkRateLimitWithLockout, logSecurityEvent } from '@/utils/rateLimiting';
 import { isValidEmail, validatePassword, sanitizeFormInput, containsSQLInjection } from '@/utils/enhancedSecurityHelpers';
 import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('SecureAuth');
 
 export const useSecureAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -53,9 +56,9 @@ export const useSecureAuth = () => {
       }
       
       return { success: true, data };
-      
+
     } catch (error) {
-      console.error('Login error:', error);
+      authLogger.error('Login error:', error);
       await logSecurityEvent('login_error', `Login system error`, undefined, { error: error.message });
       return { success: false, error: 'An unexpected error occurred during login' };
     } finally {
@@ -131,9 +134,9 @@ export const useSecureAuth = () => {
       }
       
       return { success: true, data };
-      
+
     } catch (error) {
-      console.error('Signup error:', error);
+      authLogger.error('Signup error:', error);
       await logSecurityEvent('signup_error', `Signup system error`, undefined, { error: error.message });
       return { success: false, error: 'An unexpected error occurred during signup' };
     } finally {
@@ -182,9 +185,9 @@ export const useSecureAuth = () => {
       
       await logSecurityEvent('password_reset_requested', `Password reset requested for email: ${sanitizedEmail}`);
       return { success: true, data };
-      
+
     } catch (error) {
-      console.error('Password reset error:', error);
+      authLogger.error('Password reset error:', error);
       await logSecurityEvent('password_reset_error', `Password reset system error`, undefined, { error: error.message });
       return { success: false, error: 'An unexpected error occurred during password reset' };
     } finally {

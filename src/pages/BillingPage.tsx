@@ -14,8 +14,10 @@ import CurrentSubscriptionCard from "@/components/billing/CurrentSubscriptionCar
 import CreditsBalanceCard from "@/components/billing/CreditsBalanceCard";
 import PaymentMethodsCard from "@/components/billing/PaymentMethodsCard";
 import TransactionHistoryCard from "@/components/billing/TransactionHistoryCard";
+import { logger } from '@/utils/logger';
 
 const BillingPage = () => {
+  const pageLogger = logger.withContext('BillingPage');
   const { currentUser } = useAuth();
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,7 +36,7 @@ const BillingPage = () => {
     try {
       await openCustomerPortal();
     } catch (error) {
-      console.error("Failed to open customer portal:", error);
+      pageLogger.error("Failed to open customer portal:", error);
       toast.error("Failed to open customer portal. Please try again.");
     } finally {
       setIsLoadingPortal(false);

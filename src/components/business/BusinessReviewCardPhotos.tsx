@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import PhotoGallery from "@/components/reviews/PhotoGallery";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface ReviewPhoto {
   id: string;
@@ -17,6 +18,7 @@ interface BusinessReviewCardPhotosProps {
 const BusinessReviewCardPhotos: React.FC<BusinessReviewCardPhotosProps> = ({
   reviewId,
 }) => {
+  const componentLogger = logger.withContext('BusinessReviewCardPhotos');
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const BusinessReviewCardPhotos: React.FC<BusinessReviewCardPhotosProps> = ({
         .order('display_order');
 
       if (error) {
-        console.error("Error fetching review photos:", error);
+        componentLogger.error("Error fetching review photos:", error);
       } else {
         setPhotos(data || []);
       }

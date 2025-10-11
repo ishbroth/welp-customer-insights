@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkRateLimitWithLockout, logSecurityEvent } from '@/utils/rateLimiting';
 import { isValidVerificationCode, containsSQLInjection, sanitizeFormInput } from '@/utils/enhancedSecurityHelpers';
 import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
 
 export const useSecureVerification = () => {
+  const hookLogger = logger.withContext('useSecureVerification');
   const [loading, setLoading] = useState(false);
 
   const secureVerifyCode = async (code: string, identifier: string, type: 'phone' | 'email' = 'phone') => {
@@ -59,7 +61,7 @@ export const useSecureVerification = () => {
       return { success: true, data };
       
     } catch (error) {
-      console.error('Verification error:', error);
+      hookLogger.error('Verification error:', error);
       await logSecurityEvent('verification_error', `Verification system error`, undefined, { error: error.message });
       return { success: false, error: 'An unexpected error occurred during verification' };
     } finally {
@@ -69,24 +71,24 @@ export const useSecureVerification = () => {
 
   const secureRequestCode = async (identifier: string, type: 'phone' | 'email' = 'phone') => {
     setLoading(true);
-    
+
     try {
       // Sanitize identifier
       const sanitizedIdentifier = sanitizeFormInput(identifier);
-      
+
       // Basic validation for phone numbers (simple format check)
       if (type === 'phone' && !/^\+?[\d\s\-\(\)]+$/.test(sanitizedIdentifier)) {
         toast.error('Please enter a valid phone number');
         return { success: false, error: 'Invalid phone number format' };
       }
-      
+
       // Check for SQL injection attempts
       if (containsSQLInjection(sanitizedIdentifier)) {
         await logSecurityEvent('sql_injection_attempt', 'SQL injection detected in verification request', undefined, { identifier: sanitizedIdentifier });
         toast.error('Invalid input detected');
         return { success: false, error: 'Invalid input detected' };
       }
-      
+
       // Check rate limiting with account lockout
       const canAttempt = await checkRateLimitWithLockout(sanitizedIdentifier, 'verification', 3, 60, 60, 5, 120);
       if (!canAttempt) {
@@ -95,7 +97,7 @@ export const useSecureVerification = () => {
         await logSecurityEvent('verification_request_rate_limited', `Verification request rate limited for ${type}: ${sanitizedIdentifier}`);
         return { success: false, error: errorMessage };
       }
-      
+
       // Request verification code
       const { data, error } = await supabase.functions.invoke('send-verification-code', {
         body: {
@@ -103,17 +105,17 @@ export const useSecureVerification = () => {
           type: type
         }
       });
-      
+
       if (error) {
         await logSecurityEvent('verification_request_failed', `Verification request failed for ${type}: ${sanitizedIdentifier}`, undefined, { error: error.message });
         return { success: false, error: error.message };
       }
-      
+
       await logSecurityEvent('verification_request_sent', `Verification code sent to ${type}: ${sanitizedIdentifier}`);
       return { success: true, data };
-      
+
     } catch (error) {
-      console.error('Verification request error:', error);
+      hookLogger.error('Verification request error:', error);
       await logSecurityEvent('verification_request_error', `Verification request system error`, undefined, { error: error.message });
       return { success: false, error: 'An unexpected error occurred while requesting verification code' };
     } finally {

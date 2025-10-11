@@ -17,6 +17,7 @@ import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
 import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
 import { useAuth } from "@/contexts/auth";
+import { logger } from '@/utils/logger';
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -33,10 +34,11 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   onDelete,
   onReactionToggle,
 }) => {
+  const componentLogger = logger.withContext('BusinessReviewCard');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { currentUser } = useAuth();
-  
-  console.log("BusinessReviewCard: Received review data:", {
+
+  componentLogger.debug("Received review data:", {
     id: review.id,
     customerName: review.customerName,
     customer_business_name: review.customer_business_name,
@@ -52,10 +54,10 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     zipCode: review.zipCode
   });
 
-  console.log("🔍 BUSINESS REVIEW CARD - is_anonymous field:", review.is_anonymous);
-  console.log("🔍 BUSINESS REVIEW CARD - all review fields:", Object.keys(review));
-  console.log("🔍 BUSINESS REVIEW CARD - complete review object:", review);
-  console.log("🔍 BUSINESS REVIEW CARD - business_category:", currentUser?.business_category);
+  componentLogger.debug("is_anonymous field:", review.is_anonymous);
+  componentLogger.debug("all review fields:", Object.keys(review));
+  componentLogger.debug("complete review object:", review);
+  componentLogger.debug("business_category:", currentUser?.business_category);
 
   // Business info for right side (smaller) - on "My Customer Reviews" page, always show actual business name
   // since the user is viewing their own reviews
@@ -67,8 +69,8 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
     isOwnReview
   );
 
-  console.log("🔍 BUSINESS REVIEW CARD - displayName:", displayName, "for review:", review.id);
-  
+  componentLogger.debug("displayName:", displayName, "for review:", review.id);
+
   const { handleCustomerClick, formatDate, getCustomerInitials, isReviewClaimed } = useBusinessReviewCardLogic(review);
   const navigate = useNavigate();
 
@@ -85,17 +87,17 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   };
 
   const handleConfirmDelete = () => {
-    console.log("🔥 BusinessReviewCard handleConfirmDelete called with reviewId:", review.id);
-    console.log("🔥 onDelete function:", onDelete);
+    componentLogger.debug("handleConfirmDelete called with reviewId:", review.id);
+    componentLogger.debug("onDelete function:", onDelete);
     onDelete(review.id);
     setShowDeleteDialog(false);
   };
 
   const handleEditClick = () => {
-    console.log("🔧 EDIT BUTTON CLICKED for review:", review.id);
-    console.log("=== EDIT REVIEW DEBUG ===");
-    console.log("Review object:", review);
-    console.log("Review ID:", review.id);
+    componentLogger.debug("EDIT BUTTON CLICKED for review:", review.id);
+    componentLogger.debug("=== EDIT REVIEW DEBUG ===");
+    componentLogger.debug("Review object:", review);
+    componentLogger.debug("Review ID:", review.id);
     
     // Prepare review data to pass through navigation state
     const reviewData = {
@@ -119,10 +121,10 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
       reviewId: review.id,
     });
     
-    console.log("Review data being passed:", reviewData);
-    console.log("Navigation params:", Object.fromEntries(params));
-    console.log("Full URL:", `/new-review?${params.toString()}`);
-    
+    componentLogger.debug("Review data being passed:", reviewData);
+    componentLogger.debug("Navigation params:", Object.fromEntries(params));
+    componentLogger.debug("Full URL:", `/new-review?${params.toString()}`);
+
     navigate(`/review/new?${params.toString()}`, {
       state: { reviewData }
     });

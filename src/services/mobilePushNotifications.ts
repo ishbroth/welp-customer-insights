@@ -1,8 +1,10 @@
-
 import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
+
+const serviceLogger = logger.withContext('MobilePushNotifications');
 
 interface PushNotificationService {
   requestPermissions: () => Promise<boolean>;
@@ -17,7 +19,7 @@ class MobilePushNotificationService implements PushNotificationService {
 
   async requestPermissions(): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) {
-      console.log('Push notifications are only available on native platforms');
+      serviceLogger.debug('Push notifications are only available on native platforms');
       return false;
     }
 
@@ -25,7 +27,7 @@ class MobilePushNotificationService implements PushNotificationService {
       const permission = await PushNotifications.requestPermissions();
       return permission.receive === 'granted';
     } catch (error) {
-      console.error('Error requesting push notification permissions:', error);
+      serviceLogger.error('Error requesting push notification permissions:', error);
       return false;
     }
   }
@@ -41,18 +43,18 @@ class MobilePushNotificationService implements PushNotificationService {
       return new Promise((resolve) => {
         // Listen for registration
         PushNotifications.addListener('registration', (token: Token) => {
-          console.log('Push registration success, token: ', token.value);
+          serviceLogger.debug('Push registration success, token: ', token.value);
           resolve(token.value);
         });
 
         // Listen for registration errors
         PushNotifications.addListener('registrationError', (error: any) => {
-          console.error('Error on registration: ', error);
+          serviceLogger.error('Error on registration: ', error);
           resolve(null);
         });
       });
     } catch (error) {
-      console.error('Error registering for push notifications:', error);
+      serviceLogger.error('Error registering for push notifications:', error);
       return null;
     }
   }
@@ -68,7 +70,7 @@ class MobilePushNotificationService implements PushNotificationService {
       // Request permissions first
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) {
-        console.log('Push notification permissions not granted');
+        serviceLogger.debug('Push notification permissions not granted');
         return;
       }
 
@@ -83,9 +85,9 @@ class MobilePushNotificationService implements PushNotificationService {
       this.setupNotificationListeners();
 
       this.isInitialized = true;
-      console.log('Push notifications initialized successfully');
+      serviceLogger.info('Push notifications initialized successfully');
     } catch (error) {
-      console.error('Error initializing push notifications:', error);
+      serviceLogger.error('Error initializing push notifications:', error);
     }
   }
 
@@ -102,19 +104,19 @@ class MobilePushNotificationService implements PushNotificationService {
         });
 
       if (error) {
-        console.error('Error storing device token:', error);
+        serviceLogger.error('Error storing device token:', error);
       } else {
-        console.log('Device token stored successfully');
+        serviceLogger.debug('Device token stored successfully');
       }
     } catch (error) {
-      console.error('Error storing device token:', error);
+      serviceLogger.error('Error storing device token:', error);
     }
   }
 
   private setupNotificationListeners(): void {
     // Listen for notifications received while app is in foreground
     PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-      console.log('Push notification received: ', notification);
+      serviceLogger.debug('Push notification received: ', notification);
       
       // Show a toast notification in the app
       toast.info(notification.title || 'New Notification', {
@@ -124,13 +126,13 @@ class MobilePushNotificationService implements PushNotificationService {
 
     // Listen for notifications tapped/clicked
     PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
-      console.log('Push notification action performed: ', notification);
-      
+      serviceLogger.debug('Push notification action performed: ', notification);
+
       // Handle notification tap - could navigate to specific page
       const data = notification.notification.data;
       if (data?.reviewId) {
         // Navigate to specific review or profile page
-        console.log('Navigate to review:', data.reviewId);
+        serviceLogger.debug('Navigate to review:', data.reviewId);
       }
     });
   }

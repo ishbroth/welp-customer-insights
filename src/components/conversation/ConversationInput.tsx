@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, X } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 interface ConversationInputProps {
   onSubmit: (content: string) => Promise<void>;
@@ -18,6 +19,7 @@ const ConversationInput: React.FC<ConversationInputProps> = ({
   isSubmitting = false,
   maxLength = 1500
 }) => {
+  const componentLogger = logger.withContext('ConversationInput');
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
 
@@ -38,7 +40,7 @@ const ConversationInput: React.FC<ConversationInputProps> = ({
       setContent("");
     } catch (err) {
       setError("Failed to send response. Please try again.");
-      console.error("Error submitting response:", err);
+      componentLogger.error("Error submitting response", { error: err });
     }
   };
 

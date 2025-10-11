@@ -1,4 +1,8 @@
+import { logger } from '@/utils/logger';
+
 import { supabase } from "@/integrations/supabase/client";
+
+const serviceLogger = logger.withContext('Conversation');
 
 export interface ConversationMessage {
   id: string;
@@ -30,7 +34,7 @@ export const conversationService = {
       .order('message_order', { ascending: true });
 
     if (error) {
-      console.error('Error fetching conversation:', error);
+      serviceLogger.error('Error fetching conversation:', error);
       throw error;
     }
 
@@ -46,7 +50,7 @@ export const conversationService = {
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error checking conversation:', error);
+      serviceLogger.error('Error checking conversation:', error);
     }
 
     return !!data;
@@ -61,7 +65,7 @@ export const conversationService = {
     });
 
     if (error) {
-      console.error('Error starting conversation:', error);
+      serviceLogger.error('Error starting conversation:', error);
       throw error;
     }
 
@@ -77,7 +81,7 @@ export const conversationService = {
         }
       });
     } catch (notificationError) {
-      console.error('Error sending notification:', notificationError);
+      serviceLogger.error('Error sending notification:', notificationError);
       // Don't throw - conversation was created successfully
     }
 
@@ -94,7 +98,7 @@ export const conversationService = {
     });
 
     if (error) {
-      console.error('Error adding message:', error);
+      serviceLogger.error('Error adding message:', error);
       throw error;
     }
 
@@ -110,7 +114,7 @@ export const conversationService = {
         }
       });
     } catch (notificationError) {
-      console.error('Error sending notification:', notificationError);
+      serviceLogger.error('Error sending notification:', notificationError);
       // Don't throw - message was added successfully
     }
 
@@ -126,7 +130,7 @@ export const conversationService = {
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching participants:', error);
+      serviceLogger.error('Error fetching participants:', error);
     }
 
     return data;

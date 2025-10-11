@@ -2,6 +2,7 @@
 import React from "react";
 import { Customer } from "@/types/search";
 import ReviewCard from "./ReviewCard";
+import { logger } from '@/utils/logger';
 
 interface ReviewsListProps {
   reviews: any[];
@@ -11,6 +12,8 @@ interface ReviewsListProps {
 }
 
 const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: ReviewsListProps) => {
+  const componentLogger = logger.withContext('ReviewsList');
+
   if (!reviews || reviews.length === 0) {
     return null;
   }
@@ -19,7 +22,7 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
     <div className="space-y-3">
       {reviews.map((review, index) => {
         // Debug what we're getting from the search results
-        console.log("ReviewsList: Processing review", {
+        componentLogger.debug("Processing review", {
           id: review.id,
           isAssociateMatch: review.isAssociateMatch,
           original_customer_name: review.original_customer_name,
@@ -28,7 +31,7 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
           associateData: review.associateData
         });
 
-        console.log("ReviewsList: Logic check", {
+        componentLogger.debug("Logic check", {
           isAssociateMatch: review.isAssociateMatch,
           hasOriginalName: !!review.original_customer_name,
           originalName: review.original_customer_name,
@@ -39,8 +42,8 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
           ? review.original_customer_name
           : (review.customerName || review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer');
 
-        console.log("ReviewsList: Final customer name set to:", finalCustomerName);
-        console.log("🔍 REVIEWS LIST - Passing to ReviewCard:", {
+        componentLogger.debug("Final customer name set to:", finalCustomerName);
+        componentLogger.debug("Passing to ReviewCard:", {
           associates: review.associates,
           customer_business_name: review.customer_business_name,
           customer_nickname: review.customer_nickname,

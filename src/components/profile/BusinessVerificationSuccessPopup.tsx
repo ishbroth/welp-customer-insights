@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Award, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { logger } from "@/utils/logger";
 
 interface BusinessVerificationSuccessPopupProps {
   isOpen: boolean;
@@ -22,9 +23,10 @@ const BusinessVerificationSuccessPopup = ({
   businessName,
   licenseVerificationResult
 }: BusinessVerificationSuccessPopupProps) => {
+  const componentLogger = logger.withContext('BusinessVerificationSuccessPopup');
   const navigate = useNavigate();
 
-  console.log("🎉 BusinessVerificationSuccessPopup rendered with:", {
+  componentLogger.debug("BusinessVerificationSuccessPopup rendered with:", {
     isOpen,
     businessName,
     licenseVerificationResult
@@ -33,13 +35,13 @@ const BusinessVerificationSuccessPopup = ({
   const isLicenseVerified = licenseVerificationResult?.verified && licenseVerificationResult?.isRealVerification;
 
   const handleVerifyLicense = () => {
-    console.log("🔄 Redirecting to license verification page");
+    componentLogger.debug("Redirecting to license verification page");
     onClose();
     navigate('/verify-license');
   };
 
   const handleContinue = () => {
-    console.log("🚀 Continuing to profile");
+    componentLogger.debug("Continuing to profile");
     onClose();
   };
 

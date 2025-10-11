@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
+import { logger } from '@/utils/logger';
 
 interface UseDuplicateCheckerProps {
   businessEmail: string;
@@ -18,6 +19,7 @@ export const useDuplicateChecker = ({
   businessAddress = "",
   onDuplicateFound
 }: UseDuplicateCheckerProps) => {
+  const hookLogger = logger.withContext('useDuplicateChecker');
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
@@ -37,17 +39,17 @@ export const useDuplicateChecker = ({
     }
     
     const timeoutId = setTimeout(async () => {
-      console.log("🔍 CHECKING EMAIL DUPLICATE");
-      console.log("Checking email:", businessEmail);
-      
+      hookLogger.debug("CHECKING EMAIL DUPLICATE");
+      hookLogger.debug("Checking email:", businessEmail);
+
       setIsCheckingDuplicates(true);
-      
+
       try {
         const exists = await checkEmailExistsViaEdgeFunction(businessEmail, 'business');
-        console.log("Email exists result:", exists);
-        
+        hookLogger.debug("Email exists result:", exists);
+
         setEmailExists(exists);
-        
+
         if (exists) {
           const result: DuplicateCheckResult = {
             isDuplicate: true,
@@ -67,7 +69,7 @@ export const useDuplicateChecker = ({
           }
         }
       } catch (error) {
-        console.error("Error checking email duplicate:", error);
+        hookLogger.error("Error checking email duplicate:", error);
         setEmailExists(false);
       } finally {
         setIsCheckingDuplicates(false);
@@ -90,17 +92,17 @@ export const useDuplicateChecker = ({
     }
     
     const timeoutId = setTimeout(async () => {
-      console.log("🔍 CHECKING PHONE DUPLICATE");
-      console.log("Checking phone:", businessPhone);
-      
+      hookLogger.debug("CHECKING PHONE DUPLICATE");
+      hookLogger.debug("Checking phone:", businessPhone);
+
       setIsCheckingDuplicates(true);
-      
+
       try {
         const exists = await checkPhoneExistsViaEdgeFunction(businessPhone, 'business');
-        console.log("Phone exists result:", exists);
-        
+        hookLogger.debug("Phone exists result:", exists);
+
         setPhoneExists(exists);
-        
+
         if (exists) {
           const result: DuplicateCheckResult = {
             isDuplicate: true,
@@ -120,7 +122,7 @@ export const useDuplicateChecker = ({
           }
         }
       } catch (error) {
-        console.error("Error checking phone duplicate:", error);
+        hookLogger.error("Error checking phone duplicate:", error);
         setPhoneExists(false);
       } finally {
         setIsCheckingDuplicates(false);

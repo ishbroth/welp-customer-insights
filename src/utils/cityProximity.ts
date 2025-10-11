@@ -1,5 +1,8 @@
 import { getCityCoordinates, CityCoordinates, resetGeocodingCallCount, saveCachedCoordinates } from "./geocoding";
 import { REVIEW_SEARCH_CONFIG } from "@/hooks/useCustomerSearch/reviewSearchConfig";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('cityProximity');
 
 // Calculate distance between two coordinates using Haversine formula
 export const calculateDistance = (
@@ -52,7 +55,7 @@ export const areCitiesInProximity = async (
     return { isInProximity, distance };
     
   } catch (error) {
-    console.error('Error calculating city proximity:', error);
+    utilLogger.error('Error calculating city proximity:', error);
     return { isInProximity: false };
   }
 };

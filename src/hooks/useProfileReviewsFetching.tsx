@@ -305,7 +305,7 @@ export const useProfileReviewsFetching = () => {
 
   // Enhanced useEffect with proper authentication state handling
   useEffect(() => {
-    console.log("🔄 useEffect triggered - authLoading:", authLoading, "currentUser:", !!currentUser, "isInitialized:", isInitialized);
+    hookLogger.debug("🔄 useEffect triggered - authLoading:", authLoading, "currentUser:", !!currentUser, "isInitialized:", isInitialized);
     
     // Case 1: Auth is still loading - wait
     if (authLoading) {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ConversationMessage } from "@/services/conversationService";
 import { formatDistanceToNow } from "date-fns";
+import { logger } from '@/utils/logger';
 
 interface ConversationThreadProps {
   messages: ConversationMessage[];
@@ -22,6 +23,7 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
   maxCollapsedMessages = 2,
   hasAccess = false
 }) => {
+  const componentLogger = logger.withContext('ConversationThread');
   const [isExpanded, setIsExpanded] = useState(!collapsed);
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
@@ -49,39 +51,44 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
   };
 
   const handleNameClick = (authorId: string, authorType: string) => {
-    console.log('handleNameClick called:', { authorId, authorType, hasAccess, currentUser: currentUser?.type });
-    
+    componentLogger.debug('handleNameClick called', {
+      authorId,
+      authorType,
+      hasAccess,
+      currentUserType: currentUser?.type
+    });
+
     if (!hasAccess) {
-      console.log('Navigation blocked: no access');
+      componentLogger.debug('Navigation blocked: no access');
       return;
     }
-    
+
     // If customer clicks their own name, navigate to their own profile
     if (authorType === 'customer' && authorId === currentUser?.id) {
-      console.log('Navigating to own profile');
+      componentLogger.debug('Navigating to own profile');
       navigate('/profile');
       return;
     }
-    
+
     // If business clicks their own name, navigate to their own profile
     if (authorType === 'business' && authorId === currentUser?.id) {
-      console.log('Navigating to own business profile');
+      componentLogger.debug('Navigating to own business profile');
       navigate('/profile');
       return;
     }
-    
+
     if (authorType === 'business') {
-      console.log('Navigating to business profile:', authorId);
+      componentLogger.debug('Navigating to business profile', { authorId });
       navigate(`/business-profile/${authorId}`, {
-        state: { 
+        state: {
           readOnly: true,
           showRespondButton: currentUser?.type === 'customer'
         }
       });
     } else if (authorType === 'customer') {
-      console.log('Navigating to customer profile:', authorId);
+      componentLogger.debug('Navigating to customer profile', { authorId });
       navigate(`/customer-profile/${authorId}`, {
-        state: { 
+        state: {
           readOnly: true,
           showWriteReviewButton: currentUser?.type === 'business'
         }

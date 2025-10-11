@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
+import { logger } from "@/utils/logger";
 
 interface CustomerAddressSectionProps {
   street: string;
@@ -29,15 +30,17 @@ export const CustomerAddressSection = ({
   zipCode,
   setZipCode
 }: CustomerAddressSectionProps) => {
+  const componentLogger = logger.withContext('CustomerAddressSection');
+
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    console.log('🏠 CustomerAddressSection - Place selected:', place);
-    
+    componentLogger.debug('Place selected:', place);
+
     // Extract address components using the utility function
     const components = extractAddressComponents(place);
-    
-    console.log('🏠 CustomerAddressSection - Extracted components:', components);
+
+    componentLogger.debug('Extracted components:', components);
 
     // Update the street address field with just the street portion
     if (components.streetAddress) {
@@ -51,8 +54,8 @@ export const CustomerAddressSection = ({
   };
 
   const handleAddressComponentsExtracted = (components: AddressComponents) => {
-    console.log('🏠 CustomerAddressSection - Components extracted:', components);
-    
+    componentLogger.debug('Components extracted:', components);
+
     // Update fields that are currently empty to avoid overwriting user input
     if (components.city && !city) {
       setCity(components.city);
@@ -66,7 +69,7 @@ export const CustomerAddressSection = ({
   };
 
   const handleAddressChange = (address: string) => {
-    console.log('🏠 CustomerAddressSection - Address changed to:', address);
+    componentLogger.debug('Address changed to:', address);
     setStreet(address);
   };
 
@@ -79,7 +82,7 @@ export const CustomerAddressSection = ({
           placeholder="Start typing your address..."
           value={street}
           onChange={(e) => {
-            console.log('🏠 CustomerAddressSection - Input changed:', e.target.value);
+            componentLogger.debug('Input changed:', e.target.value);
             setStreet(e.target.value);
           }}
           onAddressChange={handleAddressChange}

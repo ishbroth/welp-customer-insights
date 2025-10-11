@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 import CustomerInfoDisplay from "@/components/review/CustomerInfoDisplay";
 import { useCustomerInfo } from "@/hooks/useCustomerInfo";
+import { logger } from '@/utils/logger';
 
 interface CustomerReviewCardProps {
   review: Review & {
@@ -40,10 +41,11 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   onPurchase,
   onReactionToggle,
 }) => {
+  const componentLogger = logger.withContext('CustomerReviewCard');
   const { isSubscribed, currentUser } = useAuth();
   const navigate = useNavigate();
   const { reactions, toggleReaction } = useReactionPersistence(
-    review.id, 
+    review.id,
     review.reactions || { like: [], funny: [], ohNo: [] }
   );
 
@@ -61,8 +63,8 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', review.reviewerId],
     queryFn: async () => {
-      console.log(`CustomerReviewCard: Fetching business profile for ID: ${review.reviewerId}`);
-      
+      componentLogger.debug(`Fetching business profile for ID: ${review.reviewerId}`);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, avatar, name')
@@ -70,11 +72,11 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
         .maybeSingle();
 
       if (error) {
-        console.error("CustomerReviewCard: Error fetching business profile:", error);
+        componentLogger.error("Error fetching business profile:", error);
         return null;
       }
 
-      console.log(`CustomerReviewCard: Business profile found:`, data);
+      componentLogger.debug(`Business profile found:`, data);
       return data;
     },
     enabled: !!review.reviewerId
@@ -126,14 +128,14 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    console.log('Handling reaction toggle:', reactionType, 'for review:', reviewId);
+    componentLogger.debug('Handling reaction toggle:', reactionType, 'for review:', reviewId);
     toggleReaction(reactionType as keyof typeof reactions);
     onReactionToggle(reviewId, reactionType);
   };
 
   const handleResponseSubmitted = (newResponse: any) => {
     // Handle response submission if needed
-    console.log('Response submitted:', newResponse);
+    componentLogger.debug('Response submitted:', newResponse);
   };
 
   const handleBusinessNameClick = () => {
@@ -160,7 +162,7 @@ const CustomerReviewCard: React.FC<CustomerReviewCardProps> = ({
   // Get the final avatar URLs - prioritize businessProfile data
   const finalBusinessAvatar = businessProfile?.avatar || review.reviewerAvatar || '';
 
-  console.log('CustomerReviewCard: Avatar and verification info:', {
+  componentLogger.debug('Avatar and verification info:', {
     reviewId: review.id,
     businessAvatar: finalBusinessAvatar,
     reviewerName: review.reviewerName,

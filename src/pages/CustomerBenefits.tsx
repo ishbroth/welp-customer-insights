@@ -12,8 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Shield, Zap, Users, Clock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { logger } from '@/utils/logger';
 
 const CustomerBenefits = () => {
+  const pageLogger = logger.withContext('CustomerBenefits');
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
@@ -42,22 +44,22 @@ const CustomerBenefits = () => {
   }, [location]);
 
   const handleSubscribeClick = async () => {
-    console.log("🔥 Subscribe button clicked! isProcessing:", isProcessing, "isCustomer:", isCustomer);
-    
+    pageLogger.debug("🔥 Subscribe button clicked! isProcessing:", isProcessing, "isCustomer:", isCustomer);
+
     if (isProcessing) {
-      console.log("⏳ Already processing, ignoring click");
+      pageLogger.debug("⏳ Already processing, ignoring click");
       return;
     }
-    
-    console.log("📞 About to call handleSubscription");
+
+    pageLogger.debug("📞 About to call handleSubscription");
     await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser, 0, isMobile);
   };
 
   const handleLegacySubscribeClick = async () => {
-    console.log("🔥 Legacy Subscribe button clicked! isProcessing:", isProcessing, "isCustomer:", isCustomer);
-    
+    pageLogger.debug("🔥 Legacy Subscribe button clicked! isProcessing:", isProcessing, "isCustomer:", isCustomer);
+
     if (isProcessing) {
-      console.log("⏳ Already processing, ignoring click");
+      pageLogger.debug("⏳ Already processing, ignoring click");
       return;
     }
     
@@ -71,15 +73,15 @@ const CustomerBenefits = () => {
     }
 
     setIsProcessing(true);
-    
+
     try {
-      console.log("📞 About to call create-legacy-payment");
+      pageLogger.debug("📞 About to call create-legacy-payment");
       const { data, error } = await supabase.functions.invoke("create-legacy-payment", {
         body: { userType: isCustomer ? "customer" : "business" }
       });
-      
+
       if (error) {
-        console.error("❌ Legacy payment error:", error);
+        pageLogger.error("❌ Legacy payment error:", error);
         toast({
           title: "Payment Error",
           description: error.message || "Failed to create payment session. Please try again.",
@@ -88,9 +90,9 @@ const CustomerBenefits = () => {
         setIsProcessing(false);
         return;
       }
-      
+
       if (data?.url) {
-        console.log("🚀 Legacy - Opening Stripe checkout:", data.url);
+        pageLogger.debug("🚀 Legacy - Opening Stripe checkout:", data.url);
         
         // Use device-appropriate checkout method
         if (isMobile) {
@@ -119,7 +121,7 @@ const CustomerBenefits = () => {
         // Reset processing state since user will complete checkout in new tab
         setIsProcessing(false);
       } else {
-        console.error("❌ No checkout URL returned:", data);
+        pageLogger.error("❌ No checkout URL returned:", data);
         toast({
           title: "Payment Error",
           description: "Failed to create payment session. Please try again.",
@@ -128,7 +130,7 @@ const CustomerBenefits = () => {
         setIsProcessing(false);
       }
     } catch (error) {
-      console.error("❌ Legacy subscription error:", error);
+      pageLogger.error("❌ Legacy subscription error:", error);
       toast({
         title: "Payment Error",
         description: error instanceof Error ? error.message : "An error occurred while processing your payment. Please try again.",

@@ -7,8 +7,10 @@ import { Bell, BellRing } from 'lucide-react';
 import { mobilePushNotificationService } from '@/services/mobilePushNotifications';
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
 
 const PushNotificationTest: React.FC = () => {
+  const componentLogger = logger.withContext('PushNotificationTest');
   const [isLoading, setIsLoading] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<string>('unknown');
   const { currentUser } = useAuth();
@@ -35,7 +37,7 @@ const PushNotificationTest: React.FC = () => {
         toast.error('Push notification permissions denied');
       }
     } catch (error) {
-      console.error('Error requesting permissions:', error);
+      componentLogger.error('Error requesting permissions', { error });
       toast.error('Error requesting push notification permissions');
     } finally {
       setIsLoading(false);
@@ -50,15 +52,15 @@ const PushNotificationTest: React.FC = () => {
 
     try {
       setIsLoading(true);
-      
+
       // This would normally be called from the backend
       // For testing, we'll show a local notification
       toast.info('Test Notification', {
         description: 'This is how push notifications will appear in your app!',
       });
-      
+
     } catch (error) {
-      console.error('Error sending test notification:', error);
+      componentLogger.error('Error sending test notification', { error });
       toast.error('Error sending test notification');
     } finally {
       setIsLoading(false);

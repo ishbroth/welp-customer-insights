@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { COMMON_CITY_COORDINATES, normalizeCityName } from "@/data/commonCities";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('geocoding');
 
 export interface CityCoordinates {
   lat: number;
@@ -39,21 +42,21 @@ export const getCityCoordinates = async (
   
   // Check if we've exceeded max geocoding calls
   if (geocodingCallsCount >= maxCalls) {
-    console.log(`Geocoding limit reached (${maxCalls} calls)`);
+    utilLogger.debug(`Geocoding limit reached (${maxCalls} calls)`);
     coordinatesCache.set(normalizedKey, null);
     return null;
   }
-  
+
   try {
     geocodingCallsCount++;
-    console.log(`Geocoding ${normalizedKey} (call ${geocodingCallsCount}/${maxCalls})`);
+    utilLogger.debug(`Geocoding ${normalizedKey} (call ${geocodingCallsCount}/${maxCalls})`);
     
     const { data, error } = await supabase.functions.invoke('geocode-city', {
       body: { city, state }
     });
     
     if (error || !data?.coordinates) {
-      console.warn(`Failed to geocode ${normalizedKey}:`, error);
+      utilLogger.warn(`Failed to geocode ${normalizedKey}:`, error);
       coordinatesCache.set(normalizedKey, null);
       return null;
     }
@@ -67,7 +70,7 @@ export const getCityCoordinates = async (
     return coords;
     
   } catch (error) {
-    console.error(`Error geocoding ${normalizedKey}:`, error);
+    utilLogger.error(`Error geocoding ${normalizedKey}:`, error);
     coordinatesCache.set(normalizedKey, null);
     return null;
   }
@@ -84,7 +87,7 @@ export const loadCachedCoordinates = () => {
       });
     }
   } catch (error) {
-    console.warn('Failed to load cached coordinates:', error);
+    utilLogger.warn('Failed to load cached coordinates:', error);
   }
 };
 
@@ -94,7 +97,7 @@ export const saveCachedCoordinates = () => {
     const cacheObject = Object.fromEntries(coordinatesCache.entries());
     localStorage.setItem('cityCoordinatesCache', JSON.stringify(cacheObject));
   } catch (error) {
-    console.warn('Failed to save coordinates cache:', error);
+    utilLogger.warn('Failed to save coordinates cache:', error);
   }
 };
 

@@ -5,8 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmailVerificationCode, verifyEmailCode } from "@/utils/emailUtils";
+import { logger } from '@/utils/logger';
 
-interface UseEmailVerificationProps {
+const hookLogger = logger.withContext('useEmailVerification');
+
+interface UseEmailVerificationProps{
   email: string;
   password: string;
   name: string;
@@ -87,7 +90,7 @@ export const useEmailVerification = ({
     setVerificationError(null);
 
     try {
-      console.log("🔍 Verifying email code and creating account...");
+      hookLogger.info("Verifying email code and creating account");
       
       // Prepare user data for account creation
       const userData = {
@@ -108,15 +111,15 @@ export const useEmailVerification = ({
       const result = await verifyEmailCode(email, verificationCode, accountType, userData);
 
       if (result.success && result.isValid) {
-        console.log("✅ Account created successfully");
-        
+        hookLogger.info("Account created successfully");
+
         // Clear any existing session first to ensure clean transition
-        console.log("🔐 Clearing existing session before setting new session");
+        hookLogger.debug("Clearing existing session before setting new session");
         await supabase.auth.signOut();
         
         // If the edge function returned session data, set it in Supabase auth
         if (result.session) {
-          console.log("🔐 Setting new session from edge function response");
+          hookLogger.debug("Setting new session from edge function response");
           await supabase.auth.setSession({
             access_token: result.session.access_token,
             refresh_token: result.session.refresh_token
@@ -141,11 +144,11 @@ export const useEmailVerification = ({
           ...(licenseType && { licenseType })
         });
 
-        console.log("🚀 Navigating to email verification success page");
+        hookLogger.info("Navigating to email verification success page");
         navigate(`/email-verification-success?${params.toString()}`, { replace: true });
-        
+
       } else {
-        console.error("❌ Verification failed:", result.message);
+        hookLogger.error("Verification failed:", result.message);
         setVerificationError(result.message || "Invalid or expired verification code");
         
         // If code is already used or expired, enable resend immediately
@@ -155,7 +158,7 @@ export const useEmailVerification = ({
         }
       }
     } catch (error) {
-      console.error("❌ Error verifying email code:", error);
+      hookLogger.error("Error verifying email code:", error);
       setVerificationError("Failed to verify email code. Please try again.");
     } finally {
       setIsVerifying(false);
@@ -181,7 +184,7 @@ export const useEmailVerification = ({
         setVerificationError(result.message || "Failed to send verification code");
       }
     } catch (error) {
-      console.error("Error resending verification code:", error);
+      hookLogger.error("Error resending verification code:", error);
       setVerificationError("Failed to resend verification code. Please try again.");
     } finally {
       setIsResending(false);

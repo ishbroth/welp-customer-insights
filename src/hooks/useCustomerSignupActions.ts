@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerSignupActions');
 
 interface CustomerSignupData {
   customerFirstName: string;
@@ -66,7 +69,7 @@ export const useCustomerSignupActions = (
         : customerStreet;
 
       // Final duplicate check before proceeding using edge function
-      console.log("=== FINAL CUSTOMER DUPLICATE CHECK VIA EDGE FUNCTION ===");
+      hookLogger.debug("=== FINAL CUSTOMER DUPLICATE CHECK VIA EDGE FUNCTION ===");
       const finalDuplicateCheck = await checkDuplicatesViaEdgeFunction(
         customerEmail, 
         customerPhone, 
@@ -75,7 +78,7 @@ export const useCustomerSignupActions = (
         'customer'
       );
       
-      console.log("Final customer duplicate check result:", finalDuplicateCheck);
+      hookLogger.debug("Final customer duplicate check result:", finalDuplicateCheck);
       
       if (finalDuplicateCheck.isDuplicate && !finalDuplicateCheck.allowContinue) {
         toast({
@@ -122,7 +125,7 @@ export const useCustomerSignupActions = (
       navigate(`/verify-phone?${params.toString()}`);
       
     } catch (error) {
-      console.error("Signup error:", error);
+      hookLogger.error("Signup error:", error);
       toast({
         title: "Signup Error",
         description: "An unexpected error occurred. Please try again.",

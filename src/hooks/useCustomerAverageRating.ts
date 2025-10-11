@@ -14,21 +14,22 @@ interface UseCustomerAverageRatingProps {
   hasFullAccess: boolean;
 }
 
-export const useCustomerAverageRating = ({ 
-  reviews, 
-  isSubscribed, 
-  hasFullAccess 
+export const useCustomerAverageRating = ({
+  reviews,
+  isSubscribed,
+  hasFullAccess
 }: UseCustomerAverageRatingProps) => {
   return useMemo(() => {
     // Filter reviews that count towards the average rating
+    // ONLY include reviews that have been explicitly claimed by the current user through:
+    // 1. Paying with credits (isReviewUnlocked = true AND claim exists)
+    // 2. Responding while subscribed (hasUserResponded = true)
+    // 3. Being marked as effectively claimed (isClaimed flag from review_claims table)
     const qualifyingReviews = reviews.filter(review => {
-      // Only include reviews if user has paid for access through subscription/legacy OR credits
-      if (!isSubscribed && !hasFullAccess) {
-        // Without subscription, only count reviews that were specifically unlocked with credits
-        return review.isReviewUnlocked || review.hasUserResponded;
-      }
-      
-      // With subscription/legacy access, include effectively claimed reviews or unlocked reviews
+      // A review qualifies for star rating ONLY if user has taken action to claim it:
+      // - Responded to it (explicit acknowledgment)
+      // - Unlocked it with credits (explicit acknowledgment)
+      // - It's marked as effectively claimed (from review_claims table)
       return review.isEffectivelyClaimed || review.hasUserResponded || review.isReviewUnlocked;
     });
 

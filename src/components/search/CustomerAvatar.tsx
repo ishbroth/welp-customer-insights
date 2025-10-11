@@ -2,6 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface CustomerAvatarProps {
   customer: {
@@ -15,21 +16,22 @@ interface CustomerAvatarProps {
   onViewProfile: (e: React.MouseEvent) => void;
 }
 
-const CustomerAvatar = ({ 
-  customer, 
-  isReviewCustomer, 
-  isBusinessUser, 
-  onViewProfile 
+const CustomerAvatar = ({
+  customer,
+  isReviewCustomer,
+  isBusinessUser,
+  onViewProfile
 }: CustomerAvatarProps) => {
+  const componentLogger = logger.withContext('CustomerAvatar');
 
   // Fetch customer profile to get avatar if not already provided and we have an ID
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', customer.id],
     queryFn: async () => {
       if (!customer.id) return null;
-      
-      console.log(`CustomerAvatar: Fetching profile for ID: ${customer.id}`);
-      
+
+      componentLogger.debug(`Fetching profile for ID: ${customer.id}`);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, avatar, first_name, last_name')
@@ -37,11 +39,11 @@ const CustomerAvatar = ({
         .maybeSingle();
 
       if (error) {
-        console.error("CustomerAvatar: Error fetching profile:", error);
+        componentLogger.error("Error fetching profile:", error);
         return null;
       }
 
-      console.log(`CustomerAvatar: Profile found:`, data);
+      componentLogger.debug(`Profile found:`, data);
       return data;
     },
     enabled: !!customer.id && !customer.avatar // Only fetch if we have an ID and don't already have avatar
@@ -56,7 +58,7 @@ const CustomerAvatar = ({
   const getCustomerAvatar = () => {
     // Use avatar from props first, then from fetched profile
     const avatarUrl = customer.avatar || customerProfile?.avatar || null;
-    console.log(`CustomerAvatar: Final avatar URL for ${customer.firstName} ${customer.lastName}:`, avatarUrl);
+    componentLogger.debug(`Final avatar URL for ${customer.firstName} ${customer.lastName}:`, avatarUrl);
     return avatarUrl;
   };
 

@@ -6,6 +6,7 @@ import { useGoogleMapsInit } from "@/hooks/useGoogleMapsInit";
 import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
 import { getPlaceholder, getStatusIndicator } from "@/utils/addressAutocompleteUI";
 import { AddressComponents } from "@/utils/addressExtraction";
+import { logger } from '@/utils/logger';
 
 interface AddressAutocompleteProps extends React.ComponentProps<"input"> {
   onPlaceSelect?: (place: google.maps.places.PlaceResult) => void;
@@ -21,41 +22,41 @@ declare global {
 
 const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(
   ({ className, onPlaceSelect, onAddressChange, onAddressComponentsExtracted, onChange, ...props }, ref) => {
+    const componentLogger = logger.withContext('AddressAutocomplete');
     const inputRef = useRef<HTMLInputElement>(null);
     const [inputValue, setInputValue] = useState(props.value || "");
-    
+
     const { isGoogleReady, googleMapsStatus } = useGoogleMapsInit();
     
     // Memoize the callback handlers to prevent useEffect recreation in usePlacesAutocomplete
     const handlePlaceSelect = useCallback((place: google.maps.places.PlaceResult) => {
-      console.log('🏠 AddressAutocomplete - Place selected callback triggered');
+      componentLogger.debug('Place selected callback triggered');
       if (onPlaceSelect) {
         onPlaceSelect(place);
       }
     }, [onPlaceSelect]);
 
     const handleAddressChange = useCallback((address: string) => {
-      console.log('🏠 AddressAutocomplete - Address changed callback triggered, address:', address);
+      componentLogger.debug('Address changed callback triggered', { address });
       if (onAddressChange) {
         onAddressChange(address);
       }
     }, [onAddressChange]);
 
     const handleAddressComponentsExtracted = useCallback((components: AddressComponents) => {
-      console.log('🏠 AddressAutocomplete - Components extracted callback triggered:', components);
+      componentLogger.debug('Components extracted callback triggered', { components });
       if (onAddressComponentsExtracted) {
-        console.log('🏠 AddressAutocomplete - Successfully forwarding components to parent');
+        componentLogger.debug('Successfully forwarding components to parent');
         onAddressComponentsExtracted(components);
       } else {
-        console.log('❌ CRITICAL: AddressAutocomplete - onAddressComponentsExtracted callback is MISSING!');
+        componentLogger.error('CRITICAL: onAddressComponentsExtracted callback is MISSING!');
       }
     }, [onAddressComponentsExtracted]);
 
     const handleSetInputValue = useCallback((value: string) => {
-      console.log('🏠 AddressAutocomplete - setInputValue called with:', value);
-      console.log('🏠 AddressAutocomplete - Current inputValue before update:', inputValue);
+      componentLogger.debug('setInputValue called', { value, currentInputValue: inputValue });
       setInputValue(value);
-      console.log('🏠 AddressAutocomplete - setInputValue completed');
+      componentLogger.debug('setInputValue completed');
     }, [inputValue]);
     
     usePlacesAutocomplete({
@@ -68,23 +69,23 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     });
 
     useEffect(() => {
-      console.log('🏠 AddressAutocomplete - props.value useEffect:', props.value, 'vs inputValue:', inputValue);
+      componentLogger.debug('props.value useEffect', { propsValue: props.value, inputValue });
       if (props.value !== undefined && props.value !== inputValue) {
-        console.log('🏠 AddressAutocomplete - Updating inputValue from props:', props.value);
+        componentLogger.debug('Updating inputValue from props', { propsValue: props.value });
         setInputValue(props.value as string);
       }
     }, [props.value, inputValue]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      console.log('🏠 AddressAutocomplete - Manual input change:', value);
-      
+      componentLogger.debug('Manual input change', { value });
+
       // Allow unrestricted typing for manual entry
       setInputValue(value);
-      
+
       // Call callbacks for manual typing
       if (onAddressChange) {
-        console.log('🏠 AddressAutocomplete - Calling onAddressChange for manual input:', value);
+        componentLogger.debug('Calling onAddressChange for manual input', { value });
         onAddressChange(value);
       }
       if (onChange) {
@@ -92,7 +93,11 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       }
     };
 
-    console.log(`🏠 AddressAutocomplete render - status: ${googleMapsStatus}, Google ready: ${isGoogleReady}, inputValue: "${inputValue}"`);
+    componentLogger.debug('AddressAutocomplete render', {
+      status: googleMapsStatus,
+      isGoogleReady,
+      inputValue
+    });
 
     return (
       <div className="relative">

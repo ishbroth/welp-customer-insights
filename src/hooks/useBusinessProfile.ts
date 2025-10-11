@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessProfile } from "@/types/business";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBusinessProfile');
 
 export const useBusinessProfile = (businessId: string | undefined, hasAccess: boolean) => {
   const { toast } = useToast();
@@ -19,8 +22,8 @@ export const useBusinessProfile = (businessId: string | undefined, hasAccess: bo
       if (!hasAccess && !businessId) {
         throw new Error('Subscription required to view business profiles');
       }
-      
-      console.log("Fetching business profile for ID:", businessId);
+
+      hookLogger.info("Fetching business profile for ID:", businessId);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -41,11 +44,11 @@ export const useBusinessProfile = (businessId: string | undefined, hasAccess: bo
         .single();
       
       if (error) {
-        console.error("Error fetching business profile:", error);
+        hookLogger.error("Error fetching business profile:", error);
         throw error;
       }
-      
-      console.log("Business profile data:", data);
+
+      hookLogger.debug("Business profile data:", data);
       return data as BusinessProfile;
     },
     enabled: !!businessId && hasAccess,
@@ -54,7 +57,7 @@ export const useBusinessProfile = (businessId: string | undefined, hasAccess: bo
 
   // Show toast only for certain types of errors, not for profile not found
   if (error && !error.message.includes('No rows returned')) {
-    console.error("Business profile query error:", error);
+    hookLogger.error("Business profile query error:", error);
     toast({
       title: "Error",
       description: "Failed to load business profile information.",

@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { normalizeAddress } from "@/utils/addressNormalization";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
 
 export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) => void) => {
+  const hookLogger = logger.withContext('useSearchForm');
   const navigate = useNavigate();
   const [currentSearchParams] = useSearchParams();
   const { toast } = useToast();
@@ -84,8 +86,8 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
       state: state || "",
       zipCode: zipCode || "",
     };
-    
-    console.log("Search initiated with params:", searchParams);
+
+    hookLogger.debug("Search initiated with params:", searchParams);
 
     // Scroll down to show the search results area
     // Use a small delay to allow the page to start rendering results
@@ -103,7 +105,7 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
       // Default behavior - navigate to search results page with parameters
       // Always navigate to /search to ensure consistent behavior
       const searchUrl = `/search?lastName=${encodeURIComponent(searchParams.lastName)}&firstName=${encodeURIComponent(searchParams.firstName)}&businessName=${encodeURIComponent(searchParams.businessName)}&phone=${encodeURIComponent(searchParams.phone)}&address=${encodeURIComponent(searchParams.address)}&city=${encodeURIComponent(searchParams.city)}&state=${encodeURIComponent(searchParams.state)}&zipCode=${encodeURIComponent(searchParams.zipCode)}`;
-      console.log("Navigating to:", searchUrl);
+      hookLogger.debug("Navigating to:", searchUrl);
       navigate(searchUrl);
     }
   };

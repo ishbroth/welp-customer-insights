@@ -5,6 +5,7 @@ import BusinessReviewCard from "@/components/business/BusinessReviewCard";
 import BusinessReviewsLoadingState from "@/components/business/BusinessReviewsLoadingState";
 import BusinessReviewsEmptyState from "@/components/business/BusinessReviewsEmptyState";
 import BusinessReviewsShowAllButton from "@/components/business/BusinessReviewsShowAllButton";
+import { logger } from '@/utils/logger';
 
 interface BusinessReviewsListProps {
   reviews: Review[];
@@ -14,12 +15,13 @@ interface BusinessReviewsListProps {
   onDeleteReview: (reviewId: string) => void;
 }
 
-const BusinessReviewsList = ({ 
-  reviews, 
-  hasSubscription, 
+const BusinessReviewsList = ({
+  reviews,
+  hasSubscription,
   isLoading,
-  onDeleteReview 
+  onDeleteReview
 }: BusinessReviewsListProps) => {
+  const componentLogger = logger.withContext('BusinessReviewsList');
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3);
@@ -27,11 +29,11 @@ const BusinessReviewsList = ({
   const handleEditReview = (review: Review) => {
     // The edit functionality is now handled directly in BusinessReviewCard
     // This function is no longer needed as each card handles its own edit
-    console.log('Edit review handled by BusinessReviewCard:', review.id);
+    componentLogger.debug('Edit review handled by BusinessReviewCard:', review.id);
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    console.log('Reaction toggle:', reviewId, reactionType);
+    componentLogger.debug('Reaction toggle:', reviewId, reactionType);
   };
 
   if (isLoading) {

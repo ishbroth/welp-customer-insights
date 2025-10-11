@@ -1,15 +1,17 @@
 
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
+import { logger } from '@/utils/logger';
 
 export const useBusinessReviewCardLogic = (review: Review) => {
   const navigate = useNavigate();
+  const componentLogger = logger.withContext('useBusinessReviewCardLogic');
 
   const handleCustomerClick = () => {
     // Only allow navigation if the review is claimed (has customerId)
     if (review.customerId) {
       navigate(`/customer-profile/${review.customerId}`, {
-        state: { 
+        state: {
           readOnly: true,
           showWriteReviewButton: true // Business can write more reviews
         }
@@ -21,9 +23,9 @@ export const useBusinessReviewCardLogic = (review: Review) => {
   const isReviewClaimed = !!review.customerId;
 
   const formatDate = (dateString: string | any) => {
-    console.log("formatDate input:", { _type: typeof dateString, value: dateString });
-    console.log("formatDate review.date:", review.date);
-    console.log("formatDate review object:", review);
+    componentLogger.debug("formatDate input:", { _type: typeof dateString, value: dateString });
+    componentLogger.debug("formatDate review.date:", review.date);
+    componentLogger.debug("formatDate review object:", review);
     
     // Try to get a valid date string from multiple sources
     let cleanDateString = null;
@@ -64,29 +66,29 @@ export const useBusinessReviewCardLogic = (review: Review) => {
     
     // As a last fallback, use current date
     if (!cleanDateString || cleanDateString === 'undefined' || cleanDateString === 'null') {
-      console.warn("formatDate: No valid date found, using current date");
+      componentLogger.warn("formatDate: No valid date found, using current date");
       cleanDateString = new Date().toISOString();
     }
-    
-    console.log("formatDate: Using date string:", cleanDateString);
-    
+
+    componentLogger.debug("formatDate: Using date string:", cleanDateString);
+
     try {
       const date = new Date(cleanDateString);
-      
+
       if (isNaN(date.getTime())) {
-        console.log("formatDate: Invalid date object");
+        componentLogger.debug("formatDate: Invalid date object");
         return "Invalid date";
       }
-      
+
       const formatted = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
-      console.log("formatDate result:", formatted);
+      componentLogger.debug("formatDate result:", formatted);
       return formatted;
     } catch (error) {
-      console.error("formatDate error:", error);
+      componentLogger.error("formatDate error:", error);
       return "Invalid date";
     }
   };

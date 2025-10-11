@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { logger } from '@/utils/logger';
 
 const ReportReview = () => {
+  const pageLogger = logger.withContext('ReportReview');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -78,7 +80,7 @@ const ReportReview = () => {
 
       navigate("/profile/reviews");
     } catch (error) {
-      console.error("Error submitting report:", error);
+      pageLogger.error("Error submitting report:", error);
       toast({
         title: "Error",
         description: "Failed to submit report. Please try again.",

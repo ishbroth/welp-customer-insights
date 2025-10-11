@@ -14,8 +14,10 @@ import { toast } from "@/components/ui/sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
+import { logger } from '@/utils/logger';
 
 const BuyCredits = () => {
+  const pageLogger = logger.withContext('BuyCredits');
   const [creditAmount, setCreditAmount] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { currentUser, loading } = useAuth();
@@ -37,8 +39,8 @@ const BuyCredits = () => {
       const sessionId = searchParams.get("session_id");
 
       if (success === "true" && credits === "true" && sessionId) {
-        console.log("Processing successful credit purchase", { sessionId });
-        
+        pageLogger.debug("Processing successful credit purchase", { sessionId });
+
         try {
           // Process the successful purchase
           const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
@@ -46,15 +48,15 @@ const BuyCredits = () => {
           });
 
           if (error) {
-            console.error("Error processing credit purchase:", error);
+            pageLogger.error("Error processing credit purchase:", error);
             toast.error("Failed to process credit purchase");
           } else {
-            console.log("Credit purchase processed successfully:", data);
+            pageLogger.debug("Credit purchase processed successfully:", data);
             toast.success(data.message || "Credits purchased successfully!");
             await loadCreditsData(); // Refresh credits data
           }
         } catch (error) {
-          console.error("Error processing credit purchase:", error);
+          pageLogger.error("Error processing credit purchase:", error);
           toast.error("Failed to process credit purchase");
         }
 
@@ -84,13 +86,13 @@ const BuyCredits = () => {
   }, [currentUser, loading, navigate]);
 
   const handlePurchase = async () => {
-    console.log("🔥 Purchase button clicked!");
-    
+    pageLogger.debug("🔥 Purchase button clicked!");
+
     if (!currentUser) {
-      console.log("❌ No current user");
+      pageLogger.debug("❌ No current user");
       toast.error("Please log in to purchase credits");
-      navigate("/login", { 
-        state: { 
+      navigate("/login", {
+        state: {
           returnTo: "/buy-credits",
           message: "Please log in to purchase credits"
         }
@@ -99,46 +101,46 @@ const BuyCredits = () => {
     }
 
     if (isSubscribed) {
-      console.log("❌ User already subscribed");
+      pageLogger.debug("❌ User already subscribed");
       toast.error("You already have unlimited access with your subscription");
       return;
     }
 
     if (creditAmount < 1) {
-      console.log("❌ Invalid credit amount:", creditAmount);
+      pageLogger.debug("❌ Invalid credit amount:", creditAmount);
       toast.error("Please select at least 1 credit");
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log("📞 About to call create-credit-payment function...");
-      console.log("Request parameters:", { creditAmount, totalCost });
-      
+      pageLogger.debug("📞 About to call create-credit-payment function...");
+      pageLogger.debug("Request parameters:", { creditAmount, totalCost });
+
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: { creditAmount, totalCost }
       });
 
-      console.log("🔍 Function response:", { data, error });
+      pageLogger.debug("🔍 Function response:", { data, error });
 
       if (error) {
-        console.error("❌ Error from create-credit-payment:", error);
+        pageLogger.error("❌ Error from create-credit-payment:", error);
         toast.error("Failed to create payment session. Please try again.");
         return;
       }
 
       if (data?.url) {
-        console.log("🚀 Opening Stripe checkout URL:", data.url);
+        pageLogger.debug("🚀 Opening Stripe checkout URL:", data.url);
         openCheckout(data.url);
-        
+
         toast.success("Redirecting to Stripe checkout...");
       } else {
-        console.error("❌ No checkout URL received from function");
-        console.error("Full response data:", data);
+        pageLogger.error("❌ No checkout URL received from function");
+        pageLogger.error("Full response data:", data);
         toast.error("Failed to create payment session. Please try again.");
       }
     } catch (error) {
-      console.error("❌ Unexpected error in handlePurchase:", error);
+      pageLogger.error("❌ Unexpected error in handlePurchase:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);

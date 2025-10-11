@@ -1,6 +1,9 @@
 
 import { VerificationResult } from './types';
 import { verifyLicenseWithStateDatabase } from '../realLicenseVerification';
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('verification');
 
 /**
  * Verify a business ID (license number or EIN) with real verification only
@@ -27,13 +30,13 @@ export const verifyBusinessId = async (
   // Only attempt real verification - no mock fallback
   if (state && businessType !== 'ein') {
     try {
-      console.log(`Attempting real verification for ${businessType} in ${state}`);
+      utilLogger.info(`Attempting real verification for ${businessType} in ${state}`);
       const realResult = await verifyLicenseWithStateDatabase(cleanId, businessType, state);
-      
+
       // Return the real verification result (success or failure)
       return realResult;
     } catch (error) {
-      console.log('Real verification failed:', error);
+      utilLogger.warn('Real verification failed:', error);
       return {
         verified: false,
         message: "Unable to verify license automatically. Manual verification will be required.",

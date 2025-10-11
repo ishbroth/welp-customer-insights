@@ -6,8 +6,10 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { Review } from "@/types";
 import { fetchCarouselReviews, getFallbackReviews } from "@/services/carouselReviewsService";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
+import { logger } from "@/utils/logger";
 
 const ReviewCarousel = () => {
+  const componentLogger = logger.withContext('ReviewCarousel');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false); // Start with false since we'll show fake reviews immediately
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -43,7 +45,7 @@ const ReviewCarousel = () => {
         setReviews(shuffledReviews);
       }
     } catch (error) {
-      console.error("Error loading carousel reviews:", error);
+      componentLogger.error("Error loading carousel reviews:", error);
     } finally {
       if (isInitialLoad) setLoading(false);
     }

@@ -1,10 +1,13 @@
 
 import React, { useEffect } from 'react';
 import { generateCSPHeader, SECURITY_HEADERS } from '@/utils/securityHeaders';
+import { logger } from '@/utils/logger';
 
 interface SecurityProviderProps {
   children: React.ReactNode;
 }
+
+const componentLogger = logger.withContext('SecurityProvider');
 
 export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
   useEffect(() => {
@@ -41,10 +44,10 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     const monitorSecurity = () => {
       // Listen for console errors that might indicate security issues
       const handleError = (event: ErrorEvent) => {
-        if (event.message.includes('Content Security Policy') || 
+        if (event.message.includes('Content Security Policy') ||
             event.message.includes('Mixed Content') ||
             event.message.includes('Refused to')) {
-          console.warn('Security policy violation detected:', event.message);
+          componentLogger.warn('Security policy violation detected:', event.message);
         }
       };
       
@@ -58,11 +61,11 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
         get: originalInnerHTML.get,
         set: function(value: string) {
           if (typeof value === 'string' && (
-            value.includes('<script') || 
+            value.includes('<script') ||
             value.includes('javascript:') ||
             value.includes('onload=') ||
             value.includes('onerror='))) {
-            console.warn('Potential XSS attempt blocked:', value);
+            componentLogger.warn('Potential XSS attempt blocked:', value);
             return;
           }
           originalInnerHTML.set!.call(this, value);
@@ -71,7 +74,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
       
       Element.prototype.setAttribute = function(name: string, value: string) {
         if (name.toLowerCase().startsWith('on') && typeof value === 'string') {
-          console.warn('Potential XSS attempt blocked via attribute:', name, value);
+          componentLogger.warn('Potential XSS attempt blocked via attribute:', name, value);
           return;
         }
         return originalSetAttribute.call(this, name, value);

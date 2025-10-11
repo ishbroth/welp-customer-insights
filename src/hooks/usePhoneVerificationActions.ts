@@ -3,6 +3,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { resendVerificationCode } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('usePhoneVerificationActions');
 
 interface UsePhoneVerificationActionsProps {
   email: string | null;
@@ -84,12 +87,12 @@ export const usePhoneVerificationActions = ({
       });
       
       if (error) {
-        console.error("Error verifying phone code:", error);
+        hookLogger.error("Error verifying phone code:", error);
         throw new Error(error.message);
       }
 
       if (data.success && data.isValid) {
-        console.log("Phone verified and account created successfully");
+        hookLogger.info("Phone verified and account created successfully");
 
         // Show success toast
         toast({
@@ -115,7 +118,7 @@ export const usePhoneVerificationActions = ({
         } else {
           // For customer accounts, they should now be automatically signed in
           if (data.session && data.user) {
-            console.log("User automatically signed in, redirecting to profile");
+            hookLogger.info("User automatically signed in, redirecting to profile");
             navigate("/profile");
           } else if (data.autoSignInFailed) {
             // Account was created but auto sign-in failed, redirect to login
@@ -144,7 +147,7 @@ export const usePhoneVerificationActions = ({
         });
       }
     } catch (error) {
-      console.error("Verification error:", error);
+      hookLogger.error("Verification error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred during verification.",
@@ -179,7 +182,7 @@ export const usePhoneVerificationActions = ({
         });
       }
     } catch (error) {
-      console.error("Error resending code:", error);
+      hookLogger.error("Error resending code:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

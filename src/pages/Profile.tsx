@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MobileScaleWrapper from "@/components/MobileScaleWrapper";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Building, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Building,
   Edit,
   Calendar,
   Award,
@@ -22,8 +22,10 @@ import {
 import { formatPhoneNumber } from "@/utils/phoneUtils";
 import { processPaymentRefund } from "@/services/subscriptionService";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
 
 const Profile: React.FC = () => {
+  const pageLogger = logger.withContext('Profile');
   const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -78,7 +80,7 @@ const Profile: React.FC = () => {
             });
           }
         } catch (error) {
-          console.error("Error processing payment refund:", error);
+          pageLogger.error("Error processing payment refund:", error);
           toast({
             title: "Payment Successful",
             description: "Your payment was processed, but there was an issue with credit refunds. Please contact support if needed.",

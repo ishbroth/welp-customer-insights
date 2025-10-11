@@ -1,6 +1,9 @@
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('reviewFormatter');
 
 export const formatReview = (review: any, currentUser: any) => {
-  console.log("formatReview: Processing review", review.id, "with business profile:", review.business_profile);
+  utilLogger.debug("formatReview: Processing review", review.id, "with business profile:", review.business_profile);
   
   // Extract business info from either business_profile or the review data itself
   const businessName = review.business_profile?.name || 
@@ -44,7 +47,7 @@ export const formatReview = (review: any, currentUser: any) => {
       ['high_quality', 'potential', 'claimed'].includes(review.matchType)
   };
 
-  console.log("formatReview: Formatted review:", {
+  utilLogger.debug("formatReview: Formatted review:", {
     id: formattedReview.id,
     businessName: formattedReview.reviewerName,
     businessAvatar: formattedReview.reviewerAvatar,

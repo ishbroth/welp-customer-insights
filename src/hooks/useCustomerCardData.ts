@@ -1,6 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerCardData');
 
 interface CustomerInfo {
   label: string;
@@ -35,7 +38,7 @@ export const useCustomerCardData = (customer: Customer) => {
     queryFn: async () => {
       if (!customer.id) return null;
       
-      console.log(`CustomerCard: Fetching verification for customer ID: ${customer.id}`);
+      hookLogger.debug(`Fetching verification for customer ID: ${customer.id}`);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -44,11 +47,11 @@ export const useCustomerCardData = (customer: Customer) => {
         .maybeSingle();
 
       if (error) {
-        console.error("CustomerCard: Error fetching customer verification:", error);
+        hookLogger.error("Error fetching customer verification:", error);
         return null;
       }
 
-      console.log(`CustomerCard: Customer ${customer.id} verification status: ${data?.verified}, type: ${data?.type}`);
+      hookLogger.debug(`Customer ${customer.id} verification status: ${data?.verified}, type: ${data?.type}`);
       return data;
     },
     enabled: !!customer.id
@@ -106,7 +109,7 @@ export const useCustomerCardData = (customer: Customer) => {
   // Use verification status from database, fallback to customer prop
   const isVerified = customerProfile?.verified || customer.verified || false;
 
-  console.log(`CustomerCard: Customer ${customer.id} final verification status: ${isVerified} (from profile: ${customerProfile?.verified}, from prop: ${customer.verified})`);
+  hookLogger.debug(`Customer ${customer.id} final verification status: ${isVerified} (from profile: ${customerProfile?.verified}, from prop: ${customer.verified})`);
 
   return {
     customerProfile,

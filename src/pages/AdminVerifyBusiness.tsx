@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { logger } from '@/utils/logger';
 
 const AdminVerifyBusiness = () => {
+  const pageLogger = logger.withContext('AdminVerifyBusiness');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(false);
@@ -38,19 +40,19 @@ const AdminVerifyBusiness = () => {
     setIsVerifying(true);
     
     try {
-      console.log("Starting verification process...");
-      
+      pageLogger.debug("Starting verification process...");
+
       // Call the verify-business edge function directly
       const { data, error } = await supabase.functions.invoke('verify-business', {
         body: { token }
       });
 
       if (error) {
-        console.error("Verification error:", error);
+        pageLogger.error("Verification error:", error);
         throw error;
       }
 
-      console.log("Verification function response:", data);
+      pageLogger.debug("Verification function response:", data);
 
       // Now check if the business was actually verified in the database
       const { data: { user } } = await supabase.auth.getUser();
@@ -65,16 +67,16 @@ const AdminVerifyBusiness = () => {
         .eq('id', user.id)
         .single();
 
-      console.log("Business info after verification:", businessInfo);
+      pageLogger.debug("Business info after verification:", businessInfo);
 
       if (businessError) {
-        console.error("Error checking business verification:", businessError);
+        pageLogger.error("Error checking business verification:", businessError);
         throw new Error("Could not confirm verification status");
       }
 
       if (businessInfo?.verified) {
         // Verification was successful
-        console.log("Business verification confirmed in database");
+        pageLogger.debug("Business verification confirmed in database");
         toast.success("🎉 Business verified successfully!");
         
         // Redirect to profile after a short delay to show success
@@ -97,7 +99,7 @@ const AdminVerifyBusiness = () => {
       }
 
     } catch (error: any) {
-      console.error("Verification failed:", error);
+      pageLogger.error("Verification failed:", error);
       setVerificationResult({
         success: false,
         message: error.message || "Failed to verify business"

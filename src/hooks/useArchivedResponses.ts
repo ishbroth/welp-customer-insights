@@ -1,6 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useArchivedResponses');
 
 interface ArchivedResponse {
   id: string;
@@ -37,7 +40,7 @@ export const useArchivedResponses = (reviewId: string) => {
           setArchivedResponse(userResponse.content);
         }
       } catch (error) {
-        console.error("Error parsing archived response:", error);
+        hookLogger.error("Error parsing archived response:", error);
       }
     }
   }, [currentUser, reviewId]);

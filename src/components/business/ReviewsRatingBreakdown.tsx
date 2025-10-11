@@ -3,13 +3,15 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
+import { logger } from '@/utils/logger';
 
 interface ReviewsRatingBreakdownProps {
   reviews: Review[];
 }
 
 const ReviewsRatingBreakdown = ({ reviews }: ReviewsRatingBreakdownProps) => {
-  console.log("ReviewsRatingBreakdown received reviews:", reviews);
+  const componentLogger = logger.withContext('ReviewsRatingBreakdown');
+  componentLogger.debug("ReviewsRatingBreakdown received reviews:", reviews);
   
   // Calculate the breakdown of reviews by star rating
   const ratingBreakdown = [5, 4, 3, 2, 1].map(rating => {

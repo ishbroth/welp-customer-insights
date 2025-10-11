@@ -9,8 +9,10 @@ import VerifyCodeButton from "@/components/verification/VerifyCodeButton";
 import { usePhoneVerification } from "@/hooks/usePhoneVerification";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 const VerifyPhone = () => {
+  const pageLogger = logger.withContext('VerifyPhone');
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
@@ -28,8 +30,8 @@ const VerifyPhone = () => {
   
   // Format the phone number properly for display and processing
   const phoneNumber = rawPhoneNumber ? formatPhoneNumber(rawPhoneNumber) : null;
-  
-  console.log("🔍 VerifyPhone component loaded with params:", {
+
+  pageLogger.debug("🔍 VerifyPhone component loaded with params:", {
     email,
     phone: rawPhoneNumber,
     formattedPhone: phoneNumber,
@@ -64,7 +66,7 @@ const VerifyPhone = () => {
   useEffect(() => {
     const sendInitialSMS = async () => {
       if (!phoneNumber) {
-        console.error("❌ No phone number provided for verification");
+        pageLogger.error("❌ No phone number provided for verification");
         toast({
           title: "Error",
           description: "No phone number provided for verification",
@@ -72,20 +74,20 @@ const VerifyPhone = () => {
         });
         return;
       }
-      
-      console.log("📤 Sending initial SMS to:", phoneNumber);
-      
+
+      pageLogger.debug("📤 Sending initial SMS to:", phoneNumber);
+
       try {
         const { data, error } = await supabase.functions.invoke("send-verification-code", {
           body: {
             phoneNumber: phoneNumber
           }
         });
-        
-        console.log("📊 Initial SMS send result:", { data, error });
-        
+
+        pageLogger.debug("📊 Initial SMS send result:", { data, error });
+
         if (error) {
-          console.error("❌ Error sending initial SMS:", error);
+          pageLogger.error("❌ Error sending initial SMS:", error);
           toast({
             title: "SMS Send Failed",
             description: error.message || "Failed to send verification code. Please try again.",
@@ -93,15 +95,15 @@ const VerifyPhone = () => {
           });
           return;
         }
-        
+
         if (data?.success) {
-          console.log("✅ Initial SMS sent successfully");
+          pageLogger.debug("✅ Initial SMS sent successfully");
           toast({
             title: "Verification Code Sent",
             description: `A verification code has been sent to ${phoneNumber}`,
           });
         } else {
-          console.error("❌ SMS send failed:", data?.message);
+          pageLogger.error("❌ SMS send failed:", data?.message);
           toast({
             title: "SMS Send Failed",
             description: data?.message || "Failed to send verification code. Please try again.",
@@ -109,7 +111,7 @@ const VerifyPhone = () => {
           });
         }
       } catch (error) {
-        console.error("💥 Unexpected error sending initial SMS:", error);
+        pageLogger.error("💥 Unexpected error sending initial SMS:", error);
         toast({
           title: "Error",
           description: "An unexpected error occurred while sending the verification code.",

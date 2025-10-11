@@ -2,11 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { SearchParams, ProfileCustomer } from "./types";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('ProfileSearch');
 
 export const searchProfiles = async (searchParams: SearchParams) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
-  console.log("Searching profiles table with flexible matching...");
+  hookLogger.debug("Searching profiles table with flexible matching...");
   
   // Start with a broader query - we'll filter more intelligently in JavaScript
   let profileQuery = supabase
@@ -17,7 +20,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
 
   // For state searches, use a simpler and more reliable approach
   if (state && state.trim() !== '') {
-    console.log(`Searching for state: ${state}`);
+    hookLogger.debug(`Searching for state: ${state}`);
     
     // Use a simpler ilike query for state - this should be more reliable
     profileQuery = profileQuery.ilike('state', `%${state}%`);
@@ -26,16 +29,16 @@ export const searchProfiles = async (searchParams: SearchParams) => {
   const { data: allProfiles, error } = await profileQuery;
   
   if (error) {
-    console.error("Profile search error:", error);
+    hookLogger.error("Profile search error:", error);
     throw error;
   }
 
   if (!allProfiles || allProfiles.length === 0) {
-    console.log("No profiles found in initial query");
+    hookLogger.debug("No profiles found in initial query");
     return [];
   }
 
-  console.log(`Found ${allProfiles.length} profiles in initial query`);
+  hookLogger.debug(`Found ${allProfiles.length} profiles in initial query`);
 
   // Format phone and zip for search by removing non-digit characters
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
@@ -63,7 +66,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       
       if (profileName) {
         const similarity = calculateStringSimilarity(searchName, profileName);
-        console.log(`Name similarity for "${searchName}" vs "${profileName}": ${similarity}`);
+        hookLogger.debug(`Name similarity for "${searchName}" vs "${profileName}": ${similarity}`);
         
         // Stricter thresholds - no more weak name matches
         const threshold = isSingleFieldSearch ? 0.6 : 0.7; // Increased from 0.4/0.5
@@ -71,7 +74,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
           score += similarity * 3;
           matches++;
           nameMatch = true;
-          console.log(`✅ Name match: ${similarity} > ${threshold}`);
+          hookLogger.debug(`✅ Name match: ${similarity} > ${threshold}`);
         }
         
         // Word matching - require exact word matches or strong prefixes
@@ -88,7 +91,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
                 matches++;
                 nameMatch = true;
               }
-              console.log(`✅ Word match: "${searchWord}" matches "${profileWord}"`);
+              hookLogger.debug(`✅ Word match: "${searchWord}" matches "${profileWord}"`);
             }
           }
         }
@@ -104,7 +107,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
         score += 5;
         matches++;
         phoneMatch = true;
-        console.log(`✅ Exact phone match: ${cleanPhone}`);
+        hookLogger.debug(`✅ Exact phone match: ${cleanPhone}`);
       }
       // 7+ digit match (not just area code)
       else if (cleanPhone.length >= 7 && profilePhone.length >= 7) {
@@ -114,20 +117,20 @@ export const searchProfiles = async (searchParams: SearchParams) => {
           score += 3;
           matches++;
           phoneMatch = true;
-          console.log(`✅ 7-digit phone match: ${searchLast7}`);
+          hookLogger.debug(`✅ 7-digit phone match: ${searchLast7}`);
         }
       }
       // Area code only match - very weak, requires other strong evidence
       else if (cleanPhone.length >= 3 && profilePhone.length >= 3 && 
                cleanPhone.slice(0, 3) === profilePhone.slice(0, 3)) {
         score += 0.5; // Very low score for area code only
-        console.log(`⚠️ Area code only match: ${cleanPhone.slice(0, 3)} (weak)`);
+        hookLogger.debug(`⚠️ Area code only match: ${cleanPhone.slice(0, 3)} (weak)`);
       }
     }
     
     // Multi-field validation: reject if searching for Name + Phone but either field fails
     if (isNamePhoneSearch && (!nameMatch || !phoneMatch)) {
-      console.log(`❌ Name+Phone search failed - Name match: ${nameMatch}, Phone match: ${phoneMatch}`);
+      hookLogger.debug(`❌ Name+Phone search failed - Name match: ${nameMatch}, Phone match: ${phoneMatch}`);
       return { ...profile, searchScore: 0, matchCount: 0 };
     }
     
@@ -135,11 +138,11 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     if (address && profile.address) {
       const similarity = calculateStringSimilarity(address.toLowerCase(), profile.address.toLowerCase());
       const threshold = isSingleFieldSearch ? 0.4 : 0.6;
-      console.log(`Address similarity for "${address}" vs "${profile.address}": ${similarity}`);
+      hookLogger.debug(`Address similarity for "${address}" vs "${profile.address}": ${similarity}`);
       if (similarity > threshold) {
         score += similarity * 2;
         matches++;
-        console.log(`✅ Address match: ${similarity} > ${threshold}`);
+        hookLogger.debug(`✅ Address match: ${similarity} > ${threshold}`);
       }
       
       // Check for house number match - safely handle regex match results
@@ -160,12 +163,12 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     if (city && profile.city) {
       const similarity = calculateStringSimilarity(city.toLowerCase(), profile.city.toLowerCase());
       const threshold = isSingleFieldSearch ? 0.4 : 0.7;
-      console.log(`City similarity for "${city}" vs "${profile.city}": ${similarity}`);
+      hookLogger.debug(`City similarity for "${city}" vs "${profile.city}": ${similarity}`);
       if (similarity > threshold || 
           (similarity > 0.8 && (profile.city.toLowerCase().includes(city.toLowerCase()) || city.toLowerCase().includes(profile.city.toLowerCase())))) {
         score += similarity * 1.5;
         matches++;
-        console.log(`✅ City match: ${similarity} > ${threshold}`);
+        hookLogger.debug(`✅ City match: ${similarity} > ${threshold}`);
       }
     }
     
@@ -185,7 +188,7 @@ export const searchProfiles = async (searchParams: SearchParams) => {
         // Give very high score for state-only searches, but still allow other matches
         score += isStateOnlySearch ? 100 : 5;
         matches++;
-        console.log(`State match found: "${profile.state}" matches "${state}" for profile ${profile.first_name} ${profile.last_name}`);
+        hookLogger.debug(`State match found: "${profile.state}" matches "${state}" for profile ${profile.first_name} ${profile.last_name}`);
       }
     }
     
@@ -231,11 +234,11 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     minMatches = 1;
   }
   
-  console.log(`Filtering with minScore: ${minScore}, minMatches: ${minMatches}, isSingleField: ${isSingleFieldSearch}`);
+  hookLogger.debug(`Filtering with minScore: ${minScore}, minMatches: ${minMatches}, isSingleField: ${isSingleFieldSearch}`);
   
   const filteredProfiles = scoredProfiles
     .filter(profile => {
-      console.log(`Profile ${profile.first_name} ${profile.last_name}: score=${profile.searchScore}, matches=${profile.matchCount}`);
+      hookLogger.debug(`Profile ${profile.first_name} ${profile.last_name}: score=${profile.searchScore}, matches=${profile.matchCount}`);
       
       if (isStateOnlySearch) {
         return profile.matchCount > 0;
@@ -258,9 +261,9 @@ export const searchProfiles = async (searchParams: SearchParams) => {
     })
     .slice(0, 100); // Increased final results limit
   
-  console.log("Profile search results:", filteredProfiles.length);
+  hookLogger.debug("Profile search results:", filteredProfiles.length);
   filteredProfiles.forEach(profile => {
-    console.log(`Profile: ${profile.first_name} ${profile.last_name}, State: ${profile.state}, Zip: ${profile.zipcode}, Score: ${profile.searchScore}, Matches: ${profile.matchCount}`);
+    hookLogger.debug(`Profile: ${profile.first_name} ${profile.last_name}, State: ${profile.state}, Zip: ${profile.zipcode}, Score: ${profile.searchScore}, Matches: ${profile.matchCount}`);
   });
   
   return filteredProfiles as ProfileCustomer[];

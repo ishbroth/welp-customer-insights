@@ -1,3 +1,6 @@
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('phoneFormatter');
 
 /**
  * Format phone number to (XXX) XXX-XXXX format for display
@@ -31,11 +34,11 @@ export const formatPhoneForE164 = (phone: string | undefined | null): string => 
 
   // Decode URL-encoded characters first
   const decoded = decodeURIComponent(phone);
-  console.log("🌐 Formatting to E.164 - input:", phone, "decoded:", decoded);
+  utilLogger.debug("Formatting to E.164 - input:", phone, "decoded:", decoded);
 
   // Remove all non-digits
   const cleaned = decoded.replace(/\D/g, '');
-  console.log("🌐 Cleaned digits:", cleaned);
+  utilLogger.debug("Cleaned digits:", cleaned);
 
   // Handle different number lengths
   let e164 = '';
@@ -50,6 +53,6 @@ export const formatPhoneForE164 = (phone: string | undefined | null): string => 
     e164 = '+1' + cleaned;
   }
 
-  console.log("🌐 E.164 result:", e164);
+  utilLogger.debug("E.164 result:", e164);
   return e164;
 };

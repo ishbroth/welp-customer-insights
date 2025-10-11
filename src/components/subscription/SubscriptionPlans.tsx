@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, X, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { logger } from "@/utils/logger";
 
 interface SubscriptionPlanProps {
   type: "customer" | "business";
@@ -12,13 +13,15 @@ interface SubscriptionPlanProps {
 }
 
 const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance = 0 }: Omit<SubscriptionPlanProps, "type">) => {
+  const componentLogger = logger.withContext('CustomerSubscriptionPlans');
+
   const handlePremiumClick = () => {
-    console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
+    componentLogger.debug("Premium button clicked! isProcessing:", isProcessing);
     handleSubscribe();
   };
 
   const handleLegacyClick = () => {
-    console.log("🔥 Legacy button clicked! isProcessing:", isProcessing);
+    componentLogger.debug("Legacy button clicked! isProcessing:", isProcessing);
     handleLegacySubscribe();
   };
 
@@ -190,13 +193,15 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
 };
 
 const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance = 0 }: Omit<SubscriptionPlanProps, "type">) => {
+  const componentLogger = logger.withContext('BusinessSubscriptionPlans');
+
   const handlePremiumClick = () => {
-    console.log("🔥 Premium button clicked! isProcessing:", isProcessing);
+    componentLogger.debug("Premium button clicked! isProcessing:", isProcessing);
     handleSubscribe();
   };
 
   const handleLegacyClick = () => {
-    console.log("🔥 Legacy button clicked! isProcessing:", isProcessing);
+    componentLogger.debug("Legacy button clicked! isProcessing:", isProcessing);
     handleLegacySubscribe();
   };
 

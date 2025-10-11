@@ -7,6 +7,9 @@ import { useUserInitialization } from "./hooks/useUserInitialization";
 import { useSecureAuth } from "./hooks/useSecureAuth";
 import { logSecurityEvent } from "@/utils/rateLimiting";
 import { AuthContextType, LoginResult, SignupData } from "./types";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthContext');
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -47,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        authLogger.error("Error initializing auth:", error);
         await logSecurityEvent('auth_initialization_error', 'Error initializing authentication', undefined, { error: error.message });
       } finally {
         if (mounted) {
@@ -61,8 +64,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!mounted) return;
 
-      console.log("Auth state changed:", event, newSession?.user?.id);
-      
+      authLogger.debug("Auth state changed:", event, newSession?.user?.id);
+
       try {
         setSession(newSession);
         
@@ -77,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await logSecurityEvent('session_ended', 'User session ended');
         }
       } catch (error) {
-        console.error("Error handling auth state change:", error);
+        authLogger.error("Error handling auth state change:", error);
         await logSecurityEvent('auth_state_change_error', 'Error handling auth state change', newSession?.user?.id, { error: error.message });
       } finally {
         setLoading(false);
@@ -100,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error("Login error:", error);
+      authLogger.error("Login error:", error);
       return { success: false, error: "An unexpected error occurred during login" };
     }
   };
@@ -115,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error("Signup error:", error);
+      authLogger.error("Signup error:", error);
       return { success: false, error: "An unexpected error occurred during signup" };
     }
   };
@@ -133,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setOneTimeAccessResources([]);
       await logSecurityEvent('logout_success', 'User logged out successfully', currentUser?.id);
     } catch (error) {
-      console.error("Logout error:", error);
+      authLogger.error("Logout error:", error);
       throw error;
     }
   };
@@ -155,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser({ ...currentUser, ...updates });
       await logSecurityEvent('profile_updated', 'Profile updated successfully', currentUser.id);
     } catch (error) {
-      console.error("Profile update error:", error);
+      authLogger.error("Profile update error:", error);
       throw error;
     }
   };
@@ -179,7 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setOneTimeAccessResources(prev => [...prev, resourceId]);
       await logSecurityEvent('one_time_access_granted', 'One-time access granted', currentUser.id, { resourceId });
     } catch (error) {
-      console.error("Error marking one-time access:", error);
+      authLogger.error("Error marking one-time access:", error);
       await logSecurityEvent('one_time_access_error', 'Error granting one-time access', currentUser.id, { error: error.message });
     }
   };

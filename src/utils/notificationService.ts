@@ -1,7 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
-interface SendNotificationParams {
+const utilLogger = logger.withContext('notificationService');
+
+interface SendNotificationParams{
   userId: string;
   notificationType: 'review_reaction' | 'customer_response' | 'new_review' | 'review_response';
   subject: string;
@@ -15,7 +18,7 @@ interface SendNotificationParams {
 
 export const sendNotification = async (params: SendNotificationParams) => {
   try {
-    console.log("Sending notification:", params);
+    utilLogger.info("Sending notification:", params);
 
     // Get user's notification preferences
     const { data: preferences } = await supabase
@@ -31,9 +34,9 @@ export const sendNotification = async (params: SendNotificationParams) => {
       });
 
       if (emailError) {
-        console.error("Error sending email notification:", emailError);
+        utilLogger.error("Error sending email notification:", emailError);
       } else {
-        console.log("Email notification sent successfully:", emailData);
+        utilLogger.info("Email notification sent successfully:", emailData);
       }
     }
 
@@ -49,16 +52,16 @@ export const sendNotification = async (params: SendNotificationParams) => {
       });
 
       if (pushError) {
-        console.error("Error sending push notification:", pushError);
+        utilLogger.error("Error sending push notification:", pushError);
       } else {
-        console.log("Push notification sent successfully:", pushData);
+        utilLogger.info("Push notification sent successfully:", pushData);
       }
     }
 
     return { success: true };
 
   } catch (error) {
-    console.error("Failed to send notification:", error);
+    utilLogger.error("Failed to send notification:", error);
     throw error;
   }
 };

@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resendVerificationCode } from "@/lib/utils";
 import { useVerificationTimer } from "@/hooks/useVerificationTimer";
+import { logger } from '@/utils/logger';
 
 const BusinessVerificationSuccess = () => {
+  const pageLogger = logger.withContext('BusinessVerificationSuccess');
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +103,7 @@ const BusinessVerificationSuccess = () => {
         });
       }
     } catch (error) {
-      console.error("Error sending verification code:", error);
+      pageLogger.error("Error sending verification code:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

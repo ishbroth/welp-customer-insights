@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('customerInfoMerger');
 
 export interface CustomerInfo {
   name: string;
@@ -167,9 +170,9 @@ const findBestPotentialMatch = (
 
 export const fetchCustomerProfile = async (customerId?: string): Promise<CustomerProfile | null> => {
   if (!customerId) return null;
-  
-  console.log(`Fetching customer profile for ID: ${customerId}`);
-  
+
+  utilLogger.debug(`Fetching customer profile for ID: ${customerId}`);
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode, verified')
@@ -177,11 +180,11 @@ export const fetchCustomerProfile = async (customerId?: string): Promise<Custome
     .maybeSingle();
 
   if (error) {
-    console.error("Error fetching customer profile:", error);
+    utilLogger.error("Error fetching customer profile:", error);
     return null;
   }
-  
-  console.log(`Customer profile found:`, data);
+
+  utilLogger.debug(`Customer profile found:`, data);
   return data;
 };
 
@@ -192,7 +195,7 @@ export const findPotentialCustomerMatches = async (
     return [];
   }
 
-  console.log(`Finding potential customer matches for:`, reviewData);
+  utilLogger.debug(`Finding potential customer matches for:`, reviewData);
   
   try {
     let query = supabase
@@ -207,9 +210,10 @@ export const findPotentialCustomerMatches = async (
         const { data: phoneMatches } = await query
           .or(`phone.ilike.%${cleanPhone}%`)
           .limit(5);
-        
+
+
         if (phoneMatches && phoneMatches.length > 0) {
-          console.log(`Found ${phoneMatches.length} phone matches`);
+          utilLogger.debug(`Found ${phoneMatches.length} phone matches`);
           return phoneMatches;
         }
       }
@@ -227,7 +231,7 @@ export const findPotentialCustomerMatches = async (
         .limit(10);
 
       if (exactMatches && exactMatches.length > 0) {
-        console.log(`Found ${exactMatches.length} name matches`);
+        utilLogger.debug(`Found ${exactMatches.length} name matches`);
         return exactMatches;
       }
 
@@ -237,14 +241,14 @@ export const findPotentialCustomerMatches = async (
         .limit(10);
 
       if (fuzzyMatches && fuzzyMatches.length > 0) {
-        console.log(`Found ${fuzzyMatches.length} fuzzy matches`);
+        utilLogger.debug(`Found ${fuzzyMatches.length} fuzzy matches`);
         return fuzzyMatches;
       }
     }
 
     return [];
   } catch (error) {
-    console.error("Error finding potential customer matches:", error);
+    utilLogger.error("Error finding potential customer matches:", error);
     return [];
   }
 };

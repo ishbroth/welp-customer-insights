@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface GuestAccessInfo {
   hasAccess: boolean;
@@ -10,6 +11,7 @@ interface GuestAccessInfo {
 }
 
 export const useGuestAccess = (reviewId: string, guestToken?: string): GuestAccessInfo => {
+  const hookLogger = logger.withContext('useGuestAccess');
   const [accessInfo, setAccessInfo] = useState<GuestAccessInfo>({
     hasAccess: false,
     isExpired: false,
@@ -45,7 +47,7 @@ export const useGuestAccess = (reviewId: string, guestToken?: string): GuestAcce
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking guest access:', error);
+          hookLogger.error('Error checking guest access:', error);
           setAccessInfo({ hasAccess: false, isExpired: false, expiresAt: null, isLoading: false });
           return;
         }
@@ -76,7 +78,7 @@ export const useGuestAccess = (reviewId: string, guestToken?: string): GuestAcce
         });
 
       } catch (error) {
-        console.error('Error validating guest access:', error);
+        hookLogger.error('Error validating guest access:', error);
         setAccessInfo({ hasAccess: false, isExpired: false, expiresAt: null, isLoading: false });
       }
     };

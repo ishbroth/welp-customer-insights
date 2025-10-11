@@ -13,8 +13,10 @@ import PhotoEditDialog from "@/components/profile/PhotoEditDialog";
 import ProfileForm from "@/components/profile/ProfileForm";
 import AccountTypeSection from "@/components/profile/AccountTypeSection";
 import DeleteAccountSection from "@/components/profile/DeleteAccountSection";
+import { logger } from '@/utils/logger';
 
 const ProfileEdit = () => {
+  const pageLogger = logger.withContext('ProfileEdit');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser, updateProfile, isSubscribed, setIsSubscribed } = useAuth();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatar || null);
@@ -42,26 +44,26 @@ const ProfileEdit = () => {
 
   const handleSavePhoto = async (croppedImage: string) => {
     try {
-      console.log("=== SAVING PHOTO ===");
-      console.log("Cropped image length:", croppedImage.length);
-      
+      pageLogger.debug("=== SAVING PHOTO ===");
+      pageLogger.debug("Cropped image length:", croppedImage.length);
+
       // Update profile with the cropped image
       await updateProfile({ avatar: croppedImage });
-      
+
       // Update local state
       setAvatarPreview(croppedImage);
       setIsEditingPhoto(false);
       setRotation(0);
-      
+
       toast({
         title: "Profile photo updated",
         description: "Your profile photo has been successfully updated.",
       });
-      
-      console.log("=== PHOTO SAVE SUCCESS ===");
+
+      pageLogger.debug("=== PHOTO SAVE SUCCESS ===");
     } catch (error) {
-      console.error("=== PHOTO SAVE ERROR ===");
-      console.error("Error saving profile photo:", error);
+      pageLogger.error("=== PHOTO SAVE ERROR ===");
+      pageLogger.error("Error saving profile photo:", error);
       toast({
         title: "Error",
         description: "Failed to save profile photo. Please try again.",

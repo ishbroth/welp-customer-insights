@@ -2,35 +2,37 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import { logger } from "@/utils/logger";
 
 interface ProfileReviewsSubscriptionStatusProps {
   hasSubscription?: boolean;
 }
 
 const ProfileReviewsSubscriptionStatus = ({ hasSubscription = false }: ProfileReviewsSubscriptionStatusProps) => {
+  const componentLogger = logger.withContext('ProfileReviewsSubscriptionStatus');
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   const handleSubscribeClick = () => {
-    console.log("🔀 ProfileReviewsSubscriptionStatus clicked");
-    console.log("📋 Current user object:", currentUser);
-    console.log("📋 User type:", currentUser?.type);
-    console.log("📋 User type string:", String(currentUser?.type));
-    console.log("📋 User type typeof:", typeof currentUser?.type);
-    console.log("📋 User type strict check:", currentUser?.type === "business");
-    console.log("📋 User type loose check:", currentUser?.type == "business");
-    
+    componentLogger.debug("ProfileReviewsSubscriptionStatus clicked");
+    componentLogger.debug("Current user object:", currentUser);
+    componentLogger.debug("User type:", currentUser?.type);
+    componentLogger.debug("User type string:", String(currentUser?.type));
+    componentLogger.debug("User type typeof:", typeof currentUser?.type);
+    componentLogger.debug("User type strict check:", currentUser?.type === "business");
+    componentLogger.debug("User type loose check:", currentUser?.type == "business");
+
     // More explicit routing logic with additional checks
     const userType = String(currentUser?.type).toLowerCase().trim();
-    console.log("📋 Normalized user type:", userType);
-    
+    componentLogger.debug("Normalized user type:", userType);
+
     if (userType === "business") {
-      console.log("✅ BUSINESS DETECTED - Navigating to /subscription");
+      componentLogger.debug("BUSINESS DETECTED - Navigating to /subscription");
       navigate("/subscription");
       return;
     }
-    
-    console.log("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
+
+    componentLogger.debug("NON-BUSINESS USER - Navigating to /customer-benefits");
     navigate("/customer-benefits");
   };
 

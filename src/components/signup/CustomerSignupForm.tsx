@@ -13,8 +13,10 @@ import { DuplicateCustomerDialog } from "./DuplicateCustomerDialog";
 import { CustomerAddressSection } from "./CustomerAddressSection";
 import { sendEmailVerificationCode } from "@/utils/emailUtils";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
+import { logger } from "@/utils/logger";
 
 const CustomerSignupForm = () => {
+  const componentLogger = logger.withContext('CustomerSignupForm');
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -150,7 +152,7 @@ const CustomerSignupForm = () => {
         });
       }
     } catch (error) {
-      console.error("Error sending verification code:", error);
+      componentLogger.error("Error sending verification code:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

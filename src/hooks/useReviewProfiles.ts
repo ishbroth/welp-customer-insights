@@ -5,6 +5,9 @@ import { useCustomerProfileQuery } from "@/hooks/useCustomerProfileQuery";
 import { useBusinessVerificationQuery } from "@/hooks/useBusinessVerificationQuery";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useReviewProfiles');
 
 interface UseReviewProfilesProps {
   review: Review & {
@@ -25,8 +28,8 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
   const { data: businessInfo } = useQuery({
     queryKey: ['businessInfo', review.reviewerId],
     queryFn: async () => {
-      console.log('Fetching business_info for reviewerId:', review.reviewerId);
-      
+      hookLogger.debug('Fetching business_info for reviewerId:', review.reviewerId);
+
       const { data, error } = await supabase
         .from('business_info')
         .select('business_name')
@@ -34,11 +37,11 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching business_info:', error);
+        hookLogger.error('Error fetching business_info:', error);
         return null;
       }
 
-      console.log('Business info found:', data);
+      hookLogger.debug('Business info found:', data);
       return data;
     },
     enabled: !!review.reviewerId
@@ -52,7 +55,7 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
 
   // Check if this review has been claimed
   const isReviewClaimed = !!review.customerId;
-  console.log(`useReviewProfiles: Review ${review.id} claimed status:`, isReviewClaimed, 'Customer ID:', review.customerId);
+  hookLogger.debug(`Review ${review.id} claimed status:`, isReviewClaimed, 'Customer ID:', review.customerId);
 
   // Business verification status
   const isBusinessVerified = businessVerificationStatus || false;
@@ -73,7 +76,7 @@ export const useReviewProfiles = ({ review }: UseReviewProfilesProps) => {
     name: businessInfo?.business_name || businessProfile.name
   } : null;
 
-  console.log('useReviewProfiles: Final status for review', review.id, {
+  hookLogger.debug('Final status for review', review.id, {
     isReviewClaimed,
     customerProfile: customerProfile ? 'found' : 'not found',
     finalCustomerAvatar,

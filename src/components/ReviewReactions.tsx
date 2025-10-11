@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useReviewReactions } from "@/hooks/useReviewReactions";
+import { logger } from "@/utils/logger";
 
 interface ReviewReactionsProps {
   reviewId: string;
@@ -23,15 +24,16 @@ interface ReviewReactionsProps {
   onReactionToggle: (reviewId: string, reactionType: string) => void;
 }
 
-const ReviewReactions = ({ 
-  reviewId, 
+const ReviewReactions = ({
+  reviewId,
   customerId,
   businessId,
   businessName,
   businessAvatar,
-  reactions: initialReactions, 
-  onReactionToggle 
+  reactions: initialReactions,
+  onReactionToggle
 }: ReviewReactionsProps) => {
+  const componentLogger = logger.withContext('ReviewReactions');
   const { currentUser, hasOneTimeAccess, isSubscribed } = useAuth();
   const { toast } = useToast();
   const userId = currentUser?.id || "";
@@ -58,7 +60,7 @@ const ReviewReactions = ({
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching business profile for avatar:", error);
+        componentLogger.error("Error fetching business profile for avatar:", error);
         return null;
       }
       return data;

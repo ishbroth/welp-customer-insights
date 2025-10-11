@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface UseDuplicateCheckProps {
   email: string;
@@ -9,6 +10,7 @@ interface UseDuplicateCheckProps {
 }
 
 export const useDuplicateCheck = ({ email, phone, onDuplicateFound }: UseDuplicateCheckProps) => {
+  const hookLogger = logger.withContext('useDuplicateCheck');
   const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
@@ -19,25 +21,25 @@ export const useDuplicateCheck = ({ email, phone, onDuplicateFound }: UseDuplica
       }
 
       setIsChecking(true);
-      
+
       try {
-        console.log("Checking for duplicates:", { email, phone });
-        
+        hookLogger.debug("Checking for duplicates:", { email, phone });
+
         const { data, error } = await supabase.functions.invoke('check-duplicates', {
           body: { email: email.trim(), phone: phone.trim() }
         });
 
         if (error) {
-          console.error('Error checking duplicates:', error);
+          hookLogger.error('Error checking duplicates:', error);
           onDuplicateFound(false);
           return;
         }
 
-        console.log("Duplicate check result:", data);
+        hookLogger.debug("Duplicate check result:", data);
         onDuplicateFound(data?.hasDuplicates || false);
-        
+
       } catch (error) {
-        console.error('Unexpected error checking duplicates:', error);
+        hookLogger.error('Unexpected error checking duplicates:', error);
         onDuplicateFound(false);
       } finally {
         setIsChecking(false);

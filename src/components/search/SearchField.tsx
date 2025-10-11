@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { logger } from '@/utils/logger';
 
 interface SearchFieldProps {
   type?: string;
@@ -29,14 +30,16 @@ const SearchField = ({
   required,
   onAddressComponentsExtracted
 }: SearchFieldProps) => {
+  const componentLogger = logger.withContext('SearchField');
+
   // Use FirstNameInput for first name fields
   const isFirstNameField = placeholder.toLowerCase().includes("first name");
-  
+
   // Use PhoneInput for phone fields
   const isPhoneField = placeholder.toLowerCase().includes("phone") || type === "tel";
-  
+
   // Use AddressAutocomplete for address fields
-  const isAddressField = placeholder.toLowerCase().includes("address") || 
+  const isAddressField = placeholder.toLowerCase().includes("address") ||
                         placeholder.toLowerCase().includes("street");
 
   // Handle phone input change
@@ -50,7 +53,7 @@ const SearchField = ({
 
   // Handle address autocomplete change - no normalization during typing
   const handleAddressAutocompleteChange = (address: string) => {
-    console.log('🔍 SearchField - Address changed to:', address);
+    componentLogger.debug('Address changed to:', address);
     // Create a synthetic event to maintain consistency
     const syntheticEvent = {
       target: { value: address }
@@ -60,7 +63,7 @@ const SearchField = ({
 
   // Handle place selection from Google Maps
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    console.log('🔍 SearchField - Place selected:', place);
+    componentLogger.debug('Place selected:', place);
   };
 
   // Handle address components extraction - CRITICAL CALLBACK
@@ -70,12 +73,12 @@ const SearchField = ({
     state: string;
     zipCode: string;
   }) => {
-    console.log('🔍 SearchField - Components extracted, MUST forward to parent:', components);
+    componentLogger.debug('Components extracted, MUST forward to parent:', components);
     if (onAddressComponentsExtracted) {
-      console.log('🔍 SearchField - FORWARDING components to parent');
+      componentLogger.debug('FORWARDING components to parent');
       onAddressComponentsExtracted(components);
     } else {
-      console.log('❌ SearchField - onAddressComponentsExtracted callback is MISSING!');
+      componentLogger.warn('onAddressComponentsExtracted callback is MISSING!');
     }
   };
   

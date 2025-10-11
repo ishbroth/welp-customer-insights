@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Share2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
 
 interface MobileShareButtonProps {
   title?: string;
@@ -27,6 +28,7 @@ const MobileShareButton: React.FC<MobileShareButtonProps> = ({
   variant = 'outline',
   size = 'sm'
 }) => {
+  const componentLogger = logger.withContext('MobileShareButton');
   const isMobile = useIsMobile();
 
   const handleShare = useCallback(async () => {
@@ -37,7 +39,7 @@ const MobileShareButton: React.FC<MobileShareButtonProps> = ({
           await navigator.share({ title, text, url });
           toast.success('Shared successfully');
         } catch (error) {
-          console.error('Web share error:', error);
+          componentLogger.error('Web share error', { error });
           // Fallback to clipboard
           await navigator.clipboard.writeText(url);
           toast.success('Link copied to clipboard');
@@ -60,7 +62,7 @@ const MobileShareButton: React.FC<MobileShareButtonProps> = ({
       });
       toast.success('Shared successfully');
     } catch (error) {
-      console.error('Native share error:', error);
+      componentLogger.error('Native share error', { error });
       toast.error('Failed to share');
     }
   }, [title, text, url, files, dialogTitle]);

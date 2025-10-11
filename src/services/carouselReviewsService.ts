@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Review } from '@/types';
+import { logger } from '@/utils/logger';
+
+const serviceLogger = logger.withContext('CarouselReviews');
 
 const SUPABASE_URL = "https://yftvcixhifvrovwhtgtj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdHZjaXhoaWZ2cm92d2h0Z3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5ODY1ODQsImV4cCI6MjA2MTU2MjU4NH0.dk0-iM54olbkNnCEb92-KNsIeDw9u2owEg4B-fh5ggc";
@@ -16,7 +19,7 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
       .limit(24); // Get 24 recent reviews for variety
 
     if (error) {
-      console.error("Error fetching carousel reviews:", error);
+      serviceLogger.error("Error fetching carousel reviews:", error);
       // If database error, just use fallback reviews
       return getFallbackReviews();
     }
@@ -26,7 +29,7 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
 
     if (!reviews || reviews.length === 0) {
       // No database reviews yet, use all fallback reviews
-      console.log("No database reviews found, using fallback reviews only");
+      serviceLogger.debug("No database reviews found, using fallback reviews only");
       return fallbackReviews;
     }
 
@@ -85,25 +88,25 @@ export const fetchCarouselReviews = async (): Promise<Review[]> => {
 
     if (databaseCount >= totalDesired) {
       // Enough database reviews, use only database reviews
-      console.log(`[CAROUSEL] Using ${databaseCount} database reviews only`);
+      serviceLogger.debug(`[CAROUSEL] Using ${databaseCount} database reviews only`);
       return formattedDatabaseReviews.slice(0, totalDesired);
     } else {
       // Mix database and fallback reviews
       const fallbackNeeded = totalDesired - databaseCount;
       const selectedFallbackReviews = fallbackReviews.slice(0, fallbackNeeded);
 
-      console.log(`[CAROUSEL] Mixing ${databaseCount} database reviews with ${selectedFallbackReviews.length} fallback reviews`);
-      console.log(`[CAROUSEL] Database review IDs:`, formattedDatabaseReviews.map(r => r.id));
-      console.log(`[CAROUSEL] Fallback review IDs:`, selectedFallbackReviews.map(r => r.id));
+      serviceLogger.debug(`[CAROUSEL] Mixing ${databaseCount} database reviews with ${selectedFallbackReviews.length} fallback reviews`);
+      serviceLogger.debug(`[CAROUSEL] Database review IDs:`, formattedDatabaseReviews.map(r => r.id));
+      serviceLogger.debug(`[CAROUSEL] Fallback review IDs:`, selectedFallbackReviews.map(r => r.id));
 
       // Combine and shuffle for variety
       const combinedReviews = [...formattedDatabaseReviews, ...selectedFallbackReviews];
-      console.log(`[CAROUSEL] Combined total:`, combinedReviews.length);
+      serviceLogger.debug(`[CAROUSEL] Combined total:`, combinedReviews.length);
       return combinedReviews;
     }
 
   } catch (error) {
-    console.error("Error in fetchCarouselReviews:", error);
+    serviceLogger.error("Error in fetchCarouselReviews:", error);
     return getFallbackReviews();
   }
 };

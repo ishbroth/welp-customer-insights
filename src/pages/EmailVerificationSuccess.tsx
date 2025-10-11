@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { logger } from '@/utils/logger';
 
 const EmailVerificationSuccess = () => {
+  const pageLogger = logger.withContext('EmailVerificationSuccess');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { session, currentUser, loading } = useAuth();
@@ -36,7 +38,7 @@ const EmailVerificationSuccess = () => {
             .single();
 
           if (error) {
-            console.error("Error checking verification status:", error);
+            pageLogger.error("Error checking verification status:", error);
           } else if (data) {
             setIsVerified(data.verified || false);
             setVerificationDetails({
@@ -47,7 +49,7 @@ const EmailVerificationSuccess = () => {
             });
           }
         } catch (error) {
-          console.error("Error checking verification status:", error);
+          pageLogger.error("Error checking verification status:", error);
         }
       }
       setIsCheckingAuth(false);
@@ -70,7 +72,7 @@ const EmailVerificationSuccess = () => {
         // Clean up localStorage
         localStorage.removeItem("pendingVerification");
       } catch (error) {
-        console.error("Error parsing pending verification data:", error);
+        pageLogger.error("Error parsing pending verification data:", error);
       }
     }
 
@@ -94,7 +96,7 @@ const EmailVerificationSuccess = () => {
       navigate('/profile');
     } else {
       // If not ready, wait for auth state and then navigate
-      console.log("Waiting for auth state to be ready...");
+      pageLogger.debug("Waiting for auth state to be ready...");
       const checkAuthInterval = setInterval(() => {
         if (session?.user && currentUser && !loading) {
           clearInterval(checkAuthInterval);
@@ -105,7 +107,7 @@ const EmailVerificationSuccess = () => {
       // Clear interval after 10 seconds to prevent infinite waiting
       setTimeout(() => {
         clearInterval(checkAuthInterval);
-        console.log("Auth state timeout, navigating anyway");
+        pageLogger.debug("Auth state timeout, navigating anyway");
         navigate('/profile');
       }, 10000);
     }

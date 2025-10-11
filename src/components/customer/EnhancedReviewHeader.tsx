@@ -4,6 +4,7 @@ import { Phone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getBusinessInitials, getCustomerInitials } from "./enhancedReviewCardUtils";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { logger } from '@/utils/logger';
 
 interface EnhancedReviewHeaderProps {
   reviewerName: string;
@@ -32,7 +33,9 @@ const EnhancedReviewHeader: React.FC<EnhancedReviewHeaderProps> = ({
   isReviewClaimed,
   isCustomerVerified,
 }) => {
-  console.log('EnhancedReviewHeader: Rendering with data:', {
+  const componentLogger = logger.withContext('EnhancedReviewHeader');
+
+  componentLogger.debug('Rendering with data:', {
     reviewerName,
     customerName,
     finalBusinessAvatar,

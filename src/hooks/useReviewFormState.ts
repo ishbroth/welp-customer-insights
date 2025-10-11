@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('ReviewFormState');
 
 export const useReviewFormState = () => {
   const [searchParams] = useSearchParams();
@@ -56,7 +59,7 @@ export const useReviewFormState = () => {
 
   useEffect(() => {
     const initializeForm = async () => {
-      console.log("useReviewFormState - isEditing:", isEditing, "reviewData:", reviewData, "reviewId:", reviewId);
+      hookLogger.debug("isEditing:", isEditing, "reviewData:", reviewData, "reviewId:", reviewId);
       
       // Clear all form data first for new reviews
       if (!isEditing) {
@@ -69,8 +72,8 @@ export const useReviewFormState = () => {
       
       // Handle pre-filling data if we're editing
       if (isEditing && reviewData) {
-        console.log("🔍 EDIT FORM - Setting form data from reviewData:", reviewData);
-        console.log("🔍 EDIT FORM - reviewData.is_anonymous:", reviewData.is_anonymous);
+        hookLogger.debug("Setting form data from reviewData:", reviewData);
+        hookLogger.debug("reviewData.is_anonymous:", reviewData.is_anonymous);
         setRating(reviewData.rating);
         setComment(reviewData.content);
         
@@ -81,9 +84,9 @@ export const useReviewFormState = () => {
         
         setCustomerFirstName(firstName);
         setCustomerLastName(lastName);
-        console.log("🔍 EDIT FORM - Loading reviewData:", reviewData);
-        console.log("🔍 EDIT FORM - customer_nickname:", reviewData.customer_nickname);
-        console.log("🔍 EDIT FORM - customer_business_name:", reviewData.customer_business_name);
+        hookLogger.debug("Loading reviewData:", reviewData);
+        hookLogger.debug("customer_nickname:", reviewData.customer_nickname);
+        hookLogger.debug("customer_business_name:", reviewData.customer_business_name);
         setCustomerNickname(reviewData.customer_nickname || "");
         setCustomerBusinessName(reviewData.customer_business_name || "");
         setCustomerPhone(reviewData.phone || "");
@@ -93,9 +96,9 @@ export const useReviewFormState = () => {
         setCustomerZipCode(reviewData.zipCode || "");
 
         // Load anonymous state from reviewData
-        console.log("🔍 EDIT FORM - Loading anonymous state from reviewData:", reviewData.is_anonymous);
+        hookLogger.debug("Loading anonymous state from reviewData:", reviewData.is_anonymous);
         setIsAnonymous(reviewData.is_anonymous || false);
-        console.log("🔍 EDIT FORM - Set isAnonymous to:", reviewData.is_anonymous || false);
+        hookLogger.debug("Set isAnonymous to:", reviewData.is_anonymous || false);
 
         // Load associates data from reviewData
         if (reviewData.associates && Array.isArray(reviewData.associates)) {
@@ -119,9 +122,9 @@ export const useReviewFormState = () => {
               .order('display_order');
 
             if (error) {
-              console.error("Error fetching existing photos:", error);
+              hookLogger.error("Error fetching existing photos:", error);
             } else if (existingPhotos && existingPhotos.length > 0) {
-              console.log("Loading existing photos:", existingPhotos);
+              hookLogger.debug("Loading existing photos:", existingPhotos);
               
               // Convert existing photos to the format expected by the form
               const photoPromises = existingPhotos.map(async (photo, index) => {
@@ -135,7 +138,7 @@ export const useReviewFormState = () => {
                     existingId: photo.id
                   };
                 } catch (error) {
-                  console.error("Error converting photo to file:", error);
+                  hookLogger.error("Error converting photo to file:", error);
                   return null;
                 }
               });
@@ -145,12 +148,12 @@ export const useReviewFormState = () => {
               setPhotos(validPhotos as Array<{ file: File; caption: string; preview: string; isExisting?: boolean; existingId?: string }>);
             }
           } catch (error) {
-            console.error("Error loading existing photos:", error);
+            hookLogger.error("Error loading existing photos:", error);
           }
         }
       } else if (isEditing && reviewId && !reviewData) {
         // If we're editing but don't have reviewData, try to fetch it from the database
-        console.log("Editing mode but no reviewData, fetching from database...");
+        hookLogger.debug("Editing mode but no reviewData, fetching from database...");
         try {
           const { data: review, error } = await supabase
             .from('reviews')
@@ -159,10 +162,10 @@ export const useReviewFormState = () => {
             .maybeSingle();
 
           if (error) {
-            console.error("Error fetching review for editing:", error);
+            hookLogger.error("Error fetching review for editing:", error);
           } else if (review) {
-            console.log("🔍 EDIT FORM - Fetched review data from database:", review);
-            console.log("🔍 EDIT FORM - Database review.is_anonymous:", review.is_anonymous);
+            hookLogger.debug("Fetched review data from database:", review);
+            hookLogger.debug("Database review.is_anonymous:", review.is_anonymous);
             setRating(review.rating);
             setComment(review.content);
             
@@ -173,9 +176,9 @@ export const useReviewFormState = () => {
             
             setCustomerFirstName(firstName);
             setCustomerLastName(lastName);
-            console.log("🔍 EDIT FORM - Loading from database review:", review);
-            console.log("🔍 EDIT FORM - DB customer_nickname:", review.customer_nickname);
-            console.log("🔍 EDIT FORM - DB customer_business_name:", review.customer_business_name);
+            hookLogger.debug("Loading from database review:", review);
+            hookLogger.debug("DB customer_nickname:", review.customer_nickname);
+            hookLogger.debug("DB customer_business_name:", review.customer_business_name);
             setCustomerNickname(review.customer_nickname || "");
             setCustomerBusinessName(review.customer_business_name || "");
             setCustomerPhone(review.customer_phone || "");
@@ -185,9 +188,9 @@ export const useReviewFormState = () => {
             setCustomerZipCode(review.customer_zipcode || "");
 
             // Load anonymous state
-            console.log("🔍 EDIT FORM - Loading anonymous state from database:", review.is_anonymous);
+            hookLogger.debug("Loading anonymous state from database:", review.is_anonymous);
             setIsAnonymous(review.is_anonymous || false);
-            console.log("🔍 EDIT FORM - Set isAnonymous to:", review.is_anonymous || false);
+            hookLogger.debug("Set isAnonymous to:", review.is_anonymous || false);
 
             // Load associates data
             if (review.associates && Array.isArray(review.associates)) {
@@ -209,7 +212,7 @@ export const useReviewFormState = () => {
               .order('display_order');
 
             if (!photosError && existingPhotos && existingPhotos.length > 0) {
-              console.log("Loading existing photos:", existingPhotos);
+              hookLogger.debug("Loading existing photos:", existingPhotos);
               
               const photoPromises = existingPhotos.map(async (photo, index) => {
                 try {
@@ -222,7 +225,7 @@ export const useReviewFormState = () => {
                     existingId: photo.id
                   };
                 } catch (error) {
-                  console.error("Error converting photo to file:", error);
+                  hookLogger.error("Error converting photo to file:", error);
                   return null;
                 }
               });
@@ -233,7 +236,7 @@ export const useReviewFormState = () => {
             }
           }
         } catch (error) {
-          console.error("Error fetching review data:", error);
+          hookLogger.error("Error fetching review data:", error);
         }
       } else {
         // Pre-fill form with search parameters from URL if not editing

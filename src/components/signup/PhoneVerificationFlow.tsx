@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/utils/logger";
 
 interface PhoneVerificationFlowProps {
   businessPhone: string;
@@ -36,6 +37,7 @@ export const PhoneVerificationFlow = ({
   businessEmail,
   businessType
 }: PhoneVerificationFlowProps) => {
+  const componentLogger = logger.withContext('PhoneVerificationFlow');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isTextVerificationSent, setIsTextVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
@@ -64,7 +66,7 @@ export const PhoneVerificationFlow = ({
       
       setIsTextVerificationSent(true);
     } catch (error) {
-      console.error("Error sending verification code:", error);
+      componentLogger.error("Error sending verification code:", error);
       setVerificationError("Failed to send verification code. Please try again.");
     } finally {
       setIsVerifying(false);

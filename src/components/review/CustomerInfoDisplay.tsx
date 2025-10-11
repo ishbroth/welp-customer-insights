@@ -5,6 +5,7 @@ import ReviewMatchQualityScore from "@/components/customer/ReviewMatchQualitySco
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getNameInitials } from "@/utils/nameFormatter";
+import { logger } from '@/utils/logger';
 
 interface CustomerInfo {
   name: string;
@@ -37,12 +38,14 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
   hideMatchScore = false,
   reviewCustomerId
 }) => {
+  const componentLogger = logger.withContext('CustomerInfoDisplay');
+
   // Fetch customer profile data when review is claimed
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', reviewCustomerId],
     queryFn: async () => {
       if (!reviewCustomerId) return null;
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode')
@@ -50,10 +53,10 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
         .maybeSingle();
 
       if (error) {
-        console.error("CustomerInfoDisplay: Error fetching customer profile:", error);
+        componentLogger.error("Error fetching customer profile:", error);
         return null;
       }
-      
+
       return data;
     },
     enabled: !!reviewCustomerId && customerInfo.isClaimed

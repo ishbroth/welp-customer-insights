@@ -1,5 +1,8 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
+
+const serviceLogger = logger.withContext('PhotoUpload');
 
 export interface PhotoUpload {
   file: File;
@@ -43,7 +46,7 @@ export const uploadReviewPhotos = async (
         .upload(fileName, photo.file);
 
       if (uploadError) {
-        console.error("Error uploading photo:", uploadError);
+        serviceLogger.error("Error uploading photo:", uploadError);
         throw new Error(`Failed to upload photo: ${uploadError.message}`);
       }
 
@@ -80,7 +83,7 @@ export const savePhotoRecords = async (
       .eq('review_id', reviewId);
 
     if (deleteError) {
-      console.error("Error deleting existing photo records:", deleteError);
+      serviceLogger.error("Error deleting existing photo records:", deleteError);
       throw new Error(`Failed to delete existing photo records: ${deleteError.message}`);
     }
   }
@@ -96,7 +99,7 @@ export const savePhotoRecords = async (
     );
 
   if (photoError) {
-    console.error("Error saving photo records:", photoError);
+    serviceLogger.error("Error saving photo records:", photoError);
     throw new Error(`Failed to save photo records: ${photoError.message}`);
   }
 };

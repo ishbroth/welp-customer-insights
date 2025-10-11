@@ -10,8 +10,10 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 const ForgotPassword = () => {
+  const pageLogger = logger.withContext('ForgotPassword');
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResetEmailSent, setIsResetEmailSent] = useState(false);
@@ -40,27 +42,27 @@ const ForgotPassword = () => {
     }
     
     setIsSubmitting(true);
-    
+
     try {
-      console.log("Sending password reset email to:", email);
-      
+      pageLogger.debug("Sending password reset email to:", email);
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      
+
       if (error) {
-        console.error("Password reset error:", error);
+        pageLogger.error("Password reset error:", error);
         toast({
           title: "Error",
           description: error.message,
           variant: "destructive",
         });
       } else {
-        console.log("Password reset email sent successfully");
+        pageLogger.debug("Password reset email sent successfully");
         setIsResetEmailSent(true);
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      pageLogger.error("Unexpected error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

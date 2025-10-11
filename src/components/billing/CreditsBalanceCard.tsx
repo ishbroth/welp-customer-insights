@@ -10,8 +10,10 @@ import { toast } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
+import { logger } from "@/utils/logger";
 
 const CreditsBalanceCard = () => {
+  const componentLogger = logger.withContext('CreditsBalanceCard');
   const { balance, isLoading, loadCreditsData, processSuccessfulPurchase } = useCredits();
   const { currentUser } = useAuth();
   const { subscriptionData } = useBillingData(currentUser);
@@ -29,8 +31,8 @@ const CreditsBalanceCard = () => {
       const sessionId = searchParams.get("session_id");
 
       if (success === "true" && credits === "true" && sessionId) {
-        console.log("Processing successful credit purchase", { sessionId });
-        
+        componentLogger.info("Processing successful credit purchase", { sessionId });
+
         try {
           // Process the successful purchase
           const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
@@ -38,15 +40,15 @@ const CreditsBalanceCard = () => {
           });
 
           if (error) {
-            console.error("Error processing credit purchase:", error);
+            componentLogger.error("Error processing credit purchase:", error);
             toast.error("Failed to process credit purchase");
           } else {
-            console.log("Credit purchase processed successfully:", data);
+            componentLogger.info("Credit purchase processed successfully:", data);
             toast.success(data.message || "Credits purchased successfully!");
             await loadCreditsData(); // Refresh credits data
           }
         } catch (error) {
-          console.error("Error processing credit purchase:", error);
+          componentLogger.error("Error processing credit purchase:", error);
           toast.error("Failed to process credit purchase");
         }
 
@@ -64,45 +66,45 @@ const CreditsBalanceCard = () => {
 
 
   const handleBuyCredits = async () => {
-    console.log("🔥 Buy Credits button clicked!");
-    
+    componentLogger.info("Buy Credits button clicked!");
+
     if (isSubscribed) {
-      console.log("❌ User is subscribed, not allowing credit purchase");
+      componentLogger.debug("User is subscribed, not allowing credit purchase");
       return; // Don't navigate if subscribed
     }
-    
+
     if (!currentUser) {
-      console.log("❌ No current user");
+      componentLogger.warn("No current user");
       toast.error("Please log in to purchase credits");
       return;
     }
 
     try {
-      console.log("📞 About to call create-credit-payment function...");
+      componentLogger.debug("About to call create-credit-payment function...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: {}
       });
 
-      console.log("🔍 Function response:", { data, error });
+      componentLogger.debug("Function response:", { data, error });
 
       if (error) {
-        console.error("❌ Error creating payment session:", error);
+        componentLogger.error("Error creating payment session:", error);
         toast.error("Failed to create payment session");
         return;
       }
 
       if (data?.url) {
-        console.log("🚀 Opening Stripe checkout URL:", data.url);
+        componentLogger.info("Opening Stripe checkout URL:", data.url);
         openCheckout(data.url);
-        
+
         toast.success("Redirecting to Stripe checkout...");
       } else {
-        console.error("❌ No URL returned from payment session");
-        console.error("Full response data:", data);
+        componentLogger.error("No URL returned from payment session");
+        componentLogger.error("Full response data:", data);
         toast.error("Failed to create payment session");
       }
     } catch (error) {
-      console.error("❌ Error in handleBuyCredits:", error);
+      componentLogger.error("Error in handleBuyCredits:", error);
       toast.error("An error occurred while processing your request");
     }
   };

@@ -4,6 +4,9 @@ import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBusinessReviews');
 
 // Helper function to calculate sort priority
 const calculateSortPriority = (claimedBy: string | undefined, hasConversation: boolean, hasResponses: boolean): number => {
@@ -56,19 +59,19 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         .eq('business_id', currentUser.id)
         .is('deleted_at', null) // Only get non-deleted reviews
 
-      console.log("BusinessReviews: Query result:", { reviewsData, error });
-      console.log("🔍 RAW QUERY DATA - First review:", reviewsData?.[0]);
-      console.log("🔍 RAW QUERY DATA - Customer nickname:", reviewsData?.[0]?.customer_nickname);
-      console.log("🔍 RAW QUERY DATA - Customer business name:", reviewsData?.[0]?.customer_business_name);
-      console.log("🔍 RAW QUERY DATA - is_anonymous:", reviewsData?.[0]?.is_anonymous);
-      console.log("🔍 RAW QUERY DATA - associates:", reviewsData?.[0]?.associates);
+      hookLogger.debug("Query result:", { reviewsData, error });
+      hookLogger.debug("RAW QUERY DATA - First review:", reviewsData?.[0]);
+      hookLogger.debug("RAW QUERY DATA - Customer nickname:", reviewsData?.[0]?.customer_nickname);
+      hookLogger.debug("RAW QUERY DATA - Customer business name:", reviewsData?.[0]?.customer_business_name);
+      hookLogger.debug("RAW QUERY DATA - is_anonymous:", reviewsData?.[0]?.is_anonymous);
+      hookLogger.debug("RAW QUERY DATA - associates:", reviewsData?.[0]?.associates);
 
       if (error) {
         throw error;
       }
 
-      console.log("BusinessReviews: Found reviews:", reviewsData?.length || 0);
-      console.log("BusinessReviews: Raw data sample:", reviewsData?.[0]);
+      hookLogger.info("Found reviews:", reviewsData?.length || 0);
+      hookLogger.debug("Raw data sample:", reviewsData?.[0]);
 
       // Format reviews data to match Review type and calculate activity status
       const formattedReviews = (reviewsData || []).map(review => {
@@ -90,7 +93,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           && review.responses.some(r => r && r.id);
 
         // Debug logging to verify detection
-        console.log(`Review ${review.customer_name}:`, {
+        hookLogger.debug(`Review ${review.customer_name}:`, {
           claimedBy,
           hasConversation,
           hasResponses,
@@ -101,8 +104,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         
         // Ensure we have a valid date string - use the raw created_at value
         const reviewDate = review.created_at || new Date().toISOString();
-        
-        console.log("BusinessReviews: Processing review:", {
+
+        hookLogger.debug("Processing review:", {
           id: review.id,
           customer_name: review.customer_name,
           customer_nickname: review.customer_nickname,
@@ -146,8 +149,8 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         
         // Add sorting priority metadata
         (formattedReview as any)._sortPriority = calculateSortPriority(claimedBy, hasConversation, hasResponses);
-        
-        console.log("BusinessReviews: Formatted review:", {
+
+        hookLogger.debug("Formatted review:", {
           id: formattedReview.id,
           customerName: formattedReview.customerName,
           customer_nickname: formattedReview.customer_nickname,
@@ -183,16 +186,16 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       });
 
       setWorkingReviews(sortedReviews);
-      
-      console.log("BusinessReviews: Final formatted reviews:", formattedReviews.map(r => ({
+
+      hookLogger.debug("Final formatted reviews:", formattedReviews.map(r => ({
         id: r.id,
         customerName: r.customerName,
         date: r.date,
         dateType: typeof r.date,
         dateValue: JSON.stringify(r.date)
       })));
-      
-      console.log("BusinessReviews: Formatted reviews with responses:", formattedReviews);
+
+      hookLogger.debug("Formatted reviews with responses:", formattedReviews);
       
       if (reviewsData && reviewsData.length > 0) {
         const responsesCount = formattedReviews.reduce((acc, review) => acc + (review.responses?.length || 0), 0);
@@ -201,9 +204,9 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
           description: `Found ${reviewsData.length} reviews${responsesCount > 0 ? ` with ${responsesCount} customer responses` : ''}.`,
         });
       }
-      
+
     } catch (error) {
-      console.error("Error fetching business reviews:", error);
+      hookLogger.error("Error fetching business reviews:", error);
       toast({
         title: "Error",
         description: "There was an error fetching your reviews. Please try again.",
@@ -215,11 +218,11 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
   };
 
   const deleteReview = async (reviewId: string) => {
-    console.log("🗑️ Attempting to hard delete review:", reviewId);
-    console.log("Current user:", currentUser?.id);
-    
+    hookLogger.info("Attempting to hard delete review:", reviewId);
+    hookLogger.debug("Current user:", currentUser?.id);
+
     if (!currentUser) {
-      console.error("❌ No current user found, cannot delete review");
+      hookLogger.error("No current user found, cannot delete review");
       toast({
         title: "Error",
         description: "You must be logged in to delete reviews.",
@@ -234,7 +237,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
         body: { reviewId }
       });
 
-      console.log("Delete edge function result:", { data, error });
+      hookLogger.debug("Delete edge function result:", { data, error });
 
       if (error) {
         throw error;
@@ -256,9 +259,9 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
     if (onRefresh) {
       onRefresh();
     }
-      
+
     } catch (error) {
-      console.error("Error deleting review:", error);
+      hookLogger.error("Error deleting review:", error);
       toast({
         title: "Error",
         description: `There was an error deleting the review: ${error.message}`,

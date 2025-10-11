@@ -2,12 +2,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLoading } from '@/contexts/LoadingContext';
+import { logger } from '@/utils/logger';
 
 interface LoadingRouteProps {
   children: React.ReactNode;
 }
 
 const LoadingRoute: React.FC<LoadingRouteProps> = ({ children }) => {
+  const componentLogger = logger.withContext('LoadingRoute');
   const location = useLocation();
   const previousLocationRef = useRef<string>('');
   const { setIsPageLoading } = useLoading();
@@ -31,7 +33,7 @@ const LoadingRoute: React.FC<LoadingRouteProps> = ({ children }) => {
     
     // Only trigger loading on actual navigation (not initial load)
     if (previousLocationRef.current !== currentPath && previousLocationRef.current !== '') {
-      console.log('📍 LoadingRoute: Page transition detected', {
+      componentLogger.debug('Page transition detected', {
         from: previousLocationRef.current,
         to: currentPath
       });

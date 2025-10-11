@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CameraIcon, ImageIcon, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
 
 interface MobileImageUploadProps {
   onImageSelect: (imageData: string) => void;
@@ -24,6 +25,7 @@ const MobileImageUpload: React.FC<MobileImageUploadProps> = ({
   quality = 80,
   allowEditing = true
 }) => {
+  const componentLogger = logger.withContext('MobileImageUpload');
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
 
@@ -53,7 +55,7 @@ const MobileImageUpload: React.FC<MobileImageUploadProps> = ({
         toast.success('Photo captured successfully');
       }
     } catch (error) {
-      console.error('Camera error:', error);
+      componentLogger.error('Camera error', { error });
       toast.error('Failed to capture photo');
     } finally {
       setIsLoading(false);
@@ -78,7 +80,7 @@ const MobileImageUpload: React.FC<MobileImageUploadProps> = ({
         toast.success('Image selected successfully');
       }
     } catch (error) {
-      console.error('Gallery error:', error);
+      componentLogger.error('Gallery error', { error });
       toast.error('Failed to select image');
     } finally {
       setIsLoading(false);

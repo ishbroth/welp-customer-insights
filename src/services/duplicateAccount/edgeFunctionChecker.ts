@@ -1,6 +1,9 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
 import { DuplicateCheckResult } from "./types";
+
+const serviceLogger = logger.withContext('EdgeFunctionChecker');
 
 /**
  * Check for duplicates using the edge function that bypasses RLS
@@ -13,8 +16,8 @@ export const checkDuplicatesViaEdgeFunction = async (
   accountType: 'business' | 'customer' = 'business'
 ): Promise<DuplicateCheckResult> => {
   try {
-    console.log("=== EDGE FUNCTION DUPLICATE CHECK START ===");
-    console.log("Checking duplicates via edge function:", { email, phone, businessName, address, accountType });
+    serviceLogger.debug("=== EDGE FUNCTION DUPLICATE CHECK START ===");
+    serviceLogger.debug("Checking duplicates via edge function:", { email, phone, businessName, address, accountType });
 
     const { data, error } = await supabase.functions.invoke('check-duplicates', {
       body: {
@@ -26,11 +29,11 @@ export const checkDuplicatesViaEdgeFunction = async (
       }
     });
 
-    console.log("Edge function response:", { data, error });
+    serviceLogger.debug("Edge function response:", { data, error });
 
     if (error) {
-      console.error("Edge function error:", error);
-      console.log("=== EDGE FUNCTION DUPLICATE CHECK END (ERROR) ===");
+      serviceLogger.error("Edge function error:", error);
+      serviceLogger.debug("=== EDGE FUNCTION DUPLICATE CHECK END (ERROR) ===");
       return {
         isDuplicate: false,
         duplicateType: null,
@@ -38,12 +41,12 @@ export const checkDuplicatesViaEdgeFunction = async (
       };
     }
 
-    console.log("=== EDGE FUNCTION DUPLICATE CHECK END (SUCCESS) ===");
+    serviceLogger.debug("=== EDGE FUNCTION DUPLICATE CHECK END (SUCCESS) ===");
     return data as DuplicateCheckResult;
 
   } catch (error) {
-    console.error("Error calling edge function:", error);
-    console.log("=== EDGE FUNCTION DUPLICATE CHECK END (CATCH ERROR) ===");
+    serviceLogger.error("Error calling edge function:", error);
+    serviceLogger.debug("=== EDGE FUNCTION DUPLICATE CHECK END (CATCH ERROR) ===");
     return {
       isDuplicate: false,
       duplicateType: null,

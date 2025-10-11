@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export const useSelfReviewCheck = (customerPhone: string) => {
+  const hookLogger = logger.withContext('useSelfReviewCheck');
   const { currentUser } = useAuth();
   const [isSelfReview, setIsSelfReview] = useState(false);
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
@@ -29,18 +31,18 @@ export const useSelfReviewCheck = (customerPhone: string) => {
           .maybeSingle();
 
         if (error) {
-          console.error("Error checking user phone:", error);
+          hookLogger.error("Error checking user phone:", error);
           setIsSelfReview(false);
           return;
         }
 
         if (userProfile && userProfile.phone) {
           const cleanUserPhone = userProfile.phone.replace(/\D/g, '');
-          console.log("Self-review check - User phone:", cleanUserPhone, "Input phone:", cleanInputPhone);
-          
+          hookLogger.debug("Self-review check - User phone:", cleanUserPhone, "Input phone:", cleanInputPhone);
+
           // Check if the cleaned phone numbers match
           if (cleanUserPhone === cleanInputPhone) {
-            console.log("Self-review detected - phone numbers match");
+            hookLogger.debug("Self-review detected - phone numbers match");
             setIsSelfReview(true);
           } else {
             setIsSelfReview(false);
@@ -49,7 +51,7 @@ export const useSelfReviewCheck = (customerPhone: string) => {
           setIsSelfReview(false);
         }
       } catch (error) {
-        console.error("Error in self-review check:", error);
+        hookLogger.error("Error in self-review check:", error);
         setIsSelfReview(false);
       } finally {
         setIsCheckingPhone(false);

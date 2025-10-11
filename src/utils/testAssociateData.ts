@@ -1,8 +1,11 @@
 // Test utility to help debug associate search functionality
 // This can be run in the browser console to create test data
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('testAssociateData');
 
 export const createTestReviewWithAssociates = async () => {
-  console.log("Creating test review with associates...");
+  utilLogger.debug("Creating test review with associates...");
 
   const testReview = {
     business_id: "test-business-id",
@@ -20,17 +23,17 @@ export const createTestReviewWithAssociates = async () => {
     ]
   };
 
-  console.log("Test review data:", testReview);
+  utilLogger.debug("Test review data:", testReview);
 
   // This would need to be inserted via Supabase in the actual app
   return testReview;
 };
 
 export const debugAssociateSearch = (searchParams: any) => {
-  console.log("=== ASSOCIATE SEARCH DEBUG ===");
-  console.log("Search parameters:", searchParams);
-  console.log("firstName:", searchParams.firstName);
-  console.log("lastName:", searchParams.lastName);
+  utilLogger.debug("=== ASSOCIATE SEARCH DEBUG ===");
+  utilLogger.debug("Search parameters:", searchParams);
+  utilLogger.debug("firstName:", searchParams.firstName);
+  utilLogger.debug("lastName:", searchParams.lastName);
 
   // Test the associate matching logic
   const testAssociates = [
@@ -39,7 +42,7 @@ export const debugAssociateSearch = (searchParams: any) => {
   ];
 
   const fullName = [searchParams.firstName, searchParams.lastName].filter(Boolean).join(' ').toLowerCase();
-  console.log("Full name search:", fullName);
+  utilLogger.debug("Full name search:", fullName);
 
   const matchingAssociates = testAssociates.filter(associate => {
     const associateFirstName = (associate.firstName || '').toLowerCase();
@@ -51,15 +54,15 @@ export const debugAssociateSearch = (searchParams: any) => {
     const lastNameMatch = !searchParams.lastName || associateLastName.includes(searchParams.lastName.toLowerCase());
     const fullNameMatch = associateFullName.includes(fullName);
 
-    console.log(`Testing associate ${associate.firstName} ${associate.lastName}:`);
-    console.log(`  - First name match: ${firstNameMatch}`);
-    console.log(`  - Last name match: ${lastNameMatch}`);
-    console.log(`  - Full name match: ${fullNameMatch}`);
+    utilLogger.debug(`Testing associate ${associate.firstName} ${associate.lastName}:`);
+    utilLogger.debug(`  - First name match: ${firstNameMatch}`);
+    utilLogger.debug(`  - Last name match: ${lastNameMatch}`);
+    utilLogger.debug(`  - Full name match: ${fullNameMatch}`);
 
     return firstNameMatch && lastNameMatch || fullNameMatch;
   });
 
-  console.log("Matching associates:", matchingAssociates);
+  utilLogger.debug("Matching associates:", matchingAssociates);
   return matchingAssociates;
 };
 

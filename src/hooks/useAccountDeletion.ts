@@ -3,6 +3,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useAccountDeletion');
 
 export const useAccountDeletion = () => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,8 +35,8 @@ export const useAccountDeletion = () => {
     setIsDeleting(true);
 
     try {
-      console.log("🗑️ Starting account deletion process...");
-      
+      hookLogger.info("Starting account deletion process");
+
       const { data, error } = await supabase.functions.invoke('delete-account', {
         method: 'POST',
         headers: {
@@ -42,11 +45,11 @@ export const useAccountDeletion = () => {
       });
 
       if (error) {
-        console.error("Account deletion error:", error);
+        hookLogger.error("Account deletion error:", error);
         throw error;
       }
 
-      console.log("✅ Account deletion successful:", data);
+      hookLogger.info("Account deletion successful:", data);
       
       // Log out the user since their account no longer exists
       await logout();
@@ -57,7 +60,7 @@ export const useAccountDeletion = () => {
       return true;
 
     } catch (error: any) {
-      console.error("Account deletion failed:", error);
+      hookLogger.error("Account deletion failed:", error);
       
       toast({
         title: "Account deletion failed",

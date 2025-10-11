@@ -2,6 +2,7 @@ import React from "react";
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Review } from "@/types";
+import { logger } from "@/utils/logger";
 
 interface AssociatesDisplayProps {
   associates: Array<{ firstName: string; lastName: string }>;
@@ -22,9 +23,10 @@ const AssociatesDisplay: React.FC<AssociatesDisplayProps> = ({
   showBusinessName = true, // Default to true for backward compatibility
   reviewData
 }) => {
-  console.log("🔍 ASSOCIATES DISPLAY - businessName:", businessName);
-  console.log("🔍 ASSOCIATES DISPLAY - associates:", associates);
-  console.log("🔍 ASSOCIATES DISPLAY - reviewData:", reviewData);
+  const componentLogger = logger.withContext('AssociatesDisplay');
+  componentLogger.debug("businessName:", businessName);
+  componentLogger.debug("associates:", associates);
+  componentLogger.debug("reviewData:", reviewData);
 
   const navigate = useNavigate();
   const filteredAssociates = associates.filter(

@@ -1,5 +1,8 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
+
+const serviceLogger = logger.withContext('Customer');
 
 interface CreateCustomerParams {
   firstName: string;
@@ -30,12 +33,12 @@ export const createSearchableCustomer = async ({
       .select('id')
       .eq('phone', formattedPhone)
       .maybeSingle();
-    
+
     if (searchError) {
-      console.error('Error checking for existing customer:', searchError);
+      serviceLogger.error('Error checking for existing customer:', searchError);
       return { success: false, error: searchError.message };
     }
-    
+
     // If customer exists, update their info
     if (existingCustomer) {
       const { error: updateError } = await supabase
@@ -50,9 +53,9 @@ export const createSearchableCustomer = async ({
           updated_at: new Date().toISOString()
         })
         .eq('id', existingCustomer.id);
-        
+
       if (updateError) {
-        console.error('Error updating existing customer:', updateError);
+        serviceLogger.error('Error updating existing customer:', updateError);
         return { success: false, error: updateError.message };
       }
       
@@ -81,15 +84,15 @@ export const createSearchableCustomer = async ({
       })
       .select('id')
       .single();
-      
+
     if (insertError) {
-      console.error('Error creating searchable customer:', insertError);
+      serviceLogger.error('Error creating searchable customer:', insertError);
       return { success: false, error: insertError.message };
     }
-    
+
     return { success: true, customerId: data.id };
   } catch (error: any) {
-    console.error('Unexpected error in createSearchableCustomer:', error);
+    serviceLogger.error('Unexpected error in createSearchableCustomer:', error);
     return { success: false, error: error.message || 'An unexpected error occurred' };
   }
 };
@@ -104,15 +107,15 @@ export const hasOneTimeAccessToCustomer = async (userId: string, customerId: str
       .eq('business_id', userId)
       .eq('customer_id', customerId)
       .maybeSingle();
-      
+
     if (error) {
-      console.error('Error checking one-time access:', error);
+      serviceLogger.error('Error checking one-time access:', error);
       return false;
     }
-    
+
     return !!data;
   } catch (error) {
-    console.error('Unexpected error in hasOneTimeAccessToCustomer:', error);
+    serviceLogger.error('Unexpected error in hasOneTimeAccessToCustomer:', error);
     return false;
   }
 };
@@ -130,14 +133,14 @@ export const purchaseOneTimeAccess = async (businessId: string, customerId: stri
       })
       .select()
       .single();
-      
+
     if (error) {
       throw error;
     }
-    
+
     return { success: true, access: data };
   } catch (error: any) {
-    console.error('Error purchasing one-time access:', error);
+    serviceLogger.error('Error purchasing one-time access:', error);
     return { success: false, error: error.message || 'Failed to purchase access' };
   }
 };

@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { AddressComponents } from "@/utils/addressExtraction";
+import { logger } from "@/utils/logger";
 
 interface FormData {
   address: string;
@@ -18,18 +19,20 @@ interface BusinessAddressFieldsProps {
 }
 
 const BusinessAddressFields = ({ formData, onInputChange }: BusinessAddressFieldsProps) => {
+  const componentLogger = logger.withContext('BusinessAddressFields');
+
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
-    console.log('🏠 BusinessAddressFields - Place selected:', place);
+    componentLogger.debug('Place selected:', place);
   };
 
   const handleAddressChange = (address: string) => {
-    console.log('🏠 BusinessAddressFields - Address changed to:', address);
+    componentLogger.debug('Address changed to:', address);
     onInputChange("address", address);
   };
 
   // CRITICAL: Handle address components extraction to populate other fields
   const handleAddressComponentsExtracted = (components: AddressComponents) => {
-    console.log('🏠 BusinessAddressFields - Components extracted:', components);
+    componentLogger.debug('Components extracted:', components);
     
     // Update other form fields with extracted components
     if (components.city) onInputChange("city", components.city);

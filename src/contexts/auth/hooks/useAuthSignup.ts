@@ -1,6 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { SignupData } from "../types";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthSignup');
 
 /**
  * Hook for handling signup-related functionality
@@ -46,7 +49,7 @@ export const useAuthSignup = () => {
       });
 
       if (error) {
-        console.error("Signup error:", error);
+        authLogger.error("Signup error:", error);
         return { success: false, error: error.message };
       }
 
@@ -70,7 +73,7 @@ export const useAuthSignup = () => {
         });
 
         if (profileError) {
-          console.error("Profile creation error:", profileError);
+          authLogger.error("Profile creation error:", profileError);
           return { success: false, error: profileError.message };
         }
 
@@ -80,7 +83,7 @@ export const useAuthSignup = () => {
 
       return { success: false, error: "Failed to create user" };
     } catch (error: any) {
-      console.error("Signup error:", error);
+      authLogger.error("Signup error:", error);
       return { success: false, error: "An unexpected error occurred" };
     }
   };

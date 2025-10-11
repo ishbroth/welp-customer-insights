@@ -1,3 +1,6 @@
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('addressExtraction');
 
 export interface AddressComponents {
   streetAddress: string;
@@ -8,7 +11,7 @@ export interface AddressComponents {
 }
 
 export const extractAddressComponents = (place: google.maps.places.PlaceResult): AddressComponents => {
-  console.log('🏠 extractAddressComponents - Starting extraction for place:', place);
+  utilLogger.debug('extractAddressComponents - Starting extraction for place:', place);
   
   const components: AddressComponents = {
     streetAddress: '',
@@ -19,11 +22,11 @@ export const extractAddressComponents = (place: google.maps.places.PlaceResult):
   };
 
   if (!place.address_components) {
-    console.log('❌ No address components found in place');
+    utilLogger.warn('No address components found in place');
     return components;
   }
 
-  console.log('🏠 Address components to process:', place.address_components);
+  utilLogger.debug('Address components to process:', place.address_components);
 
   // Extract street number and route to build street address
   let streetNumber = '';
@@ -31,26 +34,26 @@ export const extractAddressComponents = (place: google.maps.places.PlaceResult):
   
   place.address_components.forEach((component) => {
     const types = component.types;
-    console.log('🏠 Processing component:', component.long_name, 'Types:', types);
-    
+    utilLogger.debug('Processing component:', component.long_name, 'Types:', types);
+
     if (types.includes('street_number')) {
       streetNumber = component.long_name;
-      console.log('🏠 Found street number:', streetNumber);
+      utilLogger.debug('Found street number:', streetNumber);
     } else if (types.includes('route')) {
       route = component.long_name;
-      console.log('🏠 Found route:', route);
+      utilLogger.debug('Found route:', route);
     } else if (types.includes('locality')) {
       components.city = component.long_name;
-      console.log('🏠 Found city:', components.city);
+      utilLogger.debug('Found city:', components.city);
     } else if (types.includes('administrative_area_level_1')) {
       components.state = component.short_name;
-      console.log('🏠 Found state:', components.state);
+      utilLogger.debug('Found state:', components.state);
     } else if (types.includes('postal_code')) {
       components.zipCode = component.long_name;
-      console.log('🏠 Found zip code:', components.zipCode);
+      utilLogger.debug('Found zip code:', components.zipCode);
     } else if (types.includes('country')) {
       components.country = component.short_name;
-      console.log('🏠 Found country:', components.country);
+      utilLogger.debug('Found country:', components.country);
     }
   });
 
@@ -63,7 +66,7 @@ export const extractAddressComponents = (place: google.maps.places.PlaceResult):
     components.streetAddress = streetNumber;
   }
 
-  console.log('🏠 Final extracted components:', components);
-  
+  utilLogger.debug('Final extracted components:', components);
+
   return components;
 };

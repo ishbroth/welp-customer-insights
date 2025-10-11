@@ -10,7 +10,8 @@ import {
   FileText, 
   Bell,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 
 interface ProfileSidebarProps {
@@ -92,8 +93,8 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
             </div>
           )}
           
-          {/* Navigation and Logout Button Container - on mobile, no flex-1 to prevent pushing down */}
-          <div className={isMobile ? "py-4" : "flex-1 py-4"}>
+          {/* Navigation Container */}
+          <div className="py-4">
             <nav className={`space-y-1 ${isMobile && !isOpen ? "px-1" : "px-4"}`}>
               <Link 
                 to="/profile" 
@@ -250,27 +251,37 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 }`} />
                 {(!isMobile || isOpen) && "Notifications"}
               </Link>
-            </nav>
-            
-            {/* Logout Button - directly under nav items when expanded on mobile */}
-            {(!isMobile || isOpen) && (
-              <div className={`${isMobile ? "px-4 pt-4" : "px-4 pt-2"}`}>
-                <Button 
-                  variant="outline" 
-                  className={`w-full transition-colors ${isMobile ? "h-12 text-base" : "h-10 text-sm"}`}
+              
+              {/* Logout Button - styled as a nav item, directly in the nav */}
+              {(!isMobile || isOpen) && (
+                <button
                   onClick={() => {
                     logout();
                     if (isMobile) toggle();
                   }}
+                  className={`w-full flex items-center rounded-md hover:bg-gray-100 transition-colors text-left ${
+                    isMobile && !isOpen 
+                      ? "px-1 py-2 justify-center" 
+                      : isMobile 
+                        ? "px-4 py-4 text-base" 
+                        : "px-2 py-2 text-sm"
+                  } text-gray-700`}
                 >
-                  Log Out
-                </Button>
-              </div>
-            )}
+                  <LogOut className={`text-gray-500 ${
+                    isMobile && !isOpen 
+                      ? "h-5 w-5" 
+                      : isMobile 
+                        ? "mr-4 h-6 w-6" 
+                        : "mr-3 h-5 w-5"
+                  }`} />
+                  {(!isMobile || isOpen) && "Log Out"}
+                </button>
+              )}
+            </nav>
           </div>
           
-          {/* Spacer for desktop to push content down - only on desktop */}
-          {!isMobile && <div className="flex-1"></div>}
+          {/* Spacer to push everything to top */}
+          <div className="flex-1"></div>
         </div>
       </div>
       

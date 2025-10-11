@@ -3,6 +3,9 @@ import { verifyBusinessId } from "@/utils/businessVerification";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBusinessVerification');
 
 export const useBusinessVerification = (currentUserId?: string) => {
   const { isVerified } = useVerifiedStatus(currentUserId);
@@ -44,7 +47,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
     }
     
     try {
-      console.log("🔍 Performing business verification with correct license type:", {
+      hookLogger.info("Performing business verification with correct license type:", {
         licenseNumber,
         businessType,
         businessState
@@ -52,12 +55,12 @@ export const useBusinessVerification = (currentUserId?: string) => {
 
       // Use the actual businessType instead of hardcoded value
       const result = await verifyBusinessId(licenseNumber, businessType, businessState);
-      
-      console.log("📋 Business verification result:", result);
+
+      hookLogger.info("Business verification result:", result);
       
       if (result.verified && result.isRealVerification) {
         // Real verification successful - proceed with verified account creation
-        console.log('Real verification successful:', result);
+        hookLogger.info('Real verification successful:', result);
         
         setRealVerificationDetails({
           businessName,
@@ -89,7 +92,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
         
       } else {
         // Real verification failed or not available - create unverified account
-        console.log('Real verification failed or unavailable:', result);
+        hookLogger.warn('Real verification failed or unavailable:', result);
         
         await createUnverifiedAccount(
           businessName,
@@ -106,7 +109,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
       }
     } catch (error) {
       setVerificationError(`License verification failed. ${isVerified ? 'You can update your license information or try again.' : 'Your account will be created and you can submit for manual verification later.'}`);
-      console.error("Verification error:", error);
+      hookLogger.error("Verification error:", error);
       
       // Create unverified account even on error
       await createUnverifiedAccount(
@@ -177,7 +180,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
             body: { userId: data.user.id, email: businessEmail }
           });
         } catch (confirmError) {
-          console.error("Error confirming email:", confirmError);
+          hookLogger.error("Error confirming email:", confirmError);
         }
       }
 
@@ -199,7 +202,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
       });
 
       if (profileError) {
-        console.error("Profile creation error:", profileError);
+        hookLogger.error("Profile creation error:", profileError);
       }
 
       // Store business data and show popup - account created but NOT verified
@@ -224,7 +227,7 @@ export const useBusinessVerification = (currentUserId?: string) => {
       setShowAccountCreatedPopup(true);
 
     } catch (error) {
-      console.error("Account creation error:", error);
+      hookLogger.error("Account creation error:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred during account creation.",

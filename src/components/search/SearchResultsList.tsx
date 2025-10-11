@@ -6,6 +6,7 @@ import EmptySearchResults from "./EmptySearchResults";
 import SearchResultsHeader from "./SearchResultsHeader";
 import { useAuth } from "@/contexts/auth";
 import { useClearSearch } from "@/hooks/useClearSearch";
+import { logger } from '@/utils/logger';
 
 interface SearchResultsListProps {
   customers: Customer[];
@@ -17,23 +18,24 @@ const SearchResultsList = ({ customers, isLoading, onRefresh }: SearchResultsLis
   const { currentUser } = useAuth();
   const [searchParams] = useSearchParams();
   const { clearSearch } = useClearSearch();
+  const componentLogger = logger.withContext('SearchResultsList');
 
   // Check if any search parameters are present to determine if a search has been performed
-  const hasSearchParams = Array.from(searchParams.entries()).some(([key, value]) => 
+  const hasSearchParams = Array.from(searchParams.entries()).some(([key, value]) =>
     value.trim() !== '' && ['firstName', 'lastName', 'phone', 'address', 'city', 'state', 'zipCode'].includes(key)
   );
 
   // Check if a customer profile is viewable
   const hasFullAccess = (customerId: string) => {
-    console.log(`Checking hasFullAccess for customer ID: ${customerId}`);
-    
+    componentLogger.debug(`Checking hasFullAccess for customer ID: ${customerId}`);
+
     // For review-based customers, they don't have actual profiles to view
     // The "View Profile" button should be disabled for review-based customers
     if (customerId.startsWith('review-customer-')) {
-      console.log(`Review-based customer detected: ${customerId} - no profile available`);
+      componentLogger.debug(`Review-based customer detected: ${customerId} - no profile available`);
       return false;
     }
-    
+
     // For actual profile customers, business users have access
     return currentUser?.type === "business" || currentUser?.type === "admin";
   };

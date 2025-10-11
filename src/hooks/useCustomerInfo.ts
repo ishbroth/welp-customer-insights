@@ -1,5 +1,8 @@
 
 import { useMemo } from "react";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerInfo');
 
 interface CustomerInfoParams {
   customer_name?: string;
@@ -57,7 +60,7 @@ export const useCustomerInfo = (
       ? customerProfile.phone 
       : customer_phone;
 
-    console.log('useCustomerInfo: Processing customer info:', {
+    hookLogger.debug('Processing customer info:', {
       customer_name,
       customerId,
       isClaimed,

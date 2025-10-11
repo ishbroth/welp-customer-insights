@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 const Login = () => {
+  const pageLogger = logger.withContext('Login');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,42 +20,42 @@ const Login = () => {
 
   // Handle navigation when auth state changes
   useEffect(() => {
-    console.log("🔍 Auth state:", { 
-      loading, 
-      hasSession: !!session, 
+    pageLogger.debug("🔍 Auth state:", {
+      loading,
+      hasSession: !!session,
       hasCurrentUser: !!currentUser,
-      userId: currentUser?.id 
+      userId: currentUser?.id
     });
 
     // Only navigate if we're not loading and have both session and user
     if (!loading && session && currentUser) {
-      console.log("✅ Auth complete, navigating to profile");
+      pageLogger.debug("✅ Auth complete, navigating to profile");
       navigate("/profile");
     }
   }, [loading, session, currentUser, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    console.log("🔐 Starting login process");
+    pageLogger.debug("🔐 Starting login process");
 
     try {
       const result = await login(email, password);
 
       if (result.success) {
-        console.log("🔐 Login call successful");
+        pageLogger.debug("🔐 Login call successful");
         // Don't navigate here - let the useEffect handle it based on auth state
         toast.success("Login successful!");
       } else {
-        console.error("❌ Login failed:", result.error);
+        pageLogger.error("❌ Login failed:", result.error);
         toast.error(result.error || "Login failed");
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error("❌ Login error:", error);
+      pageLogger.error("❌ Login error:", error);
       toast.error("An unexpected error occurred");
       setIsSubmitting(false);
     }

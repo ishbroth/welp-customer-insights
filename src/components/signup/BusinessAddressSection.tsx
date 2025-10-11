@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
+import { logger } from "@/utils/logger";
 
 interface BusinessAddressSectionProps {
   businessName: string;
@@ -33,15 +34,17 @@ export const BusinessAddressSection = ({
   businessZipCode,
   setBusinessZipCode,
 }: BusinessAddressSectionProps) => {
+  const componentLogger = logger.withContext('BusinessAddressSection');
+
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    console.log('🏠 BusinessAddressSection - Place selected:', place);
-    
+    componentLogger.debug('Place selected:', place);
+
     // Extract address components using the utility function
     const components = extractAddressComponents(place);
-    
-    console.log('🏠 BusinessAddressSection - Extracted components:', components);
+
+    componentLogger.debug('Extracted components:', components);
 
     // Update the street address field with just the street portion
     if (components.streetAddress) {
@@ -55,8 +58,8 @@ export const BusinessAddressSection = ({
   };
 
   const handleAddressComponentsExtracted = (components: AddressComponents) => {
-    console.log('🏠 BusinessAddressSection - Components extracted:', components);
-    
+    componentLogger.debug('Components extracted:', components);
+
     // Update fields that are currently empty to avoid overwriting user input
     if (components.city && !businessCity) {
       setBusinessCity(components.city);
@@ -70,7 +73,7 @@ export const BusinessAddressSection = ({
   };
 
   const handleAddressChange = (address: string) => {
-    console.log('🏠 BusinessAddressSection - Address changed to:', address);
+    componentLogger.debug('Address changed to:', address);
     setBusinessStreet(address);
   };
 
@@ -100,7 +103,7 @@ export const BusinessAddressSection = ({
           placeholder="Start typing your business address..."
           value={businessStreet}
           onChange={(e) => {
-            console.log('🏠 BusinessAddressSection - Input changed:', e.target.value);
+            componentLogger.debug('Input changed:', e.target.value);
             setBusinessStreet(e.target.value);
           }}
           onAddressChange={handleAddressChange}

@@ -6,6 +6,7 @@ import PersonalInfoSection from "./PersonalInfoSection";
 import ContactInfoSection from "./ContactInfoSection";
 import AddressInfoSection from "./AddressInfoSection";
 import LocationInfoSection from "./LocationInfoSection";
+import { logger } from "@/utils/logger";
 
 interface CustomerInfoFormProps {
   customerFirstName: string;
@@ -63,15 +64,17 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
   setCustomerZipCode,
   onAddressComponentsExtracted,
 }) => {
+  const componentLogger = logger.withContext('CustomerInfoForm');
+
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    console.log('CustomerInfoForm - Place selected:', place);
-    
+    componentLogger.debug('Place selected:', place);
+
     // Extract address components using the utility function
     const components = extractAddressComponents(place);
-    
-    console.log('CustomerInfoForm - Extracted components:', components);
+
+    componentLogger.debug('Extracted components:', components);
 
     // Update the street address field with just the street portion
     if (components.streetAddress) {
@@ -95,8 +98,8 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
     state: string;
     zipCode: string;
   }) => {
-    console.log('CustomerInfoForm - Components extracted:', components);
-    
+    componentLogger.debug('Components extracted:', components);
+
     // Update fields that are currently empty to avoid overwriting user input
     if (components.city && !customerCity) {
       setCustomerCity(components.city);
@@ -107,7 +110,7 @@ const CustomerInfoForm: React.FC<CustomerInfoFormProps> = ({
     if (components.zipCode && !customerZipCode) {
       setCustomerZipCode(components.zipCode);
     }
-    
+
     // Also call the parent callback
     if (onAddressComponentsExtracted) {
       onAddressComponentsExtracted(components);

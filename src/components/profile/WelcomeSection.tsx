@@ -5,11 +5,13 @@ import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
 import { useCustomerVerificationFix } from "@/hooks/useCustomerVerificationFix";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 const WelcomeSection = () => {
+  const componentLogger = logger.withContext('WelcomeSection');
   const { currentUser } = useAuth();
   const { isVerified: isBusinessVerified } = useVerifiedStatus(currentUser?.id);
-  
+
   // Apply the verification fix for existing customer accounts
   useCustomerVerificationFix();
 
@@ -18,7 +20,7 @@ const WelcomeSection = () => {
     queryKey: ['customerVerification', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id || currentUser.type !== 'customer') return null;
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('verified')
@@ -26,7 +28,7 @@ const WelcomeSection = () => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching customer verification:", error);
+        componentLogger.error("Error fetching customer verification:", error);
         return null;
       }
 

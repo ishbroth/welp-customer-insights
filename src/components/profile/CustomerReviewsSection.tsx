@@ -9,6 +9,7 @@ import ReviewReactions from "@/components/ReviewReactions";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useAuth } from "@/contexts/auth";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
+import { logger } from "@/utils/logger";
 
 interface CustomerReview {
   id: string;
@@ -38,8 +39,9 @@ const CustomerReviewsSection = ({
   customerReviews, 
   isLoading, 
   hasSubscription = false,
-  isReviewUnlocked = () => false 
+  isReviewUnlocked = () => false
 }: CustomerReviewsSectionProps) => {
+  const componentLogger = logger.withContext('CustomerReviewsSection');
   const { isSubscribed, hasOneTimeAccess } = useAuth();
 
   const getBusinessInitials = (name: string) => {
@@ -51,7 +53,7 @@ const CustomerReviewsSection = ({
   };
 
   const handleReactionToggle = (reviewId: string, reactionType: string) => {
-    console.log(`Reaction ${reactionType} toggled for review ${reviewId}`);
+    componentLogger.debug(`Reaction ${reactionType} toggled for review ${reviewId}`);
   };
 
   return (

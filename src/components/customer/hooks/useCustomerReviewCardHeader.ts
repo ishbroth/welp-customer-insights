@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomerInfo } from "@/hooks/useCustomerInfo";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export const useCustomerReviewCardHeader = (
   review: any,
@@ -11,6 +12,7 @@ export const useCustomerReviewCardHeader = (
   isReviewActuallyClaimed: boolean,
   currentUser: any
 ) => {
+  const componentLogger = logger.withContext('useCustomerReviewCardHeader');
   const navigate = useNavigate();
 
   // Fetch actual customer profile if review is claimed
@@ -18,9 +20,9 @@ export const useCustomerReviewCardHeader = (
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
       if (!review.customerId) return null;
-      
-      console.log(`useCustomerReviewCardHeader: Fetching customer profile for ID: ${review.customerId}`);
-      
+
+      componentLogger.debug(`Fetching customer profile for ID: ${review.customerId}`);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, avatar, first_name, last_name, name, phone')
@@ -28,11 +30,11 @@ export const useCustomerReviewCardHeader = (
         .maybeSingle();
 
       if (error) {
-        console.error("useCustomerReviewCardHeader: Error fetching customer profile:", error);
+        componentLogger.error("Error fetching customer profile:", error);
         return null;
       }
 
-      console.log(`useCustomerReviewCardHeader: Customer profile result:`, data);
+      componentLogger.debug(`Customer profile result:`, data);
       return data;
     },
     enabled: !!review.customerId

@@ -5,8 +5,10 @@ import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CameraIcon } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 const CameraTest: React.FC = () => {
+  const componentLogger = logger.withContext('CameraTest');
   const [photo, setPhoto] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +29,7 @@ const CameraTest: React.FC = () => {
 
       setPhoto(image.dataUrl || null);
     } catch (error) {
-      console.error('Error taking photo:', error);
+      componentLogger.error('Error taking photo', { error });
       alert('Error accessing camera. Please check permissions.');
     } finally {
       setIsLoading(false);
@@ -51,7 +53,7 @@ const CameraTest: React.FC = () => {
 
       setPhoto(image.dataUrl || null);
     } catch (error) {
-      console.error('Error selecting photo:', error);
+      componentLogger.error('Error selecting photo', { error });
       alert('Error accessing photo gallery. Please check permissions.');
     } finally {
       setIsLoading(false);

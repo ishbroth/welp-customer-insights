@@ -1,5 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBusinessProfileFetching');
 
 export const useBusinessProfileFetching = () => {
   const fetchBusinessProfiles = async (reviews: any[]) => {
@@ -7,7 +10,7 @@ export const useBusinessProfileFetching = () => {
     let businessProfilesMap = new Map();
     let businessVerificationMap = new Map();
 
-    console.log('🏢 fetchBusinessProfiles: Starting fetch for IDs:', businessIds);
+    hookLogger.info('fetchBusinessProfiles: Starting fetch for IDs:', businessIds);
 
     if (businessIds.length > 0) {
       // Fetch business profiles
@@ -18,12 +21,12 @@ export const useBusinessProfileFetching = () => {
         .eq('type', 'business');
 
       if (profileError) {
-        console.error('❌ Error fetching business profiles:', profileError);
+        hookLogger.error('Error fetching business profiles:', profileError);
       } else {
-        console.log('✅ Business profiles fetched:', businessProfiles?.length || 0);
+        hookLogger.debug('Business profiles fetched:', businessProfiles?.length || 0);
         businessProfiles?.forEach(profile => {
           businessProfilesMap.set(profile.id, profile);
-          console.log(`✅ Profile mapped: ${profile.id} -> ${profile.name}, profile verified: ${profile.verified}`);
+          hookLogger.debug(`Profile mapped: ${profile.id} -> ${profile.name}, profile verified: ${profile.verified}`);
         });
       }
 
@@ -34,13 +37,13 @@ export const useBusinessProfileFetching = () => {
         .in('id', businessIds);
 
       if (businessError) {
-        console.error('❌ Error fetching business verification:', businessError);
+        hookLogger.error('Error fetching business verification:', businessError);
       } else {
-        console.log('✅ Business info successfully fetched:', businessInfos?.length || 0);
+        hookLogger.debug('Business info successfully fetched:', businessInfos?.length || 0);
         businessInfos?.forEach(business => {
           const isVerified = Boolean(business.verified);
           businessVerificationMap.set(business.id, isVerified);
-          console.log(`✅ VERIFICATION MAPPED: Business ${business.id} -> verified: ${isVerified} (from business_info table)`);
+          hookLogger.debug(`VERIFICATION MAPPED: Business ${business.id} -> verified: ${isVerified} (from business_info table)`);
           
           // CRITICAL: Enhance existing profile with authoritative verification status from business_info
           if (businessProfilesMap.has(business.id)) {
@@ -48,10 +51,10 @@ export const useBusinessProfileFetching = () => {
             existingProfile.verified = isVerified; // Override with business_info verification (authoritative)
             existingProfile.business_name = business.business_name;
             businessProfilesMap.set(business.id, existingProfile);
-            console.log(`✅ ENHANCED PROFILE: ${business.id} verification OVERRIDDEN to: ${isVerified} (from business_info)`);
+            hookLogger.debug(`ENHANCED PROFILE: ${business.id} verification OVERRIDDEN to: ${isVerified} (from business_info)`);
           } else {
             // Create a minimal profile if we only have business_info data
-            console.log(`⚠️ Creating minimal profile for business ${business.id} with verification: ${isVerified}`);
+            hookLogger.debug(`Creating minimal profile for business ${business.id} with verification: ${isVerified}`);
             businessProfilesMap.set(business.id, {
               id: business.id,
               name: business.business_name || 'Business',
@@ -63,11 +66,11 @@ export const useBusinessProfileFetching = () => {
       }
     }
 
-    console.log('🏢 fetchBusinessProfiles: Final verification map:', 
+    hookLogger.debug('fetchBusinessProfiles: Final verification map:',
       Array.from(businessVerificationMap.entries()).map(([id, verified]) => ({ id, verified }))
     );
 
-    console.log('🏢 fetchBusinessProfiles: Final profiles map:', 
+    hookLogger.debug('fetchBusinessProfiles: Final profiles map:', 
       Array.from(businessProfilesMap.entries()).map(([id, profile]) => ({ 
         id, 
         name: profile.name, 

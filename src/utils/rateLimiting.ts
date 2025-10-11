@@ -1,5 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('rateLimiting');
 
 /**
  * Enhanced rate limiting utility functions with account lockout
@@ -22,13 +25,13 @@ export const checkRateLimit = async (
     });
 
     if (error) {
-      console.error('Rate limit check error:', error);
+      utilLogger.error('Rate limit check error:', error);
       return true; // Allow on error to prevent blocking legitimate users
     }
 
     return data;
   } catch (error) {
-    console.error('Rate limit check error:', error);
+    utilLogger.error('Rate limit check error:', error);
     return true; // Allow on error
   }
 };
@@ -54,13 +57,13 @@ export const checkRateLimitWithLockout = async (
     });
 
     if (error) {
-      console.error('Rate limit with lockout check error:', error);
+      utilLogger.error('Rate limit with lockout check error:', error);
       return true; // Allow on error to prevent blocking legitimate users
     }
 
     return data;
   } catch (error) {
-    console.error('Rate limit with lockout check error:', error);
+    utilLogger.error('Rate limit with lockout check error:', error);
     return true; // Allow on error
   }
 };
@@ -85,7 +88,7 @@ export const logSecurityEvent = async (
       p_metadata: metadata ? JSON.stringify(metadata) : null
     });
   } catch (error) {
-    console.error('Security event logging error:', error);
+    utilLogger.error('Security event logging error:', error);
   }
 };
 

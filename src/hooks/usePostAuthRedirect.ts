@@ -3,8 +3,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export const usePostAuthRedirect = () => {
+  const hookLogger = logger.withContext('usePostAuthRedirect');
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -24,26 +26,26 @@ export const usePostAuthRedirect = () => {
             return;
           }
         } catch (error) {
-          console.error("Error parsing pending review data:", error);
+          hookLogger.error("Error parsing pending review data:", error);
         }
       }
-      
+
       // Check if there's pending review access data (secondary priority)
       const pendingData = sessionStorage.getItem('pendingReviewAccess');
-      
+
       if (pendingData) {
         try {
           const { customerData, searchParams } = JSON.parse(pendingData);
-          
+
           // Clear the stored data
           sessionStorage.removeItem('pendingReviewAccess');
-          
+
           // Construct search URL with the original search parameters
           const searchUrl = new URLSearchParams(searchParams);
           navigate(`/search?${searchUrl.toString()}`);
-          
+
         } catch (error) {
-          console.error("Error parsing pending review access data:", error);
+          hookLogger.error("Error parsing pending review access data:", error);
           // Fallback to profile page
           navigate('/profile');
         }
@@ -55,9 +57,9 @@ export const usePostAuthRedirect = () => {
     if (!currentUser) return;
 
     try {
-      console.log('Checking for existing review by business:', currentUser.id);
-      console.log('For customer data:', customerData);
-      
+      hookLogger.debug('Checking for existing review by business:', currentUser.id);
+      hookLogger.debug('For customer data:', customerData);
+
       // Check for existing review by this business for this customer
       const { data: existingReviews, error } = await supabase
         .from('reviews')
@@ -66,14 +68,14 @@ export const usePostAuthRedirect = () => {
         .is('deleted_at', null); // Only check non-deleted reviews
 
       if (error) {
-        console.error("Error checking for existing review:", error);
+        hookLogger.error("Error checking for existing review:", error);
         // Fallback to new review form
         const params = new URLSearchParams(customerData);
         navigate(`/review/new?${params.toString()}`);
         return;
       }
 
-      console.log('Found existing reviews:', existingReviews);
+      hookLogger.debug('Found existing reviews:', existingReviews);
 
       // Normalize customer data for comparison
       const searchName = `${customerData.firstName} ${customerData.lastName}`.trim().toLowerCase();
@@ -89,36 +91,36 @@ export const usePostAuthRedirect = () => {
         const reviewAddress = review.customer_address?.toLowerCase().trim() || '';
         const reviewCity = review.customer_city?.toLowerCase().trim() || '';
         const reviewZip = review.customer_zipcode?.trim() || '';
-        
-        console.log('Comparing:', {
+
+        hookLogger.debug('Comparing:', {
           searchName, reviewName,
           searchPhone, reviewPhone,
           searchAddress, reviewAddress,
           searchCity, reviewCity,
           searchZip, reviewZip
         });
-        
+
         // Check for name match
         const nameMatch = reviewName.includes(searchName) || searchName.includes(reviewName);
-        
+
         // Check for phone match (if both exist)
         const phoneMatch = searchPhone && reviewPhone && searchPhone === reviewPhone;
-        
+
         // Check for address match (if both exist)
-        const addressMatch = searchAddress && reviewAddress && 
+        const addressMatch = searchAddress && reviewAddress &&
           (reviewAddress.includes(searchAddress) || searchAddress.includes(reviewAddress));
-        
+
         // Check for city match (if both exist)
         const cityMatch = searchCity && reviewCity && reviewCity === searchCity;
-        
+
         // Check for zip match (if both exist)
         const zipMatch = searchZip && reviewZip && reviewZip === searchZip;
-        
+
         // Consider it a match if:
         // - Name matches AND (phone matches OR address+city matches OR zip matches)
         const isMatch = nameMatch && (phoneMatch || (addressMatch && cityMatch) || zipMatch);
-        
-        console.log('Match criteria:', {
+
+        hookLogger.debug('Match criteria:', {
           nameMatch, phoneMatch, addressMatch, cityMatch, zipMatch, isMatch
         });
         
@@ -127,7 +129,7 @@ export const usePostAuthRedirect = () => {
 
       if (matchingReview) {
         // Redirect to edit the existing review
-        console.log("Existing review found, redirecting to edit:", matchingReview.id);
+        hookLogger.debug("Existing review found, redirecting to edit:", matchingReview.id);
         const reviewDataForEdit = {
           id: matchingReview.id,
           rating: 0, // Will be loaded from database
@@ -138,7 +140,7 @@ export const usePostAuthRedirect = () => {
           zipCode: matchingReview.customer_zipcode || "",
           phone: matchingReview.customer_phone || ""
         };
-        
+
         navigate(`/review/new?edit=true&reviewId=${matchingReview.id}`, {
           state: {
             reviewData: reviewDataForEdit,
@@ -147,12 +149,12 @@ export const usePostAuthRedirect = () => {
         });
       } else {
         // No existing review found, proceed to new review form
-        console.log("No existing review found, proceeding to new review form");
+        hookLogger.debug("No existing review found, proceeding to new review form");
         const params = new URLSearchParams(customerData);
         navigate(`/review/new?${params.toString()}`);
       }
     } catch (error) {
-      console.error("Error checking for existing review:", error);
+      hookLogger.error("Error checking for existing review:", error);
       // Fallback to new review form
       const params = new URLSearchParams(customerData);
       navigate(`/review/new?${params.toString()}`);

@@ -7,21 +7,24 @@ import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./types";
 import StateSelect from "@/components/search/StateSelect";
 import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
+import { logger } from "@/utils/logger";
 
 interface ContactInfoFormProps {
   form: UseFormReturn<ProfileFormValues>;
 }
 
 const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
+  const componentLogger = logger.withContext('ContactInfoForm');
+
   const handleAddressSelect = (place: google.maps.places.PlaceResult) => {
     if (!place.address_components) return;
 
-    console.log('🏠 ContactInfoForm - Place selected:', place);
-    
+    componentLogger.debug('Place selected:', place);
+
     // Extract address components using the utility function
     const components = extractAddressComponents(place);
-    
-    console.log('🏠 ContactInfoForm - Extracted components:', components);
+
+    componentLogger.debug('Extracted components:', components);
 
     // Update the street address field with just the street portion
     if (components.streetAddress) {
@@ -35,8 +38,8 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
   };
 
   const handleAddressComponentsExtracted = (components: AddressComponents) => {
-    console.log('🏠 ContactInfoForm - Components extracted:', components);
-    
+    componentLogger.debug('Components extracted:', components);
+
     // Update fields that are currently empty to avoid overwriting user input
     if (components.city && !form.getValues('city')) {
       form.setValue('city', components.city);
@@ -50,7 +53,7 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
   };
 
   const handleAddressChange = (address: string) => {
-    console.log('🏠 ContactInfoForm - Address changed to:', address);
+    componentLogger.debug('Address changed to:', address);
     form.setValue('address', address);
   };
 
@@ -77,11 +80,11 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
           <FormItem>
             <FormLabel>Street Address</FormLabel>
             <FormControl>
-              <AddressAutocomplete 
+              <AddressAutocomplete
                 placeholder="Start typing your address..."
                 value={field.value || ""}
                 onChange={(e) => {
-                  console.log('🏠 ContactInfoForm - Input changed:', e.target.value);
+                  componentLogger.debug('Input changed:', e.target.value);
                   field.onChange(e.target.value);
                 }}
                 onAddressChange={handleAddressChange}

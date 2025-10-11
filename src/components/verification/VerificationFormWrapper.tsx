@@ -8,6 +8,7 @@ import BasicLicenseFields from "./BasicLicenseFields";
 import InstantVerificationSection from "./InstantVerificationSection";
 import ManualVerificationForm from "./ManualVerificationForm";
 import VerificationSuccessPopup from "@/components/signup/VerificationSuccessPopup";
+import { logger } from "@/utils/logger";
 
 interface FormData {
   businessName: string;
@@ -32,6 +33,7 @@ interface VerificationFormWrapperProps {
 }
 
 const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWrapperProps) => {
+  const componentLogger = logger.withContext('VerificationFormWrapper');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [instantVerified, setInstantVerified] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -102,13 +104,13 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
     setIsSubmitting(true);
 
     try {
-      console.log("Submitting verification request...");
-      
+      componentLogger.debug("Submitting verification request...");
+
       // Get the session token for authentication
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) {
-        console.error("Error getting session:", sessionError);
+        componentLogger.error("Error getting session:", sessionError);
         toast.error("Authentication error. Please try logging in again.");
         return;
       }
@@ -133,17 +135,17 @@ const VerificationFormWrapper = ({ currentUser, onNavigate }: VerificationFormWr
       });
 
       if (error) {
-        console.error("Error sending verification request:", error);
+        componentLogger.error("Error sending verification request:", error);
         toast.error(`Failed to submit verification request: ${error.message}`);
         return;
       }
 
-      console.log("Verification request response:", data);
+      componentLogger.debug("Verification request response:", data);
       toast.success("Verification request submitted successfully! You will be notified once reviewed.");
       onNavigate("/profile");
-      
+
     } catch (error) {
-      console.error("Error in handleSubmit:", error);
+      componentLogger.error("Error in handleSubmit:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

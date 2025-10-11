@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from '@/utils/logger';
 
 interface ContactFormData {
   name: string;
@@ -10,6 +11,7 @@ interface ContactFormData {
 }
 
 export const useContactForm = () => {
+  const hookLogger = logger.withContext('useContactForm');
   const [isLoading, setIsLoading] = useState(false);
 
   const submitForm = async (formData: ContactFormData): Promise<boolean> => {
@@ -26,7 +28,7 @@ export const useContactForm = () => {
       });
 
       if (error) {
-        console.error('Error sending support email:', error);
+        hookLogger.error('Error sending support email:', error);
         toast.error("Failed to send message. Please try again.");
         return false;
       }
@@ -34,7 +36,7 @@ export const useContactForm = () => {
       toast.success("Message sent successfully! We'll get back to you soon.");
       return true;
     } catch (error) {
-      console.error('Error submitting contact form:', error);
+      hookLogger.error('Error submitting contact form:', error);
       toast.error("Failed to send message. Please try again.");
       return false;
     } finally {

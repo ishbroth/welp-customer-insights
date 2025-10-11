@@ -9,12 +9,15 @@ import DuplicateReviewHandler from "@/components/reviews/DuplicateReviewHandler"
 import ReviewForm from "@/components/reviews/ReviewForm";
 import UploadProgressDialog from "@/components/reviews/UploadProgressDialog";
 import SelfReviewWarning from "@/components/reviews/SelfReviewWarning";
+import NewReviewBackground from "@/components/NewReviewBackground";
 import { useReviewFormState } from "@/hooks/useReviewFormState";
 import { useReviewSubmission } from "@/hooks/useReviewSubmission";
 import { useDuplicateReviewCheck } from "@/hooks/useDuplicateReviewCheck";
 import { useSelfReviewCheck } from "@/hooks/useSelfReviewCheck";
+import { logger } from '@/utils/logger';
 
 const NewReview = () => {
+  const pageLogger = logger.withContext('NewReview');
   const [searchParams] = useSearchParams();
   const formState = useReviewFormState();
   const { 
@@ -30,8 +33,8 @@ const NewReview = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 FORM SUBMISSION STARTED");
-    console.log("Form state data:", {
+    pageLogger.debug("🚀 FORM SUBMISSION STARTED");
+    pageLogger.debug("Form state data:", {
       isEditing: formState.isEditing,
       reviewId: formState.reviewId,
       customerState: formState.customerState,
@@ -41,7 +44,7 @@ const NewReview = () => {
 
     // Check for self-review first
     if (isSelfReview) {
-      console.log("❌ Blocking submission - self review detected");
+      pageLogger.debug("❌ Blocking submission - self review detected");
       return; // Block submission if it's a self-review
     }
     
@@ -63,8 +66,8 @@ const NewReview = () => {
         return;
       }
     }
-    
-    console.log("Associates data being submitted:", formState.associates);
+
+    pageLogger.debug("Associates data being submitted:", formState.associates);
 
     await submitReview({
       rating: formState.rating,
@@ -87,8 +90,9 @@ const NewReview = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-grow py-8 relative">
+        <NewReviewBackground />
+        <div className="container mx-auto px-4 relative z-10">
           <Card className="max-w-2xl mx-auto p-6">
             <h1 className="text-3xl font-bold mb-6">
               {formState.isEditing ? "Edit Customer Review" : "Write a Customer Review"}

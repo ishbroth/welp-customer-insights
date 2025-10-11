@@ -1,9 +1,12 @@
 
 import { Customer } from "@/types/search";
 import { ReviewData } from "./types";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerProcessor');
 
 export const processProfileCustomers = async (profilesData: any[]): Promise<Customer[]> => {
-  console.log("Processing profile customers:", profilesData.length);
+  hookLogger.debug("Processing profile customers:", profilesData.length);
   
   return profilesData.map(profile => ({
     id: profile.id,
@@ -21,7 +24,7 @@ export const processProfileCustomers = async (profilesData: any[]): Promise<Cust
 };
 
 export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] => {
-  console.log("Processing review customers:", reviewsData.length);
+  hookLogger.debug("Processing review customers:", reviewsData.length);
 
   // Group reviews by customer identity - prioritize exact name matches
   const customerGroups = new Map<string, ReviewData[]>();
@@ -74,7 +77,7 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     }
   });
 
-  console.log(`Grouped ${reviewsData.length} reviews into ${customerGroups.size} customer groups`);
+  hookLogger.debug(`Grouped ${reviewsData.length} reviews into ${customerGroups.size} customer groups`);
   
   // Convert groups to Customer objects
   const customers: Customer[] = [];
@@ -116,8 +119,8 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     let finalCity = mostCompleteReview.customer_city || "";
     let finalZipCode = mostCompleteReview.customer_zipcode || "";
 
-    console.log(`Processing review customer: ${fullName}, isAssociateMatch: ${isAssociateMatch}`);
-    console.log("🔍 CUSTOMER PROCESSOR - Original review data:", {
+    hookLogger.debug(`Processing review customer: ${fullName}, isAssociateMatch: ${isAssociateMatch}`);
+    hookLogger.debug("🔍 CUSTOMER PROCESSOR - Original review data:", {
       associates: mostCompleteReview.associates,
       customer_business_name: mostCompleteReview.customer_business_name,
       customer_nickname: mostCompleteReview.customer_nickname
@@ -130,7 +133,7 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
 
       // For associate matches, we keep the original customer location data
       // since the associate doesn't have their own location data
-      console.log(`Associate match: Using ${finalFirstName} ${finalLastName} with original customer location`);
+      hookLogger.debug(`Associate match: Using ${finalFirstName} ${finalLastName} with original customer location`);
     }
 
     // Create customer with enhanced review data that includes ALL customer info
@@ -187,7 +190,7 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
       }))
     };
 
-    console.log("🔍 CUSTOMER PROCESSOR - Final customer with reviews:", {
+    hookLogger.debug("🔍 CUSTOMER PROCESSOR - Final customer with reviews:", {
       id: customer.id,
       firstName: customer.firstName,
       lastName: customer.lastName,
@@ -202,6 +205,6 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     customers.push(customer);
   });
   
-  console.log("Processed review customers:", customers.length);
+  hookLogger.debug("Processed review customers:", customers.length);
   return customers;
 };

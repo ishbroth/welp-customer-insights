@@ -2,13 +2,16 @@
 import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('UserInitialization');
 
 /**
  * Hook for initializing user data and profile information
  */
 export const useUserInitialization = () => {
   const initUserData = async (userId: string, forceRefresh: boolean = false) => {
-    console.log("🔄 Initializing user data for:", userId);
+    authLogger.debug("Initializing user data for:", userId);
     
     try {
       // Fetch user profile
@@ -19,7 +22,7 @@ export const useUserInitialization = () => {
         .single();
 
       if (profileError) {
-        console.error("❌ Error fetching profile:", profileError);
+        authLogger.error("Error fetching profile:", profileError);
         return { userProfile: null, accessResources: [] };
       }
 
@@ -77,11 +80,11 @@ export const useUserInitialization = () => {
 
       const accessResources = accessError ? [] : (accessData?.map(item => item.review_id) || []);
 
-      console.log("✅ User data initialized:", userProfile);
+      authLogger.info("User data initialized:", userProfile);
       return { userProfile, accessResources };
 
     } catch (error) {
-      console.error("❌ Error in initUserData:", error);
+      authLogger.error("Error in initUserData:", error);
       return { userProfile: null, accessResources: [] };
     }
   };

@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { sendEmailVerificationCode } from "@/utils/emailUtils";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBusinessAccountCreation');
 
 export const useBusinessAccountCreation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,18 +49,18 @@ export const useBusinessAccountCreation = () => {
 
     try {
       // Perform license verification
-      console.log("🔍 Performing license verification during signup...");
+      hookLogger.info("Performing license verification during signup");
       let licenseVerificationResult = null;
-      
+
       try {
         licenseVerificationResult = await verifyBusinessId(
           licenseNumber,
           businessType,
           businessState
         );
-        console.log("📋 License verification result:", licenseVerificationResult);
+        hookLogger.info("License verification result:", licenseVerificationResult);
       } catch (verificationError) {
-        console.error("❌ License verification failed:", verificationError);
+        hookLogger.error("License verification failed:", verificationError);
         // Continue with signup even if verification fails
         licenseVerificationResult = {
           verified: false,
@@ -80,8 +83,8 @@ export const useBusinessAccountCreation = () => {
         businessType,
         licenseVerificationResult
       };
-      
-      console.log("💾 Storing pending verification data:", businessData);
+
+      hookLogger.debug("Storing pending verification data:", businessData);
       localStorage.setItem("pendingVerification", JSON.stringify(businessData));
 
       // Send email verification code
@@ -95,7 +98,7 @@ export const useBusinessAccountCreation = () => {
           description: `A verification code has been sent to ${businessEmail}.`,
         });
 
-        console.log("🔄 Navigating to email verification page...");
+        hookLogger.info("Navigating to email verification page");
         // Navigate to email verification page with business type
         navigate(`/verify-email?email=${encodeURIComponent(businessEmail)}&type=business`);
       } else {
@@ -106,7 +109,7 @@ export const useBusinessAccountCreation = () => {
         });
       }
     } catch (error) {
-      console.error("Error initiating email verification:", error);
+      hookLogger.error("Error initiating email verification:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

@@ -5,8 +5,10 @@ import SecurityInfoBox from "@/components/business/SecurityInfoBox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { createSearchableCustomer } from "@/services/customerService";
+import { logger } from '@/utils/logger';
 
 const BusinessPasswordSetup = () => {
+  const pageLogger = logger.withContext('BusinessPasswordSetup');
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -66,7 +68,7 @@ const BusinessPasswordSetup = () => {
       // Redirect to business verification success page
       navigate('/business-verification-success');
     } catch (error: any) {
-      console.error("Account creation failed:", error);
+      pageLogger.error("Account creation failed:", error);
       toast({
         title: "Error Creating Account",
         description: error.message || "Failed to create your business account. Please try again.",

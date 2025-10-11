@@ -1,5 +1,8 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
+
+const serviceLogger = logger.withContext('ReviewSubmission');
 
 export interface ReviewSubmissionData {
   rating: number;
@@ -23,17 +26,17 @@ export const submitReviewToDatabase = async (
   isEditing: boolean,
   reviewId?: string | null
 ): Promise<string> => {
-  console.log("🔍 SUBMISSION START - Raw reviewData:", reviewData);
-  console.log("🔍 SUBMISSION - customerNickname:", reviewData.customerNickname);
-  console.log("🔍 SUBMISSION - customerBusinessName:", reviewData.customerBusinessName);
+  serviceLogger.debug("SUBMISSION START - Raw reviewData:", reviewData);
+  serviceLogger.debug("SUBMISSION - customerNickname:", reviewData.customerNickname);
+  serviceLogger.debug("SUBMISSION - customerBusinessName:", reviewData.customerBusinessName);
 
   // Create or find customer profile
   let customerId = null;
   const fullName = `${reviewData.customerFirstName} ${reviewData.customerLastName}`.trim();
-  
+
   if (reviewData.customerPhone) {
     const cleanPhone = reviewData.customerPhone.replace(/\D/g, '');
-    
+
     // Check if customer profile exists by phone
     const { data: existingCustomer } = await supabase
       .from('profiles')
@@ -41,10 +44,10 @@ export const submitReviewToDatabase = async (
       .eq('phone', cleanPhone)
       .eq('type', 'customer')
       .maybeSingle();
-    
+
     if (existingCustomer) {
       customerId = existingCustomer.id;
-      console.log("Found existing customer by phone:", customerId);
+      serviceLogger.debug("Found existing customer by phone:", customerId);
       
       // Update existing customer profile with latest info
       await supabase
@@ -77,10 +80,10 @@ export const submitReviewToDatabase = async (
           zipcode: reviewData.customerZipCode,
           type: 'customer'
         });
-      
+
       if (!profileError) {
         customerId = newCustomerId;
-        console.log("Created new customer profile:", customerId);
+        serviceLogger.debug("Created new customer profile:", customerId);
       }
     }
   }
@@ -99,9 +102,9 @@ export const submitReviewToDatabase = async (
       .limit(1);
 
     hasAnonymousColumn = !testError;
-    console.log("Anonymous column check:", hasAnonymousColumn ? "EXISTS" : "MISSING");
+    serviceLogger.debug("Anonymous column check:", hasAnonymousColumn ? "EXISTS" : "MISSING");
   } catch (e) {
-    console.warn("Could not check for is_anonymous column, proceeding without it");
+    serviceLogger.warn("Could not check for is_anonymous column, proceeding without it");
   }
 
   const supabaseReviewData = {
@@ -122,53 +125,53 @@ export const submitReviewToDatabase = async (
     // Clear deleted_at when editing to make the review visible again
     ...(isEditing && { deleted_at: null })
   };
-  
-  console.log("=== REVIEW SUBMISSION DEBUG ===");
-  console.log("Raw associates input:", reviewData.associates);
-  console.log("Filtered associates (max 3):", filteredAssociates);
-  console.log("Nickname being saved:", reviewData.customerNickname);
-  console.log("Business name being saved:", reviewData.customerBusinessName);
-  console.log("Customer state being saved:", reviewData.customerState);
-  console.log("Anonymous flag being saved:", reviewData.isAnonymous);
-  console.log("Full submission data:", supabaseReviewData);
-  console.log("Is editing:", isEditing);
-  console.log("Review ID:", reviewId);
-  console.log("Associates in submission data:", supabaseReviewData.associates);
-  
+
+  serviceLogger.debug("=== REVIEW SUBMISSION DEBUG ===");
+  serviceLogger.debug("Raw associates input:", reviewData.associates);
+  serviceLogger.debug("Filtered associates (max 3):", filteredAssociates);
+  serviceLogger.debug("Nickname being saved:", reviewData.customerNickname);
+  serviceLogger.debug("Business name being saved:", reviewData.customerBusinessName);
+  serviceLogger.debug("Customer state being saved:", reviewData.customerState);
+  serviceLogger.debug("Anonymous flag being saved:", reviewData.isAnonymous);
+  serviceLogger.debug("Full submission data:", supabaseReviewData);
+  serviceLogger.debug("Is editing:", isEditing);
+  serviceLogger.debug("Review ID:", reviewId);
+  serviceLogger.debug("Associates in submission data:", supabaseReviewData.associates);
+
   let result;
   let finalReviewId = reviewId;
-  
+
   if (isEditing && reviewId) {
     // Update existing review
-    console.log("🔄 UPDATING review with ID:", reviewId);
-    console.log("🔄 UPDATE data:", supabaseReviewData);
+    serviceLogger.debug("UPDATING review with ID:", reviewId);
+    serviceLogger.debug("UPDATE data:", supabaseReviewData);
     result = await supabase
       .from('reviews')
       .update(supabaseReviewData)
       .eq('id', reviewId);
-    console.log("🔄 UPDATE result:", result);
+    serviceLogger.debug("UPDATE result:", result);
   } else {
     // Insert new review
-    console.log("➕ INSERTING new review");
-    console.log("➕ INSERT data:", supabaseReviewData);
+    serviceLogger.debug("INSERTING new review");
+    serviceLogger.debug("INSERT data:", supabaseReviewData);
     result = await supabase
       .from('reviews')
       .insert([supabaseReviewData])
       .select()
       .single();
-    console.log("➕ INSERT result:", result);
+    serviceLogger.debug("INSERT result:", result);
 
     if (result.data) {
       finalReviewId = result.data.id;
     }
   }
-  
+
   if (result.error) {
-    console.error("Database error:", result.error);
-    console.error("Error details:", JSON.stringify(result.error, null, 2));
-    console.error("Error code:", result.error.code);
-    console.error("Error hint:", result.error.hint);
-    console.error("Error details specific:", result.error.details);
+    serviceLogger.error("Database error:", result.error);
+    serviceLogger.error("Error details:", JSON.stringify(result.error, null, 2));
+    serviceLogger.error("Error code:", result.error.code);
+    serviceLogger.error("Error hint:", result.error.hint);
+    serviceLogger.error("Error details specific:", result.error.details);
     throw new Error(`Database error: ${result.error.message} (Code: ${result.error.code})`);
   }
 
@@ -176,6 +179,6 @@ export const submitReviewToDatabase = async (
     throw new Error("Failed to get review ID");
   }
 
-  console.log("Review submitted successfully with ID:", finalReviewId);
+  serviceLogger.info("Review submitted successfully with ID:", finalReviewId);
   return finalReviewId;
 };

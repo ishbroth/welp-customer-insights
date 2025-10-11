@@ -4,16 +4,19 @@ import { User } from "@/types";
 import { AuthContextType } from "./types";
 import { useAuthState } from "./useAuthState";
 import { useAuthMethods } from "./useAuthMethods";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthProvider');
 
 // Create the Auth Context with a default value to prevent null context issues
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Auth Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  console.log("🔧 AuthProvider rendering");
-  
+  authLogger.debug("AuthProvider rendering");
+
   const authState = useAuthState();
-  console.log("🔧 AuthState initialized:", !!authState);
+  authLogger.debug("AuthState initialized:", !!authState);
   
   const {
     currentUser,
@@ -27,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   } = authState;
 
   const authMethods = useAuthMethods(setIsSubscribed, oneTimeAccessResources, setOneTimeAccessResources, currentUser, setCurrentUser);
-  console.log("🔧 AuthMethods initialized:", !!authMethods);
+  authLogger.debug("AuthMethods initialized:", !!authMethods);
 
   const {
     login,
@@ -53,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setCurrentUser
   };
 
-  console.log("🔧 AuthProvider value created:", !!value);
+  authLogger.debug("AuthProvider value created:", !!value);
 
   return (
     <AuthContext.Provider value={value}>
@@ -66,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    console.error("❌ useAuth called outside of AuthProvider");
+    authLogger.error("useAuth called outside of AuthProvider");
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

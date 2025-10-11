@@ -7,6 +7,9 @@ import { useContentValidation } from "@/hooks/useContentValidation";
 import { useUploadProgress } from "@/hooks/useUploadProgress";
 import { submitReviewToDatabase, type ReviewSubmissionData } from "@/services/reviewSubmissionService";
 import { uploadReviewPhotos, savePhotoRecords, type PhotoUpload } from "@/services/photoUploadService";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('ReviewSubmission');
 
 interface SubmitReviewParams extends ReviewSubmissionData {
   photos?: PhotoUpload[];
@@ -81,7 +84,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
           await savePhotoRecords(uploadedPhotos, finalReviewId, isEditing);
           uploadProgress.completeUpload();
         } catch (photoError) {
-          console.error("Error uploading photos:", photoError);
+          hookLogger.error("Error uploading photos:", photoError);
           uploadProgress.resetUpload();
           // Don't fail the entire submission for photo errors
           toast({
@@ -103,7 +106,7 @@ export const useReviewSubmission = (isEditing: boolean, reviewId: string | null)
       navigate("/profile/business-reviews");
       return true;
     } catch (error: any) {
-      console.error("Error submitting review:", error);
+      hookLogger.error("Error submitting review:", error);
       uploadProgress.resetUpload();
       toast({
         title: "Error",

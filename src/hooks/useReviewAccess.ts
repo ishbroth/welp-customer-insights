@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { useReviewClaims } from './useReviewClaims';
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('ReviewAccess');
 
 export const useReviewAccess = () => {
   const { currentUser } = useAuth();
@@ -42,15 +45,15 @@ export const useReviewAccess = () => {
         .eq('claimed_by', currentUser.id);
 
       if (error) {
-        console.error('Error fetching user claims:', error);
+        hookLogger.error('Error fetching user claims:', error);
         return;
       }
 
       const claimedReviewIds = claims?.map(claim => claim.review_id) || [];
       setUnlockedReviews(new Set(claimedReviewIds));
-      console.log(`✅ Refreshed access: ${claimedReviewIds.length} claimed reviews`);
+      hookLogger.info(`Refreshed access: ${claimedReviewIds.length} claimed reviews`);
     } catch (error) {
-      console.error('Error in refreshAccess:', error);
+      hookLogger.error('Error in refreshAccess:', error);
     }
   };
 

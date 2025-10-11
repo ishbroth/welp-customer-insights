@@ -1,8 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('addAssociatesColumn');
 
 export const addAssociatesColumnToDatabase = async () => {
   try {
-    console.log("Adding associates column to reviews table...");
+    utilLogger.info("Adding associates column to reviews table...");
 
     // First check if the column already exists
     const { data: existingColumns, error: columnsError } = await supabase
@@ -11,13 +14,13 @@ export const addAssociatesColumnToDatabase = async () => {
       .limit(1);
 
     if (columnsError) {
-      console.error("Error checking existing columns:", columnsError);
+      utilLogger.error("Error checking existing columns:", columnsError);
       return false;
     }
 
     // Check if associates column exists in the returned data
     if (existingColumns && existingColumns.length > 0 && 'associates' in existingColumns[0]) {
-      console.log("Associates column already exists!");
+      utilLogger.info("Associates column already exists!");
       return true;
     }
 
@@ -35,14 +38,14 @@ export const addAssociatesColumnToDatabase = async () => {
       });
 
     if (error) {
-      console.error("Error adding associates column:", error);
+      utilLogger.error("Error adding associates column:", error);
       return false;
     }
 
-    console.log("Associates column added successfully!");
+    utilLogger.info("Associates column added successfully!");
     return true;
   } catch (err) {
-    console.error("Unexpected error:", err);
+    utilLogger.error("Unexpected error:", err);
     return false;
   }
 };

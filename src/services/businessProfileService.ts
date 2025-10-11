@@ -1,5 +1,8 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
+
+const serviceLogger = logger.withContext('BusinessProfile');
 
 export interface BusinessProfile {
   id: string;
@@ -10,7 +13,7 @@ export interface BusinessProfile {
 }
 
 export const fetchBusinessProfile = async (businessId: string): Promise<BusinessProfile | null> => {
-  console.log("Looking up business profile for ID:", businessId);
+  serviceLogger.debug("Looking up business profile for ID:", businessId);
   
   let businessProfile = null;
   
@@ -23,15 +26,15 @@ export const fetchBusinessProfile = async (businessId: string): Promise<Business
     .maybeSingle();
 
   if (profileError) {
-    console.error("Error fetching profile by ID:", profileError);
+    serviceLogger.error("Error fetching profile by ID:", profileError);
   } else if (profileById) {
-    console.log("Found business profile by ID:", profileById);
+    serviceLogger.debug("Found business profile by ID:", profileById);
     businessProfile = profileById;
   }
 
   // Strategy 2: If no profile found, look up by admin email (fallback)
   if (!businessProfile) {
-    console.log("No business profile found by ID, checking admin email...");
+    serviceLogger.debug("No business profile found by ID, checking admin email...");
     
     const { data: adminProfile, error: adminError } = await supabase
       .from('profiles')
@@ -41,16 +44,16 @@ export const fetchBusinessProfile = async (businessId: string): Promise<Business
       .maybeSingle();
 
     if (adminError) {
-      console.error("Error fetching admin profile:", adminError);
+      serviceLogger.error("Error fetching admin profile:", adminError);
     } else if (adminProfile) {
-      console.log("Found admin business profile by email:", adminProfile);
+      serviceLogger.debug("Found admin business profile by email:", adminProfile);
       businessProfile = adminProfile;
     }
   }
 
   // Strategy 3: Manual fallback for known admin business ID
   if (!businessProfile && businessId === 'be76ebe3-4b67-4f11-bf4b-2dcb297f1fb7') {
-    console.log("Using hardcoded admin profile for known business ID");
+    serviceLogger.debug("Using hardcoded admin profile for known business ID");
     businessProfile = {
       id: businessId,
       name: "The Painted Painter",
@@ -60,6 +63,6 @@ export const fetchBusinessProfile = async (businessId: string): Promise<Business
     };
   }
 
-  console.log("Final business profile with avatar:", businessProfile);
+  serviceLogger.debug("Final business profile with avatar:", businessProfile);
   return businessProfile;
 };

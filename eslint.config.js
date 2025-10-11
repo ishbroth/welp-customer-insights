@@ -24,6 +24,12 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Encourage use of logger utility instead of console
+      // Set to "warn" to allow existing console statements
+      // Will be changed to "error" during Phase 4 console cleanup
+      "no-console": ["warn", { 
+        allow: [] // No console methods allowed, but only warns for now
+      }],
     },
   }
 );

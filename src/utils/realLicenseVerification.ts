@@ -1,9 +1,12 @@
 import { VerificationResult } from './verification/types';
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('realLicenseVerification');
 
 // California verification functions
 const verifyCalifornia = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying California ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying California ${licenseType} license: ${licenseNumber}`);
     
     // California Department of Consumer Affairs - Professional License Lookup
     const response = await fetch(`https://search.dca.ca.gov/details/${licenseNumber}/${licenseType}`, {
@@ -39,7 +42,7 @@ const verifyCalifornia = async (licenseNumber: string, licenseType: string): Pro
       isRealVerification: true
     };
   } catch (error) {
-    console.error('California license verification error:', error);
+    utilLogger.error('California license verification error:', error);
     throw error;
   }
 };
@@ -78,7 +81,7 @@ const verifyTexasRealEstate = async (licenseNumber: string): Promise<Verificatio
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Texas real estate license verification error:', error);
+    utilLogger.error('Texas real estate license verification error:', error);
     throw error;
   }
 };
@@ -116,14 +119,14 @@ const verifyTexasLiquor = async (licenseNumber: string): Promise<VerificationRes
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Texas liquor license verification error:', error);
+    utilLogger.error('Texas liquor license verification error:', error);
     throw error;
   }
 };
 
 const verifyTexasLicense = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying Texas ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying Texas ${licenseType} license: ${licenseNumber}`);
     
     switch (licenseType.toLowerCase()) {
       case 'real_estate':
@@ -170,7 +173,7 @@ const verifyTexasLicense = async (licenseNumber: string, licenseType: string): P
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Texas license verification error:', error);
+    utilLogger.error('Texas license verification error:', error);
     throw error;
   }
 };
@@ -178,7 +181,7 @@ const verifyTexasLicense = async (licenseNumber: string, licenseType: string): P
 // Florida verification functions
 const verifyFloridaLicense = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying Florida ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying Florida ${licenseType} license: ${licenseNumber}`);
     
     // Florida Department of Business and Professional Regulation
     const response = await fetch(`https://www.myfloridalicense.com/CheckLicenseII/LicenseDetail.asp?SID=&id=${encodeURIComponent(licenseNumber)}`, {
@@ -212,7 +215,7 @@ const verifyFloridaLicense = async (licenseNumber: string, licenseType: string):
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Florida license verification error:', error);
+    utilLogger.error('Florida license verification error:', error);
     throw error;
   }
 };
@@ -251,14 +254,14 @@ const verifyNewYorkLiquorLicense = async (licenseNumber: string): Promise<Verifi
       isRealVerification: true
     };
   } catch (error) {
-    console.error('New York liquor license verification error:', error);
+    utilLogger.error('New York liquor license verification error:', error);
     throw error;
   }
 };
 
 const verifyNewYorkLicense = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying New York ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying New York ${licenseType} license: ${licenseNumber}`);
     
     switch (licenseType.toLowerCase()) {
       case 'liquor':
@@ -311,7 +314,7 @@ const verifyNewYorkLicense = async (licenseNumber: string, licenseType: string):
       isRealVerification: true
     };
   } catch (error) {
-    console.error('New York license verification error:', error);
+    utilLogger.error('New York license verification error:', error);
     throw error;
   }
 };
@@ -319,7 +322,7 @@ const verifyNewYorkLicense = async (licenseNumber: string, licenseType: string):
 // Illinois verification functions
 const verifyIllinoisLicense = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying Illinois ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying Illinois ${licenseType} license: ${licenseNumber}`);
     
     // Illinois Department of Financial and Professional Regulation
     const response = await fetch(`https://www.idfpr.com/LicenseLookup/LicenseLookup.asp`, {
@@ -353,7 +356,7 @@ const verifyIllinoisLicense = async (licenseNumber: string, licenseType: string)
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Illinois license verification error:', error);
+    utilLogger.error('Illinois license verification error:', error);
     throw error;
   }
 };
@@ -361,7 +364,7 @@ const verifyIllinoisLicense = async (licenseNumber: string, licenseType: string)
 // Pennsylvania verification functions
 const verifyPennsylvaniaLicense = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying Pennsylvania ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying Pennsylvania ${licenseType} license: ${licenseNumber}`);
     
     // Pennsylvania Department of State - Professional Licensing
     const response = await fetch(`https://www.licensepa.state.pa.us/CheckLicense.aspx`, {
@@ -395,7 +398,7 @@ const verifyPennsylvaniaLicense = async (licenseNumber: string, licenseType: str
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Pennsylvania license verification error:', error);
+    utilLogger.error('Pennsylvania license verification error:', error);
     throw error;
   }
 };
@@ -403,7 +406,7 @@ const verifyPennsylvaniaLicense = async (licenseNumber: string, licenseType: str
 // Ohio verification functions
 const verifyOhioLicense = async (licenseNumber: string, licenseType: string): Promise<VerificationResult> => {
   try {
-    console.log(`Verifying Ohio ${licenseType} license: ${licenseNumber}`);
+    utilLogger.info(`Verifying Ohio ${licenseType} license: ${licenseNumber}`);
     
     // Ohio Department of Commerce - Professional Licensing
     const response = await fetch(`https://elicense.ohio.gov/Lookup/LicenseLookup.aspx`, {
@@ -437,7 +440,7 @@ const verifyOhioLicense = async (licenseNumber: string, licenseType: string): Pr
       isRealVerification: true
     };
   } catch (error) {
-    console.error('Ohio license verification error:', error);
+    utilLogger.error('Ohio license verification error:', error);
     throw error;
   }
 };
@@ -449,9 +452,9 @@ export const verifyLicenseWithStateDatabase = async (
   state: string
 ): Promise<VerificationResult> => {
   const normalizedState = state.toLowerCase().trim();
-  
-  console.log(`🔍 Real license verification initiated for ${normalizedState}`);
-  console.log(`License: ${licenseNumber}, Type: ${licenseType}`);
+
+  utilLogger.info(`Real license verification initiated for ${normalizedState}`);
+  utilLogger.debug(`License: ${licenseNumber}, Type: ${licenseType}`);
   
   try {
     switch (normalizedState) {
@@ -484,7 +487,7 @@ export const verifyLicenseWithStateDatabase = async (
         return await verifyOhioLicense(licenseNumber, licenseType);
       
       default:
-        console.log(`❌ Real verification not available for state: ${state}`);
+        utilLogger.warn(`Real verification not available for state: ${state}`);
         return {
           verified: false,
           message: `Real-time license verification is not yet available for ${state}. Manual verification will be required.`,
@@ -492,7 +495,7 @@ export const verifyLicenseWithStateDatabase = async (
         };
     }
   } catch (error) {
-    console.error(`❌ Real verification failed for ${state}:`, error);
+    utilLogger.error(`Real verification failed for ${state}:`, error);
     throw new Error(`License verification failed for ${state}: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };

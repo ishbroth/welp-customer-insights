@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { logger } from '@/utils/logger';
 
 interface MobileKeyboardProps {
   onKeyboardShow?: (height: number) => void;
@@ -14,36 +15,37 @@ const MobileKeyboard: React.FC<MobileKeyboardProps> = ({
   onKeyboardHide,
   adjustViewport = true
 }) => {
+  const componentLogger = logger.withContext('MobileKeyboard');
   const isMobile = useIsMobile();
 
   const handleKeyboardShow = useCallback((info: any) => {
-    console.log('Keyboard shown, height:', info.keyboardHeight);
-    
+    componentLogger.debug('Keyboard shown', { height: info.keyboardHeight });
+
     if (adjustViewport) {
       // Adjust the viewport to account for the keyboard
       document.documentElement.style.setProperty(
-        '--keyboard-height', 
+        '--keyboard-height',
         `${info.keyboardHeight}px`
       );
-      
+
       // Add CSS class for keyboard-aware styling
       document.body.classList.add('keyboard-visible');
     }
-    
+
     if (onKeyboardShow) {
       onKeyboardShow(info.keyboardHeight);
     }
   }, [adjustViewport, onKeyboardShow]);
 
   const handleKeyboardHide = useCallback(() => {
-    console.log('Keyboard hidden');
-    
+    componentLogger.debug('Keyboard hidden');
+
     if (adjustViewport) {
       // Reset viewport
       document.documentElement.style.removeProperty('--keyboard-height');
       document.body.classList.remove('keyboard-visible');
     }
-    
+
     if (onKeyboardHide) {
       onKeyboardHide();
     }

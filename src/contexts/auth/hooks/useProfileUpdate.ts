@@ -2,6 +2,9 @@
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeAddress } from "@/utils/addressNormalization";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('ProfileUpdate');
 
 export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user: User | null) => void) => {
   const updateProfile = async (updates: Partial<User>) => {
@@ -10,19 +13,19 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
     }
 
     try {
-      console.log("=== PROFILE UPDATE START ===");
-      console.log("Current user:", currentUser.id);
-      console.log("Updates to apply:", updates);
+      authLogger.debug("Profile update start");
+      authLogger.debug("Current user:", currentUser.id);
+      authLogger.debug("Updates to apply:", updates);
 
       // Update user metadata if email has changed
       if (updates.email && updates.email !== currentUser.email) {
-        console.log("Updating email in auth metadata");
+        authLogger.debug("Updating email in auth metadata");
         const { error: authError } = await supabase.auth.updateUser({
           email: updates.email,
         });
 
         if (authError) {
-          console.error("Auth email update error:", authError);
+          authLogger.error("Auth email update error:", authError);
           throw new Error(`Failed to update email: ${authError.message}`);
         }
       }
@@ -55,31 +58,31 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
         lastName: lastName
       };
 
-      console.log("Complete profile data being sent:", profileData);
-      console.log("License type being sent:", profileData.licenseType);
+      authLogger.debug("Complete profile data being sent:", profileData);
+      authLogger.debug("License type being sent:", profileData.licenseType);
 
       // Use the edge function to update the profile in the database
       const { data, error } = await supabase.functions.invoke('create-profile', {
         body: profileData
       });
 
-      console.log("Edge function response:", { data, error });
+      authLogger.debug("Edge function response:", { data, error });
 
       if (error) {
-        console.error("Edge function error:", error);
+        authLogger.error("Edge function error:", error);
         throw new Error(`Failed to update profile: ${error.message}`);
       }
 
       // Check if the response indicates success
       if (!data || !data.success) {
-        console.error("Profile update failed:", data);
+        authLogger.error("Profile update failed:", data);
         throw new Error(data?.message || "Profile update failed");
       }
 
-      console.log("Profile update successful:", data);
+      authLogger.debug("Profile update successful:", data);
 
       // Fetch the updated profile data from the database to get the latest state
-      console.log("Fetching updated profile data...");
+      authLogger.debug("Fetching updated profile data...");
       const { data: updatedProfileData, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -87,11 +90,11 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
         .single();
 
       if (fetchError) {
-        console.error("Error fetching updated profile:", fetchError);
+        authLogger.error("Error fetching updated profile:", fetchError);
         throw new Error(`Failed to fetch updated profile: ${fetchError.message}`);
       }
 
-      console.log("Fetched updated profile data:", updatedProfileData);
+      authLogger.debug("Fetched updated profile data:", updatedProfileData);
 
       // Also fetch the business info to get the license type
       let businessLicenseType = '';
@@ -104,7 +107,7 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
 
         if (!businessError && businessData) {
           businessLicenseType = businessData.license_type || '';
-          console.log("Fetched business license type:", businessLicenseType);
+          authLogger.debug("Fetched business license type:", businessLicenseType);
         }
       }
 
@@ -117,21 +120,21 @@ export const useProfileUpdate = (currentUser: User | null, setCurrentUser: (user
         licenseType: businessLicenseType || currentUser.licenseType
       };
 
-      console.log("Setting updated user in state:", updatedUser);
-      console.log("Updated user licenseType:", updatedUser.licenseType);
+      authLogger.debug("Setting updated user in state:", updatedUser);
+      authLogger.debug("Updated user licenseType:", updatedUser.licenseType);
       setCurrentUser(updatedUser);
 
-      console.log("=== PROFILE UPDATE COMPLETE ===");
-      
+      authLogger.info("Profile update complete");
+
       return data;
 
     } catch (error) {
-      console.error("=== PROFILE UPDATE ERROR ===");
-      console.error("Error in updateProfile:", error);
-      
+      authLogger.error("Profile update error");
+      authLogger.error("Error in updateProfile:", error);
+
       // Completely suppress billing-related errors during profile updates
       if (error instanceof Error && (error.message.includes('billing') || error.message.includes('Stripe') || error.message.includes('customer'))) {
-        console.log("Suppressing billing-related error during profile update:", error.message);
+        authLogger.debug("Suppressing billing-related error during profile update:", error.message);
         return { success: true }; // Don't throw billing errors during profile updates
       }
       

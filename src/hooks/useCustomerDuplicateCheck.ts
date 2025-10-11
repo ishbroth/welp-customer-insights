@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { checkEmailExistsViaEdgeFunction, checkPhoneExistsViaEdgeFunction, checkDuplicatesViaEdgeFunction } from "@/services/duplicateAccount/edgeFunctionChecker";
 import { DuplicateCheckResult } from "@/services/duplicateAccount/types";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useCustomerDuplicateCheck');
 
 export const useCustomerDuplicateCheck = (email: string, phone: string, firstName?: string, lastName?: string) => {
   const [duplicateResult, setDuplicateResult] = useState<DuplicateCheckResult | null>(null);
@@ -20,10 +23,10 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     setIsChecking(true);
     const timeoutId = setTimeout(async () => {
       try {
-        console.log("=== PHONE EXISTENCE CHECK START ===");
-        
+        hookLogger.debug("=== PHONE EXISTENCE CHECK START ===");
+
         const exists = await checkPhoneExistsViaEdgeFunction(phone, 'customer');
-        console.log("Phone check result:", exists);
+        hookLogger.debug("Phone check result:", exists);
         
         if (exists) {
           setPhoneExists(true);
@@ -47,11 +50,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
           }
         }
       } catch (error) {
-        console.error("Error checking phone duplicates:", error);
+        hookLogger.error("Error checking phone duplicates:", error);
         setPhoneExists(false);
       } finally {
         setIsChecking(false);
-        console.log("=== PHONE EXISTENCE CHECK END ===");
+        hookLogger.debug("=== PHONE EXISTENCE CHECK END ===");
       }
     }, 1000);
 
@@ -68,10 +71,10 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     setIsChecking(true);
     const timeoutId = setTimeout(async () => {
       try {
-        console.log("=== EMAIL EXISTENCE CHECK START ===");
-        
+        hookLogger.debug("=== EMAIL EXISTENCE CHECK START ===");
+
         const exists = await checkEmailExistsViaEdgeFunction(email, 'customer');
-        console.log("Email check result:", exists);
+        hookLogger.debug("Email check result:", exists);
         
         if (exists) {
           setEmailExistsCheck(true);
@@ -95,11 +98,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
           }
         }
       } catch (error) {
-        console.error("Error checking email duplicates:", error);
+        hookLogger.error("Error checking email duplicates:", error);
         setEmailExistsCheck(false);
       } finally {
         setIsChecking(false);
-        console.log("=== EMAIL EXISTENCE CHECK END ===");
+        hookLogger.debug("=== EMAIL EXISTENCE CHECK END ===");
       }
     }, 1000);
 
@@ -115,11 +118,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
     setIsChecking(true);
     const timeoutId = setTimeout(async () => {
       try {
-        console.log("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK START ===");
-        console.log("Checking comprehensive duplicates for:", { email, phone, firstName, lastName });
-        
+        hookLogger.debug("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK START ===");
+        hookLogger.debug("Checking comprehensive duplicates for:", { email, phone, firstName, lastName });
+
         const result = await checkDuplicatesViaEdgeFunction(email, phone, firstName, lastName, 'customer');
-        console.log("Comprehensive duplicate check result:", result);
+        hookLogger.debug("Comprehensive duplicate check result:", result);
         
         if (result.isDuplicate) {
           setDuplicateResult(result);
@@ -133,11 +136,11 @@ export const useCustomerDuplicateCheck = (email: string, phone: string, firstNam
           setDuplicateResult(null);
         }
       } catch (error) {
-        console.error("Error in comprehensive duplicate check:", error);
+        hookLogger.error("Error in comprehensive duplicate check:", error);
         setDuplicateResult(null);
       } finally {
         setIsChecking(false);
-        console.log("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK END ===");
+        hookLogger.debug("=== COMPREHENSIVE CUSTOMER DUPLICATE CHECK END ===");
       }
     }, 1000);
 

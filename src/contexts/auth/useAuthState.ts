@@ -5,6 +5,9 @@ import { useAuthStateManagement } from "./hooks/useAuthStateManagement";
 import { useUserInitialization } from "./hooks/useUserInitialization";
 import { useSubscriptionStatus } from "./hooks/useSubscriptionStatus";
 import { useGuestAccessUtils } from "./hooks/useGuestAccessUtils";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthState');
 
 // Define the global window object with our custom property
 declare global {
@@ -49,7 +52,7 @@ export const useAuthState = () => {
       
       setOneTimeAccessResources(accessResources);
     } catch (error) {
-      console.error("❌ Error in enhanced init user data:", error);
+      authLogger.error("Error in enhanced init user data:", error);
       setCurrentUser(null);
     } finally {
       setLoading(false);
@@ -79,16 +82,16 @@ export const useAuthState = () => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("🔐 Auth state change event:", event, "session user id:", session?.user?.id);
+        authLogger.debug("Auth state change event:", event, "session user id:", session?.user?.id);
         setSession(session);
-        
+
         if (session?.user) {
           // Defer user data initialization to prevent blocking auth state change
           setTimeout(() => {
             enhancedInitUserData(session.user.id, true);
           }, 0);
         } else {
-          console.log("❌ No session, clearing user data");
+          authLogger.debug("No session, clearing user data");
           setCurrentUser(null);
           setIsSubscribed(false);
           setLoading(false);
@@ -98,7 +101,7 @@ export const useAuthState = () => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("🔍 Initial session check:", session?.user?.id);
+      authLogger.debug("Initial session check:", session?.user?.id);
       setSession(session);
       if (session?.user) {
         // Defer user data initialization to prevent blocking initial load

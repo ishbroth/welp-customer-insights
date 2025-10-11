@@ -1,3 +1,6 @@
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('enhancedSecurityHelpers');
 
 // Rate Limiting Store (In-Memory - Replace with Redis for production)
 const rateLimitStore: { [key: string]: { count: number; expiry: number } } = {};
@@ -69,9 +72,9 @@ export const validateSecureInput = (input: string, type: 'email' | 'phone' | 'te
   ];
 
   const hasDangerousContent = dangerousPatterns.some(pattern => pattern.test(input));
-  
+
   if (hasDangerousContent) {
-    console.warn('Dangerous input detected:', input.substring(0, 100), 'type:', type);
+    utilLogger.warn('Dangerous input detected:', input.substring(0, 100), 'type:', type);
     return false;
   }
 

@@ -1,5 +1,6 @@
 
 import { ThumbsUp, Laugh, Frown } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 interface CustomerReactionsProps {
   reactions: {
@@ -10,24 +11,25 @@ interface CustomerReactionsProps {
 }
 
 const CustomerReactions = ({ reactions }: CustomerReactionsProps) => {
-  console.log("CustomerReactions component received reactions:", reactions);
-  
+  const componentLogger = logger.withContext('CustomerReactions');
+  componentLogger.debug("CustomerReactions component received reactions:", reactions);
+
   // Ensure reactions object has all required properties with default values
   const safeReactions = {
     like: reactions?.like || [],
     funny: reactions?.funny || [],
     ohNo: reactions?.ohNo || []
   };
-  
+
   const totalReactions = safeReactions.like.length + safeReactions.funny.length + safeReactions.ohNo.length;
-  
-  console.log("Total reactions count:", totalReactions);
-  console.log("Like count:", safeReactions.like.length);
-  console.log("Funny count:", safeReactions.funny.length);
-  console.log("OhNo count:", safeReactions.ohNo.length);
-  
+
+  componentLogger.debug("Total reactions count:", totalReactions);
+  componentLogger.debug("Like count:", safeReactions.like.length);
+  componentLogger.debug("Funny count:", safeReactions.funny.length);
+  componentLogger.debug("OhNo count:", safeReactions.ohNo.length);
+
   if (totalReactions === 0) {
-    console.log("No reactions to display");
+    componentLogger.debug("No reactions to display");
     return null;
   }
 

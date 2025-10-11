@@ -1,13 +1,16 @@
 
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthUtils');
 
 /**
  * Fetch user profile from database with fresh data
  */
 export const fetchUserProfile = async (userId: string): Promise<User | null> => {
   try {
-    console.log("Fetching fresh user profile for userId:", userId);
+    authLogger.debug("Fetching fresh user profile for userId:", userId);
     
     // Always fetch fresh data from the database, no caching
     const { data: profile, error } = await supabase
@@ -34,16 +37,16 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       .single();
 
     if (error) {
-      console.error("Error fetching user profile:", error);
+      authLogger.error("Error fetching user profile:", error);
       return null;
     }
 
     if (!profile) {
-      console.log("No profile found for userId:", userId);
+      authLogger.debug("No profile found for userId:", userId);
       return null;
     }
 
-    console.log("Fresh profile data fetched from database:", profile);
+    authLogger.debug("Fresh profile data fetched from database:", profile);
 
     // Transform database profile to User type
     const user: User = {
@@ -61,10 +64,10 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       avatar: profile.avatar || ''
     };
 
-    console.log("Transformed user profile:", user);
+    authLogger.debug("Transformed user profile:", user);
     return user;
   } catch (error) {
-    console.error("Error in fetchUserProfile:", error);
+    authLogger.error("Error in fetchUserProfile:", error);
     return null;
   }
 };
@@ -73,7 +76,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
  * Force refresh user profile from database (no caching)
  */
 export const refreshUserProfile = async (userId: string): Promise<User | null> => {
-  console.log("Force refreshing user profile for userId:", userId);
+  authLogger.debug("Force refreshing user profile for userId:", userId);
   // This function is identical to fetchUserProfile but semantically different
   // It's used when we explicitly want to bypass any potential caching
   return fetchUserProfile(userId);
@@ -84,8 +87,8 @@ export const refreshUserProfile = async (userId: string): Promise<User | null> =
  */
 export const loadOneTimeAccessResources = async (userId: string): Promise<string[]> => {
   try {
-    console.log("Loading one-time access resources for userId:", userId);
-    
+    authLogger.debug("Loading one-time access resources for userId:", userId);
+
     const { data, error } = await supabase
       .from('customer_access')
       .select('customer_id')
@@ -93,15 +96,15 @@ export const loadOneTimeAccessResources = async (userId: string): Promise<string
       .gt('expires_at', new Date().toISOString());
 
     if (error) {
-      console.error("Error loading one-time access resources:", error);
+      authLogger.error("Error loading one-time access resources:", error);
       return [];
     }
 
     const resources = data?.map(item => item.customer_id) || [];
-    console.log("Loaded one-time access resources:", resources);
+    authLogger.debug("Loaded one-time access resources:", resources);
     return resources;
   } catch (error) {
-    console.error("Error in loadOneTimeAccessResources:", error);
+    authLogger.error("Error in loadOneTimeAccessResources:", error);
     return [];
   }
 };

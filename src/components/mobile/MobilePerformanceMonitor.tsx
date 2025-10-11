@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { logger } from '@/utils/logger';
 
 interface PerformanceMetrics {
   fps: number;
@@ -76,7 +77,7 @@ const MobilePerformanceMonitor: React.FC<MobilePerformanceMonitorProps> = ({
       try {
         observer.observe({ entryTypes: ['navigation', 'measure'] });
       } catch (error) {
-        console.warn('Performance observer not supported:', error);
+        logger.warn('Performance observer not supported', { error });
       }
 
       return () => {

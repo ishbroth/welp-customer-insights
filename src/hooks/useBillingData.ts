@@ -1,6 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBillingData');
 
 interface SubscriptionData {
   subscribed: boolean;
@@ -100,13 +103,13 @@ export const useBillingData = (currentUser: any) => {
     if (!currentUser) return;
     
     setIsLoadingData(true);
-    
+
     try {
-      console.log("Loading billing data for user:", currentUser.email);
-      
+      hookLogger.info("Loading billing data for user:", currentUser.email);
+
       // If this is a permanent account, use mock data
       if (isPermanentAccount) {
-        console.log("Using mock data for permanent account");
+        hookLogger.debug("Using mock data for permanent account");
         const mockData = getMockBillingData();
         setSubscriptionData(mockData.subscriptionData);
         setPaymentMethods(mockData.paymentMethods);
@@ -118,46 +121,46 @@ export const useBillingData = (currentUser: any) => {
       
       // Check subscription status for regular accounts
       const { data: subData, error: subError } = await supabase.functions.invoke("check-subscription");
-      
+
       if (subError) {
-        console.error("Error checking subscription:", subError);
+        hookLogger.error("Error checking subscription:", subError);
         // If the error is about no Stripe customer, that's expected for new users
         if (subError.message?.includes("No Stripe customer found")) {
           setHasStripeCustomer(false);
           setSubscriptionData({ subscribed: false });
         } else {
           // Only log unexpected errors, don't show toast
-          console.error("Unexpected subscription error:", subError);
+          hookLogger.error("Unexpected subscription error:", subError);
         }
       } else {
-        console.log("Subscription data:", subData);
+        hookLogger.debug("Subscription data:", subData);
         setSubscriptionData(subData);
         setHasStripeCustomer(true);
       }
 
       // Load payment methods and transactions through a billing info edge function
       const { data: billingData, error: billingError } = await supabase.functions.invoke("get-billing-info");
-      
+
       if (billingError) {
-        console.error("Error loading billing info:", billingError);
+        hookLogger.error("Error loading billing info:", billingError);
         // Don't show error for missing customer - this is normal for new users
         if (!billingError.message?.includes("No Stripe customer found")) {
-          console.error("Unexpected billing error:", billingError);
+          hookLogger.error("Unexpected billing error:", billingError);
         }
         // Set empty arrays for new users without Stripe customers
         setPaymentMethods([]);
         setTransactions([]);
       } else {
-        console.log("Billing data:", billingData);
+        hookLogger.debug("Billing data:", billingData);
         setPaymentMethods(billingData?.payment_methods || []);
         setTransactions(billingData?.transactions || []);
         setHasStripeCustomer(true);
       }
     } catch (error) {
-      console.error("Error in loadBillingData:", error);
+      hookLogger.error("Error in loadBillingData:", error);
       // Only log unexpected errors, don't show toast for missing Stripe customer
       if (!error.message?.includes("No Stripe customer found")) {
-        console.error("Unexpected error in loadBillingData:", error);
+        hookLogger.error("Unexpected error in loadBillingData:", error);
       }
     } finally {
       setIsLoadingData(false);

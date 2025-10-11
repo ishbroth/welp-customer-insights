@@ -2,6 +2,9 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('lib/utils');
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -18,13 +21,13 @@ export const verifyPhoneNumber = async ({ phoneNumber, code }: { phoneNumber: st
     });
 
     if (error) {
-      console.error("Phone verification error:", error);
+      utilLogger.error("Phone verification error:", error);
       return { isValid: false, error: error.message };
     }
 
     return { isValid: data.success, error: data.message };
   } catch (error) {
-    console.error("Phone verification error:", error);
+    utilLogger.error("Phone verification error:", error);
     return { isValid: false, error: "Failed to verify phone number" };
   }
 };
@@ -38,13 +41,13 @@ export const resendVerificationCode = async ({ phoneNumber }: { phoneNumber: str
     });
     
     if (error) {
-      console.error("Error resending verification code:", error);
+      utilLogger.error("Error resending verification code:", error);
       return { success: false, error: error.message };
     }
-    
+
     return { success: data?.success || false, error: data?.message };
   } catch (error) {
-    console.error("Error resending verification code:", error);
+    utilLogger.error("Error resending verification code:", error);
     return { success: false, error: "Failed to resend verification code" };
   }
 };

@@ -3,6 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { AddressComponents } from "@/utils/addressExtraction";
+import { logger } from "@/utils/logger";
 
 interface AddressInfoSectionProps {
   customerAddress: string;
@@ -25,15 +26,17 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
   onAddressSelect,
   onAddressComponentsExtracted,
 }) => {
+  const componentLogger = logger.withContext('AddressInfoSection');
+
   // Handle address autocomplete change - no normalization during typing (same as SearchField)
   const handleAddressAutocompleteChange = (address: string) => {
-    console.log('🏠 AddressInfoSection - Address changed to:', address);
+    componentLogger.debug('Address changed to:', address);
     setCustomerAddress(address);
   };
 
   // Handle place selection from Google Maps (same as SearchField)
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    console.log('🏠 AddressInfoSection - Place selected:', place);
+    componentLogger.debug('Place selected:', place);
     onAddressSelect(place);
   };
 
@@ -45,7 +48,7 @@ const AddressInfoSection: React.FC<AddressInfoSectionProps> = ({
           id="customerAddress"
           value={customerAddress}
           onChange={(e) => {
-            console.log('🏠 AddressInfoSection - Input changed:', e.target.value);
+            componentLogger.debug('Input changed:', e.target.value);
             setCustomerAddress(e.target.value);
           }}
           onAddressChange={handleAddressAutocompleteChange}

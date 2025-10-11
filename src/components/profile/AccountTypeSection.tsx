@@ -6,6 +6,7 @@ import { Star } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "@/components/ui/sonner";
 import { openCustomerPortal } from "@/services/subscriptionService";
+import { logger } from "@/utils/logger";
 
 interface AccountTypeSectionProps {
   isSubscribed: boolean;
@@ -15,17 +16,19 @@ interface AccountTypeSectionProps {
 }
 
 const AccountTypeSection = ({ isSubscribed, currentUserType, currentUserEmail, setIsSubscribed }: AccountTypeSectionProps) => {
+  const componentLogger = logger.withContext('AccountTypeSection');
+
   // Function to get the subscription page URL based on account type
   const getSubscriptionUrl = () => {
-    return currentUserType === "business" 
-      ? "/subscription?type=business" 
+    return currentUserType === "business"
+      ? "/subscription?type=business"
       : "/subscription?type=customer";
   };
 
   // Function to get the account type display text with subscription status
   const getAccountTypeDisplay = () => {
     if (!currentUserType) return "Unknown";
-    
+
     if (currentUserType === "business") {
       return isSubscribed ? "Business Premium" : "Business Account";
     } else {
@@ -41,7 +44,7 @@ const AccountTypeSection = ({ isSubscribed, currentUserType, currentUserEmail, s
         'iw@thepaintedpainter.com',
         'isaac.wiley99@gmail.com'
       ];
-      
+
       if (currentUserEmail && permanentAccountEmails.includes(currentUserEmail)) {
         setIsSubscribed(false);
         toast.success("Subscription cancelled successfully.");
@@ -51,7 +54,7 @@ const AccountTypeSection = ({ isSubscribed, currentUserType, currentUserEmail, s
       // For regular users, redirect to customer portal for cancellation
       await openCustomerPortal();
     } catch (error: any) {
-      console.error("Error cancelling subscription:", error);
+      componentLogger.error("Error cancelling subscription:", error);
       toast.error("Could not cancel subscription. Please try again.");
     }
   };

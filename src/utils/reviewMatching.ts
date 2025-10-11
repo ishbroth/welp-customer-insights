@@ -2,6 +2,9 @@
 import { Customer } from "@/types/search";
 import { compareAddresses } from "./addressNormalization";
 import { calculateStringSimilarity } from "./stringSimilarity";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('reviewMatching');
 
 interface ReviewMatchData {
   customer_name?: string;
@@ -36,7 +39,7 @@ export const doesReviewMatchUser = (
     if (similarity >= 0.8) {
       matches.name = true;
       matchCount++;
-      console.log(`[DEBUG] Name match found: "${review.customer_name}" vs "${userFullName}" (similarity: ${similarity})`);
+      utilLogger.debug(`Name match found: "${review.customer_name}" vs "${userFullName}" (similarity: ${similarity})`);
     }
   }
 
@@ -47,7 +50,7 @@ export const doesReviewMatchUser = (
     if (reviewPhone && userPhone && reviewPhone === userPhone) {
       matches.phone = true;
       matchCount++;
-      console.log(`[DEBUG] Phone match found: "${reviewPhone}" vs "${userPhone}"`);
+      utilLogger.debug(`Phone match found: "${reviewPhone}" vs "${userPhone}"`);
     }
   }
 
@@ -58,13 +61,13 @@ export const doesReviewMatchUser = (
     if (compareAddresses(reviewAddress, userAddress, 0.8)) {
       matches.address = true;
       matchCount++;
-      console.log(`[DEBUG] Address match found: "${reviewAddress}" vs "${userAddress}"`);
+      utilLogger.debug(`Address match found: "${reviewAddress}" vs "${userAddress}"`);
     }
   }
 
   // Require at least 2 out of 3 fields to match to prevent false positives
   const isMatch = matchCount >= 2;
-  console.log(`[DEBUG] Review matching result: ${isMatch} (${matchCount}/3 fields matched)`, matches);
+  utilLogger.debug(`Review matching result: ${isMatch} (${matchCount}/3 fields matched)`, matches);
   
   return isMatch;
 };

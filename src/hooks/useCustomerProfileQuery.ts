@@ -1,17 +1,20 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerProfileQuery');
 
 export const useCustomerProfileQuery = (customerId: string | undefined) => {
   return useQuery({
     queryKey: ['customerProfile', customerId],
     queryFn: async () => {
       if (!customerId) {
-        console.log(`useCustomerProfileQuery: No customer ID provided`);
+        hookLogger.debug(`No customer ID provided`);
         return null;
       }
       
-      console.log(`useCustomerProfileQuery: Fetching customer profile for ID: ${customerId}`);
+      hookLogger.debug(`Fetching customer profile for ID: ${customerId}`);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -20,11 +23,11 @@ export const useCustomerProfileQuery = (customerId: string | undefined) => {
         .maybeSingle();
 
       if (error) {
-        console.error("useCustomerProfileQuery: Error fetching customer profile:", error);
+        hookLogger.error("Error fetching customer profile:", error);
         return null;
       }
 
-      console.log(`useCustomerProfileQuery: Customer profile result:`, data);
+      hookLogger.debug(`Customer profile result:`, data);
       return data;
     },
     enabled: !!customerId,

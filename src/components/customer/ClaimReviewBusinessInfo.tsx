@@ -3,6 +3,7 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getBusinessInitials } from "./enhancedReviewCardUtils";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { logger } from '@/utils/logger';
 
 interface BusinessProfile {
   id?: string;
@@ -40,13 +41,15 @@ const ClaimReviewBusinessInfo: React.FC<ClaimReviewBusinessInfoProps> = ({
   displayData,
   fullBusinessProfile,
 }) => {
+  const componentLogger = logger.withContext('ClaimReviewBusinessInfo');
+
   // Use the most complete data source available
   const businessData = fullBusinessProfile || displayData;
   const finalBusinessName = businessData?.business_info?.business_name || businessData?.name || businessName;
   const finalBusinessAvatar = businessData?.avatar || businessAvatar;
   const isVerified = businessData?.verified || businessData?.business_info?.verified || false;
 
-  console.log('ClaimReviewBusinessInfo: Rendering with data:', {
+  componentLogger.debug('Rendering with data:', {
     businessName,
     finalBusinessName,
     businessData: businessData ? 'found' : 'not found',

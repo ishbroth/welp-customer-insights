@@ -7,6 +7,9 @@ import { useAuth } from "@/contexts/auth";
 import { compareAddresses } from "@/utils/addressNormalization";
 import { calculateStringSimilarity } from "@/utils/stringSimilarity";
 import { useReviewAccess } from "./useReviewAccess";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerProfile');
 
 export const useCustomerProfile = (customerId: string | undefined) => {
   const { currentUser } = useAuth();
@@ -64,7 +67,7 @@ export const useCustomerProfile = (customerId: string | undefined) => {
         await fetchReviewsAboutCustomer(profileData);
         
       } catch (error: any) {
-        console.error("Error fetching customer profile:", error);
+        hookLogger.error("Error fetching customer profile:", error);
         toast({
           title: "Error",
           description: "Failed to load customer profile. Please try again later.",
@@ -77,7 +80,7 @@ export const useCustomerProfile = (customerId: string | undefined) => {
 
     const fetchReviewsAboutCustomer = async (customerProfile: any) => {
       try {
-        console.log('Fetching reviews for customer:', customerId);
+        hookLogger.debug('Fetching reviews for customer:', customerId);
         
         // Get all claimed reviews for this customer using JOIN query
         const { data: claimedReviews, error: claimedError } = await supabase
@@ -98,7 +101,7 @@ export const useCustomerProfile = (customerId: string | undefined) => {
           `)
           .eq('review_claims.claimed_by', customerId);
 
-        console.log('Claimed reviews query result:', { claimedReviews, claimedError });
+        hookLogger.debug('Claimed reviews query result:', { claimedReviews, claimedError });
 
         // Get all unclaimed reviews to check for potential matches
         const { data: allReviews, error: reviewsError } = await supabase
@@ -119,7 +122,7 @@ export const useCustomerProfile = (customerId: string | undefined) => {
           .order('created_at', { ascending: false });
 
         if (reviewsError) {
-          console.error("Error fetching reviews:", reviewsError);
+          hookLogger.error("Error fetching reviews:", reviewsError);
           return;
         }
 
@@ -150,7 +153,7 @@ export const useCustomerProfile = (customerId: string | undefined) => {
           matchReasons: ['Claimed by customer']
         })) || [];
 
-        console.log('Processed claimed reviews:', processedClaimedReviews);
+        hookLogger.debug('Processed claimed reviews:', processedClaimedReviews);
 
         // Check unclaimed reviews for potential matches
         const potentialMatches = allReviews
@@ -193,7 +196,7 @@ export const useCustomerProfile = (customerId: string | undefined) => {
         setCustomerReviews(allCustomerReviews);
 
       } catch (error) {
-        console.error("Error fetching customer reviews:", error);
+        hookLogger.error("Error fetching customer reviews:", error);
       }
     };
 

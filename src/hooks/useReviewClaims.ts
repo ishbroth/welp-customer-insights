@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useReviewClaims');
 
 export const useReviewClaims = () => {
   const { toast } = useToast();
@@ -28,7 +31,7 @@ export const useReviewClaims = () => {
       });
 
       if (error) {
-        console.error('Error claiming review:', error);
+        hookLogger.error('Error claiming review:', error);
         if (error.message.includes('unique_violation')) {
           toast({
             title: "Review Already Claimed",
@@ -49,10 +52,10 @@ export const useReviewClaims = () => {
         return false;
       }
 
-      console.log(`✅ Successfully claimed review ${reviewId} with type ${claimType}`);
+      hookLogger.info(`Successfully claimed review ${reviewId} with type ${claimType}`);
       return true;
     } catch (error) {
-      console.error('Error in claimReview:', error);
+      hookLogger.error('Error in claimReview:', error);
       toast({
         title: "Error",
         description: "Failed to claim review. Please try again.",
@@ -94,12 +97,12 @@ export const useReviewClaims = () => {
         .order('claimed_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching user claimed reviews:', error);
+        hookLogger.error('Error fetching user claimed reviews:', error);
         return [];
       }
 
       if (!claims || claims.length === 0) {
-        console.log('No claimed reviews found for user');
+        hookLogger.debug('No claimed reviews found for user');
         return [];
       }
 
@@ -134,7 +137,7 @@ export const useReviewClaims = () => {
         };
       }) || [];
     } catch (error) {
-      console.error('Error in getUserClaimedReviews:', error);
+      hookLogger.error('Error in getUserClaimedReviews:', error);
       return [];
     }
   };
@@ -153,13 +156,13 @@ export const useReviewClaims = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error checking review claim:', error);
+        hookLogger.error('Error checking review claim:', error);
         return false;
       }
 
       return !!data;
     } catch (error) {
-      console.error('Error in isReviewClaimedByUser:', error);
+      hookLogger.error('Error in isReviewClaimedByUser:', error);
       return false;
     }
   };

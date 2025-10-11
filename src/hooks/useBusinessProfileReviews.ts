@@ -4,6 +4,9 @@ import { Review } from "@/types";
 import { useAuth } from "@/contexts/auth";
 import { useReviewClaims } from "./useReviewClaims";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useBusinessProfileReviews');
 
 export const useBusinessProfileReviews = (businessId: string | undefined, hasAccess: boolean) => {
   const { currentUser, isSubscribed } = useAuth();
@@ -20,8 +23,8 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
       if (!businessId || !hasAccess) {
         return [];
       }
-      
-      console.log("Fetching reviews for business ID:", businessId);
+
+      hookLogger.info("Fetching reviews for business ID:", businessId);
       
       const { data, error } = await supabase
         .from('reviews')
@@ -31,7 +34,7 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error("Error fetching business reviews:", error);
+        hookLogger.error("Error fetching business reviews:", error);
         throw error;
       }
       
@@ -51,12 +54,12 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
               funny: Array.isArray(parsed.funny) ? parsed.funny : [],
               ohNo: Array.isArray(parsed.ohNo) ? parsed.ohNo : []
             };
-            console.log(`Loaded reactions for review ${review.id}:`, reactions);
+            hookLogger.debug(`Loaded reactions for review ${review.id}:`, reactions);
           } catch (error) {
-            console.error('Error parsing stored reactions:', error);
+            hookLogger.error('Error parsing stored reactions:', error);
           }
         } else {
-          console.log(`No stored reactions found for review ${review.id}`);
+          hookLogger.debug(`No stored reactions found for review ${review.id}`);
         }
 
         // Check if this review is claimed by the current user
@@ -96,8 +99,8 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
           canReact: !!currentUser,
           canRespond: isClaimed && currentUser?.type === 'customer'
         };
-        
-        console.log(`Transformed review ${review.id}:`, transformedReview);
+
+        hookLogger.debug(`Transformed review ${review.id}:`, transformedReview);
         return transformedReview;
       }));
       
@@ -111,8 +114,8 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
         // Then sort by date (newest first)
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
-      
-      console.log("All transformed business reviews:", sortedReviews);
+
+      hookLogger.debug("All transformed business reviews:", sortedReviews);
       return sortedReviews;
     },
     enabled: !!businessId && hasAccess,

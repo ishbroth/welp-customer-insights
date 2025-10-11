@@ -1,47 +1,50 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
 import { openStripeCheckout } from "@/utils/stripeCheckout";
 
+const serviceLogger = logger.withContext('Subscription');
+
 export const openCustomerPortal = async () => {
   try {
-    console.log("Opening customer portal...");
-    
+    serviceLogger.info("Opening customer portal...");
+
     const { data, error } = await supabase.functions.invoke("customer-portal");
-    
+
     if (error) {
-      console.error("Error opening customer portal:", error);
+      serviceLogger.error("Error opening customer portal:", error);
       throw error;
     }
-    
+
     if (data?.url) {
-      console.log("Redirecting to customer portal:", data.url);
+      serviceLogger.info("Redirecting to customer portal:", data.url);
       // Customer portal always opens in new tab for security
       window.open(data.url, '_blank');
     } else {
       throw new Error("No portal URL received");
     }
   } catch (error) {
-    console.error("Failed to open customer portal:", error);
+    serviceLogger.error("Failed to open customer portal:", error);
     throw error;
   }
 };
 
 export const processPaymentRefund = async (sessionId: string) => {
   try {
-    console.log("Processing payment refund for session:", sessionId);
-    
+    serviceLogger.info("Processing payment refund for session:", sessionId);
+
     const { data, error } = await supabase.functions.invoke("process-payment-refund", {
       body: { sessionId }
     });
-    
+
     if (error) {
-      console.error("Error processing payment refund:", error);
+      serviceLogger.error("Error processing payment refund:", error);
       throw error;
     }
-    
+
     return data;
   } catch (error) {
-    console.error("Failed to process payment refund:", error);
+    serviceLogger.error("Failed to process payment refund:", error);
     throw error;
   }
 };
@@ -55,8 +58,8 @@ export const handleSubscription = async (
   creditBalance: number = 0,
   isMobile: boolean = false
 ) => {
-  console.log("🔥 handleSubscription called! isProcessing:", false, "isCustomer:", isCustomer);
-  
+  serviceLogger.debug("handleSubscription called! isProcessing:", false, "isCustomer:", isCustomer);
+
   if (!currentUser) {
     toast({
       title: "Authentication Error",
@@ -67,15 +70,15 @@ export const handleSubscription = async (
   }
 
   setIsProcessing(true);
-  
+
   try {
-    console.log("📞 About to call create-checkout");
+    serviceLogger.debug("About to call create-checkout");
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: { userType: isCustomer ? "customer" : "business" }
     });
-    
+
     if (error) {
-      console.error("❌ Payment error:", error);
+      serviceLogger.error("Payment error:", error);
       toast({
         title: "Payment Error",
         description: error.message || "Failed to create payment session. Please try again.",
@@ -84,9 +87,9 @@ export const handleSubscription = async (
       setIsProcessing(false);
       return;
     }
-    
+
     if (data?.url) {
-      console.log("🚀 Opening Stripe checkout:", data.url);
+      serviceLogger.info("Opening Stripe checkout:", data.url);
       
       // Use same-tab navigation to avoid popup blockers
       openStripeCheckout(data.url);
@@ -104,7 +107,7 @@ export const handleSubscription = async (
       // Reset processing state since user will complete checkout in new tab
       setIsProcessing(false);
     } else {
-      console.error("❌ No checkout URL returned:", data);
+      serviceLogger.error("No checkout URL returned:", data);
       toast({
         title: "Payment Error",
         description: "Failed to create payment session. Please try again.",
@@ -113,7 +116,7 @@ export const handleSubscription = async (
       setIsProcessing(false);
     }
   } catch (error) {
-    console.error("❌ Subscription error:", error);
+    serviceLogger.error("Subscription error:", error);
     toast({
       title: "Payment Error",
       description: error instanceof Error ? error.message : "An error occurred while processing your payment. Please try again.",

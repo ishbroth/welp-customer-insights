@@ -17,7 +17,7 @@ const CallToActionSection = () => {
   };
 
   return (
-    <section className="py-16 welp-gradient text-white">
+    <section className="py-16 welp-gradient text-white bg-opacity-90 backdrop-blur-sm">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-3xl font-bold mb-6">Ready to take control?</h2>
         <p className="text-xl mb-8 max-w-2xl mx-auto">

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
+import { logger } from '@/utils/logger';
 
 interface ReviewItemHeaderProps {
   review: {
@@ -24,6 +25,7 @@ interface ReviewItemHeaderProps {
 const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
   const { isSubscribed } = useAuth();
   const navigate = useNavigate();
+  const componentLogger = logger.withContext('ReviewItemHeader');
 
   // Fetch business profile to get avatar
   const { data: businessProfile } = useQuery({
@@ -36,7 +38,7 @@ const ReviewItemHeader = ({ review, hasFullAccess }: ReviewItemHeaderProps) => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching business profile:", error);
+        componentLogger.error("Error fetching business profile:", error);
         return null;
       }
       return data;

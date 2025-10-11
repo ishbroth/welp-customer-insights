@@ -1,5 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('emailUtils');
 
 interface EmailVerificationRequest {
   email: string;
@@ -7,30 +10,30 @@ interface EmailVerificationRequest {
 
 /**
  * Sends an email verification code to the specified email address
- * 
+ *
  * @param email The email address to send verification code to
  * @returns Promise with result of sending the verification code
  */
-export const sendEmailVerificationCode = async (params: EmailVerificationRequest): Promise<{ 
-  success: boolean; 
+export const sendEmailVerificationCode = async (params: EmailVerificationRequest): Promise<{
+  success: boolean;
   message: string;
   debug?: any;
 }> => {
   try {
-    console.log(`📧 Sending verification code to: ${params.email}`);
+    utilLogger.info(`Sending verification code to: ${params.email}`);
     
     const { data, error } = await supabase.functions.invoke('send-email-verification-code', {
       body: { email: params.email }
     });
 
     if (error) {
-      console.error("❌ Error sending email verification code:", error);
+      utilLogger.error("Error sending email verification code:", error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error("❌ Failed to send email verification code:", error);
+    utilLogger.error("Failed to send email verification code:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Failed to send verification code"
@@ -61,7 +64,7 @@ export const verifyEmailCode = async (
   user?: any;
 }> => {
   try {
-    console.log(`🔍 Verifying email code for: ${email}`);
+    utilLogger.info(`Verifying email code for: ${email}`);
 
     const { data, error } = await supabase.functions.invoke('verify-email-code', {
       body: {
@@ -73,13 +76,13 @@ export const verifyEmailCode = async (
     });
 
     if (error) {
-      console.error("❌ Error verifying email code:", error);
+      utilLogger.error("Error verifying email code:", error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error("❌ Failed to verify email code:", error);
+    utilLogger.error("Failed to verify email code:", error);
     return {
       success: false,
       isValid: false,

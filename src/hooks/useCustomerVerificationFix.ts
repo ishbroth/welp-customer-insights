@@ -3,6 +3,9 @@ import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('CustomerVerificationFix');
 
 export const useCustomerVerificationFix = () => {
   const { currentUser } = useAuth();
@@ -12,7 +15,7 @@ export const useCustomerVerificationFix = () => {
     const fixCustomerVerification = async () => {
       if (!currentUser || currentUser.type !== 'customer') return;
       
-      console.log("Checking customer verification status for:", currentUser.id);
+      hookLogger.debug("Checking customer verification status for:", currentUser.id);
       
       // Check current verification status
       const { data: profile, error } = await supabase
@@ -22,16 +25,16 @@ export const useCustomerVerificationFix = () => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error checking verification:", error);
+        hookLogger.error("Error checking verification:", error);
         return;
       }
 
-      console.log("Current verification status:", profile?.verified);
+      hookLogger.debug("Current verification status:", profile?.verified);
 
       // If customer is not verified, automatically verify them
       // since they already completed phone verification to create the account
       if (profile && !profile.verified) {
-        console.log("Auto-verifying existing customer account...");
+        hookLogger.debug("Auto-verifying existing customer account...");
         
         const { error: updateError } = await supabase
           .from('profiles')
@@ -39,9 +42,9 @@ export const useCustomerVerificationFix = () => {
           .eq('id', currentUser.id);
 
         if (updateError) {
-          console.error("Error updating verification:", updateError);
+          hookLogger.error("Error updating verification:", updateError);
         } else {
-          console.log("Customer account verified successfully!");
+          hookLogger.info("Customer account verified successfully!");
           toast({
             title: "Account Verified",
             description: "Your customer account has been verified!",

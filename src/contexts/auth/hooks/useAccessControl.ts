@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AccessControl');
 
 /**
  * Hook for handling one-time access functionality
@@ -31,13 +34,13 @@ export const useAccessControl = (
         });
         
       if (error) {
-        console.error("Error marking one-time access:", error);
+        authLogger.error("Error marking one-time access:", error);
       } else {
         // Update local state
         setOneTimeAccessResources(prev => [...prev, resourceId]);
       }
     } catch (error) {
-      console.error("Error in markOneTimeAccess:", error);
+      authLogger.error("Error in markOneTimeAccess:", error);
     }
   };
 

@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface ReviewBusinessAvatarProps {
   reviewerId: string;
@@ -10,11 +11,13 @@ interface ReviewBusinessAvatarProps {
   reviewerVerified?: boolean;
 }
 
-const ReviewBusinessAvatar = ({ 
-  reviewerId, 
-  reviewerName, 
-  reviewerVerified 
+const ReviewBusinessAvatar = ({
+  reviewerId,
+  reviewerName,
+  reviewerVerified
 }: ReviewBusinessAvatarProps) => {
+  const componentLogger = logger.withContext('ReviewBusinessAvatar');
+
   // Fetch business profile
   const { data: businessProfile } = useQuery({
     queryKey: ['businessProfile', reviewerId],
@@ -26,7 +29,7 @@ const ReviewBusinessAvatar = ({
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching business profile:", error);
+        componentLogger.error("Error fetching business profile:", error);
         return null;
       }
       return data;

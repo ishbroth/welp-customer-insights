@@ -8,6 +8,7 @@ import { formatPhoneNumber } from "@/utils/phoneFormatter";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface CustomerProfileViewProps {
   customerId: string;
@@ -34,6 +35,7 @@ const CustomerProfileView = ({
   avatar,
   bio
 }: CustomerProfileViewProps) => {
+  const componentLogger = logger.withContext('CustomerProfileView');
   const navigate = useNavigate();
 
   // Fetch customer's verification status
@@ -47,7 +49,7 @@ const CustomerProfileView = ({
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching customer verification:", error);
+        componentLogger.error("Error fetching customer verification:", error);
         return null;
       }
 

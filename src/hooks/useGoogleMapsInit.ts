@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export type GoogleMapsStatus = 'loading' | 'ready' | 'error' | 'no-key';
 
 export const useGoogleMapsInit = () => {
+  const hookLogger = logger.withContext('useGoogleMapsInit');
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const [googleMapsStatus, setGoogleMapsStatus] = useState<GoogleMapsStatus>('loading');
 
@@ -14,11 +16,11 @@ export const useGoogleMapsInit = () => {
     
     const initializeGoogle = async () => {
       try {
-        console.log('🗺️ Initializing Google Maps...');
-        
+        hookLogger.info('Initializing Google Maps...');
+
         // Check if already loaded and ready
         if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
-          console.log('✅ Google Maps already loaded and ready');
+          hookLogger.info('Google Maps already loaded and ready');
           if (mounted) {
             setIsGoogleReady(true);
             setGoogleMapsStatus('ready');
@@ -29,9 +31,9 @@ export const useGoogleMapsInit = () => {
         const { data, error } = await supabase.functions.invoke('get-secret', {
           body: { secretName: 'VITE_GOOGLE_MAPS_API_KEY' }
         });
-        
+
         if (error) {
-          console.error("❌ Error calling get-secret function:", error);
+          hookLogger.error("Error calling get-secret function:", error);
           if (mounted) {
             setGoogleMapsStatus('error');
           }
@@ -39,16 +41,16 @@ export const useGoogleMapsInit = () => {
         }
 
         if (!data?.secret) {
-          console.log("❌ Google Maps API key not available");
+          hookLogger.warn("Google Maps API key not available");
           if (mounted) {
             setGoogleMapsStatus('no-key');
           }
           return;
         }
 
-        console.log('✅ Google Maps API key retrieved successfully');
+        hookLogger.info('Google Maps API key retrieved successfully');
 
-        console.log('🔄 Loading Google Maps script...');
+        hookLogger.debug('Loading Google Maps script...');
         const script = document.createElement('script');
         script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places&loading=async&callback=initGoogleMaps`;
         script.async = true;
@@ -56,29 +58,29 @@ export const useGoogleMapsInit = () => {
         
         // Create a global callback that will be called when Google Maps is ready
         (window as any).initGoogleMaps = () => {
-          console.log('✅ Google Maps script loaded and callback fired');
-          
+          hookLogger.info('Google Maps script loaded and callback fired');
+
           // Double-check that places library is available with timeout
           const checkPlacesReady = () => {
             if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
-              console.log('✅ Google Places library confirmed ready');
+              hookLogger.info('Google Places library confirmed ready');
               if (mounted) {
                 setIsGoogleReady(true);
                 setGoogleMapsStatus('ready');
               }
             } else {
-              console.log('⏳ Google Places library not ready yet, checking again...');
+              hookLogger.debug('Google Places library not ready yet, checking again...');
               if (mounted) {
                 timeoutId = setTimeout(checkPlacesReady, 100);
               }
             }
           };
-          
+
           checkPlacesReady();
         };
 
         script.onerror = (error) => {
-          console.error('❌ Failed to load Google Maps script:', error);
+          hookLogger.error('Failed to load Google Maps script:', error);
           if (mounted) {
             setGoogleMapsStatus('error');
           }
@@ -86,7 +88,7 @@ export const useGoogleMapsInit = () => {
 
         document.head.appendChild(script);
       } catch (error) {
-        console.error("❌ Error loading Google Maps:", error);
+        hookLogger.error("Error loading Google Maps:", error);
         if (mounted) {
           setGoogleMapsStatus('error');
         }

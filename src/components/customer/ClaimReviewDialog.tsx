@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import ClaimReviewBusinessInfo from "./ClaimReviewBusinessInfo";
 import { useClaimReviewDialog } from "@/hooks/useClaimReviewDialog";
+import { logger } from '@/utils/logger';
 
 interface ClaimReviewDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const componentLogger = logger.withContext('ClaimReviewDialog');
   const { fullBusinessProfile, isLoading } = useClaimReviewDialog(businessId);
 
   const handleConfirm = () => {
@@ -58,17 +60,17 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
 
   // Use full profile data if available, otherwise fall back to businessData
   const displayData = fullBusinessProfile || businessData;
-  
+
   // Handle business name - prioritize business_info.business_name, then profile name, then businessData name
-  const businessName = (fullBusinessProfile?.business_info && 'business_name' in fullBusinessProfile.business_info && typeof fullBusinessProfile.business_info.business_name === 'string') 
+  const businessName = (fullBusinessProfile?.business_info && 'business_name' in fullBusinessProfile.business_info && typeof fullBusinessProfile.business_info.business_name === 'string')
                       ? fullBusinessProfile.business_info.business_name
-                      : fullBusinessProfile?.name || 
-                        businessData?.name || 
+                      : fullBusinessProfile?.name ||
+                        businessData?.name ||
                         'Business';
-  
+
   const businessAvatar = displayData?.avatar || '';
 
-  console.log('ClaimReviewDialog: Rendering with data:', {
+  componentLogger.debug('Rendering with data:', {
     businessId,
     fullBusinessProfile: fullBusinessProfile ? 'loaded' : 'not loaded',
     businessName,

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "@/components/ui/sonner";
+import { logger } from '@/utils/logger';
 
 interface CreditBalance {
   id: string;
@@ -20,6 +21,7 @@ interface CreditTransaction {
 }
 
 export const useCredits = () => {
+  const hookLogger = logger.withContext('useCredits');
   const { currentUser } = useAuth();
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
@@ -42,7 +44,7 @@ export const useCredits = () => {
         .maybeSingle();
 
       if (creditsError && creditsError.code !== 'PGRST116') {
-        console.error("Error loading credits:", creditsError);
+        hookLogger.error("Error loading credits:", creditsError);
         toast.error("Failed to load credit balance");
       } else {
         setBalance(creditsData?.balance || 0);
@@ -57,13 +59,13 @@ export const useCredits = () => {
         .limit(50);
 
       if (transactionsError) {
-        console.error("Error loading transactions:", transactionsError);
+        hookLogger.error("Error loading transactions:", transactionsError);
         toast.error("Failed to load transaction history");
       } else {
         setTransactions(transactionsData || []);
       }
     } catch (error) {
-      console.error("Error in loadCreditsData:", error);
+      hookLogger.error("Error in loadCreditsData:", error);
       toast.error("Failed to load credits data");
     } finally {
       setIsLoading(false);
@@ -74,25 +76,25 @@ export const useCredits = () => {
     if (!currentUser) return;
 
     try {
-      console.log("Processing successful credit purchase:", { sessionId });
-      
+      hookLogger.debug("Processing successful credit purchase:", { sessionId });
+
       // Call the process-credit-purchase function
       const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
         body: { sessionId }
       });
 
       if (error) {
-        console.error("Error processing credit purchase:", error);
+        hookLogger.error("Error processing credit purchase:", error);
         toast.error("Failed to process credit purchase");
         return false;
       }
 
-      console.log("Credit purchase processed successfully:", data);
+      hookLogger.info("Credit purchase processed successfully:", data);
       toast.success(data.message || "Credits purchased successfully!");
       await loadCreditsData(); // Reload data
       return true;
     } catch (error) {
-      console.error("Error in processSuccessfulPurchase:", error);
+      hookLogger.error("Error in processSuccessfulPurchase:", error);
       toast.error("Failed to process credit purchase");
       return false;
     }
@@ -115,7 +117,7 @@ export const useCredits = () => {
       });
 
       if (error) {
-        console.error("Error using credits:", error);
+        hookLogger.error("Error using credits:", error);
         toast.error("Failed to use credits");
         return { success: false };
       }
@@ -132,16 +134,16 @@ export const useCredits = () => {
         .single();
 
       if (transactionError) {
-        console.error('Error fetching transaction ID:', transactionError);
+        hookLogger.error('Error fetching transaction ID:', transactionError);
       }
 
       await loadCreditsData(); // Reload data
-      return { 
-        success: true, 
-        transactionId: transaction?.id 
+      return {
+        success: true,
+        transactionId: transaction?.id
       };
     } catch (error) {
-      console.error("Error in useCredits:", error);
+      hookLogger.error("Error in useCredits:", error);
       toast.error("Failed to use credits");
       return { success: false };
     }

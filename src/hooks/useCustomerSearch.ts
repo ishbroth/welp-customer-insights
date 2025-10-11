@@ -5,14 +5,18 @@ import { Customer } from "@/types/search";
 import { useToast } from "@/hooks/use-toast";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { searchProfiles } from "./useCustomerSearch/profileSearch";
 import { searchReviews } from "./useCustomerSearch/reviewSearch";
 import { processProfileCustomers, processReviewCustomers } from "./useCustomerSearch/customerProcessor";
 import { SearchParams, ReviewData } from "./useCustomerSearch/types";
+import { logger } from '@/utils/logger';
 
 // Simple cache for search results to improve performance
 const searchCache = new Map<string, { data: Customer[]; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const hookLogger = logger.withContext('useCustomerSearch');
 
 export const useCustomerSearch = () => {
   const [searchParams] = useSearchParams();
@@ -44,7 +48,7 @@ export const useCustomerSearch = () => {
     // Check cache first
     const cached = searchCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('Using cached search results');
+      hookLogger.debug('Using cached search results');
       setCustomers(cached.data);
       return;
     }
@@ -53,25 +57,37 @@ export const useCustomerSearch = () => {
     const hasSearchParams = Object.values(searchParameters)
       .slice(0, 7) // Only check the string parameters, not fuzzy/threshold
       .some(param => typeof param === 'string' && param.trim() !== "");
-    
-    console.log("Search parameters:", searchParameters);
-    console.log("Has search params:", hasSearchParams);
-    
+
+    hookLogger.debug("Search parameters:", searchParameters);
+    hookLogger.debug("Has search params:", hasSearchParams);
+
     if (!hasSearchParams) {
-      console.log("No search parameters, clearing customers and skipping search");
+      hookLogger.debug("No search parameters, clearing customers and skipping search");
       setCustomers([]);
       setIsLoading(false);
       return;
     }
 
-    console.log("Starting search...");
+    hookLogger.debug("Starting search...");
     setIsLoading(true);
     
     try {
+      // For customer users, also fetch their claimed reviews to include in results
+      let claimedReviewIds: string[] = [];
+      if (currentUser?.type === 'customer') {
+        const { data: claims } = await supabase
+          .from('review_claims')
+          .select('review_id')
+          .eq('claimed_by', currentUser.id);
+
+        claimedReviewIds = claims?.map(c => c.review_id) || [];
+        hookLogger.info(`Current user has ${claimedReviewIds.length} claimed reviews`);
+      }
+
       // Search both profiles and reviews
       const [profilesData, reviewsData] = await Promise.all([
         searchProfiles(searchParameters),
-        searchReviews(searchParameters, unlockedReviews)
+        searchReviews(searchParameters, unlockedReviews, claimedReviewIds)
       ]);
       
       // Process customers from profiles
@@ -130,7 +146,7 @@ export const useCustomerSearch = () => {
           combinedCustomers.push(reviewCustomer);
         } else {
           // Match found, merge reviews into the existing profile customer
-          console.log(`Merging reviews for duplicate customer: ${reviewCustomer.firstName} ${reviewCustomer.lastName}`);
+          hookLogger.debug(`Merging reviews for duplicate customer: ${reviewCustomer.firstName} ${reviewCustomer.lastName}`);
           combinedCustomers[matchingProfileIndex].reviews = [
             ...combinedCustomers[matchingProfileIndex].reviews,
             ...reviewCustomer.reviews
@@ -147,8 +163,8 @@ export const useCustomerSearch = () => {
         if (!aHasUserReview && bHasUserReview) return 1;
         return 0;
       });
-      
-      console.log("Final combined customers:", sortedCustomers);
+
+      hookLogger.debug("Final combined customers:", sortedCustomers);
       setCustomers(sortedCustomers);
       
       // Cache the results
@@ -160,9 +176,9 @@ export const useCustomerSearch = () => {
           searchCache.delete(key);
         }
       }
-      
+
     } catch (error) {
-      console.error('Search error:', error);
+      hookLogger.error('Search error:', error);
       toast({
         title: "Search Error",
         description: "An error occurred while searching the customer database.",
@@ -170,7 +186,7 @@ export const useCustomerSearch = () => {
       });
       setCustomers([]);
     } finally {
-      console.log("Search completed, setting loading to false");
+      hookLogger.debug("Search completed, setting loading to false");
       setIsLoading(false);
     }
   }, [

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCustomerNameWithNickname, getNameInitials } from "@/utils/nameFormatter";
 import { Eye } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 interface BusinessReviewCardHeaderProps {
   review: Review;
@@ -22,14 +23,16 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   handleCustomerClick,
   isReviewClaimed,
 }) => {
+  const componentLogger = logger.withContext('BusinessReviewCardHeader');
+
   // Fetch customer profile for avatar and contact info when review is claimed
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
       if (!review.customerId) return null;
-      
-      console.log('BusinessReviewCardHeader: Fetching customer profile for ID:', review.customerId);
-      
+
+      componentLogger.debug('Fetching customer profile for ID:', review.customerId);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, avatar, first_name, last_name, name, phone, address, city, state, zipcode')
@@ -37,11 +40,11 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching customer profile:", error);
+        componentLogger.error("Error fetching customer profile:", error);
         return null;
       }
-      
-      console.log('BusinessReviewCardHeader: Customer profile found:', data);
+
+      componentLogger.debug('Customer profile found:', data);
       return data;
     },
     enabled: !!review.customerId
@@ -55,7 +58,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
   let customerCity = review.customer_city || '';
   let customerZipcode = review.customer_zipcode || '';
 
-  console.log("BusinessReviewCardHeader: Initial customer data:", {
+  componentLogger.debug("Initial customer data:", {
     reviewCustomerName: review.customerName,
     customerDisplayName,
     customer_nickname: (review as any).customer_nickname,
@@ -96,7 +99,7 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     return parts.join(', ');
   };
 
-  console.log('BusinessReviewCardHeader: Customer info display:', {
+  componentLogger.debug('Customer info display:', {
     reviewId: review.id,
     customerId: review.customerId,
     customerDisplayName,
@@ -105,15 +108,15 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
     address: formatAddress(),
     hasProfile: !!customerProfile
   });
-  
-  console.log('BusinessReviewCardHeader: Review date debug:', {
+
+  componentLogger.debug('Review date debug:', {
     reviewId: review.id,
     reviewDate: review.date,
     reviewDateType: typeof review.date,
     reviewObject: review
   });
 
-  console.log('🔍 BusinessReviewCardHeader: is_anonymous check:', {
+  componentLogger.debug('is_anonymous check:', {
     reviewId: review.id,
     customerName: review.customerName,
     is_anonymous: review.is_anonymous,

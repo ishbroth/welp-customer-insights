@@ -1,11 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
+
+const utilLogger = logger.withContext('forceDeleteAccount');
 
 /**
  * Force delete an account by email - for debugging corrupted accounts
  */
 export const forceDeleteCorruptedAccount = async (email: string) => {
-  console.log(`🗑️ Starting force deletion of corrupted account: ${email}`);
+  utilLogger.info(`Starting force deletion of corrupted account: ${email}`);
   
   try {
     // First, try to sign in as the user to get their session
@@ -15,7 +18,7 @@ export const forceDeleteCorruptedAccount = async (email: string) => {
     });
     
     if (authError) {
-      console.log("❌ Cannot sign in with corrupted account, trying alternative approach");
+      utilLogger.warn("Cannot sign in with corrupted account, trying alternative approach");
       
       // Call the delete-account edge function with admin privileges
       // We'll need to use the service role to delete this corrupted account
@@ -28,17 +31,17 @@ export const forceDeleteCorruptedAccount = async (email: string) => {
       });
       
       if (error) {
-        console.error("❌ Error in force delete:", error);
+        utilLogger.error("Error in force delete:", error);
         throw error;
       }
-      
-      console.log("✅ Force deletion completed:", data);
+
+      utilLogger.info("Force deletion completed:", data);
       return { success: true, data };
     }
-    
+
     // If we somehow got a session, use the normal delete process
     if (authData.session) {
-      console.log("🔄 Using normal deletion process with session");
+      utilLogger.info("Using normal deletion process with session");
       const { data, error } = await supabase.functions.invoke('delete-account', {
         method: 'POST',
         headers: {
@@ -47,16 +50,16 @@ export const forceDeleteCorruptedAccount = async (email: string) => {
       });
       
       if (error) {
-        console.error("❌ Error in normal delete:", error);
+        utilLogger.error("Error in normal delete:", error);
         throw error;
       }
-      
-      console.log("✅ Normal deletion completed:", data);
+
+      utilLogger.info("Normal deletion completed:", data);
       return { success: true, data };
     }
-    
+
   } catch (error) {
-    console.error("❌ Force deletion failed:", error);
+    utilLogger.error("Force deletion failed:", error);
     return { success: false, error };
   }
 };
@@ -65,7 +68,7 @@ export const forceDeleteCorruptedAccount = async (email: string) => {
  * Verify that an account has been completely deleted
  */
 export const verifyAccountDeleted = async (email: string) => {
-  console.log(`🔍 Verifying account deletion for: ${email}`);
+  utilLogger.info(`Verifying account deletion for: ${email}`);
   
   try {
     // Try to sign in - this should fail
@@ -75,20 +78,20 @@ export const verifyAccountDeleted = async (email: string) => {
     });
     
     if (authError && authError.message.includes('Invalid login credentials')) {
-      console.log("✅ Auth account properly deleted - login fails as expected");
+      utilLogger.info("Auth account properly deleted - login fails as expected");
       return { deleted: true, verified: true };
     }
-    
+
     if (authData.user) {
-      console.log("❌ Auth user still exists!");
+      utilLogger.warn("Auth user still exists!");
       return { deleted: false, verified: false };
     }
-    
-    console.log("✅ Account appears to be deleted");
+
+    utilLogger.info("Account appears to be deleted");
     return { deleted: true, verified: true };
-    
+
   } catch (error) {
-    console.error("❌ Error verifying deletion:", error);
+    utilLogger.error("Error verifying deletion:", error);
     return { deleted: false, verified: false, error };
   }
 };
@@ -97,7 +100,7 @@ export const verifyAccountDeleted = async (email: string) => {
  * Test account recreation after deletion
  */
 export const testAccountRecreation = async (email: string) => {
-  console.log(`🧪 Testing account recreation for: ${email}`);
+  utilLogger.info(`Testing account recreation for: ${email}`);
   
   try {
     // Try to create account with basic info
@@ -114,21 +117,21 @@ export const testAccountRecreation = async (email: string) => {
     });
     
     if (error) {
-      console.error("❌ Account recreation failed:", error);
+      utilLogger.error("Account recreation failed:", error);
       return { success: false, error };
     }
-    
-    console.log("✅ Account recreation successful:", data);
-    
+
+    utilLogger.info("Account recreation successful:", data);
+
     // Clean up the test account
     if (data.user) {
       await supabase.auth.signOut();
     }
-    
+
     return { success: true, data };
-    
+
   } catch (error) {
-    console.error("❌ Error in account recreation test:", error);
+    utilLogger.error("Error in account recreation test:", error);
     return { success: false, error };
   }
 };

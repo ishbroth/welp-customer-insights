@@ -1,12 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { logger } from '@/utils/logger';
 
 export const useRealTimeLicenseVerification = (
   licenseNumber: string,
   businessType: string,
   businessState: string
 ) => {
+  const hookLogger = logger.withContext('useRealTimeLicenseVerification');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
@@ -31,9 +33,9 @@ export const useRealTimeLicenseVerification = (
     const timeoutId = setTimeout(async () => {
       setIsVerifying(true);
       setHasAttempted(true);
-      
+
       try {
-        console.log("🔍 Real-time license verification with proper license type:", {
+        hookLogger.debug("Real-time license verification with proper license type:", {
           licenseNumber: licenseNumber.trim(),
           businessType,
           businessState
@@ -46,14 +48,14 @@ export const useRealTimeLicenseVerification = (
           businessState
         );
 
-        console.log("📋 Real-time license verification result:", result);
-        
+        hookLogger.debug("Real-time license verification result:", result);
+
         setVerificationResult(result);
         setIsVerified(result.verified && result.isRealVerification);
 
         // Removed toast notification - UI feedback is already provided below the input field
       } catch (error) {
-        console.error("❌ Real-time license verification error:", error);
+        hookLogger.error("Real-time license verification error:", error);
         setVerificationResult({
           verified: false,
           message: "Verification temporarily unavailable",

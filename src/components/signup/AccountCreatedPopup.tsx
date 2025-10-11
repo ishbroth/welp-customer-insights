@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { resendVerificationCode } from "@/lib/utils";
 import { useVerificationTimer } from "@/hooks/useVerificationTimer";
+import { logger } from "@/utils/logger";
 
 interface AccountCreatedPopupProps {
   isOpen: boolean;
@@ -24,8 +25,9 @@ const AccountCreatedPopup = ({
   businessName, 
   businessPhone, 
   setBusinessPhone, 
-  businessData 
+  businessData
 }: AccountCreatedPopupProps) => {
+  const componentLogger = logger.withContext('AccountCreatedPopup');
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +95,7 @@ const AccountCreatedPopup = ({
         });
       }
     } catch (error) {
-      console.error("Error sending verification code:", error);
+      componentLogger.error("Error sending verification code:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

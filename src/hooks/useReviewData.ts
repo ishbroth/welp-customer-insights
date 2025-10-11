@@ -1,6 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useReviewData');
 
 interface ReviewPhoto {
   id: string;
@@ -23,7 +26,7 @@ export const useReviewData = (reviewId: string, hasFullAccess: boolean) => {
         .order('display_order');
 
       if (photoError) {
-        console.error("Error fetching review photos:", photoError);
+        hookLogger.error("Error fetching review photos:", photoError);
       } else {
         setPhotos(photoData || []);
       }
@@ -37,7 +40,7 @@ export const useReviewData = (reviewId: string, hasFullAccess: boolean) => {
           .single();
 
         if (reviewError) {
-          console.error("Error fetching review content:", reviewError);
+          hookLogger.error("Error fetching review content:", reviewError);
         } else {
           setFullReviewContent(reviewData?.content || "");
         }

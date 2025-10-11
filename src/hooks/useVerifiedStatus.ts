@@ -1,14 +1,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('useVerifiedStatus');
 
 export const useVerifiedStatus = (businessId?: string) => {
   const { data: isVerified = false } = useQuery({
     queryKey: ['businessVerified', businessId],
     queryFn: async () => {
       if (!businessId) return false;
-      
-      console.log(`useVerifiedStatus: Checking verification for business ID: ${businessId}`);
+
+      hookLogger.info(`Checking verification for business ID: ${businessId}`);
       
       try {
         const { data, error } = await supabase
@@ -18,15 +21,15 @@ export const useVerifiedStatus = (businessId?: string) => {
           .maybeSingle();
 
         if (error) {
-          console.error("useVerifiedStatus: Error fetching business verification:", error);
+          hookLogger.error("Error fetching business verification:", error);
           return false;
         }
 
         const verified = data?.verified || false;
-        console.log(`useVerifiedStatus: Business ${businessId} verified status: ${verified}`);
+        hookLogger.debug(`Business ${businessId} verified status: ${verified}`);
         return verified;
       } catch (error) {
-        console.error("useVerifiedStatus: Unexpected error:", error);
+        hookLogger.error("Unexpected error:", error);
         return false;
       }
     },

@@ -1,16 +1,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export const useClaimReviewDialog = (businessId?: string) => {
+  const hookLogger = logger.withContext('useClaimReviewDialog');
   // Fetch comprehensive business profile data
   const { data: fullBusinessProfile, isLoading } = useQuery({
     queryKey: ['fullBusinessProfile', businessId],
     queryFn: async () => {
       if (!businessId) return null;
-      
-      console.log("Fetching full business profile for claim dialog:", businessId);
-      
+
+      hookLogger.debug("Fetching full business profile for claim dialog:", businessId);
+
       // First get the profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -29,14 +31,14 @@ export const useClaimReviewDialog = (businessId?: string) => {
         .eq('id', businessId)
         .eq('type', 'business')
         .maybeSingle();
-      
+
       if (profileError) {
-        console.error("Error fetching business profile:", profileError);
+        hookLogger.error("Error fetching business profile:", profileError);
         return null;
       }
 
       if (!profileData) {
-        console.log("No business profile found for ID:", businessId);
+        hookLogger.debug("No business profile found for ID:", businessId);
         return null;
       }
 
@@ -57,7 +59,7 @@ export const useClaimReviewDialog = (businessId?: string) => {
         .maybeSingle();
 
       if (businessInfoError) {
-        console.error("Error fetching business info:", businessInfoError);
+        hookLogger.error("Error fetching business info:", businessInfoError);
       }
 
       // Combine the data
@@ -65,8 +67,8 @@ export const useClaimReviewDialog = (businessId?: string) => {
         ...profileData,
         business_info: businessInfoData || {}
       };
-      
-      console.log("Full business profile fetched for claim dialog:", combinedData);
+
+      hookLogger.debug("Full business profile fetched for claim dialog:", combinedData);
       return combinedData;
     },
     enabled: !!businessId,

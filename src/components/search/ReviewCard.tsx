@@ -18,6 +18,8 @@ import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import BusinessReviewCardPhotos from "@/components/business/BusinessReviewCardPhotos";
 import { formatCustomerNameWithNickname, getNameInitials } from "@/utils/nameFormatter";
 import { getReviewerDisplayName, canParticipateInConversation } from "@/utils/anonymousReviewUtils";
+import { useReviewClaims } from "@/hooks/useReviewClaims";
+import { logger } from '@/utils/logger';
 
 interface ReviewCardProps {
   review: {
@@ -56,7 +58,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   hasSubscription,
   isOneTimeUnlocked,
 }) => {
-  console.log("🔍 SEARCH ReviewCard - Review data:", {
+  const componentLogger = logger.withContext('SearchReviewCard');
+  componentLogger.debug("Review data:", {
     id: review.id,
     customer_business_name: review.customer_business_name,
     associates: review.associates,
@@ -66,6 +69,15 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const { currentUser, isSubscribed } = useAuth();
   const { balance, useCredits: useCreditsFn, loadCreditsData } = useCredits();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
+  const { isReviewClaimedByUser } = useReviewClaims();
+  const [isClaimedByCurrentUser, setIsClaimedByCurrentUser] = React.useState<boolean>(false);
+
+  // Check if current user has claimed this review
+  React.useEffect(() => {
+    if (currentUser?.type === 'customer' && review.id) {
+      isReviewClaimedByUser(review.id).then(setIsClaimedByCurrentUser);
+    }
+  }, [review.id, currentUser?.type]);
 
   // Check if current user is the business that wrote this review
   const isReviewAuthor = currentUser?.type === 'business' && currentUser?.id === review.reviewerId;
@@ -84,9 +96,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     isReviewAuthor
   );
   
-  // Check if customer user can access this review (only if it matches their profile)
-  const customerCanAccessReview = currentUser?.type === 'customer' 
-    ? doesReviewMatchUser(review, currentUser)
+  // Check if customer user can access this review
+  // Customer can access if:
+  // 1. Review matches their profile exactly (2/3 fields) OR
+  // 2. They have already claimed this review
+  const customerCanAccessReview = currentUser?.type === 'customer'
+    ? (doesReviewMatchUser(review, currentUser) || isClaimedByCurrentUser)
     : true; // Business users can access any review
   
   // Use persistent review access check
@@ -173,9 +188,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       navigate('/login');
       return;
     }
-    
+
     try {
-      console.log("Creating credit payment session...");
+      componentLogger.info("Creating credit payment session...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: {
           returnUrl: window.location.href // Return to current search page
@@ -183,7 +198,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       });
 
       if (error) {
-        console.error("Error creating payment session:", error);
+        componentLogger.error("Error creating payment session:", error);
         toast.error("Failed to create payment session");
         return;
       }
@@ -193,7 +208,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         window.open(data.url, '_blank');
       }
     } catch (error) {
-      console.error("Error:", error);
+      componentLogger.error("Error:", error);
       toast.error("Failed to initiate payment");
     }
   };

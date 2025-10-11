@@ -3,15 +3,17 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { conversationService, ConversationMessage } from "@/services/conversationService";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 export const useConversation = (reviewId: string) => {
+  const hookLogger = logger.withContext('useConversation');
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [userProfiles, setUserProfiles] = useState<Record<string, any>>({});
   const [hasConversation, setHasConversation] = useState(false);
   const [canRespond, setCanRespond] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
@@ -71,7 +73,7 @@ export const useConversation = (reviewId: string) => {
         setCanRespond(canUserRespond);
       }
     } catch (error) {
-      console.error('Error fetching conversation:', error);
+      hookLogger.error('Error fetching conversation:', error);
       toast({
         title: "Error",
         description: "Failed to load conversation",
@@ -98,7 +100,7 @@ export const useConversation = (reviewId: string) => {
       // Refresh conversation data
       await fetchConversation();
     } catch (error) {
-      console.error('Error starting conversation:', error);
+      hookLogger.error('Error starting conversation:', error);
       toast({
         title: "Error",
         description: "Failed to send response",
@@ -131,7 +133,7 @@ export const useConversation = (reviewId: string) => {
       // Refresh conversation data
       await fetchConversation();
     } catch (error) {
-      console.error('Error adding message:', error);
+      hookLogger.error('Error adding message:', error);
       toast({
         title: "Error",
         description: "Failed to send response",

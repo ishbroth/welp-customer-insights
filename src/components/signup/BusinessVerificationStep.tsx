@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { BusinessInfoForm } from "./BusinessInfoForm";
 import { BusinessPasswordSection } from "./BusinessPasswordSection";
+import { logger } from "@/utils/logger";
 
 interface BusinessVerificationStepProps {
   businessName: string;
@@ -72,38 +73,39 @@ export const BusinessVerificationStep = ({
   licenseVerified,
   onSubmit
 }: BusinessVerificationStepProps) => {
-  
+  const componentLogger = logger.withContext('BusinessVerificationStep');
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log("🔍 BUSINESS SIGNUP FORM SUBMISSION");
-    console.log("Business Type (License Type):", businessType);
-    console.log("License Number:", licenseNumber);
-    console.log("Business State:", businessState);
+
+    componentLogger.debug("BUSINESS SIGNUP FORM SUBMISSION");
+    componentLogger.debug("Business Type (License Type):", businessType);
+    componentLogger.debug("License Number:", licenseNumber);
+    componentLogger.debug("Business State:", businessState);
     
     // Validate required fields including passwords
     if (!businessName.trim() || !businessEmail.trim() || !businessStreet.trim() || 
-        !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() || 
+        !businessCity.trim() || !businessState.trim() || !businessZipCode.trim() ||
         !businessPhone.trim() || !businessType.trim() || !licenseNumber.trim() ||
         !businessPassword.trim() || !businessConfirmPassword.trim()) {
-      console.error("❌ Required fields missing for submission");
+      componentLogger.error("Required fields missing for submission");
       return;
     }
 
     // Validate passwords match
     if (businessPassword !== businessConfirmPassword) {
-      console.error("❌ Passwords do not match");
+      componentLogger.error("Passwords do not match");
       return;
     }
 
     // Validate password length
     if (businessPassword.length < 8) {
-      console.error("❌ Password too short");
+      componentLogger.error("Password too short");
       return;
     }
-    
+
     // Trigger email verification and account creation
-    console.log("✅ Triggering email verification...");
+    componentLogger.debug("Triggering email verification...");
     onSubmit(e);
   };
 

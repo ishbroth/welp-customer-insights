@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { verifyBusinessId } from "@/utils/businessVerification";
+import { logger } from "@/utils/logger";
 
 interface InstantVerificationSectionProps {
   primaryLicense: string;
@@ -27,6 +28,7 @@ const InstantVerificationSection = ({
   state,
   onVerificationSuccess
 }: InstantVerificationSectionProps) => {
+  const componentLogger = logger.withContext('InstantVerificationSection');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [error, setError] = useState("");
@@ -42,7 +44,7 @@ const InstantVerificationSection = ({
     setVerificationResult(null);
 
     try {
-      console.log("🔍 Starting instant verification with:", {
+      componentLogger.debug("Starting instant verification with:", {
         primaryLicense,
         licenseType,
         licenseState,
@@ -51,8 +53,8 @@ const InstantVerificationSection = ({
 
       // Use the actual selected license type instead of hardcoded "Business License"
       const result = await verifyBusinessId(primaryLicense, licenseType, licenseState);
-      
-      console.log("📋 Instant verification result:", result);
+
+      componentLogger.debug("Instant verification result:", result);
       
       setVerificationResult(result);
       
@@ -69,7 +71,7 @@ const InstantVerificationSection = ({
         });
       }
     } catch (error) {
-      console.error("Instant verification error:", error);
+      componentLogger.error("Instant verification error:", error);
       setError("Verification failed. Please try again or proceed with manual verification.");
     } finally {
       setIsVerifying(false);

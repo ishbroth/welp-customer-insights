@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { User } from "@/types";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthStateManagement');
 
 /**
  * Hook for managing core authentication state
@@ -15,7 +18,7 @@ export const useAuthStateManagement = () => {
 
   // Enhanced setCurrentUser function that also persists to database
   const enhancedSetCurrentUser = (user: User | null) => {
-    console.log("Enhanced setCurrentUser called with:", user);
+    authLogger.debug("Enhanced setCurrentUser called with:", user);
     setCurrentUser(user);
   };
 

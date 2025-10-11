@@ -9,8 +9,10 @@ import EmailVerificationCodeInput from '@/components/verification/EmailVerificat
 import VerifyEmailCodeButton from '@/components/verification/VerifyEmailCodeButton';
 import ResendEmailCodeButton from '@/components/verification/ResendEmailCodeButton';
 import { useEmailVerification } from '@/hooks/useEmailVerification';
+import { logger } from '@/utils/logger';
 
 const VerifyEmail: React.FC = () => {
+  const pageLogger = logger.withContext('VerifyEmail');
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -53,7 +55,7 @@ const VerifyEmail: React.FC = () => {
             licenseVerificationResult: businessData.licenseVerificationResult
           };
         } catch (error) {
-          console.error("Error parsing pending verification data:", error);
+          pageLogger.error("Error parsing pending verification data:", error);
         }
       }
     }

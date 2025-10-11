@@ -12,8 +12,10 @@ import ContactInfoForm from "./ContactInfoForm";
 import BusinessInfoForm from "./BusinessInfoForm";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 const ProfileForm = () => {
+  const componentLogger = logger.withContext('ProfileForm');
   const { toast } = useToast();
   const navigate = useNavigate();
   const { currentUser, updateProfile } = useAuth();
@@ -40,19 +42,19 @@ const ProfileForm = () => {
           .single();
 
         if (businessError) {
-          console.error("Error fetching business info:", businessError);
+          componentLogger.error("Error fetching business info:", businessError);
           return;
         }
 
-        console.log("=== BUSINESS DATA FETCHED ===");
-        console.log("Business info from database:", businessInfo);
+        componentLogger.debug("=== BUSINESS DATA FETCHED ===");
+        componentLogger.debug("Business info from database:", businessInfo);
         
         setBusinessData({
           licenseType: businessInfo?.license_type || "",
           licenseNumber: businessInfo?.license_number || currentUser?.businessId || ""
         });
       } catch (error) {
-        console.error("Error in fetchBusinessData:", error);
+        componentLogger.error("Error in fetchBusinessData:", error);
       } finally {
         setIsLoadingBusinessData(false);
       }
@@ -81,7 +83,7 @@ const ProfileForm = () => {
   // Update form values when business data is loaded
   useEffect(() => {
     if (businessData.licenseType || businessData.licenseNumber) {
-      console.log("Setting form values with business data:", businessData);
+      componentLogger.debug("Setting form values with business data:", businessData);
       
       if (businessData.licenseType) {
         form.setValue('licenseType', businessData.licenseType);
@@ -95,8 +97,8 @@ const ProfileForm = () => {
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      console.log("=== FORM SUBMIT START ===");
-      console.log("Form data submitted:", data);
+      componentLogger.debug("=== FORM SUBMIT START ===");
+      componentLogger.debug("Form data submitted:", data);
       
       // Create update object - include all fields that have values
       const updateData: any = {
@@ -118,11 +120,11 @@ const ProfileForm = () => {
       if (isBusinessAccount) {
         updateData.businessId = data.businessId || "";
         updateData.licenseType = data.licenseType || "";
-        console.log("Business account - including licenseType:", data.licenseType);
-        console.log("Business account - including businessId:", data.businessId);
+        componentLogger.debug("Business account - including licenseType:", data.licenseType);
+        componentLogger.debug("Business account - including businessId:", data.businessId);
       }
-      
-      console.log("Processed update data:", updateData);
+
+      componentLogger.debug("Processed update data:", updateData);
       
       await updateProfile(updateData);
       
@@ -132,16 +134,16 @@ const ProfileForm = () => {
         description: "Your profile information has been saved.",
       });
 
-      console.log("=== FORM SUBMIT SUCCESS ===");
+      componentLogger.debug("=== FORM SUBMIT SUCCESS ===");
 
       // Navigate back to profile page after successful update
       setTimeout(() => {
         navigate('/profile');
       }, 1500);
-      
+
     } catch (error) {
-      console.error("=== FORM SUBMIT ERROR ===");
-      console.error("Error updating profile:", error);
+      componentLogger.error("=== FORM SUBMIT ERROR ===");
+      componentLogger.error("Error updating profile:", error);
       
       // Show generic error message for profile updates
       toast({

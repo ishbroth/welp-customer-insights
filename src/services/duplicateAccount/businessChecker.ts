@@ -1,5 +1,8 @@
+import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
+
+const serviceLogger = logger.withContext('BusinessChecker');
 
 /**
  * Check if business name AND phone exist together
@@ -44,7 +47,7 @@ export const checkBusinessNameAndPhoneExists = async (businessName: string, phon
       email: matchingProfile.email || undefined
     };
   } catch (error) {
-    console.error("Error checking business name and phone:", error);
+    serviceLogger.error("Error checking business name and phone:", error);
     return { exists: false };
   }
 };

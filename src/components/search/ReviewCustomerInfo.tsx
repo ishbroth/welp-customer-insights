@@ -2,6 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 interface ReviewCustomerInfoProps {
   hasFullAccess: boolean;
@@ -26,20 +27,22 @@ interface ReviewCustomerInfoProps {
   finalCustomerAvatar: string;
 }
 
-const ReviewCustomerInfo = ({ 
-  hasFullAccess, 
-  customerData, 
-  review, 
-  finalCustomerAvatar 
+const ReviewCustomerInfo = ({
+  hasFullAccess,
+  customerData,
+  review,
+  finalCustomerAvatar
 }: ReviewCustomerInfoProps) => {
+  const componentLogger = logger.withContext('ReviewCustomerInfo');
+
   // Fetch customer profile if we have customerId but no customer data
   const { data: customerProfile } = useQuery({
     queryKey: ['customerProfile', review.customerId],
     queryFn: async () => {
       if (!review.customerId) return null;
-      
-      console.log(`ReviewCustomerInfo: Fetching customer profile for ID: ${review.customerId}`);
-      
+
+      componentLogger.debug(`Fetching customer profile for ID: ${review.customerId}`);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, avatar, first_name, last_name, name')
@@ -47,11 +50,11 @@ const ReviewCustomerInfo = ({
         .maybeSingle();
 
       if (error) {
-        console.error("ReviewCustomerInfo: Error fetching customer profile:", error);
+        componentLogger.error("Error fetching customer profile:", error);
         return null;
       }
 
-      console.log(`ReviewCustomerInfo: Customer profile found:`, data);
+      componentLogger.debug(`Customer profile found:`, data);
       return data;
     },
     enabled: !!review.customerId
@@ -62,9 +65,9 @@ const ReviewCustomerInfo = ({
     queryKey: ['customerProfileByName', review.customer_name],
     queryFn: async () => {
       if (!review.customer_name) return null;
-      
-      console.log(`ReviewCustomerInfo: Searching for customer profile by name: ${review.customer_name}`);
-      
+
+      componentLogger.debug(`Searching for customer profile by name: ${review.customer_name}`);
+
       // Try to match by exact name first
       let { data, error } = await supabase
         .from('profiles')
@@ -73,14 +76,14 @@ const ReviewCustomerInfo = ({
         .maybeSingle();
 
       if (error || !data) {
-        console.log('ReviewCustomerInfo: Exact name match failed, trying first/last name combination');
-        
+        componentLogger.debug('Exact name match failed, trying first/last name combination');
+
         // If no exact match, try to construct from first_name and last_name
         const nameParts = review.customer_name.split(' ');
         if (nameParts.length >= 2) {
           const firstName = nameParts[0];
           const lastName = nameParts.slice(1).join(' ');
-          
+
           ({ data, error } = await supabase
             .from('profiles')
             .select('id, avatar, first_name, last_name, name')
@@ -91,11 +94,11 @@ const ReviewCustomerInfo = ({
       }
 
       if (error) {
-        console.error("ReviewCustomerInfo: Error fetching customer profile by name:", error);
+        componentLogger.error("Error fetching customer profile by name:", error);
         return null;
       }
 
-      console.log(`ReviewCustomerInfo: Customer profile found by name:`, data);
+      componentLogger.debug(`Customer profile found by name:`, data);
       return data;
     },
     enabled: !!review.customer_name && !review.customerId && !customerData?.avatar
@@ -139,7 +142,7 @@ const ReviewCustomerInfo = ({
     return "C";
   };
 
-  console.log('ReviewCustomerInfo: Final avatar determination:', {
+  componentLogger.debug('Final avatar determination:', {
     customerAvatar,
     finalCustomerAvatar,
     customerProfileAvatar: customerProfile?.avatar,
