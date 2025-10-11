@@ -280,21 +280,22 @@ export const scoreReview = async (
       const hasStrongComponent = bestFirstNameSimilarity >= 0.8 || bestLastNameSimilarity >= 0.8;
       const hasModerateComponent = bestFirstNameSimilarity >= 0.4 && bestLastNameSimilarity >= 0.4;
       const hasBothGoodComponents = bestFirstNameSimilarity >= 0.6 && bestLastNameSimilarity >= 0.6;
-      
+
+
       nameComponentMatched = (hasStrongComponent && hasModerateComponent) || hasBothGoodComponents;
-      console.log(`[NAME_DEBUG] Component analysis: strong=${hasStrongComponent}, moderate=${hasModerateComponent}, bothGood=${hasBothGoodComponents}`);
+      hookLogger.debug(`[NAME_DEBUG] Component analysis: strong=${hasStrongComponent}, moderate=${hasModerateComponent}, bothGood=${hasBothGoodComponents}`);
     } else {
       // For single component searches, use the original threshold
       nameComponentMatched = (bestFirstNameSimilarity >= nameThreshold) || (bestLastNameSimilarity >= nameThreshold);
     }
-    
-    console.log(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity})`);
-    console.log(`[NAME_DEBUG] Validation deferred: ${nameValidationDeferred}`);
-    
+
+    hookLogger.debug(`[NAME_DEBUG] Name component matched: ${nameComponentMatched} (first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity})`);
+    hookLogger.debug(`[NAME_DEBUG] Validation deferred: ${nameValidationDeferred}`);
+
     // Only reject immediately for simpler searches
     if (!nameComponentMatched && !nameValidationDeferred) {
-      console.log(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity meets criteria`);
-      console.log(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
+      hookLogger.debug(`[NAME_VALIDATION] Review ${review.id} REJECTED - No name component similarity meets criteria`);
+      hookLogger.debug(`[NAME_VALIDATION] Best similarities: first=${bestFirstNameSimilarity}, last=${bestLastNameSimilarity}`);
       return { 
         ...review, 
         searchScore: 0, 
@@ -315,17 +316,17 @@ export const scoreReview = async (
     // Test individual name components for better matching
     if (firstName) {
       const firstSim = calculateNameSimilarity(firstName, review.customer_name);
-      console.log(`[NAME_SCORING] First name: "${firstName}" vs "${review.customer_name}" = ${firstSim.toFixed(3)}`);
+      hookLogger.debug(`[NAME_SCORING] First name: "${firstName}" vs "${review.customer_name}" = ${firstSim.toFixed(3)}`);
 
       let bestFirstSim = firstSim;
 
       // Also check nickname if available
       if (review.customer_nickname) {
         const nicknameSim = calculateNameSimilarity(firstName, review.customer_nickname);
-        console.log(`[NAME_SCORING] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
+        hookLogger.debug(`[NAME_SCORING] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
         if (nicknameSim > bestFirstSim) {
           bestFirstSim = nicknameSim;
-          console.log(`[NAME_SCORING] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
+          hookLogger.debug(`[NAME_SCORING] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
         }
       }
 
@@ -333,19 +334,19 @@ export const scoreReview = async (
         bestSimilarity = bestFirstSim;
       }
     }
-    
+
     if (lastName) {
       const lastSim = calculateNameSimilarity(lastName, review.customer_name);
-      console.log(`[NAME_SCORING] Last name: "${lastName}" vs "${review.customer_name}" = ${lastSim.toFixed(3)}`);
+      hookLogger.debug(`[NAME_SCORING] Last name: "${lastName}" vs "${review.customer_name}" = ${lastSim.toFixed(3)}`);
       if (lastSim > bestSimilarity) {
         bestSimilarity = lastSim;
       }
     }
-    
+
     // Full name comparison
     const fullSearchName = [firstName, lastName].filter(Boolean).join(' ');
     const fullSim = calculateStringSimilarity(fullSearchName.toLowerCase(), review.customer_name.toLowerCase());
-    console.log(`[NAME_SCORING] Full name: "${fullSearchName}" vs "${review.customer_name}" = ${fullSim.toFixed(3)}`);
+    hookLogger.debug(`[NAME_SCORING] Full name: "${fullSearchName}" vs "${review.customer_name}" = ${fullSim.toFixed(3)}`);
     
     // Use the best similarity found
     const finalSimilarity = Math.max(bestSimilarity, fullSim);
@@ -375,7 +376,7 @@ export const scoreReview = async (
         // Check if we already validated strong component matches (including nickname)
         const hasStrongComponentMatch = nameComponentMatched && (bestFirstNameSimilarity >= 0.8 || bestLastNameSimilarity >= 0.8);
 
-        console.log(`[NAME_COMPONENT_CHECK] componentSimilarity=${componentSimilarity}, hasStrongComponentMatch=${hasStrongComponentMatch}, nameComponentMatched=${nameComponentMatched}`);
+        hookLogger.debug(`[NAME_COMPONENT_CHECK] componentSimilarity=${componentSimilarity}, hasStrongComponentMatch=${hasStrongComponentMatch}, nameComponentMatched=${nameComponentMatched}`);
 
         // For first+last searches, use component-specific matching
         if (componentSimilarity >= 0.7 || hasStrongComponentMatch) {
@@ -386,14 +387,14 @@ export const scoreReview = async (
           } else {
             namePoints = 40; // Good component match
           }
-          console.log(`[NAME_COMPONENT_SUCCESS] Using namePoints=${namePoints} (componentSimilarity=${componentSimilarity}, hasStrongComponentMatch=${hasStrongComponentMatch})`);
+          hookLogger.debug(`[NAME_COMPONENT_SUCCESS] Using namePoints=${namePoints} (componentSimilarity=${componentSimilarity}, hasStrongComponentMatch=${hasStrongComponentMatch})`);
         } else if (searchFieldCount >= 5 && exactFieldMatches >= 3) {
           // For comprehensive searches with multiple exact matches, allow weaker name matching
           namePoints = 25; // Partial name credit for comprehensive searches
-          console.log(`[NAME_COMPREHENSIVE] Allowing weak name match due to comprehensive search with ${exactFieldMatches} exact matches`);
+          hookLogger.debug(`[NAME_COMPREHENSIVE] Allowing weak name match due to comprehensive search with ${exactFieldMatches} exact matches`);
         } else {
           // Component matching failed - reject for simpler searches
-          console.log(`[NAME_COMPONENT_FAIL] Component matching failed for "${fullSearchName}" vs "${review.customer_name}" (similarity: ${componentSimilarity})`);
+          hookLogger.debug(`[NAME_COMPONENT_FAIL] Component matching failed for "${fullSearchName}" vs "${review.customer_name}" (similarity: ${componentSimilarity})`);
           return {
             ...review,
             searchScore: 0,
@@ -429,9 +430,9 @@ export const scoreReview = async (
         exactFieldMatches++;
         exactMatchDetails.push({ field: 'name', isExact: true });
       }
-      
-      console.log(`[NAME_SCORING] Review ${review.id} name score: ${namePoints.toFixed(1)} (similarity: ${finalSimilarity.toFixed(3)})`);
-      
+
+      hookLogger.debug(`[NAME_SCORING] Review ${review.id} name score: ${namePoints.toFixed(1)} (similarity: ${finalSimilarity.toFixed(3)})`);
+
       detailedMatches.push({
         field: 'Name',
         reviewValue: review.customer_name,
@@ -482,7 +483,7 @@ export const scoreReview = async (
       review.customer_business_name.toLowerCase()
     );
 
-    console.log(`[BUSINESS_NAME] Comparing "${businessName}" vs "${review.customer_business_name}" = ${businessSimilarity.toFixed(3)}`);
+    hookLogger.debug(`[BUSINESS_NAME] Comparing "${businessName}" vs "${review.customer_business_name}" = ${businessSimilarity.toFixed(3)}`);
 
     // Business name matching gets high weight since it's likely to be specific and accurate
     if (businessSimilarity >= 0.7) {
@@ -510,7 +511,7 @@ export const scoreReview = async (
         exactMatchDetails.push({ field: 'business_name', isExact: true });
       }
 
-      console.log(`[BUSINESS_NAME] Added ${businessPoints.toFixed(1)} points (similarity: ${businessSimilarity.toFixed(3)})`);
+      hookLogger.debug(`[BUSINESS_NAME] Added ${businessPoints.toFixed(1)} points (similarity: ${businessSimilarity.toFixed(3)})`);
 
       detailedMatches.push({
         field: 'Business Name',
