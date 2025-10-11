@@ -22,7 +22,7 @@ const TabsSection = () => {
   };
 
   return (
-    <section className="py-4 md:py-6 bg-welp-bg-light">
+    <section className="py-4 md:py-6">
       <div className="container mx-auto px-3 md:px-4">
         <div className="max-w-3xl mx-auto">
           <Tabs
@@ -35,22 +35,22 @@ const TabsSection = () => {
               <SearchBox simplified className="max-w-md mx-auto" />
             </div>
 
-            {/* Tab buttons positioned between search and portal */}
-            <TabsList className="grid w-full grid-cols-2 mb-6 md:mb-8 h-auto">
-              <TabsTrigger value="business" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white py-3 md:py-2 text-xs md:text-sm">
-                <Building2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                I'm a Business Owner
-              </TabsTrigger>
-              <TabsTrigger value="customer" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white py-3 md:py-2 text-xs md:text-sm">
-                <UserRound className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                I'm a Customer
-              </TabsTrigger>
-            </TabsList>
-
             <TabsContent value="business">
               {/* Login Portal Box */}
               <div className="welp-card">
-                <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-center">Business Owner Portal</h2>
+                <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-center">Login Portal</h2>
+
+                {/* Tab buttons inside the portal box */}
+                <TabsList className="grid w-full grid-cols-2 mb-4 md:mb-6 h-auto">
+                  <TabsTrigger value="business" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white py-3 md:py-2 text-xs md:text-sm">
+                    <Building2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                    I'm a Business Owner
+                  </TabsTrigger>
+                  <TabsTrigger value="customer" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white py-3 md:py-2 text-xs md:text-sm">
+                    <UserRound className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                    I'm a Customer
+                  </TabsTrigger>
+                </TabsList>
                 <p className="text-center mb-4 md:mb-6 text-sm md:text-base">
                   Rate and review your customers, access our customer database, and make informed business decisions.
                 </p>
@@ -113,7 +113,19 @@ const TabsSection = () => {
             <TabsContent value="customer">
               {/* Login Portal Box */}
               <div className="welp-card">
-                <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-center">Customer Portal</h2>
+                <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-center">Login Portal</h2>
+
+                {/* Tab buttons inside the portal box */}
+                <TabsList className="grid w-full grid-cols-2 mb-4 md:mb-6 h-auto">
+                  <TabsTrigger value="business" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white py-3 md:py-2 text-xs md:text-sm">
+                    <Building2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                    I'm a Business Owner
+                  </TabsTrigger>
+                  <TabsTrigger value="customer" className="data-[state=active]:bg-welp-primary data-[state=active]:text-white py-3 md:py-2 text-xs md:text-sm">
+                    <UserRound className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                    I'm a Customer
+                  </TabsTrigger>
+                </TabsList>
                 <p className="text-center mb-4 md:mb-6 text-sm md:text-base">
                   View and respond to reviews about you from businesses you've interacted with.
                 </p>

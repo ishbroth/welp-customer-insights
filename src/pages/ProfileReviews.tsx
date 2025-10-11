@@ -11,6 +11,7 @@ import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import ProfileReviewsHeader from "@/components/profile/ProfileReviewsHeader";
 import ProfileReviewsSubscriptionStatus from "@/components/profile/ProfileReviewsSubscriptionStatus";
 import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
+import AvatarBackground from "@/components/AvatarBackground";
 
 const ProfileReviews = () => {
   const { currentUser, loading, isSubscribed } = useAuth();
@@ -29,10 +30,11 @@ const ProfileReviews = () => {
   const isCustomerAccount = currentUser.type === "customer";
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
+      <AvatarBackground avatarUrl={currentUser?.avatar} />
       <Header />
       <ProfileMobileMenu />
-      <div className="flex-grow flex">
+      <div className="flex relative z-10">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">
           <ProfileSidebar isOpen={true} toggle={() => {}} />
@@ -40,20 +42,20 @@ const ProfileReviews = () => {
         <main className="flex-1 px-3 py-6 md:px-4">
           <MobileScaleWrapper>
             <div className="w-full">
-              <ProfileReviewsHeader 
+              <ProfileReviewsHeader
                 title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
                 description={
-                  isCustomerAccount 
+                  isCustomerAccount
                     ? "Reviews that businesses have written about you"
                     : "Reviews you've written about your customers"
                 }
                 onRefresh={fetchCustomerReviews}
                 isLoading={isLoading}
               />
-              
+
               <ProfileReviewsSubscriptionStatus hasSubscription={isSubscribed} />
-              
-              <ProfileReviewsContent 
+
+              <ProfileReviewsContent
                 customerReviews={customerReviews}
                 isLoading={isLoading}
                 hasSubscription={isSubscribed}
@@ -63,7 +65,7 @@ const ProfileReviews = () => {
           </MobileScaleWrapper>
         </main>
       </div>
-      <Footer />
+      <Footer className="mt-0" />
     </div>
   );
 };

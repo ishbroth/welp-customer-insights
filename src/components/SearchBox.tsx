@@ -4,6 +4,7 @@ import StateSelect from "@/components/search/StateSelect";
 import SearchButton from "@/components/search/SearchButton";
 import { useSearchForm } from "@/hooks/useSearchForm";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { logger } from '@/utils/logger';
 
 interface SearchBoxProps {
   className?: string;
@@ -12,14 +13,15 @@ interface SearchBoxProps {
   buttonText?: string;
 }
 
-const SearchBox = React.memo(({ 
-  className, 
-  simplified = false, 
+const SearchBox = React.memo(({
+  className,
+  simplified = false,
   onSearch,
-  buttonText = "Search a Customer"
+  buttonText = "Search Customer"
 }: SearchBoxProps) => {
   const { formValues, setters, handleSearch } = useSearchForm(onSearch);
   const isMobile = useIsMobile();
+  const componentLogger = logger.withContext('SearchBox');
 
   // Handle Google Maps address component extraction - memoized for performance
   const handleAddressComponentsExtracted = useCallback((components: {
@@ -28,19 +30,19 @@ const SearchBox = React.memo(({
     state: string;
     zipCode: string;
   }) => {
-    console.log('📍 SearchBox - Address components extracted:', components);
-    
+    componentLogger.debug('Address components extracted:', components);
+
     // FORCE update all fields when Google Maps provides them
-    console.log('📍 SearchBox - FORCING address update to:', components.streetAddress);
+    componentLogger.debug('FORCING address update to:', components.streetAddress);
     setters.setAddress(components.streetAddress);
-    
-    console.log('📍 SearchBox - FORCING city update to:', components.city);
+
+    componentLogger.debug('FORCING city update to:', components.city);
     setters.setCity(components.city);
-    
-    console.log('📍 SearchBox - FORCING state update to:', components.state);
+
+    componentLogger.debug('FORCING state update to:', components.state);
     setters.setState(components.state);
-    
-    console.log('📍 SearchBox - FORCING zipCode update to:', components.zipCode);
+
+    componentLogger.debug('FORCING zipCode update to:', components.zipCode);
     setters.setZipCode(components.zipCode);
   }, [setters]);
 
@@ -84,7 +86,7 @@ const SearchBox = React.memo(({
             placeholder="Address"
             value={formValues.address}
             onChange={(e) => {
-              console.log('📍 SearchBox - Manual address change:', e.target.value);
+              componentLogger.debug('Manual address change:', e.target.value);
               setters.setAddress(e.target.value);
             }}
             onAddressComponentsExtracted={handleAddressComponentsExtracted}
@@ -95,30 +97,25 @@ const SearchBox = React.memo(({
             placeholder="City"
             value={formValues.city}
             onChange={(e) => {
-              console.log('📍 SearchBox - Manual city change:', e.target.value);
+              componentLogger.debug('Manual city change:', e.target.value);
               setters.setCity(e.target.value);
             }}
             required={false}
           />
 
-          <div className="space-y-1">
-            <label className={`block font-medium text-gray-700 ${isMobile ? "text-base" : "text-sm"}`}>
-              State <span className="text-red-500">*</span>
-            </label>
-            <StateSelect 
-              value={formValues.state} 
-              onValueChange={(value) => {
-                console.log('📍 SearchBox - Manual state change:', value);
-                setters.setState(value);
-              }} 
-            />
-          </div>
+          <StateSelect
+            value={formValues.state}
+            onValueChange={(value) => {
+              componentLogger.debug('Manual state change:', value);
+              setters.setState(value);
+            }}
+          />
 
           <SearchField
             placeholder="ZIP Code"
             value={formValues.zipCode}
             onChange={(e) => {
-              console.log('📍 SearchBox - Manual zip change:', e.target.value);
+              componentLogger.debug('Manual zip change:', e.target.value);
               setters.setZipCode(e.target.value);
             }}
             required={false}

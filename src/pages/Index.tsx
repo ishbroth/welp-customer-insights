@@ -7,6 +7,7 @@ import TabsSection from "@/components/sections/TabsSection";
 import FeaturesSection from "@/components/sections/FeaturesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import CallToActionSection from "@/components/sections/CallToActionSection";
+import BackgroundImages from "@/components/sections/BackgroundImages";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from '@capacitor/core';
@@ -22,9 +23,17 @@ const Index = () => {
         <main className="flex-grow">
           <HeroSection />
           <ReviewCarousel />
-          <TabsSection />
-          <FeaturesSection />
-          <TestimonialsSection />
+
+          {/* Section with background images - from first carousel to CallToAction */}
+          <div className="relative">
+            <BackgroundImages />
+            <div className="relative z-10">
+              <TabsSection />
+              <FeaturesSection />
+              <TestimonialsSection />
+            </div>
+          </div>
+
           <CallToActionSection />
           <ReviewCarousel />
           {isNative && (

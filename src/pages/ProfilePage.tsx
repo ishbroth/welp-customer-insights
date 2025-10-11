@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileMobileMenu from "@/components/ProfileMobileMenu";
 import WelcomeSection from "@/components/profile/WelcomeSection";
+import AvatarBackground from "@/components/AvatarBackground";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -24,8 +25,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle } from "lucide-react";
+import { logger } from '@/utils/logger';
 
 const ProfilePage = () => {
+  const pageLogger = logger.withContext('ProfilePage');
   const { currentUser, isSubscribed } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,7 +39,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   // Customer reviews data for average rating (customer accounts only)
-  const { customerReviews } = useProfileReviewsFetching();
+  const { customerReviews, isLoading: isLoadingReviews } = useProfileReviewsFetching();
   const { sortedReviews } = useProfileReviewsData(customerReviews, currentUser);
   const { isReviewUnlocked } = useReviewAccess();
   
@@ -69,26 +72,26 @@ const ProfilePage = () => {
     }
 
     try {
-      console.log("Creating credit payment session...");
+      pageLogger.debug("Creating credit payment session...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: {} // Remove the specific credit amount and total cost parameters
       });
 
       if (error) {
-        console.error("Error creating payment session:", error);
+        pageLogger.error("Error creating payment session:", error);
         toast.error("Failed to create payment session");
         return;
       }
 
       if (data?.url) {
-        console.log("Opening Stripe checkout...");
+        pageLogger.debug("Opening Stripe checkout...");
         window.open(data.url, '_blank');
       } else {
-        console.error("No URL returned from payment session");
+        pageLogger.error("No URL returned from payment session");
         toast.error("Failed to create payment session");
       }
     } catch (error) {
-      console.error("Error in handleBuyCredits:", error);
+      pageLogger.error("Error in handleBuyCredits:", error);
       toast.error("An error occurred while processing your request");
     }
   };
@@ -110,9 +113,10 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <AvatarBackground avatarUrl={currentUser?.avatar} />
       <Header />
       <ProfileMobileMenu />
-      <div className="flex-grow flex">
+      <div className="flex-grow flex relative z-10">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">
           <ProfileSidebar isOpen={true} toggle={() => {}} />
@@ -204,7 +208,9 @@ const ProfilePage = () => {
                             className="justify-center mb-1"
                           />
                           <div className="text-xs text-gray-500">
-                            {reviewCount > 0 ? (
+                            {isLoadingReviews ? (
+                              <span>searching...</span>
+                            ) : reviewCount > 0 ? (
                               <span>Based on {reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
                             ) : (
                               <span>No qualifying reviews yet</span>
@@ -317,21 +323,21 @@ const ProfilePage = () => {
                       </Button>
                       
                       {!isSubscribed && !subscriptionData?.subscribed ? (
-                        <Button 
+                        <Button
                           onClick={() => {
-                            console.log("🔀 ProfilePage Subscribe Now clicked");
-                            console.log("📋 Current user object:", currentUser);
-                            console.log("📋 User type:", currentUser?.type);
-                            
+                            pageLogger.debug("🔀 ProfilePage Subscribe Now clicked");
+                            pageLogger.debug("📋 Current user object:", currentUser);
+                            pageLogger.debug("📋 User type:", currentUser?.type);
+
                             // Route based on user type - business users to subscription, customers to benefits
                             const userType = String(currentUser?.type).toLowerCase().trim();
-                            console.log("📋 Normalized user type:", userType);
-                            
+                            pageLogger.debug("📋 Normalized user type:", userType);
+
                             if (userType === "business") {
-                              console.log("✅ BUSINESS DETECTED - Navigating to /subscription");
+                              pageLogger.debug("✅ BUSINESS DETECTED - Navigating to /subscription");
                               navigate("/subscription");
                             } else {
-                              console.log("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
+                              pageLogger.debug("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
                               navigate("/customer-benefits");
                             }
                           }}
@@ -340,21 +346,21 @@ const ProfilePage = () => {
                           Subscribe Now
                         </Button>
                       ) : (
-                        <Button 
+                        <Button
                           onClick={() => {
-                            console.log("🔀 ProfilePage Upgrade to Legacy clicked");
-                            console.log("📋 Current user object:", currentUser);
-                            console.log("📋 User type:", currentUser?.type);
-                            
+                            pageLogger.debug("🔀 ProfilePage Upgrade to Legacy clicked");
+                            pageLogger.debug("📋 Current user object:", currentUser);
+                            pageLogger.debug("📋 User type:", currentUser?.type);
+
                             // Route based on user type - business users to subscription, customers to benefits
                             const userType = String(currentUser?.type).toLowerCase().trim();
-                            console.log("📋 Normalized user type:", userType);
-                            
+                            pageLogger.debug("📋 Normalized user type:", userType);
+
                             if (userType === "business") {
-                              console.log("✅ BUSINESS DETECTED - Navigating to /subscription");
+                              pageLogger.debug("✅ BUSINESS DETECTED - Navigating to /subscription");
                               navigate("/subscription");
                             } else {
-                              console.log("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
+                              pageLogger.debug("✅ NON-BUSINESS USER - Navigating to /customer-benefits");
                               navigate("/customer-benefits");
                             }
                           }}

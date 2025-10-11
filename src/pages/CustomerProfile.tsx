@@ -11,6 +11,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CustomerReviewsSection from "@/components/customer/CustomerReviewsSection";
+import AvatarBackground from "@/components/AvatarBackground";
 
 const CustomerProfile: React.FC = () => {
   const { customerId } = useParams<{ customerId: string }>();
@@ -67,8 +68,9 @@ const CustomerProfile: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <AvatarBackground avatarUrl={customerProfile?.avatar} />
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Header */}

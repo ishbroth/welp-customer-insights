@@ -108,7 +108,7 @@
   }
   
   .welp-card {
-    @apply bg-white rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-shadow duration-200;
+    @apply bg-white/85 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6 hover:shadow-lg transition-shadow duration-200;
   }
   
   /* Mobile-specific utilities */

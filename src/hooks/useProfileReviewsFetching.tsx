@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfileReviewsMatching } from "./useProfileReviewsMatching";
 import { useReviewMatching } from "./useReviewMatching";
 import { useReviewClaims } from "./useReviewClaims";
+import { logger } from '@/utils/logger';
+
+const hookLogger = logger.withContext('ProfileReviewsFetching');
 
 export const useProfileReviewsFetching = () => {
   const { toast } = useToast();
@@ -19,34 +22,78 @@ export const useProfileReviewsFetching = () => {
   const { checkReviewMatch } = useReviewMatching();
   const { getUserClaimedReviews } = useReviewClaims();
 
-  const fetchCustomerReviews = async () => {
+  const getCacheKey = (userId: string) => `profileReviews_${userId}`;
+
+  const fetchCustomerReviews = async (forceRefresh: boolean = false) => {
     // Don't fetch if auth is still loading or user is not available
     if (authLoading || !currentUser) {
-      console.log("⏳ Skipping review fetch - auth loading:", authLoading, "currentUser:", !!currentUser);
+      hookLogger.debug("⏳ Skipping review fetch - auth loading:", authLoading, "currentUser:", !!currentUser);
       setIsLoading(authLoading);
       return;
+    }
+
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cacheKey = getCacheKey(currentUser.id);
+      const cachedData = sessionStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          hookLogger.debug("✅ Using cached review data");
+          setCustomerReviews(parsed);
+          setIsLoading(false);
+          return;
+        } catch (e) {
+          hookLogger.error("Error parsing cached data:", e);
+          sessionStorage.removeItem(cacheKey);
+        }
+      }
     }
 
     setIsLoading(true);
     
     try {
-      console.log("=== FETCHING REVIEWS FOR USER ===");
-      console.log("Auth loading:", authLoading);
-      console.log("User type:", currentUser.type);
-      console.log("User ID:", currentUser.id);
-      console.log("User email:", currentUser.email);
+      hookLogger.debug("=== FETCHING REVIEWS FOR USER ===");
+      hookLogger.debug("Auth loading:", authLoading);
+      hookLogger.debug("User type:", currentUser.type);
+      hookLogger.debug("User ID:", currentUser.id);
+      hookLogger.debug("User email:", currentUser.email);
       
         // If user is a customer, use the new global claims system
         if (currentUser.type === "customer") {
-          console.log("🔍 Starting review search for customer...");
+          hookLogger.debug("🔍 Starting review search for customer...");
           
-          // SEARCH 1: Find potential matches from unclaimed reviews only
-          const unclaimedMatches = await categorizeReviews(currentUser);
-          console.log("📊 Unclaimed review matches found:", unclaimedMatches.length);
+          // SEARCH 1: Find potential matches from reviews NOT claimed by other users
+          // This allows showing fuzzy matches while preventing duplicate claims
+          const potentialMatches = await categorizeReviews(currentUser);
+          hookLogger.debug("📊 Potential review matches found (before filtering claimed by others):", potentialMatches.length);
+
+          // Filter out reviews that have been claimed by OTHER users (not current user)
+          // Get all claimed review IDs by OTHER users
+          const { data: otherUserClaims, error: claimsError } = await supabase
+            .from('review_claims')
+            .select('review_id, claimed_by')
+            .neq('claimed_by', currentUser.id);
+
+          if (claimsError) {
+            hookLogger.error('Error fetching other user claims:', claimsError);
+          }
+
+          const reviewsClaimedByOthers = new Set(
+            otherUserClaims?.map(claim => claim.review_id) || []
+          );
+          hookLogger.debug("🔒 Reviews claimed by other users:", reviewsClaimedByOthers.size);
+
+          // Filter out reviews claimed by others
+          const unclaimedMatches = potentialMatches.filter(match =>
+            !reviewsClaimedByOthers.has(match.review.id)
+          );
+          hookLogger.debug("📊 Unclaimed review matches (after filtering):", unclaimedMatches.length);
           
           // SEARCH 2: Get reviews claimed by current user using new system
           const claimedReviews = await getUserClaimedReviews();
-          console.log("✅ Found claimed reviews for current user:", claimedReviews.length);
+          hookLogger.debug("✅ Found claimed reviews for current user:", claimedReviews.length);
           
           // Combine results: claimed reviews first, then unclaimed matches
           const allMatches = [
@@ -58,7 +105,7 @@ export const useProfileReviewsFetching = () => {
             })),
             ...unclaimedMatches
           ];
-          console.log("📋 Total combined results:", allMatches.length);
+          hookLogger.debug("📋 Total combined results:", allMatches.length);
           
           // Sort combined results: claimed first, then by match quality
           const sortedMatches = allMatches.sort((a, b) => {
@@ -88,7 +135,7 @@ export const useProfileReviewsFetching = () => {
                 });
               }
             } catch (error) {
-              console.error('Error fetching user responses:', error);
+              hookLogger.error('Error fetching user responses:', error);
             }
           }
 
@@ -104,14 +151,14 @@ export const useProfileReviewsFetching = () => {
                 .in('id', uniqueBusinessIds);
 
               if (error) {
-                console.error('Error batch fetching business profiles:', error);
+                hookLogger.error('Error batch fetching business profiles:', error);
               } else if (profiles) {
                 profiles.forEach(profile => {
                   businessProfilesMap.set(profile.id, profile);
                 });
               }
             } catch (error) {
-              console.error('Error in batch profile fetch:', error);
+              hookLogger.error('Error in batch profile fetch:', error);
             }
           }
 
@@ -154,16 +201,20 @@ export const useProfileReviewsFetching = () => {
           });
 
           // Format the reviews data
-          const formattedReviews = reviewsWithProfiles.map(review => 
+          const formattedReviews = reviewsWithProfiles.map(review =>
             formatReview(review, currentUser)
           );
 
+          // Cache the results
+          const cacheKey = getCacheKey(currentUser.id);
+          sessionStorage.setItem(cacheKey, JSON.stringify(formattedReviews));
+
           setCustomerReviews(formattedReviews);
-          console.log("=== DUAL SEARCH COMPLETE ===");
-          console.log("Formatted reviews:", formattedReviews);
+          hookLogger.debug("=== DUAL SEARCH COMPLETE ===");
+          hookLogger.debug("Formatted reviews:", formattedReviews);
       } else {
         // For business users, use existing logic from the old file
-        console.log("🔍 PROFILE FETCHING - Fetching reviews for business account...");
+        hookLogger.debug("🔍 PROFILE FETCHING - Fetching reviews for business account...");
         
         const { data: businessReviews, error: businessError } = await supabase
           .from('reviews')
@@ -189,14 +240,14 @@ export const useProfileReviewsFetching = () => {
           .order('created_at', { ascending: false });
 
         if (businessError) {
-          console.error("Error fetching business reviews:", businessError);
+          hookLogger.error("Error fetching business reviews:", businessError);
           return [];
         }
 
-        console.log("🔍 PROFILE FETCHING - Raw business reviews:", businessReviews);
-        console.log("🔍 PROFILE FETCHING - First review nickname:", businessReviews?.[0]?.customer_nickname);
-        console.log("🔍 PROFILE FETCHING - First review business name:", businessReviews?.[0]?.customer_business_name);
-        console.log("🔍 PROFILE FETCHING - First review is_anonymous:", businessReviews?.[0]?.is_anonymous);
+        hookLogger.debug("🔍 PROFILE FETCHING - Raw business reviews:", businessReviews);
+        hookLogger.debug("🔍 PROFILE FETCHING - First review nickname:", businessReviews?.[0]?.customer_nickname);
+        hookLogger.debug("🔍 PROFILE FETCHING - First review business name:", businessReviews?.[0]?.customer_business_name);
+        hookLogger.debug("🔍 PROFILE FETCHING - First review is_anonymous:", businessReviews?.[0]?.is_anonymous);
 
         // Add business profile data to business reviews
         const reviewsWithBusinessProfile = (businessReviews || []).map(review => ({
@@ -231,13 +282,17 @@ export const useProfileReviewsFetching = () => {
           }
         }));
 
-        console.log("🔍 PROFILE FETCHING - Transformed reviews:", reviewsWithBusinessProfile);
-        console.log("🔍 PROFILE FETCHING - First transformed review:", reviewsWithBusinessProfile?.[0]);
+        hookLogger.debug("🔍 PROFILE FETCHING - Transformed reviews:", reviewsWithBusinessProfile);
+        hookLogger.debug("🔍 PROFILE FETCHING - First transformed review:", reviewsWithBusinessProfile?.[0]);
+
+        // Cache the results
+        const cacheKey = getCacheKey(currentUser.id);
+        sessionStorage.setItem(cacheKey, JSON.stringify(reviewsWithBusinessProfile));
 
         setCustomerReviews(reviewsWithBusinessProfile);
       }
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      hookLogger.error("Error fetching reviews:", error);
       toast({
         title: "Error",
         description: "Failed to fetch reviews.",
@@ -254,14 +309,14 @@ export const useProfileReviewsFetching = () => {
     
     // Case 1: Auth is still loading - wait
     if (authLoading) {
-      console.log("⏳ Auth still loading, waiting...");
+      hookLogger.debug("⏳ Auth still loading, waiting...");
       setIsLoading(true);
       return;
     }
     
     // Case 2: Auth completed but no user - clear data and stop loading
     if (!authLoading && !currentUser) {
-      console.log("❌ No user found after auth completion");
+      hookLogger.debug("❌ No user found after auth completion");
       setCustomerReviews([]);
       setIsLoading(false);
       setIsInitialized(true);
@@ -270,7 +325,7 @@ export const useProfileReviewsFetching = () => {
     
     // Case 3: User is available and auth is complete
     if (!authLoading && currentUser) {
-      console.log("✅ User available, fetching reviews");
+      hookLogger.debug("✅ User available, fetching reviews");
       // Only fetch if we haven't initialized yet, or if the user has changed
       if (!isInitialized) {
         setIsInitialized(true);

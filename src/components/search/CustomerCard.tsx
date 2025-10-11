@@ -26,8 +26,8 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'U';
   };
 
-  const displayedReviews = showAllReviews ? customer.reviews || [] : (customer.reviews || []).slice(0, 2);
-  const hasMoreReviews = (customer.reviews || []).length > 2;
+  const displayedReviews = showAllReviews ? customer.reviews || [] : (customer.reviews || []).slice(0, 6);
+  const hasMoreReviews = (customer.reviews || []).length > 6;
 
   const handleViewProfile = () => {
     // Navigate to read-only customer profile

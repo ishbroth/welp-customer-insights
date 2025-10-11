@@ -2,6 +2,9 @@ import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { SignupData, LoginResult } from "./types";
+import { logger } from '@/utils/logger';
+
+const authLogger = logger.withContext('AuthMethods');
 
 /**
  * Hook for authentication methods (login, signup, logout, etc.)
@@ -14,8 +17,8 @@ export const useAuthMethods = (
   setCurrentUser: (user: User | null) => void
 ) => {
   const login = async (email: string, password: string): Promise<LoginResult> => {
-    console.log("🔐 Attempting login for:", email);
-    
+    authLogger.debug("Attempting login for:", email);
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -23,11 +26,11 @@ export const useAuthMethods = (
       });
 
       if (error) {
-        console.error("❌ Login error:", error);
-        
+        authLogger.error("Login error:", error);
+
         // Check if this is a "user not found" error, which might indicate incomplete registration
         if (error.message === "Invalid login credentials") {
-          console.log("🔍 Invalid login credentials - checking if user exists but needs phone verification");
+          authLogger.debug("Invalid login credentials - checking if user exists but needs phone verification");
           
           // Check if a user exists with this email but might need phone verification
           try {
@@ -38,17 +41,17 @@ export const useAuthMethods = (
               .maybeSingle();
             
             if (profile && !profileError) {
-              console.log("👤 User profile found but login failed");
-              console.log("📋 Profile details:", {
+              authLogger.debug("User profile found but login failed");
+              authLogger.debug("Profile details:", {
                 id: profile.id,
                 type: profile.type,
                 phone: profile.phone,
                 verified: profile.verified
               });
-              
+
               // If user has a phone and is not verified, they need phone verification
               if (profile.phone && !profile.verified) {
-                console.log("🔄 User needs to complete phone verification");
+                authLogger.debug("User needs to complete phone verification");
                 return { 
                   success: true, 
                   needsPhoneVerification: true,
@@ -64,9 +67,9 @@ export const useAuthMethods = (
                 };
               } else {
                 // User exists but likely needs password setup (business account)
-                console.log("👤 User profile found but likely needs password setup");
-                return { 
-                  success: false, 
+                authLogger.debug("User profile found but likely needs password setup");
+                return {
+                  success: false,
                   needsPasswordSetup: true,
                   error: "Account found but password not set. Please complete your registration by setting up your password.",
                   phone: profile.phone
@@ -74,29 +77,33 @@ export const useAuthMethods = (
               }
             } else {
               // No profile found, this is a regular invalid login
-              console.log("👤 No profile found - regular invalid login");
+              authLogger.debug("No profile found - regular invalid login");
               return { success: false, error: "Invalid email or password. Please try again." };
             }
           } catch (profileCheckError) {
-            console.error("❌ Error checking profile for incomplete registration:", profileCheckError);
+            authLogger.error("Error checking profile for incomplete registration:", profileCheckError);
             // If profile check fails, still return the original error
             return { success: false, error: "Invalid email or password. Please try again." };
           }
         }
-        
+
         return { success: false, error: error.message };
       }
 
-      console.log("✅ Login successful");
+      authLogger.info("Login successful");
+
+      // Clear review cache on login to fetch fresh data
+      sessionStorage.removeItem(`profileReviews_${data.user.id}`);
+
       return { success: true };
     } catch (error: any) {
-      console.error("❌ Login error:", error);
+      authLogger.error("Login error:", error);
       return { success: false, error: error.message || "An unexpected error occurred" };
     }
   };
 
   const signup = async (signupData: SignupData): Promise<{ success: boolean; error?: string }> => {
-    console.log("📝 Attempting signup for:", signupData.email);
+    authLogger.debug("Attempting signup for:", signupData.email);
     
     try {
       const redirectUrl = `${window.location.origin}/`;
@@ -117,25 +124,25 @@ export const useAuthMethods = (
       });
 
       if (error) {
-        console.error("❌ Signup error:", error);
+        authLogger.error("Signup error:", error);
         return { success: false, error: error.message };
       }
 
-      console.log("✅ Signup successful");
+      authLogger.info("Signup successful");
       return { success: true };
     } catch (error: any) {
-      console.error("❌ Signup error:", error);
+      authLogger.error("Signup error:", error);
       return { success: false, error: error.message };
     }
   };
 
   const logout = async (): Promise<void> => {
-    console.log("🚪 Attempting logout");
+    authLogger.debug("Attempting logout");
     
     const { error } = await supabase.auth.signOut();
     
     if (error) {
-      console.error("❌ Logout error:", error);
+      authLogger.error("Logout error:", error);
       throw error;
     }
 
@@ -143,8 +150,8 @@ export const useAuthMethods = (
     setCurrentUser(null);
     setIsSubscribed(false);
     setOneTimeAccessResources([]);
-    
-    console.log("✅ Logout successful");
+
+    authLogger.info("Logout successful");
   };
 
   const updateProfile = async (updates: Partial<User>): Promise<void> => {
@@ -152,7 +159,7 @@ export const useAuthMethods = (
       throw new Error("No user logged in");
     }
 
-    console.log("📝 Updating profile for:", currentUser.id);
+    authLogger.debug("Updating profile for:", currentUser.id);
 
     const { error } = await supabase
       .from('profiles')
@@ -171,15 +178,15 @@ export const useAuthMethods = (
       .eq('id', currentUser.id);
 
     if (error) {
-      console.error("❌ Profile update error:", error);
+      authLogger.error("Profile update error:", error);
       throw error;
     }
 
     // Update local user state
     const updatedUser = { ...currentUser, ...updates };
     setCurrentUser(updatedUser);
-    
-    console.log("✅ Profile updated successfully");
+
+    authLogger.info("Profile updated successfully");
   };
 
   const hasOneTimeAccess = (resourceId: string): boolean => {
