@@ -95,16 +95,16 @@ export const scoreReview = async (
   },
   businessState?: string | null
 ): Promise<ScoredReview> => {
-  console.log(`🔍 SCORING REVIEW ${review.id} (${review.customer_name})`);
-  console.log(`🔍 Search params:`, searchParams);
-  console.log(`🔍 Review data:`, {
+  hookLogger.debug(`SCORING REVIEW ${review.id} (${review.customer_name})`);
+  hookLogger.debug(`Search params:`, searchParams);
+  hookLogger.debug(`Review data:`, {
     customer_name: review.customer_name,
     customer_nickname: review.customer_nickname,
     customer_city: review.customer_city,
     customer_zipcode: review.customer_zipcode,
     customer_address: review.customer_address
   });
-  console.log(`🔍 Business state:`, businessState);
+  hookLogger.debug(`Business state:`, businessState);
 
   const { firstName, lastName, businessName, phone, address, city, state, zipCode } = searchParams;
   const searchContext = detectSearchContext(searchParams);
@@ -153,7 +153,7 @@ export const scoreReview = async (
 
   // Early exit if field combination is invalid
   if (!fieldValidation.isValid) {
-    console.log(`[FIELD_VALIDATION] Review ${review.id} rejected by field combination rules: ${fieldValidation.appliedRules.join(', ')}`);
+    hookLogger.debug(`[FIELD_VALIDATION] Review ${review.id} rejected by field combination rules: ${fieldValidation.appliedRules.join(', ')}`);
     return { 
       ...review, 
       searchScore: 0, 
@@ -174,30 +174,31 @@ export const scoreReview = async (
   if (isNamePhoneSearch && review.customer_name) {
     let totalNameSimilarity = 0;
     let nameCount = 0;
-    
+
+
     if (firstName) {
       const firstNameSim = calculateNameSimilarity(firstName, review.customer_name);
-      console.log(`[NAME_VALIDATION] First name: "${firstName}" vs "${review.customer_name}" = ${firstNameSim.toFixed(3)}`);
+      hookLogger.debug(`[NAME_VALIDATION] First name: "${firstName}" vs "${review.customer_name}" = ${firstNameSim.toFixed(3)}`);
 
       let bestFirstNameSim = firstNameSim;
 
       // Also check nickname if available
       if (review.customer_nickname) {
         const nicknameSim = calculateNameSimilarity(firstName, review.customer_nickname);
-        console.log(`[NAME_VALIDATION] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
+        hookLogger.debug(`[NAME_VALIDATION] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
         if (nicknameSim > bestFirstNameSim) {
           bestFirstNameSim = nicknameSim;
-          console.log(`[NAME_VALIDATION] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
+          hookLogger.debug(`[NAME_VALIDATION] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
         }
       }
 
       totalNameSimilarity += bestFirstNameSim;
       nameCount++;
     }
-    
+
     if (lastName) {
       const lastNameSim = calculateNameSimilarity(lastName, review.customer_name);
-      console.log(`[NAME_VALIDATION] Last name: "${lastName}" vs "${review.customer_name}" = ${lastNameSim.toFixed(3)}`);
+      hookLogger.debug(`[NAME_VALIDATION] Last name: "${lastName}" vs "${review.customer_name}" = ${lastNameSim.toFixed(3)}`);
       totalNameSimilarity += lastNameSim;
       nameCount++;
     }
@@ -224,8 +225,9 @@ export const scoreReview = async (
   // Count non-empty search parameters for dynamic validation
   const searchFieldCount = [firstName, lastName, businessName, phone, address, city, state, zipCode]
     .filter(field => field && field.trim().length > 0).length;
-  
-  console.log(`[FIELD_COUNT] Total search fields: ${searchFieldCount}`);
+
+
+  hookLogger.debug(`[FIELD_COUNT] Total search fields: ${searchFieldCount}`);
   
   // Track name validation state with improved component matching
   let nameValidationDeferred = false;
@@ -245,29 +247,29 @@ export const scoreReview = async (
   
   // Store name validation results with improved individual component validation
   if ((firstName || lastName) && review.customer_name) {
-    console.log(`[NAME_DEBUG] Review ${review.id} (${review.customer_name})`);
-    console.log(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
-    console.log(`[NAME_DEBUG] Using name threshold: ${nameThreshold} (based on ${searchFieldCount} fields)`);
-    
+    hookLogger.debug(`[NAME_DEBUG] Review ${review.id} (${review.customer_name})`);
+    hookLogger.debug(`[NAME_DEBUG] Search: firstName="${firstName}", lastName="${lastName}"`);
+    hookLogger.debug(`[NAME_DEBUG] Using name threshold: ${nameThreshold} (based on ${searchFieldCount} fields)`);
+
     if (firstName) {
       bestFirstNameSimilarity = calculateNameSimilarity(firstName, review.customer_name);
-      console.log(`[NAME_DEBUG] First name similarity: "${firstName}" vs "${review.customer_name}" = ${bestFirstNameSimilarity}`);
+      hookLogger.debug(`[NAME_DEBUG] First name similarity: "${firstName}" vs "${review.customer_name}" = ${bestFirstNameSimilarity}`);
 
       // Also check nickname if available
       if (review.customer_nickname) {
         const nicknameSimilarity = calculateNameSimilarity(firstName, review.customer_nickname);
-        console.log(`[NAME_DEBUG] Nickname similarity: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSimilarity}`);
+        hookLogger.debug(`[NAME_DEBUG] Nickname similarity: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSimilarity}`);
         // Use the better of the two scores
         if (nicknameSimilarity > bestFirstNameSimilarity) {
           bestFirstNameSimilarity = nicknameSimilarity;
-          console.log(`[NAME_DEBUG] Using nickname similarity: ${nicknameSimilarity}`);
+          hookLogger.debug(`[NAME_DEBUG] Using nickname similarity: ${nicknameSimilarity}`);
         }
       }
     }
 
     if (lastName) {
       bestLastNameSimilarity = calculateNameSimilarity(lastName, review.customer_name);
-      console.log(`[NAME_DEBUG] Last name similarity: "${lastName}" vs "${review.customer_name}" = ${bestLastNameSimilarity}`);
+      hookLogger.debug(`[NAME_DEBUG] Last name similarity: "${lastName}" vs "${review.customer_name}" = ${bestLastNameSimilarity}`);
     }
     
     // Improved component validation logic for nickname matches
