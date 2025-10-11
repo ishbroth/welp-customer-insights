@@ -6,6 +6,9 @@ import { REVIEW_SEARCH_CONFIG } from "./reviewSearchConfig";
 import { ReviewData } from "./types";
 import { validateFieldCombination } from "./fieldCombinationRules";
 import { areCitiesInProximity, calculateProximityScore } from "@/utils/cityProximity";
+import { logger } from "@/utils/logger";
+
+const hookLogger = logger.withContext('ReviewScoring');
 
 interface ScoredReview extends ReviewData {
   searchScore: number;
