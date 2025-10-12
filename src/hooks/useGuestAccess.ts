@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { parseISOString, now, isBefore } from '@/utils/dateUtils';
 
 interface GuestAccessInfo {
   hasAccess: boolean;
@@ -60,9 +61,9 @@ export const useGuestAccess = (reviewId: string, guestToken?: string): GuestAcce
           return;
         }
 
-        const expiresAt = new Date(accessRecord.expires_at);
-        const now = new Date();
-        const isExpired = now > expiresAt;
+        const expiresAt = parseISOString(accessRecord.expires_at);
+        const currentTime = now();
+        const isExpired = expiresAt ? isBefore(expiresAt, currentTime) : true;
 
         if (isExpired) {
           // Clean up expired token from sessionStorage

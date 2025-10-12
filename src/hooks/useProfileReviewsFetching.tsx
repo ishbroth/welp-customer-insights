@@ -9,6 +9,7 @@ import { useProfileReviewsMatching } from "./useProfileReviewsMatching";
 import { useReviewMatching } from "./useReviewMatching";
 import { useReviewClaims } from "./useReviewClaims";
 import { logger } from '@/utils/logger';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '@/utils/safeLocalStorage';
 
 const hookLogger = logger.withContext('ProfileReviewsFetching');
 
@@ -35,7 +36,7 @@ export const useProfileReviewsFetching = () => {
     // Check cache first (unless force refresh)
     if (!forceRefresh) {
       const cacheKey = getCacheKey(currentUser.id);
-      const cachedData = sessionStorage.getItem(cacheKey);
+      const cachedData = safeGetItem(cacheKey, sessionStorage);
 
       if (cachedData) {
         try {
@@ -46,7 +47,7 @@ export const useProfileReviewsFetching = () => {
           return;
         } catch (e) {
           hookLogger.error("Error parsing cached data:", e);
-          sessionStorage.removeItem(cacheKey);
+          safeRemoveItem(cacheKey, sessionStorage);
         }
       }
     }
@@ -205,9 +206,9 @@ export const useProfileReviewsFetching = () => {
             formatReview(review, currentUser)
           );
 
-          // Cache the results
+          // Cache the results (safely)
           const cacheKey = getCacheKey(currentUser.id);
-          sessionStorage.setItem(cacheKey, JSON.stringify(formattedReviews));
+          safeSetItem(cacheKey, JSON.stringify(formattedReviews), sessionStorage);
 
           setCustomerReviews(formattedReviews);
           hookLogger.debug("=== DUAL SEARCH COMPLETE ===");
@@ -285,9 +286,9 @@ export const useProfileReviewsFetching = () => {
         hookLogger.debug("🔍 PROFILE FETCHING - Transformed reviews:", reviewsWithBusinessProfile);
         hookLogger.debug("🔍 PROFILE FETCHING - First transformed review:", reviewsWithBusinessProfile?.[0]);
 
-        // Cache the results
+        // Cache the results (safely)
         const cacheKey = getCacheKey(currentUser.id);
-        sessionStorage.setItem(cacheKey, JSON.stringify(reviewsWithBusinessProfile));
+        safeSetItem(cacheKey, JSON.stringify(reviewsWithBusinessProfile), sessionStorage);
 
         setCustomerReviews(reviewsWithBusinessProfile);
       }

@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { now, addHours, toISOString } from "../_shared/dateUtils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,9 +69,8 @@ serve(async (req) => {
       });
     }
 
-    // Create guest access record with 24-hour expiration
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24);
+    // Create guest access record with 24-hour expiration (DST-safe)
+    const expiresAt = addHours(now(), 24);
 
     const { data: accessRecord, error: accessError } = await supabase
       .from('guest_access')
@@ -78,7 +78,7 @@ serve(async (req) => {
         access_token: accessToken,
         review_id: reviewId,
         stripe_session_id: sessionId,
-        expires_at: expiresAt.toISOString()
+        expires_at: toISOString(expiresAt)
       })
       .select()
       .single();
@@ -88,16 +88,16 @@ serve(async (req) => {
       throw new Error(`Failed to create access record: ${accessError.message}`);
     }
 
-    logStep("Guest access record created", { 
-      accessId: accessRecord.id, 
-      expiresAt: expiresAt.toISOString(),
-      reviewId 
+    logStep("Guest access record created", {
+      accessId: accessRecord.id,
+      expiresAt: toISOString(expiresAt),
+      reviewId
     });
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return new Response(JSON.stringify({
+      success: true,
       accessId: accessRecord.id,
-      expiresAt: expiresAt.toISOString()
+      expiresAt: toISOString(expiresAt)
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

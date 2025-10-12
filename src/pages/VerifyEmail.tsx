@@ -128,6 +128,7 @@ const VerifyEmail: React.FC = () => {
           <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="font-medium text-blue-800 mb-1">Can't find the email?</p>
             <p>Check your spam or junk mail folder. Sometimes verification emails end up there.</p>
+            <p className="mt-2 text-xs text-gray-500">Note: Verification codes expire after 10 minutes for security.</p>
           </div>
           
           <VerifyEmailCodeButton 

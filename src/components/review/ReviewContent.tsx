@@ -1,5 +1,5 @@
 
-import { formatDistance } from "date-fns";
+import { formatRelative } from "@/utils/dateUtils";
 
 interface ReviewContentProps {
   comment: string;
@@ -12,12 +12,10 @@ const ReviewContent = ({ comment, createdAt }: ReviewContentProps) => {
       <div className="mb-4">
         <p className="text-gray-700 whitespace-pre-line">{comment}</p>
       </div>
-      
+
       <div className="text-sm text-gray-500">
         <span>
-          {formatDistance(new Date(createdAt), new Date(), {
-            addSuffix: true,
-          })}
+          {formatRelative(createdAt)}
         </span>
       </div>
     </>

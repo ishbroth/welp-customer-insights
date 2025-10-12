@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { useReviewClaims } from "./useReviewClaims";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
 import { logger } from '@/utils/logger';
+import { safeGetItem } from '@/utils/safeLocalStorage';
 
 const hookLogger = logger.withContext('useBusinessProfileReviews');
 
@@ -40,11 +41,11 @@ export const useBusinessProfileReviews = (businessId: string | undefined, hasAcc
       
       // Transform the data to match the Review type and load reactions from localStorage
       const transformedReviews: Review[] = await Promise.all((data || []).map(async (review) => {
-        // Load reactions from localStorage for this review
-        const storageKey = `reactions_${review.id}`;
-        const storedReactions = localStorage.getItem(storageKey);
+        // Load reactions from localStorage for this review (with safe error handling)
         let reactions = { like: [], funny: [], ohNo: [] };
-        
+        const storageKey = `reactions_${review.id}`;
+        const storedReactions = safeGetItem(storageKey);
+
         if (storedReactions) {
           try {
             const parsed = JSON.parse(storedReactions);

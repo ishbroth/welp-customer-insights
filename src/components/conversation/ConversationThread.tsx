@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ConversationMessage } from "@/services/conversationService";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelative } from "@/utils/dateUtils";
 import { logger } from '@/utils/logger';
 
 interface ConversationThreadProps {
@@ -107,7 +107,7 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
         const displayName = getUserDisplayName(message.author_id, message.author_type);
         const avatar = getUserAvatar(message.author_id);
         const initials = getInitials(displayName);
-        const timeAgo = formatDistanceToNow(new Date(message.created_at), { addSuffix: true });
+        const timeAgo = formatRelative(message.created_at);
 
         return (
           <div key={message.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">

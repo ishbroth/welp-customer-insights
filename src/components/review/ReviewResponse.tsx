@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, Trash2, MessageSquare, Lock } from "lucide-react";
-import { formatDistance } from "date-fns";
+import { formatRelative } from "@/utils/dateUtils";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { moderateContent } from "@/utils/contentModeration";
@@ -72,9 +72,7 @@ const ReviewResponse: React.FC<ReviewResponseProps> = ({
         <div className="flex justify-between items-center mb-2">
           <span className="font-medium">{response.authorName}</span>
           <span className="text-xs text-gray-500">
-            {formatDistance(new Date(response.createdAt), new Date(), {
-              addSuffix: true,
-            })}
+            {formatRelative(response.createdAt)}
           </span>
         </div>
         
@@ -141,9 +139,7 @@ const ReviewResponse: React.FC<ReviewResponseProps> = ({
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-medium text-xs">{reply.authorName}</span>
                   <span className="text-xs text-gray-500">
-                    {formatDistance(new Date(reply.createdAt), new Date(), {
-                      addSuffix: true,
-                    })}
+                    {formatRelative(reply.createdAt)}
                   </span>
                 </div>
                 <p className="text-gray-700 text-xs">{reply.content}</p>

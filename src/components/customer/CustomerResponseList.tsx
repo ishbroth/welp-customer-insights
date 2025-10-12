@@ -1,5 +1,5 @@
 
-import { formatDistance } from "date-fns";
+import { formatRelative } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,9 +42,7 @@ const CustomerResponseList = ({
           <div className="flex justify-between items-center mb-1">
             <span className="font-medium text-sm">{response.authorName}</span>
             <span className="text-xs text-gray-500">
-              {formatDistance(new Date(response.createdAt), new Date(), {
-                addSuffix: true,
-              })}
+              {formatRelative(response.createdAt)}
             </span>
           </div>
           

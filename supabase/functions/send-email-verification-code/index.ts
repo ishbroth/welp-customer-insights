@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
+import { now, addMinutes, toISOString } from "../_shared/dateUtils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,8 +30,7 @@ serve(async (req) => {
 
     // Generate a 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // Expires in 10 minutes
+    const expiresAt = addMinutes(now(), 10); // Expires in 10 minutes (DST-safe)
 
     // Store the verification code in the database
     const { error: dbError } = await supabase
@@ -38,7 +38,7 @@ serve(async (req) => {
       .upsert({
         email: email,
         code: code,
-        expires_at: expiresAt.toISOString(),
+        expires_at: toISOString(expiresAt),
         used: false
       }, {
         onConflict: 'email'

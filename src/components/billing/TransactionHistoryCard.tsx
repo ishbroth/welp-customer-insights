@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useCredits } from "@/hooks/useCredits";
 import { useAuth } from "@/contexts/auth";
+import { formatDate as formatDateUtil } from "@/utils/dateUtils";
 
 interface Transaction {
   id: string;
@@ -39,7 +40,7 @@ const TransactionHistoryCard = ({
 
   const formatDate = (timestamp: number | string) => {
     const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
-    return date.toLocaleDateString();
+    return formatDateUtil(date);
   };
 
   const getTransactionDescription = (stripeTransaction: Transaction, creditTransaction?: any) => {

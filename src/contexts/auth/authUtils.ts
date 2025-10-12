@@ -2,6 +2,7 @@
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/utils/logger';
+import { now, toISOString } from '@/utils/dateUtils';
 
 const authLogger = logger.withContext('AuthUtils');
 
@@ -93,7 +94,7 @@ export const loadOneTimeAccessResources = async (userId: string): Promise<string
       .from('customer_access')
       .select('customer_id')
       .eq('business_id', userId)
-      .gt('expires_at', new Date().toISOString());
+      .gt('expires_at', toISOString(now()));
 
     if (error) {
       authLogger.error("Error loading one-time access resources:", error);

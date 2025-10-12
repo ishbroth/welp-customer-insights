@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.0";
+import { now, toISOString, parseISOString, isBefore } from "../_shared/dateUtils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +35,7 @@ serve(async (req) => {
       .eq('email', email)
       .eq('code', code)
       .eq('used', false)
-      .gte('expires_at', new Date().toISOString())
+      .gte('expires_at', toISOString(now()))
       .maybeSingle();
 
     if (verificationError) {
@@ -64,8 +65,11 @@ serve(async (req) => {
       if (existingCode) {
         if (existingCode.used) {
           errorMessage = "This verification code has already been used. Please request a new one.";
-        } else if (new Date(existingCode.expires_at) < new Date()) {
-          errorMessage = "This verification code has expired. Please request a new one.";
+        } else {
+          const expiryDate = parseISOString(existingCode.expires_at);
+          if (expiryDate && isBefore(expiryDate, now())) {
+            errorMessage = "This verification code has expired. Please request a new one.";
+          }
         }
       }
 

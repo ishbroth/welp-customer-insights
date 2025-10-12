@@ -39,7 +39,7 @@ const EmailVerificationCodeInput: React.FC<EmailVerificationCodeInputProps> = ({
       </div>
       <div className="flex flex-col items-center space-y-1">
         <p className="text-xs text-gray-500">
-          Enter the 6-digit code sent to your email
+          Enter the 6-digit code sent to your email (expires in 10 minutes)
         </p>
         {value && !disabled && (
           <button

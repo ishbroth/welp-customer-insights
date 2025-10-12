@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Crown, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/utils/dateUtils";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 
@@ -122,7 +122,7 @@ const CurrentSubscriptionCard = ({
               {endDate && (
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Next billing:</span>
-                  <span>{format(new Date(endDate), 'MMM dd, yyyy')}</span>
+                  <span>{formatDate(endDate, 'MMM dd, yyyy')}</span>
                 </div>
               )}
             </div>
