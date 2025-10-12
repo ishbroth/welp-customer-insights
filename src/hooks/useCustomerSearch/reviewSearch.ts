@@ -164,7 +164,7 @@ export const searchReviews = async (
     .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
 
   if (error) {
-    console.error("Review search error:", error);
+    hookLogger.error("Review search error:", error);
     throw error;
   }
 

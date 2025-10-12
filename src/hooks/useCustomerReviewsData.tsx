@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 export const useCustomerReviewsData = () => {
+  const hookLogger = logger.withContext('CustomerReviewsData');
   const { currentUser, isSubscribed, hasOneTimeAccess } = useAuth();
   const { toast } = useToast();
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
@@ -121,7 +123,7 @@ export const useCustomerReviewsData = () => {
               .single();
             businessName = businessData?.name || "Anonymous Business";
           } catch (error) {
-            console.error('Error fetching business name:', error);
+            hookLogger.error('Error fetching business name:', error);
           }
         }
         
@@ -141,7 +143,7 @@ export const useCustomerReviewsData = () => {
         [customerId]: formattedReviews
       }));
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      hookLogger.error("Error fetching reviews:", error);
       toast({
         title: "Error",
         description: "Failed to fetch customer reviews.",

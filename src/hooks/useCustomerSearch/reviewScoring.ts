@@ -599,9 +599,9 @@ export const scoreReview = async (
       // Only allow area code matches if this is NOT a name+phone search OR if name similarity is very high
       if (!isNamePhoneSearch) {
         score += REVIEW_SEARCH_CONFIG.SCORES.PHONE_MATCH * 0.2; // Very low score
-        console.log(`⚠️ Area code only match accepted for non-name+phone search: ${cleanPhone.slice(0, 3)}`);
+        hookLogger.debug(`Area code only match accepted for non-name+phone search: ${cleanPhone.slice(0, 3)}`);
       } else {
-        console.log(`❌ Area code only match rejected for name+phone search: ${cleanPhone.slice(0, 3)}`);
+        hookLogger.debug(`Area code only match rejected for name+phone search: ${cleanPhone.slice(0, 3)}`);
       }
     }
   }
@@ -677,10 +677,10 @@ export const scoreReview = async (
       if (address.trim() === searchNumber && !isNaN(Number(address.trim()))) {
         exactFieldMatches++;
         exactMatchDetails.push({ field: 'address', isExact: true });
-        console.log(`[ADDRESS_EXACT] Street number exact match: "${address}" = "${reviewNumber}" (counted as exact)`);
+        hookLogger.debug(`[ADDRESS_EXACT] Street number exact match: "${address}" = "${reviewNumber}" (counted as exact)`);
       }
     }
-    
+
     // Check other address components
     for (const word of addressWords) {
       if (word.length >= REVIEW_SEARCH_CONFIG.MIN_WORD_LENGTH) {
@@ -691,7 +691,7 @@ export const scoreReview = async (
             addressMatched = true;
             hasExactWordMatch = true;
             bestWordMatchSimilarity = Math.max(bestWordMatchSimilarity, 1.0);
-            console.log(`[ADDRESS_WORD_EXACT] Exact word match: "${word}" in "${review.customer_address}"`);
+            hookLogger.debug(`[ADDRESS_WORD_EXACT] Exact word match: "${word}" in "${review.customer_address}"`);
           }
           // Partial word match
           else if (reviewWord.includes(word) || word.includes(reviewWord)) {
@@ -716,18 +716,18 @@ export const scoreReview = async (
           similarity: bestWordMatchSimilarity,
           matchType: 'partial'
         });
-        console.log(`[ADDRESS_DETAILED] Added exact word match to detailedMatches: similarity=${bestWordMatchSimilarity}`);
+        hookLogger.debug(`[ADDRESS_DETAILED] Added exact word match to detailedMatches: similarity=${bestWordMatchSimilarity}`);
       }
     }
-    
+
     // For address+state searches, only add score if address actually matched
     if (searchContext.isAddressWithState) {
       if (addressMatched) {
         score += addressScore;
         matches++;
-        console.log(`[ADDRESS_MATCH] Address+State search: added ${addressScore.toFixed(1)} points for "${address}" -> "${review.customer_address}"`);
+        hookLogger.debug(`[ADDRESS_MATCH] Address+State search: added ${addressScore.toFixed(1)} points for "${address}" -> "${review.customer_address}"`);
       } else {
-        console.log(`[ADDRESS_NO_MATCH] Address+State search: no address match for "${address}" -> "${review.customer_address}" (similarity: ${addressSimilarity.toFixed(3)})`);
+        hookLogger.debug(`[ADDRESS_NO_MATCH] Address+State search: no address match for "${address}" -> "${review.customer_address}" (similarity: ${addressSimilarity.toFixed(3)})`);
       }
     } else {
       // For non-address-focused searches, always add the score
@@ -755,14 +755,14 @@ export const scoreReview = async (
         points *= 1.3;
         exactFieldMatches++;
         exactMatchDetails.push({ field: 'city', isExact: true });
-        console.log(`[CITY_EXACT] Exact city match: "${city}" = "${review.customer_city}"`);
+        hookLogger.debug(`[CITY_EXACT] Exact city match: "${city}" = "${review.customer_city}"`);
       }
-      
+
       cityMatched = true;
       cityMatchedLocal = true;
       matchType = similarity >= 0.9 ? 'exact' : 'partial';
-      
-      console.log(`[CITY_MATCH] String match found: "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
+
+      hookLogger.debug(`[CITY_MATCH] String match found: "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
     }
 
     // Geographic proximity check - only if string matching didn't work
@@ -785,21 +785,21 @@ export const scoreReview = async (
             cityMatched = true;
             cityMatchedLocal = true;
             matchType = 'proximity';
-            console.log(`[CITY_PROXIMITY] Cities within proximity: "${city}, ${state}" and "${review.customer_city}, ${reviewState}" (${proximityResult.distance?.toFixed(1)} miles)`);
+            hookLogger.debug(`[CITY_PROXIMITY] Cities within proximity: "${city}, ${state}" and "${review.customer_city}, ${reviewState}" (${proximityResult.distance?.toFixed(1)} miles)`);
           }
         } catch (error) {
-          console.error('[CITY_PROXIMITY] Error checking proximity:', error);
+          hookLogger.error('[CITY_PROXIMITY] Error checking proximity:', error);
         }
       }
     }
 
-    console.log(`[CITY_MATCHING] Customer city data: "${review.customer_city}" vs search "${city}"`);
+    hookLogger.debug(`[CITY_MATCHING] Customer city data: "${review.customer_city}" vs search "${city}"`);
 
 
     if (cityMatchedLocal) {
       score += points;
       matches++;
-      
+
       detailedMatches.push({
         field: 'City',
         reviewValue: review.customer_city,
@@ -807,16 +807,16 @@ export const scoreReview = async (
         similarity: matchType === 'proximity' ? 0.8 : similarity,
         matchType: matchType as 'exact' | 'partial' | 'fuzzy' | 'proximity'
       });
-      
-      console.log(`[CITY_FINAL] City match added ${points.toFixed(2)} points for "${city}" -> "${review.customer_city}"`);
+
+      hookLogger.debug(`[CITY_FINAL] City match added ${points.toFixed(2)} points for "${city}" -> "${review.customer_city}"`);
     } else {
-      console.log(`[CITY_NO_MATCH] No match found for "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
-      
+      hookLogger.debug(`[CITY_NO_MATCH] No match found for "${city}" -> "${review.customer_city}" (similarity: ${similarity.toFixed(2)})`);
+
       // Apply heavy penalty for name + location only searches when city doesn't match
-      if (searchContext.hasName && searchContext.hasLocation && 
+      if (searchContext.hasName && searchContext.hasLocation &&
           !searchContext.hasPhone && !searchContext.hasAddress) {
         score *= 0.1; // Reduce score by 90% for missing city match in location-focused searches
-        console.log(`[CITY_PENALTY] Applied heavy city mismatch penalty to review ${review.id} for name+location search`);
+        hookLogger.debug(`[CITY_PENALTY] Applied heavy city mismatch penalty to review ${review.id} for name+location search`);
       }
     }
   }
@@ -834,9 +834,9 @@ export const scoreReview = async (
     // Only use business state if we have no customer location to contradict it
     customerState = businessState;
   }
-  
-  console.log(`[STATE_SOURCE] Customer state derived: ${customerState} (from business: ${businessState})`);
-  
+
+  hookLogger.debug(`[STATE_SOURCE] Customer state derived: ${customerState} (from business: ${businessState})`);
+
   if (state && customerState) {
     // Use normalized state comparison to handle CA vs California  
     if (compareStates(state, customerState)) {
@@ -850,9 +850,9 @@ export const scoreReview = async (
           matches++;
           exactFieldMatches++;
           exactMatchDetails.push({ field: 'state', isExact: true });
-          console.log(`[STATE_MATCH] Address+State search: minimal state bonus added for "${state}" <-> "${customerState}"`);
+          hookLogger.debug(`[STATE_MATCH] Address+State search: minimal state bonus added for "${state}" <-> "${customerState}"`);
         } else {
-          console.log(`[STATE_NO_BONUS] Address+State search: no state bonus (address didn't match)`);
+          hookLogger.debug(`[STATE_NO_BONUS] Address+State search: no state bonus (address didn't match)`);
         }
       } else {
         // For comprehensive searches (5+ fields), require state match but give minimal weight
@@ -861,10 +861,10 @@ export const scoreReview = async (
           matches++;
           exactFieldMatches++;
           exactMatchDetails.push({ field: 'state', isExact: true });
-          console.log(`[STATE_MATCH] Comprehensive search: mandatory state match with minimal weight "${state}" <-> "${customerState}"`);
+          hookLogger.debug(`[STATE_MATCH] Comprehensive search: mandatory state match with minimal weight "${state}" <-> "${customerState}"`);
         }
       }
-      
+
       detailedMatches.push({
         field: 'State',
         reviewValue: customerState,
@@ -875,10 +875,10 @@ export const scoreReview = async (
     } else {
       // State mismatch is now critical for comprehensive searches
       if (searchFieldCount >= 5) {
-        console.log(`[STATE_MISMATCH] REJECTING review ${review.id} - State mismatch in comprehensive search: ${state} vs ${customerState}`);
-        return { 
-          ...review, 
-          searchScore: 0, 
+        hookLogger.debug(`[STATE_MISMATCH] REJECTING review ${review.id} - State mismatch in comprehensive search: ${state} vs ${customerState}`);
+        return {
+          ...review,
+          searchScore: 0,
           matchCount: 0,
           completenessScore,
           exactFieldMatches: 0,
@@ -886,22 +886,22 @@ export const scoreReview = async (
           detailedMatches: []
         };
       }
-      
+
       // Apply penalties for location-focused searches
       const hasLocationFocus = Boolean(city || zipCode || address);
       if (hasLocationFocus && !phone && !(firstName && lastName)) {
         // Heavy penalty for location-only searches with wrong state
         score *= 0.1; // Reduce score by 90% (stronger penalty)
-        console.log(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${state} vs ${customerState}`);
+        hookLogger.debug(`[STATE_PENALTY] Applied heavy state mismatch penalty to review ${review.id}: ${state} vs ${customerState}`);
       } else if (hasLocationFocus) {
         // Moderate penalty for mixed searches with wrong state
         score *= 0.5; // Reduce score by 50% (stronger penalty)
-        console.log(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${state} vs ${customerState}`);
+        hookLogger.debug(`[STATE_PENALTY] Applied moderate state mismatch penalty to review ${review.id}: ${state} vs ${customerState}`);
       }
     }
   } else if (state && searchFieldCount >= 5) {
     // For comprehensive searches, lack of customer state data is problematic
-    console.log(`[STATE_MISSING] Review ${review.id} lacks customer state data for comprehensive search - penalizing`);
+    hookLogger.debug(`[STATE_MISSING] Review ${review.id} lacks customer state data for comprehensive search - penalizing`);
     score *= 0.7; // 30% penalty for missing state data
   }
 
@@ -919,8 +919,8 @@ export const scoreReview = async (
       exactFieldMatches++;
       exactMatchDetails.push({ field: 'zip', isExact: true });
       zipMatched = true;
-      console.log(`[ZIP_EXACT] Exact ZIP match: "${cleanZip}" = "${reviewZip}"`);
-      
+      hookLogger.debug(`[ZIP_EXACT] Exact ZIP match: "${cleanZip}" = "${reviewZip}"`);
+
       detailedMatches.push({
         field: 'ZIP Code',
         reviewValue: review.customer_zipcode,
@@ -1010,10 +1010,10 @@ export const scoreReview = async (
 
   // Apply field combination minimum score requirement
   if (percentageScore < fieldValidation.minScoreRequired) {
-    console.log(`[FIELD_VALIDATION] Review ${review.id} score ${percentageScore} below required minimum ${fieldValidation.minScoreRequired} for rules: ${fieldValidation.appliedRules.join(', ')}`);
-    return { 
-      ...review, 
-      searchScore: 0, 
+    hookLogger.debug(`[FIELD_VALIDATION] Review ${review.id} score ${percentageScore} below required minimum ${fieldValidation.minScoreRequired} for rules: ${fieldValidation.appliedRules.join(', ')}`);
+    return {
+      ...review,
+      searchScore: 0,
       matchCount: 0,
       completenessScore,
       exactFieldMatches: 0,
@@ -1026,10 +1026,10 @@ export const scoreReview = async (
   if (nameValidationDeferred && !nameComponentMatched && (firstName || lastName)) {
     const requiredExactMatches = searchFieldCount >= 6 ? 4 : 3;
     if (exactFieldMatches < requiredExactMatches) {
-      console.log(`[NAME_VALIDATION_DEFERRED] Review ${review.id} REJECTED - Insufficient exact matches (${exactFieldMatches}/${requiredExactMatches}) to bypass name validation`);
-      return { 
-        ...review, 
-        searchScore: 0, 
+      hookLogger.debug(`[NAME_VALIDATION_DEFERRED] Review ${review.id} REJECTED - Insufficient exact matches (${exactFieldMatches}/${requiredExactMatches}) to bypass name validation`);
+      return {
+        ...review,
+        searchScore: 0,
         matchCount: 0,
         completenessScore,
         exactFieldMatches: 0,
@@ -1037,7 +1037,7 @@ export const scoreReview = async (
         detailedMatches: []
       };
     } else {
-      console.log(`[NAME_VALIDATION_BYPASS] Review ${review.id} ACCEPTED - Bypassed name validation with ${exactFieldMatches} exact matches`);
+      hookLogger.debug(`[NAME_VALIDATION_BYPASS] Review ${review.id} ACCEPTED - Bypassed name validation with ${exactFieldMatches} exact matches`);
     }
   }
 
@@ -1051,12 +1051,13 @@ export const scoreReview = async (
       match.field === 'State' || 
       (match.field === 'City' && match.similarity !== undefined && match.similarity < 0.6)
     );
-  
+
+
   if (hasMajorFields && (detailedMatches.length === 1 && detailedMatches[0].field === 'State')) {
-    console.log(`[STATE_ONLY_FILTER] Review ${review.id} REJECTED - Only state matched when major fields provided`);
-    return { 
-      ...review, 
-      searchScore: 0, 
+    hookLogger.debug(`[STATE_ONLY_FILTER] Review ${review.id} REJECTED - Only state matched when major fields provided`);
+    return {
+      ...review,
+      searchScore: 0,
       matchCount: 0,
       completenessScore,
       exactFieldMatches: 0,
@@ -1064,20 +1065,20 @@ export const scoreReview = async (
       detailedMatches: []
     };
   }
-  
+
   // Apply comprehensive search bonus for 5+ field searches with multiple exact matches
   if (searchFieldCount >= 5 && exactFieldMatches >= 4) {
     const comprehensiveBonus = REVIEW_SEARCH_CONFIG.SCORES.COMPREHENSIVE_SEARCH_BONUS;
     score += comprehensiveBonus;
-    console.log(`[COMPREHENSIVE_BONUS] Added ${comprehensiveBonus} points for comprehensive search with ${exactFieldMatches} exact matches`);
+    hookLogger.debug(`[COMPREHENSIVE_BONUS] Added ${comprehensiveBonus} points for comprehensive search with ${exactFieldMatches} exact matches`);
   }
 
   // Filter out weak similarity matches (like La Mesa vs San Diego)
   if (hasMajorFields && hasOnlyWeakMatches && !hasSubstantialMatch) {
-    console.log(`[WEAK_MATCH_FILTER] Review ${review.id} REJECTED - Only weak matches found (state + weak city)`);
-    return { 
-      ...review, 
-      searchScore: 0, 
+    hookLogger.debug(`[WEAK_MATCH_FILTER] Review ${review.id} REJECTED - Only weak matches found (state + weak city)`);
+    return {
+      ...review,
+      searchScore: 0,
       matchCount: 0,
       completenessScore,
       exactFieldMatches: 0,
@@ -1086,10 +1087,10 @@ export const scoreReview = async (
     };
   }
 
-  console.log(`[EXACT_MATCH_COUNT] Review ${review.id} final exact matches: ${exactFieldMatches}/${searchFieldCount}`);
-  console.log(`[EXACT_MATCH_DETAILS] Fields: ${exactMatchDetails.map(d => d.field).join(', ')}`);
-  
-  console.log('Enhanced review scoring result:', {
+  hookLogger.debug(`[EXACT_MATCH_COUNT] Review ${review.id} final exact matches: ${exactFieldMatches}/${searchFieldCount}`);
+  hookLogger.debug(`[EXACT_MATCH_DETAILS] Fields: ${exactMatchDetails.map(d => d.field).join(', ')}`);
+
+  hookLogger.debug('Enhanced review scoring result:', {
     reviewId: review.id,
     customerName: review.customer_name,
     searchParams,

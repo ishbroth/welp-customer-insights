@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { logger } from "@/utils/logger";
 
 interface Review {
   id: string;
@@ -28,6 +29,7 @@ export const useReviewsFetching = (
   initialReviews: any[] = [],
   isReviewCustomer = false
 ) => {
+  const hookLogger = logger.withContext('ReviewsFetching');
   const { toast } = useToast();
   const { currentUser, isSubscribed } = useAuth();
   const [processedReviews, setProcessedReviews] = useState<FormattedReview[]>(initialReviews);
@@ -90,7 +92,7 @@ export const useReviewsFetching = (
                   businessName = businessData?.name || "The Painted Painter";
                   businessAvatar = businessData?.avatar || "";
                 } catch (error) {
-                  console.error('Error fetching business profile:', error);
+                  hookLogger.error('Error fetching business profile:', error);
                 }
               }
               
@@ -108,7 +110,7 @@ export const useReviewsFetching = (
 
           setProcessedReviews(formattedReviews);
         } catch (error) {
-          console.error("Error fetching review customer data:", error);
+          hookLogger.error("Error fetching review customer data:", error);
           toast({
             title: "Error",
             description: "Failed to fetch reviews.",
@@ -124,34 +126,34 @@ export const useReviewsFetching = (
     // If no reviews are passed as props and this is a regular customer, fetch them from Supabase
     const fetchReviews = async () => {
       try {
-        console.log("=== FETCHING REVIEWS FOR CUSTOMER ===");
-        console.log("Customer ID:", customerId);
-        
+        hookLogger.debug("=== FETCHING REVIEWS FOR CUSTOMER ===");
+        hookLogger.debug("Customer ID:", customerId);
+
         // Search by customer name if available
         let allReviews: Review[] = [];
-        
+
         if (currentUser?.name) {
-          console.log("Searching by customer name:", currentUser.name);
-          
+          hookLogger.debug("Searching by customer name:", currentUser.name);
+
           const { data: nameReviews, error: nameError } = await supabase
             .from('reviews')
             .select('id, rating, content, created_at, business_id')
             .ilike('customer_name', `%${currentUser.name}%`);
 
           if (nameError) {
-            console.error("Error fetching reviews by name:", nameError);
+            hookLogger.error("Error fetching reviews by name:", nameError);
           } else {
-            console.log("Reviews found by name:", nameReviews?.length || 0);
+            hookLogger.debug("Reviews found by name:", nameReviews?.length || 0);
             allReviews = [...allReviews, ...(nameReviews || [])];
           }
         }
 
         // Remove duplicates based on review ID
-        const uniqueReviews = allReviews.filter((review, index, self) => 
+        const uniqueReviews = allReviews.filter((review, index, self) =>
           index === self.findIndex(r => r.id === review.id)
         );
 
-        console.log("Total unique reviews:", uniqueReviews.length);
+        hookLogger.debug("Total unique reviews:", uniqueReviews.length);
 
         // Format the reviews data and fetch business names separately
         const formattedReviews: FormattedReview[] = [];
@@ -170,7 +172,7 @@ export const useReviewsFetching = (
               businessName = businessData?.name || "The Painted Painter";
               businessAvatar = businessData?.avatar || "";
             } catch (error) {
-              console.error('Error fetching business profile:', error);
+              hookLogger.error('Error fetching business profile:', error);
             }
           }
           
@@ -186,9 +188,9 @@ export const useReviewsFetching = (
         }
 
         setProcessedReviews(formattedReviews);
-        console.log("=== REVIEW FETCH COMPLETE ===");
+        hookLogger.debug("=== REVIEW FETCH COMPLETE ===");
       } catch (error) {
-        console.error("Error fetching reviews:", error);
+        hookLogger.error("Error fetching reviews:", error);
         toast({
           title: "Error",
           description: "Failed to fetch reviews.",
