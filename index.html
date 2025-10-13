@@ -3,10 +3,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Welp. - Review your customers</title>
     <meta name="description" content="Welp. - Because businesses are people too" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+    <!-- Mobile status bar color - matches header -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <meta property="og:title" content="Welp. - Review your customers" />
     <meta property="og:description" content="Because businesses are people too" />
@@ -15,6 +19,21 @@
     <meta name="twitter:card" content="summary_large_image" />
 
     <style>
+      /* Ensure body extends to top on mobile (no red status bar bleed) */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+      }
+
+      /* Support for safe area insets on iOS */
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
       /* Initial loading screen - shown before React loads */
       #initial-loading-screen {
         position: fixed;
