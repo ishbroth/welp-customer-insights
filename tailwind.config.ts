@@ -1,8 +1,8 @@
 
 import type { Config } from "tailwindcss";
+import { theme } from "./src/styles/theme";
 
 export default {
-	darkMode: ["class"],
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -20,6 +20,7 @@ export default {
 		},
 		extend: {
 			colors: {
+				// Keep existing CSS variable-based colors for compatibility
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -27,7 +28,9 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					// Add centralized theme colors
+					...theme.colors.primary,
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -71,7 +74,17 @@ export default {
 					light: '#D6BCFA',
 					gray: '#8E9196',
 					'bg-light': '#F8F7FF'
-				}
+				},
+				// Add centralized theme colors
+				gray: theme.colors.gray,
+				blue: theme.colors.blue,
+				success: theme.colors.success,
+				error: theme.colors.error,
+				warning: theme.colors.warning,
+				info: theme.colors.info,
+				green: theme.colors.green,
+				red: theme.colors.red,
+				yellow: theme.colors.yellow,
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

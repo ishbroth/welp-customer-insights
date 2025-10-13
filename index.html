@@ -13,12 +13,140 @@
     <meta property="og:type" content="website" />
 
     <meta name="twitter:card" content="summary_large_image" />
+
+    <style>
+      /* Initial loading screen - shown before React loads */
+      #initial-loading-screen {
+        position: fixed;
+        inset: 0;
+        background-color: #ea384c;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Hide once React takes over */
+      .react-loaded #initial-loading-screen {
+        display: none;
+      }
+
+      @keyframes clockwise-highlight {
+        0%, 80% {
+          fill: white;
+        }
+        20%, 60% {
+          fill: #3b82f6;
+        }
+      }
+
+      .initial-arm-right {
+        animation: clockwise-highlight 0.5s ease-in-out infinite;
+        animation-delay: 0s;
+        animation-fill-mode: forwards;
+      }
+
+      .initial-arm-bottom-right {
+        animation: clockwise-highlight 0.5s ease-in-out infinite;
+        animation-delay: 0.1s;
+        animation-fill-mode: forwards;
+      }
+
+      .initial-arm-bottom-left {
+        animation: clockwise-highlight 0.5s ease-in-out infinite;
+        animation-delay: 0.2s;
+        animation-fill-mode: forwards;
+      }
+
+      .initial-arm-top-left {
+        animation: clockwise-highlight 0.5s ease-in-out infinite;
+        animation-delay: 0.3s;
+        animation-fill-mode: forwards;
+      }
+
+      .initial-period {
+        animation: clockwise-highlight 0.5s ease-in-out infinite;
+        animation-delay: 0.4s;
+        animation-fill-mode: forwards;
+      }
+    </style>
   </head>
 
   <body>
+    <!-- Initial loading screen - shows immediately before React loads -->
+    <div id="initial-loading-screen">
+      <div>
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <g transform="translate(100, 100) rotate(12)">
+            <!-- Right arm (0 degrees) -->
+            <path
+              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+              fill="white"
+              class="initial-arm-right"
+            />
+
+            <!-- Bottom-right diagonal arm (72 degrees) -->
+            <g transform="rotate(72)">
+              <path
+                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+                fill="white"
+                class="initial-arm-bottom-right"
+              />
+            </g>
+
+            <!-- Bottom-left diagonal arm (144 degrees) -->
+            <g transform="rotate(144)">
+              <path
+                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+                fill="white"
+                class="initial-arm-bottom-left"
+              />
+            </g>
+
+            <!-- Top-left diagonal arm (216 degrees) -->
+            <g transform="rotate(216)">
+              <path
+                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+                fill="white"
+                class="initial-arm-top-left"
+              />
+            </g>
+
+            <!-- Period positioned at 288 degrees -->
+            <circle
+              cx="7.5"
+              cy="-20"
+              r="8"
+              fill="white"
+              class="initial-period"
+            />
+          </g>
+        </svg>
+      </div>
+    </div>
+
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      // Hide initial loading screen once React has mounted
+      window.addEventListener('DOMContentLoaded', () => {
+        const checkReactLoaded = setInterval(() => {
+          const root = document.getElementById('root');
+          if (root && root.children.length > 0) {
+            document.body.classList.add('react-loaded');
+            clearInterval(checkReactLoaded);
+          }
+        }, 50);
+
+        // Fallback: hide after 5 seconds regardless
+        setTimeout(() => {
+          document.body.classList.add('react-loaded');
+          clearInterval(checkReactLoaded);
+        }, 5000);
+      });
+    </script>
   </body>
 </html>
