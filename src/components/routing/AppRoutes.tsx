@@ -31,6 +31,7 @@ import HowItWorks from "@/pages/HowItWorks";
 import FAQ from "@/pages/FAQ";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import Support from "@/pages/Support";
 import VerifyLicense from "@/pages/VerifyLicense";
 import NewReview from "@/pages/NewReview";
 import DebugAccount from "@/pages/DebugAccount";
@@ -86,6 +87,7 @@ const AppRoutes = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/debug-account" element={<DebugAccount />} />
             
             <Route path="/review/new" element={
