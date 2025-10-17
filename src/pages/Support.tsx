@@ -1,10 +1,12 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AIChatAssistant from "@/components/AIChatAssistant";
 
 export default function Support() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <AIChatAssistant />
 
       {/* Hero Section */}
       <div className="bg-[#ea384c] text-white py-12 px-4 text-center">
