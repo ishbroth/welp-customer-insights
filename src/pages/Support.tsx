@@ -102,7 +102,7 @@ export default function Support() {
 
               <div className="bg-gray-50 p-6 rounded-lg border-l-3 border-[#ea384c]">
                 <h3 className="text-xl font-semibold mb-3 text-gray-900">Are my conversations private?</h3>
-                <p className="text-gray-700">Yes! Private conversations between users are end-to-end encrypted and only visible to the participants. We do not read or share your private messages except as required by law.</p>
+                <p className="text-gray-700">Conversations on Welp can be viewed by other business owners or customers who are participants in the conversation, but are not immediately accessible to Welp staff. Welp staff may access conversations only when necessary for moderation, security purposes, or as required by law.</p>
               </div>
 
               <div className="bg-gray-50 p-6 rounded-lg border-l-3 border-[#ea384c]">
