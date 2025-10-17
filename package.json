@@ -17,7 +17,6 @@
     "@capacitor/core": "^7.4.0",
     "@capacitor/ios": "^7.4.0",
     "@capacitor/keyboard": "^7.0.1",
-    "@capacitor/push-notifications": "^7.0.1",
     "@capacitor/share": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
     "@hookform/resolvers": "^3.9.0",

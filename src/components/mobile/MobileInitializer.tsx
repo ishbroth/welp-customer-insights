@@ -1,13 +1,13 @@
 import React from 'react';
-import { useMobilePushNotifications } from "@/hooks/useMobilePushNotifications";
 
 /**
  * Wrapper component to initialize mobile features that depend on auth context
+ * Note: Push notifications have been removed - email-only system now
  */
 const MobileInitializer: React.FC = () => {
-  // This hook needs to be called inside AuthProvider context
-  useMobilePushNotifications();
-  
+  // Reserved for future mobile-specific initialization
+  // Push notifications removed - email-only notification system
+
   // This component doesn't render anything visible
   return null;
 };

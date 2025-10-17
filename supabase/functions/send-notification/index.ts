@@ -1,11 +1,16 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { sendNotification, createBaseEmail } from '../_shared/notifications/index.ts';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': '*',
+  'Content-Type': 'application/json'
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' } })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
@@ -16,7 +21,7 @@ serve(async (req) => {
 
     if (type === 'review_report') {
       subject = `Review Report Submitted - Review ID: ${data.reviewId}`
-      htmlContent = `
+      const reportContent = `
         <h2>Review Report Submitted</h2>
         <p><strong>Reporter Information:</strong></p>
         <ul>
@@ -24,57 +29,49 @@ serve(async (req) => {
           <li><strong>Email:</strong> ${data.reporterEmail}</li>
           ${data.reporterPhone ? `<li><strong>Phone:</strong> ${data.reporterPhone}</li>` : ''}
         </ul>
-        
+
         <p><strong>Review ID:</strong> ${data.reviewId}</p>
         <p><strong>Is this review about the reporter?</strong> ${data.isAboutReporter ? 'Yes' : 'No'}</p>
-        
+
         ${data.isAboutReporter && data.complaint ? `
           <p><strong>Complaint:</strong></p>
           <p>${data.complaint}</p>
         ` : ''}
-        
+
         <p>Please review this report and take appropriate action.</p>
-      `
+      `;
+
+      htmlContent = createBaseEmail({
+        title: 'Review Report',
+        previewText: 'New review report submitted',
+        content: reportContent,
+        footerText: 'This is an automated report from Welp.',
+      });
     }
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'reports@trustyreview.com',
-        to: [recipientEmail],
-        subject: subject,
-        html: htmlContent,
-      }),
-    })
+    // Use unified notification system
+    const result = await sendNotification({
+      to: { email: recipientEmail },
+      subject,
+      emailHtml: htmlContent,
+    });
 
-    const result = await res.json()
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: result.error }),
+        { status: 500, headers: corsHeaders }
+      )
+    }
 
     return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': '*'
-        } 
-      }
+      JSON.stringify({ success: true, messageId: result.channels.email?.messageId }),
+      { headers: corsHeaders }
     )
   } catch (error) {
     console.error('Error sending notification:', error)
     return new Response(
       JSON.stringify({ error: 'Failed to send notification' }),
-      { 
-        status: 500,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': '*'
-        } 
-      }
+      { status: 500, headers: corsHeaders }
     )
   }
 })
