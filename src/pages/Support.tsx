@@ -23,12 +23,10 @@ export default function Support() {
           <div className="bg-gradient-to-br from-[#ea384c] to-[#d02e40] text-white p-8 rounded-xl shadow-lg mb-12">
             <h2 className="text-3xl font-bold mb-4">Get in Touch</h2>
             <p className="mb-6">Need help? Have questions? We're here for you!</p>
-            <div className="space-y-2 mb-4">
-              <p><strong>Email Support:</strong> <a href="mailto:support@mywelp.com" className="text-blue-200 hover:text-white font-semibold">support@mywelp.com</a></p>
-              <p><strong>Privacy Questions:</strong> <a href="mailto:privacy@mywelp.com" className="text-blue-200 hover:text-white font-semibold">privacy@mywelp.com</a></p>
-              <p><strong>Business Inquiries:</strong> <a href="mailto:hello@mywelp.com" className="text-blue-200 hover:text-white font-semibold">hello@mywelp.com</a></p>
-            </div>
-            <p className="text-sm opacity-90">We typically respond within 24 hours (Monday-Friday)</p>
+            <p className="mb-4">
+              <strong>Email:</strong> <a href="mailto:support@mywelp.com" className="text-blue-200 hover:text-white font-semibold">support@mywelp.com</a>
+            </p>
+            <p className="text-sm opacity-90">We typically respond within 72 hours (Monday-Friday)</p>
           </div>
 
           {/* Quick Links */}
@@ -277,19 +275,9 @@ export default function Support() {
             <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Contact Information</h2>
 
             <h3 className="text-2xl font-semibold mt-6 mb-4">Support Channels</h3>
-            <p className="text-gray-700 mb-4">
-              <strong>Email Support:</strong> <a href="mailto:support@mywelp.com" className="text-[#ea384c] hover:underline">support@mywelp.com</a><br />
-              Response time: Within 24 hours (Monday-Friday)
-            </p>
-
-            <p className="text-gray-700 mb-4">
-              <strong>Privacy Inquiries:</strong> <a href="mailto:privacy@mywelp.com" className="text-[#ea384c] hover:underline">privacy@mywelp.com</a><br />
-              For data deletion requests, privacy questions, or GDPR/CCPA requests
-            </p>
-
             <p className="text-gray-700 mb-6">
-              <strong>Business Partnerships:</strong> <a href="mailto:hello@mywelp.com" className="text-[#ea384c] hover:underline">hello@mywelp.com</a><br />
-              For partnership opportunities and business inquiries
+              <strong>Email:</strong> <a href="mailto:support@mywelp.com" className="text-[#ea384c] hover:underline">support@mywelp.com</a><br />
+              Response time: Within 72 hours (Monday-Friday)
             </p>
 
             <h3 className="text-2xl font-semibold mt-6 mb-4">Website</h3>
