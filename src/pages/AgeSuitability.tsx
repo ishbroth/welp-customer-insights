@@ -185,7 +185,7 @@ export default function AgeSuitability() {
               If you have questions about our age suitability policy or need to report a concern, please contact us:
             </p>
 
-            <div className="bg-gradient-to-br from-primary to-primary/90 text-white p-6 rounded-lg">
+            <div className="bg-gradient-to-br from-[#ea384c] to-[#d02e40] text-white p-6 rounded-lg">
               <p className="mb-2"><strong>Email:</strong> <a href="mailto:support@mywelp.com" className="text-blue-200 hover:text-white">support@mywelp.com</a></p>
               <p className="mb-2"><strong>Age-Related Concerns:</strong> <a href="mailto:privacy@mywelp.com" className="text-blue-200 hover:text-white">privacy@mywelp.com</a></p>
               <p><strong>Response Time:</strong> Within 24 hours (Monday-Friday)</p>
