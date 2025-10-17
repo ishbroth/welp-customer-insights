@@ -7,7 +7,7 @@ export default function AgeSuitability() {
       <Header />
 
       {/* Hero Section */}
-      <div className="bg-primary text-white py-12 px-4 text-center">
+      <div className="bg-[#ea384c] text-white py-12 px-4 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">Age Suitability</h1>
         <p className="text-xl md:text-2xl opacity-90">
           Recommended for users 18 years and older
@@ -20,9 +20,9 @@ export default function AgeSuitability() {
 
           {/* Age Recommendation */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Age Recommendation</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Age Recommendation</h2>
 
-            <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-primary mb-6">
+            <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-[#ea384c] mb-6">
               <p className="text-lg text-gray-800">
                 <strong>Welp is designed for adults 18 years of age and older.</strong>
               </p>
@@ -39,7 +39,7 @@ export default function AgeSuitability() {
 
           {/* Why 18+ */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Why 18+ Only?</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Why 18+ Only?</h2>
 
             <div className="space-y-4">
               <div className="bg-gray-50 p-6 rounded-lg">
@@ -66,7 +66,7 @@ export default function AgeSuitability() {
 
           {/* Content Moderation */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Content Moderation & Safety</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Content Moderation & Safety</h2>
 
             <p className="text-gray-700 mb-4">
               While Welp is designed for adult users, we take content safety seriously:
@@ -90,7 +90,7 @@ export default function AgeSuitability() {
 
           {/* Prohibited Content */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Prohibited Content</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Prohibited Content</h2>
 
             <p className="text-gray-700 mb-4">The following content is strictly prohibited on Welp:</p>
 
@@ -122,14 +122,14 @@ export default function AgeSuitability() {
 
           {/* Parental Responsibility */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Parental Responsibility</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Parental Responsibility</h2>
 
             <div className="bg-gray-50 p-6 rounded-lg">
               <p className="text-gray-700 mb-4">
                 Welp is not designed for use by anyone under 18 years of age. Parents and guardians are responsible for monitoring their children's online activities.
               </p>
               <p className="text-gray-700 mb-4">
-                If you are a parent or guardian and believe your child has created an account on Welp while under 18, please contact us immediately at <a href="mailto:support@mywelp.com" className="text-primary hover:underline">support@mywelp.com</a>, and we will delete the account.
+                If you are a parent or guardian and believe your child has created an account on Welp while under 18, please contact us immediately at <a href="mailto:support@mywelp.com" className="text-[#ea384c] hover:underline">support@mywelp.com</a>, and we will delete the account.
               </p>
               <p className="text-gray-700">
                 We do not knowingly collect or maintain information from users under 18 years of age. If we become aware that a user is under 18, we will promptly delete their account and all associated data.
@@ -139,9 +139,9 @@ export default function AgeSuitability() {
 
           {/* App Store Rating */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">App Store Age Rating</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">App Store Age Rating</h2>
 
-            <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-primary">
+            <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-[#ea384c]">
               <p className="text-gray-700 mb-4">
                 <strong>Apple App Store Rating:</strong> 17+ (Unrestricted Web Access)
               </p>
@@ -159,7 +159,7 @@ export default function AgeSuitability() {
 
           {/* User Agreement */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">User Agreement</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">User Agreement</h2>
 
             <div className="bg-gray-50 p-6 rounded-lg">
               <p className="text-gray-700 mb-4">By using Welp, you agree that:</p>
@@ -179,7 +179,7 @@ export default function AgeSuitability() {
 
           {/* Contact Section */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Questions or Concerns?</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Questions or Concerns?</h2>
 
             <p className="text-gray-700 mb-4">
               If you have questions about our age suitability policy or need to report a concern, please contact us:
@@ -194,10 +194,10 @@ export default function AgeSuitability() {
 
           {/* Related Pages */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-6 border-l-4 border-primary pl-4">Related Information</h2>
+            <h2 className="text-3xl font-bold mb-6 border-l-4 border-[#ea384c] pl-4">Related Information</h2>
 
             <div className="flex flex-wrap gap-3">
-              <a href="/privacy" className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+              <a href="/privacy" className="inline-block bg-[#ea384c] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#ea384c]/90 transition-colors">
                 Privacy Policy
               </a>
               <a href="/terms" className="inline-block bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
