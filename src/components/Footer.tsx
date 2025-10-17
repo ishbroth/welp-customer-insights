@@ -36,8 +36,10 @@ const Footer = () => {
             <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">Support</h4>
             <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
               <li><button onClick={() => handleLinkClick("/faq")} className="hover:text-welp-primary transition-colors cursor-pointer">FAQ</button></li>
+              <li><button onClick={() => handleLinkClick("/support")} className="hover:text-welp-primary transition-colors cursor-pointer">Support</button></li>
               <li><button onClick={() => handleLinkClick("/terms")} className="hover:text-welp-primary transition-colors cursor-pointer">Terms of Service</button></li>
               <li><button onClick={() => handleLinkClick("/privacy")} className="hover:text-welp-primary transition-colors cursor-pointer">Privacy Policy</button></li>
+              <li><button onClick={() => handleLinkClick("/age-suitability")} className="hover:text-welp-primary transition-colors cursor-pointer">Age Suitability</button></li>
             </ul>
           </div>
           
