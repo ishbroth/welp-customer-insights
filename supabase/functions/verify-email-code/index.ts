@@ -15,9 +15,28 @@ serve(async (req) => {
 
   try {
     const { email, code, accountType, userData } = await req.json();
-    
-    if (!email || !code || !accountType || !userData) {
-      throw new Error("Missing required fields");
+
+    console.log("Received verification request:", {
+      email,
+      code: code ? '******' : 'MISSING',
+      accountType,
+      userDataKeys: userData ? Object.keys(userData) : 'MISSING'
+    });
+
+    if (!email) {
+      throw new Error("Missing required field: email");
+    }
+    if (!code) {
+      throw new Error("Missing required field: code");
+    }
+    if (!accountType) {
+      throw new Error("Missing required field: accountType");
+    }
+    if (!userData) {
+      throw new Error("Missing required field: userData");
+    }
+    if (!userData.password) {
+      throw new Error("Missing required field: userData.password");
     }
 
     console.log("Verifying email code for:", email);
