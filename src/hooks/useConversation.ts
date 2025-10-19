@@ -115,21 +115,21 @@ export const useConversation = (reviewId: string) => {
   // Add a message to existing conversation
   const addMessage = async (content: string) => {
     if (!currentUser) return;
-    
+
     try {
       setIsSubmitting(true);
       await conversationService.addMessage(
-        reviewId, 
-        currentUser.id, 
-        currentUser.type as 'business' | 'customer', 
+        reviewId,
+        currentUser.id,
+        currentUser.type as 'business' | 'customer',
         content
       );
-      
+
       toast({
         title: "Response sent",
         description: "Your response has been sent."
       });
-      
+
       // Refresh conversation data
       await fetchConversation();
     } catch (error) {
@@ -142,6 +142,52 @@ export const useConversation = (reviewId: string) => {
       throw error;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Edit a message
+  const editMessage = async (messageId: string, content: string) => {
+    try {
+      await conversationService.updateMessage(messageId, content);
+
+      toast({
+        title: "Message updated",
+        description: "Your message has been updated."
+      });
+
+      // Refresh conversation data
+      await fetchConversation();
+    } catch (error) {
+      hookLogger.error('Error editing message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update message",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  // Delete a message
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await conversationService.deleteMessage(messageId);
+
+      toast({
+        title: "Message deleted",
+        description: "Your message has been deleted."
+      });
+
+      // Refresh conversation data
+      await fetchConversation();
+    } catch (error) {
+      hookLogger.error('Error deleting message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete message",
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 
@@ -160,6 +206,8 @@ export const useConversation = (reviewId: string) => {
     isSubmitting,
     startConversation,
     addMessage,
+    editMessage,
+    deleteMessage,
     refreshConversation: fetchConversation
   };
 };

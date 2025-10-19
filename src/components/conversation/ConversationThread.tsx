@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Edit2, Trash2 } from "lucide-react";
 import { ConversationMessage } from "@/services/conversationService";
 import { formatRelative } from "@/utils/dateUtils";
 import { logger } from '@/utils/logger';
@@ -14,6 +14,8 @@ interface ConversationThreadProps {
   collapsed?: boolean;
   maxCollapsedMessages?: number;
   hasAccess?: boolean; // Whether user has access to click names
+  onEditMessage?: (messageId: string, content: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 const ConversationThread: React.FC<ConversationThreadProps> = ({
@@ -21,7 +23,9 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
   userProfiles,
   collapsed = false,
   maxCollapsedMessages = 2,
-  hasAccess = false
+  hasAccess = false,
+  onEditMessage,
+  onDeleteMessage
 }) => {
   const componentLogger = logger.withContext('ConversationThread');
   const [isExpanded, setIsExpanded] = useState(!collapsed);
@@ -123,10 +127,10 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span 
+                <span
                   className={`font-medium text-sm ${
-                    hasAccess 
-                      ? "text-blue-600 cursor-pointer hover:text-blue-800 transition-colors" 
+                    hasAccess
+                      ? "text-blue-600 cursor-pointer hover:text-blue-800 transition-colors"
                       : "text-foreground"
                   }`}
                   onClick={hasAccess ? () => handleNameClick(message.author_id, message.author_type) : undefined}
@@ -139,8 +143,34 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                   {message.author_type}
                 </span>
+                {message.author_id === currentUser?.id && (onEditMessage || onDeleteMessage) && (
+                  <div className="ml-auto flex gap-1">
+                    {onEditMessage && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditMessage(message.id, message.content)}
+                        className="h-6 w-6 p-0 hover:bg-primary/10"
+                        title="Edit message"
+                      >
+                        <Edit2 className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                      </Button>
+                    )}
+                    {onDeleteMessage && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteMessage(message.id)}
+                        className="h-6 w-6 p-0 hover:bg-destructive/10"
+                        title="Delete message"
+                      >
+                        <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
-              
+
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {message.content}
               </p>

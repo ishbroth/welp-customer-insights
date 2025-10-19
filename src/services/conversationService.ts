@@ -136,6 +136,32 @@ export const conversationService = {
     return data;
   },
 
+  // Update a conversation message
+  async updateMessage(messageId: string, content: string): Promise<void> {
+    const { error } = await supabase
+      .from('review_conversations')
+      .update({ content, updated_at: new Date().toISOString() })
+      .eq('id', messageId);
+
+    if (error) {
+      serviceLogger.error('Error updating message:', error);
+      throw error;
+    }
+  },
+
+  // Delete a conversation message
+  async deleteMessage(messageId: string): Promise<void> {
+    const { error } = await supabase
+      .from('review_conversations')
+      .delete()
+      .eq('id', messageId);
+
+    if (error) {
+      serviceLogger.error('Error deleting message:', error);
+      throw error;
+    }
+  },
+
   // Check if user can respond (conversation exists and user is participant and it's their turn)
   async canUserRespond(reviewId: string, userId: string, userType: 'business' | 'customer', customerId?: string): Promise<boolean> {
     // First, check if the review is anonymous
