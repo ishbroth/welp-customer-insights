@@ -62,7 +62,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Welp <onboarding@resend.dev>",
+        from: "Welp <noreply@mywelp.com>",
         to: [email],
         subject: "Your Welp Verification Code",
         html: `
