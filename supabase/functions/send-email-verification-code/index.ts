@@ -62,7 +62,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "noreply@mywelp.com",
+        from: "Welp <onboarding@resend.dev>",
         to: [email],
         subject: "Your Welp Verification Code",
         html: `
@@ -108,13 +108,17 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error sending verification code:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to send verification code";
+    console.error("❌ ERROR in send-email-verification-code:", errorMessage);
+    console.error("Full error details:", error);
+
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        message: error instanceof Error ? error.message : "Failed to send verification code" 
+      JSON.stringify({
+        success: false,
+        message: errorMessage,
+        error: error instanceof Error ? error.stack : String(error)
       }),
-      { 
+      {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
