@@ -221,9 +221,11 @@ const EmailVerificationSuccess = () => {
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                {accountType === 'business' && isVerified 
+                {accountType === 'business' && isVerified
                   ? "You're all set! Your verified business account is ready to use."
-                  : "Your account is ready to use. You can always verify your license later from your profile."
+                  : accountType === 'business'
+                  ? "Your account is ready to use. You can always verify your license later from your profile."
+                  : "Your account is ready to use."
                 }
               </p>
             </div>
