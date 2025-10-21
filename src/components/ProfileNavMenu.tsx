@@ -2,12 +2,13 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { 
-  CreditCard, 
-  Settings, 
-  User, 
-  FileText, 
+import {
+  CreditCard,
+  Settings,
+  User,
+  FileText,
   Bell,
+  LogOut,
 } from "lucide-react";
 
 interface ProfileNavMenuProps {
@@ -144,30 +145,28 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
               Billing
             </Link>
             
-            <Link 
-              to="/notifications" 
+            <Link
+              to="/notifications"
               onClick={handleLinkClick}
               className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
-                location.pathname === "/notifications" 
-                ? "bg-gray-100 text-primary" 
+                location.pathname === "/notifications"
+                ? "bg-gray-100 text-primary"
                 : "text-gray-700"
               }`}
             >
               <Bell className="mr-4 h-6 w-6 text-gray-500" />
               Notifications
             </Link>
+
+            {/* Logout button moved up with other menu items */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors text-gray-700"
+            >
+              <LogOut className="mr-4 h-6 w-6 text-gray-500" />
+              Log Out
+            </button>
           </nav>
-        </div>
-        
-        {/* Footer */}
-        <div className="border-t p-4">
-          <Button 
-            variant="outline" 
-            className="w-full h-12 text-base"
-            onClick={handleLogout}
-          >
-            Log Out
-          </Button>
         </div>
       </div>
     </>
