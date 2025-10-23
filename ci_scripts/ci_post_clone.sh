@@ -105,12 +105,23 @@ fi
 
 echo "Running pod install..."
 cd ios/App
-if ! pod install; then
+pwd
+echo "Contents before pod install:"
+ls -la
+echo ""
+echo "Checking node_modules location (should be at ../../node_modules):"
+ls -la ../../node_modules/@capacitor/ || echo "ERROR: node_modules not found at expected location!"
+echo ""
+
+if ! pod install --repo-update --verbose; then
     echo "ERROR: pod install failed!"
-    echo "Contents of ios/App directory:"
+    echo "Contents of ios/App directory after failed install:"
     ls -la
     exit 1
 fi
+
+echo "Contents after pod install:"
+ls -la
 cd ../..
 
 echo "✓ pod install completed"
@@ -152,6 +163,21 @@ if [ ! -f "ios/App/Pods/Target Support Files/Pods-mywelp/Pods-mywelp.release.xcc
 fi
 
 echo "✓ Pods-mywelp.release.xcconfig found"
+
+# Show the actual file paths for debugging
+echo ""
+echo "=== File Path Verification ==="
+echo "Working directory: $(pwd)"
+echo "Pods directory: $(ls -ld ios/App/Pods/)"
+echo "Pods-mywelp.release.xcconfig full path:"
+realpath "ios/App/Pods/Target Support Files/Pods-mywelp/Pods-mywelp.release.xcconfig" || echo "ERROR: realpath failed"
+echo ""
+echo "Workspace file:"
+ls -l ios/App/App.xcworkspace/contents.xcworkspacedata
+cat ios/App/App.xcworkspace/contents.xcworkspacedata
+echo "=== End Path Verification ==="
+echo ""
+
 echo "✓ CocoaPods installed and verified successfully"
 
 # Verify workspace exists
