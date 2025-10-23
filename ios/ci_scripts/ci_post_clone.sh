@@ -91,7 +91,20 @@ echo "✓ Capacitor synced"
 echo "Installing CocoaPods dependencies..."
 (cd ios/App && pod install)
 
-echo "✓ CocoaPods installed"
+# Verify Pods were installed correctly
+if [ ! -d "ios/App/Pods" ]; then
+    echo "ERROR: Pods directory not found after pod install!"
+    exit 1
+fi
+
+if [ ! -f "ios/App/Pods/Target Support Files/Pods-mywelp/Pods-mywelp.release.xcconfig" ]; then
+    echo "ERROR: Pods-mywelp.release.xcconfig not found!"
+    echo "Checking what files exist in Pods/Target Support Files:"
+    ls -la "ios/App/Pods/Target Support Files/" || echo "Target Support Files directory not found"
+    exit 1
+fi
+
+echo "✓ CocoaPods installed and verified"
 
 echo "=========================================="
 echo "Post-Clone Script Complete!"
