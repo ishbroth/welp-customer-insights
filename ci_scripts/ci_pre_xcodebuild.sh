@@ -9,8 +9,11 @@ echo "=========================================="
 echo "Pre-Xcodebuild Script"
 echo "=========================================="
 
+# The working directory is already at the repository root when Xcode Cloud runs this script
+echo "Current directory: $(pwd)"
+
 # Verify that web assets were built
-if [ ! -d "../dist" ]; then
+if [ ! -d "dist" ]; then
     echo "ERROR: dist directory not found!"
     echo "Web build may have failed."
     exit 1

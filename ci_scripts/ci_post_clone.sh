@@ -10,8 +10,8 @@ echo "=========================================="
 echo "Starting Xcode Cloud Post-Clone Script"
 echo "=========================================="
 
-# Navigate to project root
-cd ..
+# The working directory is already at the repository root when Xcode Cloud runs this script
+# (it executes ci_scripts/ci_post_clone.sh from the repo root)
 
 echo "Current directory: $(pwd)"
 echo "Node version: $(node --version)"
