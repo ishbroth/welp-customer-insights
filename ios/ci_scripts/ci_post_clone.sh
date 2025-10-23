@@ -89,8 +89,7 @@ echo "✓ Capacitor synced"
 
 # Install CocoaPods dependencies
 echo "Installing CocoaPods dependencies..."
-cd ios/App
-pod install
+(cd ios/App && pod install)
 
 echo "✓ CocoaPods installed"
 
