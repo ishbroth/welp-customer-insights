@@ -87,6 +87,13 @@ npx cap sync ios
 
 echo "✓ Capacitor synced"
 
+# Install CocoaPods dependencies
+echo "Installing CocoaPods dependencies..."
+cd ios/App
+pod install
+
+echo "✓ CocoaPods installed"
+
 echo "=========================================="
 echo "Post-Clone Script Complete!"
 echo "=========================================="
