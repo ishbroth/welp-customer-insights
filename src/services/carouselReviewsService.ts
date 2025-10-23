@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { Review } from '@/types';
 import { logger } from '@/utils/logger';
 
 const serviceLogger = logger.withContext('CarouselReviews');
-
-const SUPABASE_URL = "https://yftvcixhifvrovwhtgtj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdHZjaXhoaWZ2cm92d2h0Z3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5ODY1ODQsImV4cCI6MjA2MTU2MjU4NH0.dk0-iM54olbkNnCEb92-KNsIeDw9u2owEg4B-fh5ggc";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const fetchCarouselReviews = async (): Promise<Review[]> => {
   try {

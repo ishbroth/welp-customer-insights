@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
-
-const SUPABASE_URL = "https://yftvcixhifvrovwhtgtj.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmdHZjaXhoaWZ2cm92d2h0Z3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5ODY1ODQsImV4cCI6MjA2MTU2MjU4NH0.dk0-iM54olbkNnCEb92-KNsIeDw9u2owEg4B-fh5ggc";
-
-const supabaseSimple = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const serviceLogger = logger.withContext('Reviews');
 
@@ -20,7 +15,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     let allReviews: any[] = [];
 
     // Search 1: Reviews claimed by this customer
-    const { data: claimedReviews, error: claimedError } = await supabaseSimple
+    const { data: claimedReviews, error: claimedError } = await supabase
       .from('review_claims')
       .select(`
         reviews (
@@ -42,7 +37,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     if (currentUser?.name) {
       serviceLogger.debug("Searching by customer name:", currentUser.name);
 
-      const { data: nameReviews, error: nameError } = await supabaseSimple
+      const { data: nameReviews, error: nameError } = await supabase
         .from('reviews')
         .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, is_anonymous, created_at, updated_at, deleted_at')
         .ilike('customer_name', `%${currentUser.name}%`)
@@ -72,7 +67,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
 
     if (businessIds.length > 0) {
       // Fetch business profiles
-      const { data: businessProfiles, error: profileError } = await supabaseSimple
+      const { data: businessProfiles, error: profileError } = await supabase
         .from('profiles')
         .select('*, business_category')
         .in('id', businessIds)
@@ -85,7 +80,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       }
 
       // Fetch business verification statuses
-      const { data: businessInfos, error: businessError } = await supabaseSimple
+      const { data: businessInfos, error: businessError } = await supabase
         .from('business_info')
         .select('*')
         .in('id', businessIds);
@@ -102,7 +97,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     let responsesMap = new Map();
 
     if (reviewIds.length > 0) {
-      const { data: responses, error: responsesError } = await supabaseSimple
+      const { data: responses, error: responsesError } = await supabase
         .from('responses')
         .select('*')
         .in('review_id', reviewIds)
@@ -163,7 +158,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
     // For business users, fetch reviews they've written
     serviceLogger.debug("Fetching reviews for business account...");
 
-    const { data: businessReviews, error: businessError } = await supabaseSimple
+    const { data: businessReviews, error: businessError } = await supabase
       .from('reviews')
       .select('id, business_id, content, rating, customer_name, customer_nickname, customer_business_name, customer_address, customer_city, customer_state, customer_zipcode, customer_phone, associates, is_anonymous, created_at, updated_at, deleted_at')
       .eq('business_id', currentUser.id)
