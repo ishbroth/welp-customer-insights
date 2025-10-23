@@ -25,6 +25,7 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     const componentLogger = useMemo(() => logger.withContext('AddressAutocomplete'), []);
     const inputRef = useRef<HTMLInputElement>(null);
     const [inputValue, setInputValue] = useState(props.value || "");
+    const isAutocompletingRef = useRef(false);
 
     const { isGoogleReady, googleMapsStatus } = useGoogleMapsInit();
     
@@ -54,8 +55,14 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     }, [onAddressComponentsExtracted, componentLogger]);
 
     const handleSetInputValue = useCallback((value: string) => {
-      componentLogger.debug('setInputValue called', { value });
+      componentLogger.debug('setInputValue called from autocomplete', { value });
+      // Set flag to prevent onChange from updating parent
+      isAutocompletingRef.current = true;
       setInputValue(value);
+      // Reset flag after a short delay to allow normal typing again
+      setTimeout(() => {
+        isAutocompletingRef.current = false;
+      }, 100);
       componentLogger.debug('setInputValue completed');
     }, [componentLogger]);
     
@@ -69,26 +76,33 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
     });
 
     useEffect(() => {
-      componentLogger.debug('props.value useEffect', { propsValue: props.value, inputValue });
+      componentLogger.debug('props.value useEffect', { propsValue: props.value, currentInputValue: inputValue });
       if (props.value !== undefined && props.value !== inputValue) {
         componentLogger.debug('Updating inputValue from props', { propsValue: props.value });
         setInputValue(props.value as string);
       }
-    }, [props.value, inputValue]);
+    }, [props.value, componentLogger]); // Don't include inputValue to avoid fighting with autocomplete
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      componentLogger.debug('Manual input change', { value });
+      componentLogger.debug('Input change event', { value, isAutocompleting: isAutocompletingRef.current });
 
-      // Allow unrestricted typing for manual entry
+      // Always update local input value
       setInputValue(value);
 
-      // Call callbacks for manual typing
+      // Don't call parent callbacks if this is an autocomplete-initiated change
+      if (isAutocompletingRef.current) {
+        componentLogger.debug('Skipping callbacks - autocomplete in progress');
+        return;
+      }
+
+      // Call callbacks for manual typing only
       if (onAddressChange) {
         componentLogger.debug('Calling onAddressChange for manual input', { value });
         onAddressChange(value);
       }
       if (onChange) {
+        componentLogger.debug('Calling onChange for manual input');
         onChange(e);
       }
     };

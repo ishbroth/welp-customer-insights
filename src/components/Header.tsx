@@ -144,25 +144,16 @@ const Header = ({ isProfilePage = false }: HeaderProps) => {
               )}
               
               {currentUser ? (
-                <div className="flex items-center space-x-4">
-                  <Link to="/profile" className="flex items-center space-x-2 text-welp-dark hover:text-[#ea384c] transition-colors">
-                    <Avatar className="h-8 w-8">
-                      {currentUser.avatar ? (
-                        <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                      ) : (
-                        <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-                      )}
-                    </Avatar>
-                    <span className="hidden md:inline">{currentUser.name}</span>
-                  </Link>
-                  <Button 
-                    variant="ghost"
-                    className="flex items-center text-welp-dark hover:text-[#ea384c]"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-1 h-4 w-4" /> Logout
-                  </Button>
-                </div>
+                <Link to="/profile" className="flex items-center space-x-2 text-welp-dark hover:text-[#ea384c] transition-colors">
+                  <Avatar className="h-8 w-8">
+                    {currentUser.avatar ? (
+                      <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                    ) : (
+                      <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span className="hidden md:inline">{currentUser.name}</span>
+                </Link>
               ) : (
                 <>
                   <Link

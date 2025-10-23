@@ -12,16 +12,65 @@ const authLogger = logger.withContext('UserInitialization');
 export const useUserInitialization = () => {
   const initUserData = async (userId: string, forceRefresh: boolean = false) => {
     authLogger.debug("Initializing user data for:", userId);
-    
+
     try {
       // Fetch user profile
-      const { data: profile, error: profileError } = await supabase
+      let { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (profileError) {
+      // If profile doesn't exist (PGRST116), create it from auth user data
+      if (profileError && profileError.code === 'PGRST116') {
+        authLogger.warn("Profile not found, creating from auth user data:", userId);
+
+        // Get auth user data
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !authUser) {
+          authLogger.error("Error fetching auth user:", authError);
+          return { userProfile: null, accessResources: [] };
+        }
+
+        // Extract user metadata
+        const userMetadata = authUser.user_metadata || {};
+        const accountType = userMetadata.account_type || 'customer';
+
+        // Create profile from auth data
+        const newProfile = {
+          id: authUser.id,
+          email: authUser.email,
+          name: userMetadata.name || userMetadata.business_name || '',
+          type: accountType,
+          phone: userMetadata.phone || '',
+          address: userMetadata.address || '',
+          city: userMetadata.city || '',
+          state: userMetadata.state || '',
+          zipcode: userMetadata.zipcode || userMetadata.zip_code || '',
+          first_name: userMetadata.first_name || '',
+          last_name: userMetadata.last_name || '',
+          avatar: userMetadata.avatar || null,
+          bio: userMetadata.bio || null,
+          business_id: userMetadata.business_id || null,
+        };
+
+        authLogger.info("Creating new profile:", newProfile);
+
+        const { data: insertedProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+
+        if (insertError) {
+          authLogger.error("Error creating profile:", insertError);
+          return { userProfile: null, accessResources: [] };
+        }
+
+        profile = insertedProfile;
+        authLogger.info("Profile created successfully:", profile);
+      } else if (profileError) {
         authLogger.error("Error fetching profile:", profileError);
         return { userProfile: null, accessResources: [] };
       }

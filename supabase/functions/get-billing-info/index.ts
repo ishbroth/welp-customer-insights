@@ -54,10 +54,17 @@ serve(async (req) => {
     
     // Check if user exists in Stripe
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
+
     if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      throw new Error("No Stripe customer found for this user");
+      logStep("No Stripe customer found - returning empty billing info");
+      // Return empty billing info for users without Stripe accounts (normal for new users)
+      return new Response(JSON.stringify({
+        payment_methods: [],
+        transactions: []
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     // Get customer ID

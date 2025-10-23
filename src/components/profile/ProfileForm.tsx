@@ -6,16 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
-import { profileSchema, ProfileFormValues } from "./types";
+import { getProfileSchema, ProfileFormValues } from "./types";
 import PersonalInfoForm from "./PersonalInfoForm";
 import ContactInfoForm from "./ContactInfoForm";
 import BusinessInfoForm from "./BusinessInfoForm";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/utils/logger";
 
 const ProfileForm = () => {
-  const componentLogger = logger.withContext('ProfileForm');
+  const componentLogger = useMemo(() => logger.withContext('ProfileForm'), []);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { currentUser, updateProfile } = useAuth();
@@ -24,8 +24,11 @@ const ProfileForm = () => {
     licenseNumber: string;
   }>({ licenseType: "", licenseNumber: "" });
   const [isLoadingBusinessData, setIsLoadingBusinessData] = useState(false);
-  
+
   const isBusinessAccount = currentUser?.type === "business" || currentUser?.type === "admin";
+
+  // Get the appropriate schema based on account type
+  const profileSchema = useMemo(() => getProfileSchema(isBusinessAccount), [isBusinessAccount]);
 
   // Fetch business data from database
   useEffect(() => {
@@ -108,6 +111,11 @@ const ProfileForm = () => {
       zipCode: currentUser?.zipCode || "",
     },
   });
+
+  // Re-validate form when schema changes (e.g., when account type is loaded)
+  useEffect(() => {
+    form.trigger();
+  }, [profileSchema, form]);
 
   // Update form values when business data is loaded
   useEffect(() => {
@@ -207,23 +215,39 @@ const ProfileForm = () => {
     );
   }
 
+  const handleInvalidSubmit = (errors: any) => {
+    componentLogger.error("=== FORM VALIDATION FAILED ===");
+    componentLogger.error("Validation errors:", errors);
+
+    // Show toast with validation errors
+    const errorMessages = Object.keys(errors).map(key => {
+      return `${key}: ${errors[key]?.message || 'Invalid'}`;
+    }).join(', ');
+
+    toast({
+      title: "Please fix the following errors",
+      description: errorMessages,
+      variant: "destructive",
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="space-y-6">
         <PersonalInfoForm form={form} isBusinessAccount={isBusinessAccount} />
-        
+
         <ContactInfoForm form={form} />
 
         {/* Only render business info fields for business accounts */}
         {isBusinessAccount && <BusinessInfoForm form={form} />}
-        
+
         <div className="flex gap-4">
           <Button type="submit" className="w-full md:w-auto">
             Save Changes
           </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             className="w-full md:w-auto"
             onClick={() => navigate('/profile')}
           >

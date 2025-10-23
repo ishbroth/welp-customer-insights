@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import React from "react";
 import { useAuth } from "@/contexts/auth";
 import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -17,6 +18,18 @@ const ProfileReviews = () => {
   const { currentUser, loading, isSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { customerReviews, isLoading, fetchCustomerReviews } = useProfileReviewsFetching();
+
+  // Force refresh on mount to clear cache
+  React.useEffect(() => {
+    if (currentUser) {
+      console.log('=== CURRENT USER DEBUG ===');
+      console.log('User ID:', currentUser.id);
+      console.log('User email:', currentUser.email);
+      console.log('User name:', currentUser.name);
+      console.log('User type:', currentUser.type);
+      fetchCustomerReviews(true); // Force refresh
+    }
+  }, []);
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;

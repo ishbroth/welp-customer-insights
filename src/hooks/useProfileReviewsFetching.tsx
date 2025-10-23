@@ -144,20 +144,81 @@ export const useProfileReviewsFetching = () => {
           const uniqueBusinessIds = [...new Set(sortedMatches.map(m => m.review.business_id).filter(Boolean))];
           const businessProfilesMap = new Map();
 
+          hookLogger.info('=== BUSINESS PROFILE FETCH DEBUG ===');
+          hookLogger.info('Total reviews to process:', sortedMatches.length);
+          hookLogger.info('Unique business IDs to fetch:', uniqueBusinessIds);
+          sortedMatches.forEach(m => {
+            hookLogger.info(`Review ${m.review.id}: business_id = "${m.review.business_id}", business_id type = ${typeof m.review.business_id}`);
+          });
+          hookLogger.info('Query to execute: SELECT id, name, avatar, verified, type FROM profiles WHERE id IN', uniqueBusinessIds);
+
           if (uniqueBusinessIds.length > 0) {
             try {
-              const { data: profiles, error } = await supabase
+              hookLogger.debug('Fetching business profiles for IDs:', uniqueBusinessIds);
+
+              // Fetch from profiles table (primary source for all users)
+              hookLogger.info('Executing profiles query with IDs:', uniqueBusinessIds);
+              const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, name, avatar, verified, type')
+                .in('id', uniqueBusinessIds);
+
+              hookLogger.info('Query response:', {
+                profilesCount: profiles?.length || 0,
+                profiles: profiles,
+                error: profilesError,
+                errorCode: profilesError?.code,
+                errorMessage: profilesError?.message,
+                errorDetails: profilesError?.details
+              });
+
+              if (profilesError) {
+                hookLogger.error('Error batch fetching profiles:', profilesError);
+                hookLogger.error('Error details:', {
+                  code: profilesError.code,
+                  message: profilesError.message,
+                  details: profilesError.details,
+                  hint: profilesError.hint
+                });
+              } else if (profiles && profiles.length > 0) {
+                hookLogger.info('Found profiles from profiles table:', profiles);
+                profiles.forEach(profile => {
+                  hookLogger.info(`Profile ${profile.id}: name="${profile.name}", type="${profile.type}"`);
+                  businessProfilesMap.set(profile.id, {
+                    id: profile.id,
+                    name: profile.name,
+                    avatar: profile.avatar,
+                    verified: profile.verified || false,
+                    business_category: null
+                  });
+                });
+              } else {
+                hookLogger.warn('NO PROFILES FOUND in profiles table! Query returned empty array.');
+                hookLogger.warn('This means the profile does not exist in the database.');
+              }
+
+              // Then try to enhance with business_profiles data if available
+              const { data: businessProfiles, error: businessError } = await supabase
                 .from('business_profiles')
                 .select('id, name, avatar, verified, business_category')
                 .in('id', uniqueBusinessIds);
 
-              if (error) {
-                hookLogger.error('Error batch fetching business profiles:', error);
-              } else if (profiles) {
-                profiles.forEach(profile => {
-                  businessProfilesMap.set(profile.id, profile);
+              if (businessError) {
+                hookLogger.debug('No business_profiles found (this is normal):', businessError.message);
+              } else if (businessProfiles) {
+                // Enhance existing profiles with business_profiles data
+                businessProfiles.forEach(businessProfile => {
+                  const existing = businessProfilesMap.get(businessProfile.id);
+                  if (existing) {
+                    businessProfilesMap.set(businessProfile.id, {
+                      ...existing,
+                      ...businessProfile // Override with business_profiles data if available
+                    });
+                  }
                 });
               }
+
+              hookLogger.debug('Final business profiles map:', Array.from(businessProfilesMap.entries()));
             } catch (error) {
               hookLogger.error('Error in batch profile fetch:', error);
             }
@@ -184,12 +245,20 @@ export const useProfileReviewsFetching = () => {
             // Check if this review was claimed by the current user (already handled in data structure)
             const isClaimedByCurrentUser = match.matchType === 'claimed';
 
+            hookLogger.debug(`Review ${review.id} business profile:`, {
+              businessProfileId: review.business_id,
+              businessProfileFound: !!businessProfile,
+              businessProfileName: businessProfile?.name,
+              reviewerNameToUse: businessProfile?.name || 'Anonymous Business'
+            });
+
             return {
               ...review,
               business_profile: businessProfile,
               // Ensure we have the business avatar from profile
               reviewerAvatar: businessProfile?.avatar || '',
-              reviewerName: businessProfile?.name || review.customer_name || 'Business',
+              // IMPORTANT: Use business profile name, NOT customer name as fallback
+              reviewerName: businessProfile?.name || 'Anonymous Business',
               responses: [],
               matchType: isClaimedByCurrentUser ? 'claimed' : match.matchType,
               matchScore: isClaimedByCurrentUser ? 100 : enhancedMatchScore,
