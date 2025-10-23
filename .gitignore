@@ -31,7 +31,6 @@ stripe-secret-form.html
 
 # iOS build artifacts
 ios/App/Pods/
-ios/App/Podfile.lock
 ios/.DS_Store
 ios/App/build/
 
