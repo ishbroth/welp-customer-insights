@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
 import { logger } from '@/utils/logger';
 
@@ -20,7 +20,7 @@ export const usePlacesAutocomplete = ({
   onAddressComponentsExtracted,
   setInputValue
 }: UsePlacesAutocompleteProps) => {
-  const hookLogger = logger.withContext('usePlacesAutocomplete');
+  const hookLogger = useMemo(() => logger.withContext('usePlacesAutocomplete'), []);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const listenerRef = useRef<google.maps.MapsEventListener | null>(null);
 

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Review } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -28,11 +28,11 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
   const [workingReviews, setWorkingReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchBusinessReviews = async () => {
+  const fetchBusinessReviews = useCallback(async () => {
     if (!currentUser) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       // Fetch reviews written by this business with claim info, conversations, and responses
       const { data: reviewsData, error } = await supabase
@@ -215,7 +215,7 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser, toast]);
 
   const deleteReview = async (reviewId: string) => {
     hookLogger.info("Attempting to hard delete review:", reviewId);
@@ -275,7 +275,32 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
     if (currentUser) {
       fetchBusinessReviews();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchBusinessReviews]);
+
+  // Refetch reviews when the page becomes visible (e.g., when navigating back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && currentUser) {
+        hookLogger.debug('Page became visible, refetching reviews');
+        fetchBusinessReviews();
+      }
+    };
+
+    const handleFocus = () => {
+      if (currentUser) {
+        hookLogger.debug('Window focused, refetching reviews');
+        fetchBusinessReviews();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [currentUser, fetchBusinessReviews]);
 
   return {
     workingReviews,

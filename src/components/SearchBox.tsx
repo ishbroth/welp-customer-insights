@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
+import { flushSync } from "react-dom";
 import SearchField from "@/components/search/SearchField";
 import StateSelect from "@/components/search/StateSelect";
 import SearchButton from "@/components/search/SearchButton";
@@ -21,7 +22,7 @@ const SearchBox = React.memo(({
 }: SearchBoxProps) => {
   const { formValues, setters, handleSearch } = useSearchForm(onSearch);
   const isMobile = useIsMobile();
-  const componentLogger = logger.withContext('SearchBox');
+  const componentLogger = useMemo(() => logger.withContext('SearchBox'), []);
 
   // Handle Google Maps address component extraction - memoized for performance
   const handleAddressComponentsExtracted = useCallback((components: {
@@ -32,19 +33,24 @@ const SearchBox = React.memo(({
   }) => {
     componentLogger.debug('Address components extracted:', components);
 
-    // FORCE update all fields when Google Maps provides them
-    componentLogger.debug('FORCING address update to:', components.streetAddress);
-    setters.setAddress(components.streetAddress);
+    // Use flushSync to force synchronous state updates
+    // This ensures all fields update immediately and together
+    flushSync(() => {
+      componentLogger.debug('FORCING address update to:', components.streetAddress);
+      setters.setAddress(components.streetAddress);
 
-    componentLogger.debug('FORCING city update to:', components.city);
-    setters.setCity(components.city);
+      componentLogger.debug('FORCING city update to:', components.city);
+      setters.setCity(components.city);
 
-    componentLogger.debug('FORCING state update to:', components.state);
-    setters.setState(components.state);
+      componentLogger.debug('FORCING state update to:', components.state);
+      setters.setState(components.state);
 
-    componentLogger.debug('FORCING zipCode update to:', components.zipCode);
-    setters.setZipCode(components.zipCode);
-  }, [setters]);
+      componentLogger.debug('FORCING zipCode update to:', components.zipCode);
+      setters.setZipCode(components.zipCode);
+    });
+
+    componentLogger.debug('All address fields updated successfully');
+  }, [setters.setAddress, setters.setCity, setters.setState, setters.setZipCode, componentLogger]);
 
   return (
     <div className={className}>

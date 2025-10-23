@@ -63,10 +63,39 @@ const ProfileForm = () => {
     fetchBusinessData();
   }, [currentUser?.id, isBusinessAccount]);
 
+  // Get firstName and lastName from currentUser, or parse from name if not available
+  const getFirstAndLastName = () => {
+    // If we have firstName/lastName in currentUser, use those
+    if (currentUser?.firstName || currentUser?.lastName) {
+      return {
+        firstName: currentUser.firstName || "",
+        lastName: currentUser.lastName || ""
+      };
+    }
+
+    // Otherwise, parse from the name field for backward compatibility
+    if (!isBusinessAccount && currentUser?.name) {
+      const parts = currentUser.name.trim().split(/\s+/);
+      if (parts.length === 1) {
+        return { firstName: parts[0], lastName: "" };
+      }
+      return {
+        firstName: parts[0],
+        lastName: parts.slice(1).join(" ")
+      };
+    }
+
+    return { firstName: "", lastName: "" };
+  };
+
+  const { firstName: parsedFirstName, lastName: parsedLastName } = getFirstAndLastName();
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: currentUser?.name || "",
+      firstName: parsedFirstName,
+      lastName: parsedLastName,
       email: currentUser?.email || "",
       bio: currentUser?.bio || "",
       businessId: "",
@@ -99,10 +128,22 @@ const ProfileForm = () => {
     try {
       componentLogger.debug("=== FORM SUBMIT START ===");
       componentLogger.debug("Form data submitted:", data);
-      
+
+      // For customer accounts, combine firstName and lastName into name
+      let fullName = data.name || "";
+      if (!isBusinessAccount && data.firstName && data.lastName) {
+        fullName = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
+        componentLogger.debug("Combined customer name:", fullName);
+      } else if (!isBusinessAccount && data.firstName) {
+        fullName = data.firstName.trim();
+        componentLogger.debug("Using first name only:", fullName);
+      }
+
       // Create update object - include all fields that have values
       const updateData: any = {
-        name: data.name || "",
+        name: fullName,
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
         email: data.email || "",
         bio: data.bio || "",
         phone: data.phone || "",

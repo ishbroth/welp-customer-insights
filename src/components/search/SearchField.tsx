@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { FirstNameInput } from "@/components/ui/first-name-input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -30,7 +30,7 @@ const SearchField = ({
   required,
   onAddressComponentsExtracted
 }: SearchFieldProps) => {
-  const componentLogger = logger.withContext('SearchField');
+  const componentLogger = useMemo(() => logger.withContext('SearchField'), []);
 
   // Use FirstNameInput for first name fields
   const isFirstNameField = placeholder.toLowerCase().includes("first name");

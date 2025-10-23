@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
+import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -15,11 +16,12 @@ const BusinessReviews = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isSubscribed } = useAuth();
   const [hasSubscription, setHasSubscription] = useState(isSubscribed);
-  
+  const location = useLocation();
+
   // Add new state for content moderation
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
-  
+
   const {
     workingReviews,
     setWorkingReviews,
@@ -27,11 +29,16 @@ const BusinessReviews = () => {
     fetchBusinessReviews,
     deleteReview
   } = useBusinessReviews();
-  
+
   // Update local state when subscription changes
   useEffect(() => {
     setHasSubscription(isSubscribed);
   }, [isSubscribed]);
+
+  // Refetch reviews when navigating to this page
+  useEffect(() => {
+    fetchBusinessReviews();
+  }, [location.pathname, fetchBusinessReviews]);
 
   return (
     <div className="flex flex-col min-h-screen">

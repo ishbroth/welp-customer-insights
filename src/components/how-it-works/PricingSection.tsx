@@ -13,7 +13,7 @@ const PricingSection = () => {
             <h2 className="text-3xl font-bold">Pricing Options</h2>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {/* Pay Per Review Option */}
             <div className="welp-card p-6 border-t-4 border-gray-400">
               <div className="text-center mb-6">
@@ -93,7 +93,43 @@ const PricingSection = () => {
                 </Button>
               </Link>
             </div>
-            
+
+            {/* Legacy Lifetime Subscription Option */}
+            <div className="welp-card p-6 border-t-4 border-amber-500">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold">Legacy Lifetime</h3>
+                <div className="text-3xl font-bold mt-4">$250<span className="text-base font-normal">/one-time</span></div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <p className="font-semibold text-center">Available for:</p>
+                <p className="text-center flex items-center justify-center">
+                  <UserRound className="h-4 w-4 mr-1" /> Customers
+                </p>
+                <p className="text-center flex items-center justify-center">
+                  <Building2 className="h-4 w-4 mr-1" /> Business Owners
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-8">
+                <p className="font-semibold">Lifetime access to:</p>
+                <ul className="list-disc ml-5 space-y-1 text-sm">
+                  <li>Full review content for all customers/businesses</li>
+                  <li>Unlimited responses to reviews</li>
+                  <li>Verified badge on your profile</li>
+                  <li>Advanced search filters and tools</li>
+                  <li>Enhanced profile customization</li>
+                  <li>Priority customer support</li>
+                </ul>
+              </div>
+
+              <Link to="/subscription">
+                <Button className="welp-button w-full bg-amber-600 hover:bg-amber-700">
+                  Purchase Lifetime
+                </Button>
+              </Link>
+            </div>
+
             {/* Free Option */}
             <div className="welp-card p-6 border-t-4 border-gray-300">
               <div className="text-center mb-6">

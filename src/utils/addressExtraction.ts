@@ -1,5 +1,6 @@
 import { logger } from "@/utils/logger";
 
+// Create logger instance once at module level to avoid recreating on every function call
 const utilLogger = logger.withContext('addressExtraction');
 
 export interface AddressComponents {
@@ -44,7 +45,15 @@ export const extractAddressComponents = (place: google.maps.places.PlaceResult):
       utilLogger.debug('Found route:', route);
     } else if (types.includes('locality')) {
       components.city = component.long_name;
-      utilLogger.debug('Found city:', components.city);
+      utilLogger.debug('Found city (locality):', components.city);
+    } else if (types.includes('sublocality_level_1') && !components.city) {
+      // Fallback to sublocality if locality is not found
+      components.city = component.long_name;
+      utilLogger.debug('Found city (sublocality_level_1):', components.city);
+    } else if (types.includes('administrative_area_level_2') && !components.city) {
+      // Fallback to administrative_area_level_2 (county) if locality is not found
+      components.city = component.long_name;
+      utilLogger.debug('Found city (administrative_area_level_2):', components.city);
     } else if (types.includes('administrative_area_level_1')) {
       components.state = component.short_name;
       utilLogger.debug('Found state:', components.state);

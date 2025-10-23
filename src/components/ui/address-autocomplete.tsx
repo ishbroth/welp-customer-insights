@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useGoogleMapsInit } from "@/hooks/useGoogleMapsInit";
@@ -22,7 +22,7 @@ declare global {
 
 const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocompleteProps>(
   ({ className, onPlaceSelect, onAddressChange, onAddressComponentsExtracted, onChange, ...props }, ref) => {
-    const componentLogger = logger.withContext('AddressAutocomplete');
+    const componentLogger = useMemo(() => logger.withContext('AddressAutocomplete'), []);
     const inputRef = useRef<HTMLInputElement>(null);
     const [inputValue, setInputValue] = useState(props.value || "");
 
@@ -34,14 +34,14 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       if (onPlaceSelect) {
         onPlaceSelect(place);
       }
-    }, [onPlaceSelect]);
+    }, [onPlaceSelect, componentLogger]);
 
     const handleAddressChange = useCallback((address: string) => {
       componentLogger.debug('Address changed callback triggered', { address });
       if (onAddressChange) {
         onAddressChange(address);
       }
-    }, [onAddressChange]);
+    }, [onAddressChange, componentLogger]);
 
     const handleAddressComponentsExtracted = useCallback((components: AddressComponents) => {
       componentLogger.debug('Components extracted callback triggered', { components });
@@ -51,13 +51,13 @@ const AddressAutocomplete = React.forwardRef<HTMLInputElement, AddressAutocomple
       } else {
         componentLogger.error('CRITICAL: onAddressComponentsExtracted callback is MISSING!');
       }
-    }, [onAddressComponentsExtracted]);
+    }, [onAddressComponentsExtracted, componentLogger]);
 
     const handleSetInputValue = useCallback((value: string) => {
-      componentLogger.debug('setInputValue called', { value, currentInputValue: inputValue });
+      componentLogger.debug('setInputValue called', { value });
       setInputValue(value);
       componentLogger.debug('setInputValue completed');
-    }, [inputValue]);
+    }, [componentLogger]);
     
     usePlacesAutocomplete({
       isGoogleReady,

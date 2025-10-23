@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Building2 } from "lucide-react";
 import { Review } from "@/types";
 import StarRating from "@/components/StarRating";
 import BusinessReviewCardContent from "./BusinessReviewCardContent";
@@ -188,11 +189,12 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
               <div className="flex-1">
                 <div className="mt-3">
                   <div className="flex items-start gap-2">
-                    <span className="text-gray-500 mt-0.5">🏢</span>
+                    <Building2 className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-gray-600 mb-2">Business or Employment:</p>
-                      <span className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium">
-                        🏢 {review.customer_business_name}
+                      <span className="text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded-md font-medium inline-flex items-center gap-1">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {review.customer_business_name}
                       </span>
                     </div>
                   </div>

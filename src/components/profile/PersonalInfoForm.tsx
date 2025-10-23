@@ -14,25 +14,61 @@ const PersonalInfoForm = ({ form, isBusinessAccount }: PersonalInfoFormProps) =>
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Personal Information</h3>
-      
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>
-              {isBusinessAccount ? "Business Name" : "Full Name"}
-            </FormLabel>
-            <FormControl>
-              <Input 
-                placeholder={isBusinessAccount ? "Enter business name" : "Enter your full name"} 
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+
+      {isBusinessAccount ? (
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Business Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter business name"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <>
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your first name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your last name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      )}
 
       <FormField
         control={form.control}

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { normalizeAddress } from "@/utils/addressNormalization";
 import { useToast } from "@/hooks/use-toast";
@@ -110,27 +110,33 @@ export const useSearchForm = (onSearch?: (searchParams: Record<string, string>) 
     }
   };
 
+  // Memoize setters object to prevent recreation on every render
+  const setters = useMemo(() => ({
+    setLastName,
+    setFirstName,
+    setBusinessName,
+    setPhone,
+    setAddress,
+    setCity,
+    setState,
+    setZipCode,
+  }), [setLastName, setFirstName, setBusinessName, setPhone, setAddress, setCity, setState, setZipCode]);
+
+  // Memoize formValues object to prevent recreation on every render
+  const formValues = useMemo(() => ({
+    lastName,
+    firstName,
+    businessName,
+    phone,
+    address,
+    city,
+    state,
+    zipCode,
+  }), [lastName, firstName, businessName, phone, address, city, state, zipCode]);
+
   return {
-    formValues: {
-      lastName,
-      firstName,
-      businessName,
-      phone,
-      address,
-      city,
-      state,
-      zipCode,
-    },
-    setters: {
-      setLastName,
-      setFirstName,
-      setBusinessName,
-      setPhone,
-      setAddress,
-      setCity,
-      setState,
-      setZipCode,
-    },
+    formValues,
+    setters,
     handleSearch,
   };
 };
