@@ -1,18 +1,21 @@
 #!/bin/sh
 
+echo "========================================"
+echo "POST-CLONE SCRIPT IS RUNNING!"
+echo "========================================"
+echo "Working directory: $(pwd)"
+echo "Script location: $0"
+echo "Directory contents:"
+ls -la
+echo "========================================"
+
+set -e
+
 # Xcode Cloud Post-Clone Script
 # This script runs after Xcode Cloud clones your repository
 # It sets up Node.js, installs dependencies, and builds the web app
 
-set -e
-
-echo "=========================================="
 echo "Starting Xcode Cloud Post-Clone Script"
-echo "=========================================="
-
-# The working directory is already at the repository root when Xcode Cloud runs this script
-# (it executes ci_scripts/ci_post_clone.sh from the repo root)
-
 echo "Current directory: $(pwd)"
 echo "Node version: $(node --version)"
 echo "npm version: $(npm --version)"
