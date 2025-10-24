@@ -20,6 +20,7 @@ import { formatCustomerNameWithNickname, getNameInitials } from "@/utils/nameFor
 import { getReviewerDisplayName, canParticipateInConversation } from "@/utils/anonymousReviewUtils";
 import { useReviewClaims } from "@/hooks/useReviewClaims";
 import { logger } from '@/utils/logger';
+import { formatDate } from "@/utils/dateUtils";
 
 interface ReviewCardProps {
   review: {
@@ -169,15 +170,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
 
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   const handleOneTimeAccess = async () => {
     if (!currentUser) {

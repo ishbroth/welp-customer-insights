@@ -7,6 +7,8 @@ import { Review } from "@/types";
 import { fetchCarouselReviews, getFallbackReviews } from "@/services/carouselReviewsService";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import { logger } from "@/utils/logger";
+import { getInitials, truncateText } from "@/utils/stringUtils";
+import { formatDate } from "@/utils/dateUtils";
 
 const ReviewCarousel = () => {
   const componentLogger = logger.withContext('ReviewCarousel');
@@ -76,37 +78,16 @@ const ReviewCarousel = () => {
     };
   }, []);
 
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
+  const renderStars = (rating: number) => (
+    Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
         className={`h-3 w-3 ${
           index < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
         }`}
       />
-    ));
-  };
-
-  const truncateContent = (content: string, maxLength: number = 120) => {
-    if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + "...";
-  };
+    ))
+  );
 
   // Calculate content complexity and determine appropriate scaling
   const getContentScale = (review: any) => {
@@ -316,7 +297,7 @@ const ReviewCarousel = () => {
                           {renderBlurredName(review.customerName)}
                         </h3>
                         <p className="text-xs text-gray-500 truncate">
-                          {formatDate(review.date)}
+                          {formatDate(review.date, "MMM d")}
                         </p>
                         {/* Customer contact info */}
                         {(review as any).customer_phone && (
