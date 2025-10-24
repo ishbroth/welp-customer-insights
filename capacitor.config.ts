@@ -5,7 +5,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 const isDev = process.env.NODE_ENV === 'development';
 
 const config: CapacitorConfig = {
-  appId: 'com.mywelp.welp',
+  appId: 'com.mywelp.dev',
   appName: 'Welp.',
   webDir: 'dist',
   ...(isDev && {
