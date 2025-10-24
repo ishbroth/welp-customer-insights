@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/utils/logger';
+import { getInitials } from "@/utils/stringUtils";
 
 interface CustomerAvatarProps {
   customer: {
@@ -49,11 +50,7 @@ const CustomerAvatar = ({
     enabled: !!customer.id && !customer.avatar // Only fetch if we have an ID and don't already have avatar
   });
 
-  const getInitials = () => {
-    const firstInitial = customer.firstName ? customer.firstName[0] : "";
-    const lastInitial = customer.lastName ? customer.lastName[0] : "";
-    return `${firstInitial}${lastInitial}`.toUpperCase();
-  };
+  const customerInitials = getInitials(`${customer.firstName} ${customer.lastName}`);
 
   const getCustomerAvatar = () => {
     // Use avatar from props first, then from fetched profile
@@ -71,7 +68,7 @@ const CustomerAvatar = ({
           <AvatarImage src={avatarSrc} alt={`${customer.firstName} ${customer.lastName}`} />
         ) : (
           <AvatarFallback className="bg-gray-200 text-gray-800">
-            {getInitials()}
+            {customerInitials}
           </AvatarFallback>
         )}
       </Avatar>
@@ -85,7 +82,7 @@ const CustomerAvatar = ({
           <AvatarImage src={avatarSrc} alt={`${customer.firstName} ${customer.lastName}`} />
         ) : (
           <AvatarFallback className="bg-gray-200 text-gray-800">
-            {getInitials()}
+            {customerInitials}
           </AvatarFallback>
         )}
       </Avatar>

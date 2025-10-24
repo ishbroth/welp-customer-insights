@@ -23,6 +23,7 @@ import { formatPhoneNumber } from "@/utils/phoneUtils";
 import { processPaymentRefund } from "@/services/subscriptionService";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
+import { getInitials } from "@/utils/stringUtils";
 
 const Profile: React.FC = () => {
   const pageLogger = logger.withContext('Profile');
@@ -113,14 +114,6 @@ const Profile: React.FC = () => {
     return null;
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const isBusinessUser = currentUser.type === 'business' || currentUser.type === 'admin';
 
