@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, User } from "lucide-react";
 import { formatPhoneNumber } from "@/utils/phoneFormatter";
+import { getInitials } from "@/utils/stringUtils";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,12 +59,7 @@ const CustomerProfileView = ({
     enabled: !!customerId
   });
 
-  const getInitials = () => {
-    const firstInitial = firstName ? firstName[0] : "";
-    const lastInitial = lastName ? lastName[0] : "";
-    return `${firstInitial}${lastInitial}`.toUpperCase();
-  };
-
+  const initials = getInitials(`${firstName} ${lastName}`);
   const isVerified = customerProfile?.verified || false;
 
   return (
@@ -75,7 +71,7 @@ const CustomerProfileView = ({
               <AvatarImage src={avatar} alt={`${firstName} ${lastName}`} />
             ) : (
               <AvatarFallback className="text-xl bg-gray-200 text-gray-800">
-                {getInitials() || "?"}
+                {initials || "?"}
               </AvatarFallback>
             )}
           </Avatar>

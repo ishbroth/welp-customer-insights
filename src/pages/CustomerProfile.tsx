@@ -11,6 +11,7 @@ import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CustomerReviewsSection from "@/components/customer/CustomerReviewsSection";
+import { getInitials } from "@/utils/stringUtils";
 import AvatarBackground from "@/components/AvatarBackground";
 
 const CustomerProfile: React.FC = () => {
@@ -23,21 +24,10 @@ const CustomerProfile: React.FC = () => {
   const showWriteReviewButton = location.state?.showWriteReviewButton || false;
 
   const { customerProfile, customerReviews, isLoading, hasFullAccess } = useCustomerProfile(customerId);
-  
-  // Check if current business user has already written a review about this customer
-  const hasAlreadyWrittenReview = currentUser?.type === 'business' && 
-    customerReviews.some(review => review.reviewerId === currentUser.id);
 
-  const getInitials = (firstName?: string, lastName?: string, name?: string) => {
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase();
-    }
-    if (name) {
-      const nameParts = name.split(' ');
-      return nameParts.map(part => part[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "C";
-  };
+  // Check if current business user has already written a review about this customer
+  const hasAlreadyWrittenReview = currentUser?.type === 'business' &&
+    customerReviews.some(review => review.reviewerId === currentUser.id);
 
   const displayName = customerProfile 
     ? `${customerProfile.first_name || ''} ${customerProfile.last_name || ''}`.trim() || customerProfile.name || 'Customer'
@@ -80,7 +70,7 @@ const CustomerProfile: React.FC = () => {
                   <Avatar className="h-20 w-20">
                     <AvatarImage src={customerProfile.avatar} alt={displayName} />
                     <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                      {getInitials(customerProfile.first_name, customerProfile.last_name, customerProfile.name)}
+                      {getInitials(displayName)}
                     </AvatarFallback>
                   </Avatar>
                   

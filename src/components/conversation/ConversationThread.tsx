@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Edit2, Trash2 } from "lucide-react";
 import { ConversationMessage } from "@/services/conversationService";
 import { formatRelative } from "@/utils/dateUtils";
+import { getInitials } from "@/utils/stringUtils";
 import { logger } from '@/utils/logger';
 
 interface ConversationThreadProps {
@@ -31,12 +32,6 @@ const ConversationThread: React.FC<ConversationThreadProps> = ({
   const [isExpanded, setIsExpanded] = useState(!collapsed);
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
-
-  const getInitials = (name: string) => {
-    if (!name) return "U";
-    const names = name.split(' ');
-    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   const getUserDisplayName = (authorId: string, authorType: string) => {
     const profile = userProfiles[authorId];

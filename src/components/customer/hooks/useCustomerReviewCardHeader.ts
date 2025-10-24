@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomerInfo } from "@/hooks/useCustomerInfo";
 import { supabase } from "@/integrations/supabase/client";
+import { getInitials } from "@/utils/stringUtils";
 import { logger } from '@/utils/logger';
 
 export const useCustomerReviewCardHeader = (
@@ -51,14 +52,6 @@ export const useCustomerReviewCardHeader = (
     matchScore: review.matchScore,
     matchType: review.matchType
   }, customerProfile);
-
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
 
   // Business info for left side (larger)
   const businessDisplayName = businessProfile?.name || review.reviewerName || 'Business';

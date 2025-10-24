@@ -15,6 +15,7 @@ import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerRe
 import SubscriptionButton from "@/components/profile/SubscriptionButton";
 import { useProfileReviewsActions } from "@/components/profile/hooks/useProfileReviewsActions";
 import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
+import { getInitials } from "@/utils/stringUtils";
 import AvatarBackground from "@/components/AvatarBackground";
 
 const BusinessProfile: React.FC = () => {
@@ -48,12 +49,6 @@ const BusinessProfile: React.FC = () => {
       window.location.reload();
     }
   );
-
-  const getInitials = (name?: string) => {
-    if (!name) return "B";
-    const nameParts = name.split(' ');
-    return nameParts.map(part => part[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   // Use actual business name for masking, or fall back to profile name
   const rawBusinessName = actualBusinessName || businessProfile?.business_info?.business_name || businessProfile?.name || 'Business';
