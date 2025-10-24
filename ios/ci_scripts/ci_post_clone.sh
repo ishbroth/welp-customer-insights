@@ -23,7 +23,8 @@ REQUIRED_VARS="VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY"
 MISSING_VARS=""
 
 for VAR in $REQUIRED_VARS; do
-    if [ -z "${!VAR}" ]; then
+    eval VALUE=\$$VAR
+    if [ -z "$VALUE" ]; then
         MISSING_VARS="$MISSING_VARS $VAR"
     else
         echo "✓ $VAR is set"
