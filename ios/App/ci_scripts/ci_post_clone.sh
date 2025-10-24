@@ -22,6 +22,15 @@ set -e
 
 echo "Starting Xcode Cloud Post-Clone Script"
 echo "Current directory: $(pwd)"
+
+# Install Node.js if not available
+if ! command -v node >/dev/null 2>&1; then
+    echo "Node.js not found, installing via Homebrew..."
+    brew install node@20
+    echo "Adding Node.js to PATH..."
+    export PATH="/usr/local/opt/node@20/bin:$PATH"
+fi
+
 echo "Node version: $(node --version)"
 echo "npm version: $(npm --version)"
 
