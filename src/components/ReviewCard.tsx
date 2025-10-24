@@ -9,6 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MobileShareButton from "@/components/mobile/MobileShareButton";
 import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
+import { getInitials } from "@/utils/stringUtils";
+import { formatDate } from "@/utils/dateUtils";
 
 interface ReviewCardProps {
   review: Review;
@@ -24,22 +26,6 @@ const ReviewCard = ({
   viewerType = "business"
 }: ReviewCardProps) => {
   const isMobile = useIsMobile();
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, index) => (
@@ -133,7 +119,7 @@ const ReviewCard = ({
         <div className={`flex items-center gap-2 ${isMobile ? "mb-3" : "mb-2"}`}>
           <div className="flex">{renderStars(review.rating)}</div>
           <span className={`text-gray-500 ${isMobile ? "text-sm" : "text-sm"}`}>
-            {formatDate(review.date)}
+            {formatDate(review.date, "MMMM d, yyyy")}
           </span>
         </div>
 
