@@ -19,6 +19,7 @@ import { formatCustomerNameWithNickname } from "@/utils/nameFormatter";
 import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
 import { useAuth } from "@/contexts/auth";
 import { logger } from '@/utils/logger';
+import { getInitials } from "@/utils/stringUtils";
 
 interface BusinessReviewCardProps {
   review: Review;
@@ -75,13 +76,6 @@ const BusinessReviewCard: React.FC<BusinessReviewCardProps> = ({
   const { handleCustomerClick, formatDate, getCustomerInitials, isReviewClaimed } = useBusinessReviewCardLogic(review);
   const navigate = useNavigate();
 
-  const getInitials = (name: string) => {
-    if (name) {
-      const names = name.split(' ');
-      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return "U";
-  };
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);

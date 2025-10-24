@@ -10,6 +10,7 @@ import { MapPin, Phone, Star, User } from "lucide-react";
 import ReviewsList from "./ReviewsList";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useAuth } from "@/contexts/auth";
+import { getInitials } from "@/utils/stringUtils";
 
 interface CustomerCardProps {
   customer: Customer;
@@ -21,10 +22,6 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
   const [showAllReviews, setShowAllReviews] = useState(false);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'U';
-  };
 
   const displayedReviews = showAllReviews ? customer.reviews || [] : (customer.reviews || []).slice(0, 6);
   const hasMoreReviews = (customer.reviews || []).length > 6;
@@ -103,7 +100,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             <Avatar className="h-12 w-12">
               <AvatarImage src={customer.avatar} alt={`${customer.firstName} ${customer.lastName}`} />
               <AvatarFallback className="bg-blue-100 text-blue-800">
-                {getInitials(customer.firstName, customer.lastName)}
+                {getInitials(`${customer.firstName} ${customer.lastName}`)}
               </AvatarFallback>
             </Avatar>
             
