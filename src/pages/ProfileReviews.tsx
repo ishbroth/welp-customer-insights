@@ -22,11 +22,6 @@ const ProfileReviews = () => {
   // Force refresh on mount to clear cache
   React.useEffect(() => {
     if (currentUser) {
-      console.log('=== CURRENT USER DEBUG ===');
-      console.log('User ID:', currentUser.id);
-      console.log('User email:', currentUser.email);
-      console.log('User name:', currentUser.name);
-      console.log('User type:', currentUser.type);
       fetchCustomerReviews(true); // Force refresh
     }
   }, []);
