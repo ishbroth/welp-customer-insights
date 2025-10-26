@@ -238,11 +238,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     }
   };
 
-  // Get first three letters for preview (not words)
-  const getPreviewText = (text: string) => {
-    return text.substring(0, 3) + '...';
-  };
-
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -316,10 +311,41 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           {canViewFullContent ? (
             <p className="text-gray-700 leading-relaxed md:text-base text-sm">{review.content}</p>
           ) : (
-            <div className="relative">
-              <p className="text-gray-700 leading-relaxed md:text-base text-sm">
-                {getPreviewText(review.content)}
-              </p>
+            <div className="relative inline-block w-full">
+              {/* Clear first 2 characters */}
+              <span className="text-gray-700 leading-relaxed md:text-base text-sm">
+                {review.content.substring(0, 2)}
+              </span>
+              {/* 3rd letter - halfway between clear and blurry */}
+              <span
+                className="text-gray-900 leading-relaxed md:text-base text-sm"
+                style={{
+                  filter: 'blur(2.5px)',
+                  WebkitFilter: 'blur(2.5px)',
+                }}
+              >
+                {review.content.substring(2, 3)}
+              </span>
+              {/* 4th letter - more blur */}
+              <span
+                className="text-gray-900 leading-relaxed md:text-base text-sm"
+                style={{
+                  filter: 'blur(4px)',
+                  WebkitFilter: 'blur(4px)',
+                }}
+              >
+                {review.content.substring(3, 4)}
+              </span>
+              {/* Fully blurred remaining text */}
+              <span
+                className="text-gray-900 leading-relaxed md:text-base text-sm"
+                style={{
+                  filter: 'blur(5px)',
+                  WebkitFilter: 'blur(5px)',
+                }}
+              >
+                {review.content.substring(4)}
+              </span>
             </div>
           )}
         </div>

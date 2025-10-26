@@ -115,11 +115,11 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
         ) : (
           <div className="space-y-4">
             <div className="relative inline-block w-full">
-              {/* Clear first 3 characters */}
+              {/* Clear first 2 characters */}
               <span className="text-gray-700 leading-relaxed md:text-base text-sm">
-                {content.substring(0, 3)}
+                {content.substring(0, 2)}
               </span>
-              {/* 4th letter - halfway between clear and blurry */}
+              {/* 3rd letter - halfway between clear and blurry */}
               <span
                 className="text-gray-900 leading-relaxed md:text-base text-sm"
                 style={{
@@ -127,9 +127,9 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
                   WebkitFilter: 'blur(2.5px)',
                 }}
               >
-                {content.substring(3, 4)}
+                {content.substring(2, 3)}
               </span>
-              {/* 5th letter - more blur */}
+              {/* 4th letter - more blur */}
               <span
                 className="text-gray-900 leading-relaxed md:text-base text-sm"
                 style={{
@@ -137,7 +137,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
                   WebkitFilter: 'blur(4px)',
                 }}
               >
-                {content.substring(4, 5)}
+                {content.substring(3, 4)}
               </span>
               {/* Fully blurred remaining text - darker with medium blur */}
               <span
@@ -147,7 +147,7 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
                   WebkitFilter: 'blur(5px)',
                 }}
               >
-                {content.substring(5)}
+                {content.substring(4)}
               </span>
             </div>
             

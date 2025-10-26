@@ -196,14 +196,6 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
       })));
 
       hookLogger.debug("Formatted reviews with responses:", formattedReviews);
-      
-      if (reviewsData && reviewsData.length > 0) {
-        const responsesCount = formattedReviews.reduce((acc, review) => acc + (review.responses?.length || 0), 0);
-        toast({
-          title: "Reviews Loaded",
-          description: `Found ${reviewsData.length} reviews${responsesCount > 0 ? ` with ${responsesCount} customer responses` : ''}.`,
-        });
-      }
 
     } catch (error) {
       hookLogger.error("Error fetching business reviews:", error);
