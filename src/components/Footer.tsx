@@ -46,8 +46,8 @@ const Footer = () => {
           <div>
             <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">Business Owners</h4>
             <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
-              <li><button onClick={() => handleLinkClick("/verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Business Verification</button></li>
               <li><button onClick={() => handleLinkClick("/subscription")} className="hover:text-welp-primary transition-colors cursor-pointer">Subscription Benefits</button></li>
+              <li><button onClick={() => handleLinkClick("/verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Business Verification</button></li>
               <li><button onClick={() => handleLinkClick("/success-stories")} className="hover:text-welp-primary transition-colors cursor-pointer">Success Stories</button></li>
             </ul>
           </div>
@@ -55,8 +55,8 @@ const Footer = () => {
           <div>
             <h4 className="text-sm md:text-lg font-semibold mb-2 md:mb-3">Customer Accounts</h4>
             <ul className="space-y-1 md:space-y-2 text-gray-300 text-xs md:text-sm">
-              <li><button onClick={() => handleLinkClick("/customer-verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Customer Verification</button></li>
               <li><button onClick={() => handleLinkClick("/customer-benefits")} className="hover:text-welp-primary transition-colors cursor-pointer">Subscription Benefits</button></li>
+              <li><button onClick={() => handleLinkClick("/customer-verification")} className="hover:text-welp-primary transition-colors cursor-pointer">Customer Verification</button></li>
               <li><button onClick={() => handleLinkClick("/customer-stories")} className="hover:text-welp-primary transition-colors cursor-pointer">Success Stories</button></li>
             </ul>
           </div>
