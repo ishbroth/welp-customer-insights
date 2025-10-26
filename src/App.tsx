@@ -26,7 +26,7 @@ function App() {
         <AuthProvider>
           <LoadingProvider>
             <MobileInitializer />
-            <MobileStatusBar backgroundColor="#000000" />
+            <MobileStatusBar backgroundColor="#ffffff" />
             <MobileKeyboard adjustViewport={true} />
             <AppRoutes />
             <Toaster />
