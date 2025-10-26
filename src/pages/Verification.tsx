@@ -1,13 +1,16 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import { Shield, CheckCircle2, AlertCircle } from "lucide-react";
+import VerificationResourcesDialog from "@/components/verification/VerificationResourcesDialog";
 
 const Verification = () => {
   const navigate = useNavigate();
+  const [showResourcesDialog, setShowResourcesDialog] = useState(false);
   
   const handleNavigateToSignup = () => {
     navigate('/signup?type=business');
@@ -90,12 +93,12 @@ const Verification = () => {
             </div>
             
             <div className="text-center mb-6">
-              <a 
-                href="/verification-resources" 
-                className="text-welp-primary hover:underline text-sm font-medium"
+              <button
+                onClick={() => setShowResourcesDialog(true)}
+                className="text-welp-primary hover:underline text-sm font-medium cursor-pointer"
               >
                 List of verification resources
-              </a>
+              </button>
             </div>
             
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
@@ -124,6 +127,11 @@ const Verification = () => {
         </div>
       </main>
       <Footer />
+
+      <VerificationResourcesDialog
+        open={showResourcesDialog}
+        onOpenChange={setShowResourcesDialog}
+      />
     </div>
   );
 };
