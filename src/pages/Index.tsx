@@ -8,13 +8,8 @@ import FeaturesSection from "@/components/sections/FeaturesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import CallToActionSection from "@/components/sections/CallToActionSection";
 import BackgroundImages from "@/components/sections/BackgroundImages";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Capacitor } from '@capacitor/core';
 
 const Index = () => {
-  const navigate = useNavigate();
-  const isNative = Capacitor.isNativePlatform();
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -36,16 +31,6 @@ const Index = () => {
 
           <CallToActionSection />
           <ReviewCarousel />
-          {isNative && (
-            <div className="mt-4">
-              <Button
-                onClick={() => navigate('/mobile-test')}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                📱 Test Mobile Features
-              </Button>
-            </div>
-          )}
         </main>
         <Footer />
       </div>
