@@ -99,10 +99,6 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
 }) => {
   const [showResponseForm, setShowResponseForm] = useState(false);
 
-  const getPreviewText = (text: string) => {
-    return text.substring(0, 3) + "...";
-  };
-
   const handleResponseSubmit = async (content: string) => {
     const success = await onSubmitResponse(content);
     if (success) {
@@ -118,7 +114,20 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
           <p className="text-gray-700 leading-relaxed md:text-base text-sm">{content}</p>
         ) : (
           <div className="space-y-4">
-            <p className="text-gray-700 leading-relaxed md:text-base text-sm">{getPreviewText(content)}</p>
+            <div className="relative inline-block w-full">
+              <p className="text-gray-700 leading-relaxed md:text-base text-sm">{content}</p>
+              <div
+                className="absolute top-0 bottom-0 pointer-events-none"
+                style={{
+                  left: '1.5ch',
+                  right: '0',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  maskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.8) 5%, rgba(0, 0, 0, 1) 10%)',
+                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.8) 5%, rgba(0, 0, 0, 1) 10%)',
+                }}
+              />
+            </div>
             
             {/* Match Information - show for unlockable reviews */}
             {canUnlockReview && (
