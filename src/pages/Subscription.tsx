@@ -11,6 +11,7 @@ import { handleSubscription } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
 import { useCredits } from "@/hooks/useCredits";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Shield, Zap, Users, Clock } from "lucide-react";
 import { logger } from '@/utils/logger';
 
 const Subscription = () => {
@@ -161,11 +162,57 @@ const Subscription = () => {
                 Access all reviews about you and respond to businesses
               </p>
             ) : (
-              <p className="text-center text-xl mb-10 text-gray-600">
+              <p className="text-center text-xl mb-6 md:mb-10 text-gray-600">
                 Access the full customer database and make informed business decisions
               </p>
             )}
-            
+
+            {/* Benefits Overview - only for business users */}
+            {!isCustomer && (
+              <div className="mb-8 md:mb-16">
+                <div className="text-center mb-6 md:mb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 md:mb-4">Why Upgrade Your Account?</h2>
+                  <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+                    Make better business decisions with unlimited access to customer reviews and insights.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                  <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                      <Shield className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Full Access</h3>
+                    <p className="text-sm md:text-base text-gray-600">Access all customer reviews in the database</p>
+                  </div>
+
+                  <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                      <Zap className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Unlimited Reviews</h3>
+                    <p className="text-sm md:text-base text-gray-600">Post unlimited reviews about customers</p>
+                  </div>
+
+                  <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                      <Users className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Ongoing Conversations</h3>
+                    <p className="text-sm md:text-base text-gray-600">Reply to customer responses and maintain dialogue</p>
+                  </div>
+
+                  <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                      <Clock className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
+                    </div>
+                    <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Priority Support</h3>
+                    <p className="text-sm md:text-base text-gray-600">Get faster help and dedicated assistance</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <SubscriptionPlans 
               type={isCustomer ? "customer" : "business"}
               isProcessing={isProcessing}

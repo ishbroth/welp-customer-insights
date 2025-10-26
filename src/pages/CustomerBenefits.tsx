@@ -147,51 +147,51 @@ const CustomerBenefits = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <h1 className="text-4xl font-bold text-center mb-3">Customer Benefits</h1>
-            <p className="text-center text-xl mb-10 text-gray-600">
-              Unlock the full power of Welp as a customer. Get unlimited access to reviews, 
+            <p className="text-center text-xl mb-6 md:mb-10 text-gray-600">
+              Unlock the full power of Welp as a customer. Get unlimited access to reviews,
               respond to businesses, and take control of your online reputation.
             </p>
 
             {/* Benefits Overview */}
-            <div className="mb-16">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">Why Upgrade Your Account?</h2>
-                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <div className="mb-8 md:mb-16">
+              <div className="text-center mb-6 md:mb-12">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 md:mb-4">Why Upgrade Your Account?</h2>
+                <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
                   Transform your customer experience with premium features designed to give you more control and better insights.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
-                  <div className="w-16 h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Shield className="h-8 w-8 text-welp-primary" />
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Full Access</h3>
-                  <p className="text-gray-600">Access all reviews about you without per-review fees</p>
+                  <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Full Access</h3>
+                  <p className="text-sm md:text-base text-gray-600">Access all reviews about you without per-review fees</p>
                 </div>
 
-                <div className="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
-                  <div className="w-16 h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="h-8 w-8 text-welp-primary" />
+                <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                    <Zap className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Unlimited Responses</h3>
-                  <p className="text-gray-600">Respond to business reviews without limitations</p>
+                  <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Unlimited Responses</h3>
+                  <p className="text-sm md:text-base text-gray-600">Respond to business reviews without limitations</p>
                 </div>
 
-                <div className="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
-                  <div className="w-16 h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-8 w-8 text-welp-primary" />
+                <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                    <Users className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Ongoing Conversations</h3>
-                  <p className="text-gray-600">Maintain continuous dialogue with businesses</p>
+                  <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Ongoing Conversations</h3>
+                  <p className="text-sm md:text-base text-gray-600">Maintain continuous dialogue with businesses</p>
                 </div>
 
-                <div className="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
-                  <div className="w-16 h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Clock className="h-8 w-8 text-welp-primary" />
+                <div className="text-center p-4 md:p-6 rounded-lg hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-welp-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                    <Clock className="h-6 w-6 md:h-8 md:w-8 text-welp-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Priority Support</h3>
-                  <p className="text-gray-600">Get faster response times and dedicated help</p>
+                  <h3 className="text-lg md:text-xl font-semibold mb-1 md:mb-3">Priority Support</h3>
+                  <p className="text-sm md:text-base text-gray-600">Get faster response times and dedicated help</p>
                 </div>
               </div>
             </div>
