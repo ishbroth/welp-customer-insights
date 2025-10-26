@@ -45,5 +45,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Welp needs access to your photo library so you can add photos to your reviews.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Welp needs access to your camera so you can take photos for your reviews.</string>
 </dict>
 </plist>
