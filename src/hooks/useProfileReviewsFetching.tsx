@@ -394,18 +394,12 @@ export const useProfileReviewsFetching = () => {
     }
     
     // Case 3: User is available and auth is complete
-    if (!authLoading && currentUser) {
-      hookLogger.debug("✅ User available, fetching reviews");
-      // Only fetch if we haven't initialized yet, or if the user has changed
-      if (!isInitialized) {
-        setIsInitialized(true);
-        fetchCustomerReviews();
-      } else {
-        // User changed, fetch again
-        fetchCustomerReviews();
-      }
+    if (!authLoading && currentUser && !isInitialized) {
+      hookLogger.debug("✅ User available, initializing reviews");
+      setIsInitialized(true);
+      fetchCustomerReviews();
     }
-  }, [currentUser, authLoading]);
+  }, [currentUser, authLoading, isInitialized]);
 
   return { customerReviews, isLoading, fetchCustomerReviews };
 };
