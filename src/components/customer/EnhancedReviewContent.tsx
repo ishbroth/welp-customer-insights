@@ -119,15 +119,25 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
               <span className="text-gray-700 leading-relaxed md:text-base text-sm">
                 {content.substring(0, 3)}
               </span>
-              {/* Blurred remaining text */}
+              {/* Transition zone - gradual blur (chars 3-5) */}
               <span
-                className="text-gray-700 leading-relaxed md:text-base text-sm"
+                className="text-gray-800 leading-relaxed md:text-base text-sm"
                 style={{
-                  filter: 'blur(8px)',
-                  WebkitFilter: 'blur(8px)',
+                  filter: 'blur(2px)',
+                  WebkitFilter: 'blur(2px)',
                 }}
               >
-                {content.substring(3)}
+                {content.substring(3, 5)}
+              </span>
+              {/* Fully blurred remaining text - darker and more recognizable */}
+              <span
+                className="text-gray-800 leading-relaxed md:text-base text-sm"
+                style={{
+                  filter: 'blur(4px)',
+                  WebkitFilter: 'blur(4px)',
+                }}
+              >
+                {content.substring(5)}
               </span>
             </div>
             
