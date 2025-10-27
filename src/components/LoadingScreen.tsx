@@ -13,47 +13,42 @@ const LoadingScreen: React.FC = React.memo(() => {
       <div className="relative">
         <svg width="200" height="200" viewBox="0 0 200 200">
           <g transform="translate(100, 100) rotate(12)">
-            {/* Right arm (0 degrees) */}
-            <path 
-              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-              fill="white" 
-              className="arm-right" 
+            {/* Right arm */}
+            <path
+              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+              fill="white"
             />
-            
-            {/* Bottom-right diagonal arm (72 degrees) */}
+
+            {/* Bottom-right arm */}
             <g transform="rotate(72)">
-              <path 
-                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-                fill="white" 
-                className="arm-bottom-right" 
+              <path
+                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+                fill="white"
               />
             </g>
-            
-            {/* Bottom-left diagonal arm (144 degrees) */}
+
+            {/* Bottom-left arm */}
             <g transform="rotate(144)">
-              <path 
-                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-                fill="white" 
-                className="arm-bottom-left" 
+              <path
+                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+                fill="white"
               />
             </g>
-            
-            {/* Top-left diagonal arm (216 degrees) */}
+
+            {/* Top-left arm */}
             <g transform="rotate(216)">
-              <path 
-                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-                fill="white" 
-                className="arm-top-left" 
+              <path
+                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+                fill="white"
               />
             </g>
-            
-            {/* Period positioned at 288 degrees */}
-            <circle 
-              cx="7.5" 
-              cy="-20" 
-              r="8" 
-              fill="white" 
-              className="period" 
+
+            {/* Period */}
+            <circle
+              cx="7.5"
+              cy="-20"
+              r="8"
+              fill="white"
             />
           </g>
         </svg>

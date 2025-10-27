@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import VerificationFormWrapper from "@/components/verification/VerificationFormWrapper";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const VerifyLicense = () => {
   const { currentUser, loading } = useAuth();
@@ -13,15 +14,10 @@ const VerifyLicense = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
+      <div className="flex flex-col min-h-screen bg-welp-primary">
         <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ea384c] mx-auto mb-4"></div>
-            <p>Loading...</p>
-          </div>
+          <WelpLoadingIcon size={120} />
         </main>
-        <Footer />
       </div>
     );
   }

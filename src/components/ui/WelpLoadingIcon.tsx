@@ -6,64 +6,59 @@ interface WelpLoadingIconProps {
   showText?: boolean;
   text?: string;
   className?: string;
+  duration?: number; // Duration in seconds for one full rotation
 }
 
-const WelpLoadingIcon: React.FC<WelpLoadingIconProps> = ({ 
-  size = 80, 
-  showText = false, 
+const WelpLoadingIcon: React.FC<WelpLoadingIconProps> = ({
+  size = 80,
+  showText = false,
   text = "Loading...",
-  className = ""
+  className = "",
+  duration = 3 // Default 3 seconds for one full rotation
 }) => {
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      <div className="relative">
-        <svg width={size} height={size} viewBox="0 0 200 200">
-          <g transform="translate(100, 100) rotate(12)">
-            {/* Right arm (0 degrees) */}
-            <path 
-              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-              fill="white" 
-              className="welp-arm-right" 
-            />
-            
-            {/* Bottom-right diagonal arm (72 degrees) */}
-            <g transform="rotate(72)">
-              <path 
-                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-                fill="white" 
-                className="welp-arm-bottom-right" 
-              />
-            </g>
-            
-            {/* Bottom-left diagonal arm (144 degrees) */}
-            <g transform="rotate(144)">
-              <path 
-                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-                fill="white" 
-                className="welp-arm-bottom-left" 
-              />
-            </g>
-            
-            {/* Top-left diagonal arm (216 degrees) */}
-            <g transform="rotate(216)">
-              <path 
-                d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0" 
-                fill="white" 
-                className="welp-arm-top-left" 
-              />
-            </g>
-            
-            {/* Period positioned at 288 degrees */}
-            <circle 
-              cx="7.5" 
-              cy="-20" 
-              r="8" 
-              fill="white" 
-              className="welp-period" 
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 200 200"
+      >
+        <g transform="translate(100, 100) rotate(12)">
+          {/* Right arm */}
+          <path
+            d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+            fill="white"
+          />
+          {/* Bottom-right arm */}
+          <g transform="rotate(72)">
+            <path
+              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+              fill="white"
             />
           </g>
-        </svg>
-      </div>
+          {/* Bottom-left arm */}
+          <g transform="rotate(144)">
+            <path
+              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+              fill="white"
+            />
+          </g>
+          {/* Top-left arm */}
+          <g transform="rotate(216)">
+            <path
+              d="M 2 0 Q 18 -10 34 -5 Q 38 0 34 5 Q 18 10 2 0"
+              fill="white"
+            />
+          </g>
+          {/* Period */}
+          <circle
+            cx="7.5"
+            cy="-20"
+            r="8"
+            fill="white"
+          />
+        </g>
+      </svg>
       {showText && (
         <p className="mt-3 text-muted-foreground text-sm font-medium">{text}</p>
       )}

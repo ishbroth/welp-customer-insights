@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import CustomerReviewsSection from "@/components/customer/CustomerReviewsSection";
 import { getInitials } from "@/utils/stringUtils";
 import AvatarBackground from "@/components/AvatarBackground";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const CustomerProfile: React.FC = () => {
   const { customerId } = useParams<{ customerId: string }>();
@@ -35,10 +36,8 @@ const CustomerProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-welp-primary">
+        <WelpLoadingIcon size={120} />
       </div>
     );
   }

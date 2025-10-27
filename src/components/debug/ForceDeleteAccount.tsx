@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Trash2, CheckCircle, TestTube } from "lucide-react";
 import { forceDeleteCorruptedAccount, verifyAccountDeleted, testAccountRecreation } from "@/utils/forceDeleteAccount";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const ForceDeleteAccount = () => {
   const [email, setEmail] = useState("iw@thepaintedpainter.com");
@@ -87,10 +88,10 @@ const ForceDeleteAccount = () => {
               className="w-full"
             >
               {isDeleting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <span className="flex items-center justify-center">
+                  <WelpLoadingIcon size={16} className="mr-2" />
                   Deleting Account...
-                </>
+                </span>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -106,10 +107,10 @@ const ForceDeleteAccount = () => {
               className="w-full"
             >
               {isVerifying ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                <span className="flex items-center justify-center">
+                  <WelpLoadingIcon size={16} className="mr-2" />
                   Verifying...
-                </>
+                </span>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
@@ -125,10 +126,10 @@ const ForceDeleteAccount = () => {
               className="w-full"
             >
               {isTesting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                <span className="flex items-center justify-center">
+                  <WelpLoadingIcon size={16} className="mr-2" />
                   Testing...
-                </>
+                </span>
               ) : (
                 <>
                   <TestTube className="h-4 w-4 mr-2" />

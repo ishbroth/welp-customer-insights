@@ -7,6 +7,7 @@ import LoadingRoute from "./LoadingRoute";
 import PrivateRoute from "./PrivateRoute";
 import BusinessOrAdminRoute from "./BusinessOrAdminRoute";
 import LoadingScreen from "@/components/LoadingScreen";
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 // Import pages
 import Index from "@/pages/Index";
@@ -57,11 +58,7 @@ const AppRoutes = () => {
   }, [loading, setIsInitialLoading]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
