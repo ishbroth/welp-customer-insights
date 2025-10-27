@@ -63,18 +63,41 @@ export const checkSubscriptionStatus = async (): Promise<boolean> => {
  */
 export const getOfferings = async (): Promise<PurchasesPackage[]> => {
   try {
+    iapLogger.info('🔍 Fetching offerings from RevenueCat...');
     const offerings = await Purchases.getOfferings();
 
+    iapLogger.info('📦 Raw offerings response:', {
+      hasOfferings: !!offerings,
+      hasCurrent: !!offerings.current,
+      currentId: offerings.current?.identifier,
+      allOfferingIds: Object.keys(offerings.all || {})
+    });
+
     if (!offerings.current) {
-      iapLogger.warn('No current offering available');
+      iapLogger.warn('❌ No current offering available');
+      iapLogger.warn('Available offering IDs:', Object.keys(offerings.all || {}));
       return [];
     }
 
     const packages = offerings.current.availablePackages;
-    iapLogger.info('Available packages:', packages.length);
+    iapLogger.info(`✅ Found ${packages.length} packages in current offering`);
+
+    // Log each package's details
+    packages.forEach((pkg, index) => {
+      iapLogger.info(`Package ${index + 1}:`, {
+        identifier: pkg.identifier,
+        packageType: pkg.packageType,
+        product: {
+          identifier: pkg.product?.identifier,
+          title: pkg.product?.title,
+          description: pkg.product?.description
+        }
+      });
+    });
+
     return packages;
   } catch (error) {
-    iapLogger.error('Failed to get offerings:', error);
+    iapLogger.error('❌ Failed to get offerings:', error);
     return [];
   }
 };
@@ -84,17 +107,27 @@ export const getOfferings = async (): Promise<PurchasesPackage[]> => {
  */
 export const getPackage = async (packageId: string): Promise<PurchasesPackage | null> => {
   try {
+    iapLogger.info(`🔍 Looking for package: ${packageId}`);
     const packages = await getOfferings();
+
+    iapLogger.info('📦 Available package identifiers:', packages.map(p => p.identifier));
+
     const pkg = packages.find(p => p.identifier === packageId);
 
     if (!pkg) {
-      iapLogger.warn('Package not found:', packageId);
+      iapLogger.warn(`❌ Package not found: ${packageId}`);
+      iapLogger.warn(`Available packages: ${packages.map(p => p.identifier).join(', ')}`);
       return null;
     }
 
+    iapLogger.info(`✅ Found package: ${packageId}`, {
+      identifier: pkg.identifier,
+      productId: pkg.product?.identifier
+    });
+
     return pkg;
   } catch (error) {
-    iapLogger.error('Failed to get package:', error);
+    iapLogger.error('❌ Failed to get package:', error);
     return null;
   }
 };
