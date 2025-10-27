@@ -48,7 +48,7 @@ export const checkSubscriptionStatus = async (): Promise<boolean> => {
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     const hasActiveSubscription =
-      customerInfo.customerInfo.entitlements.active['premium'] !== undefined;
+      customerInfo.customerInfo.entitlements.active['Welp Subscriptions'] !== undefined;
 
     iapLogger.info('Subscription status:', hasActiveSubscription);
     return hasActiveSubscription;
