@@ -74,17 +74,21 @@ serve(async (req) => {
       logStep("Created new Stripe customer", { customerId });
     }
 
+    // Get credit amount from request body
+    const { creditAmount = 1 } = await req.json();
+    logStep("Request data", { creditAmount });
+
     const origin = req.headers.get("origin") || "http://localhost:5173";
-    
+
     // Prepare success URL with parameters to identify what was purchased
     const successParams = new URLSearchParams();
     successParams.append("credits", "true");
     successParams.append("success", "true");
     successParams.append("session_id", "{CHECKOUT_SESSION_ID}");
-    
+
     const successUrl = `${origin}/profile/billing?${successParams.toString()}`;
     const cancelUrl = `${origin}/profile/billing?canceled=true`;
-    
+
     // Create a one-time payment checkout session for credits with quantity adjustment enabled
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -98,7 +102,7 @@ serve(async (req) => {
             },
             unit_amount: 300, // $3.00 per credit in cents
           },
-          quantity: 1, // Start with 1 credit by default
+          quantity: creditAmount || 1, // Use the amount from frontend
           adjustable_quantity: {
             enabled: true,
             minimum: 1,

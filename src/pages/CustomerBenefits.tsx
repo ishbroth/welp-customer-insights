@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Shield, Zap, Users, Clock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCredits } from "@/hooks/useCredits";
 import { logger } from '@/utils/logger';
 
 const CustomerBenefits = () => {
@@ -20,6 +21,7 @@ const CustomerBenefits = () => {
   const { toast } = useToast();
   const location = useLocation();
   const { currentUser, setIsSubscribed } = useAuth();
+  const { balance: creditBalance } = useCredits();
   const isCustomer = currentUser?.type === "customer";
   const isMobile = useIsMobile();
 
@@ -52,7 +54,7 @@ const CustomerBenefits = () => {
     }
 
     pageLogger.debug("📞 About to call handleSubscription");
-    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser, 0, isMobile);
+    await handleSubscription(setIsProcessing, setIsSubscribed, toast, isCustomer, currentUser, creditBalance, isMobile);
   };
 
   const handleLegacySubscribeClick = async () => {
@@ -196,11 +198,12 @@ const CustomerBenefits = () => {
               </div>
             </div>
             
-            <SubscriptionPlans 
+            <SubscriptionPlans
               type="customer"
               isProcessing={isProcessing}
               handleSubscribe={handleSubscribeClick}
               handleLegacySubscribe={handleLegacySubscribeClick}
+              creditBalance={creditBalance}
             />
             
             <SubscriptionFAQ isCustomer={true} />
