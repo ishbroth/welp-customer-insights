@@ -12,7 +12,6 @@ import ContactInfoForm from "./ContactInfoForm";
 import BusinessInfoForm from "./BusinessInfoForm";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 import { logger } from "@/utils/logger";
 
 const ProfileForm = () => {
@@ -207,8 +206,11 @@ const ProfileForm = () => {
   // Show loading state while fetching business data
   if (isBusinessAccount && isLoadingBusinessData) {
     return (
-      <div className="flex items-center justify-center p-6 min-h-[400px] bg-welp-primary">
-        <WelpLoadingIcon size={120} />
+      <div className="flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading business information...</p>
+        </div>
       </div>
     );
   }

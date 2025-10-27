@@ -24,7 +24,6 @@ import { processPaymentRefund } from "@/services/subscriptionService";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/utils/logger';
 import { getInitials } from "@/utils/stringUtils";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const Profile: React.FC = () => {
   const pageLogger = logger.withContext('Profile');
@@ -102,8 +101,11 @@ const Profile: React.FC = () => {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-welp-primary">
-        <WelpLoadingIcon size={120} />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
       </div>
     );
   }

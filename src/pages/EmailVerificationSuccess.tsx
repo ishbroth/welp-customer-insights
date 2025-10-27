@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 import { logger } from '@/utils/logger';
 
 const EmailVerificationSuccess = () => {
@@ -120,9 +119,9 @@ const EmailVerificationSuccess = () => {
 
   if (loading || isCheckingAuth) {
     return (
-      <div className="flex flex-col min-h-screen bg-welp-primary">
+      <div className="flex flex-col min-h-screen bg-gray-100">
         <div className="container mx-auto flex-grow flex items-center justify-center px-4">
-          <WelpLoadingIcon size={120} />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </div>
     );

@@ -17,7 +17,6 @@ import { useProfileReviewsActions } from "@/components/profile/hooks/useProfileR
 import { getReviewerDisplayName } from "@/utils/anonymousReviewUtils";
 import { getInitials } from "@/utils/stringUtils";
 import AvatarBackground from "@/components/AvatarBackground";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const BusinessProfile: React.FC = () => {
   const { businessId } = useParams<{ businessId: string }>();
@@ -63,8 +62,10 @@ const BusinessProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-welp-primary">
-        <WelpLoadingIcon size={120} />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
       </div>
     );
   }

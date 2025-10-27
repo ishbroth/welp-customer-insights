@@ -15,7 +15,6 @@ import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
 import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from "@/services/iapService";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 import { logger } from '@/utils/logger';
 
 const BuyCredits = () => {
@@ -200,10 +199,15 @@ const BuyCredits = () => {
   // Show loading while auth is being determined
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-welp-primary">
+      <div className="flex flex-col min-h-screen">
+        <Header />
         <main className="flex-grow flex items-center justify-center">
-          <WelpLoadingIcon size={120} />
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ea384c] mx-auto mb-4"></div>
+            <p>Loading...</p>
+          </div>
         </main>
+        <Footer />
       </div>
     );
   }

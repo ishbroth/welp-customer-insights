@@ -4,7 +4,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { BusinessInfoForm } from "./BusinessInfoForm";
 import { BusinessPasswordSection } from "./BusinessPasswordSection";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 import { logger } from "@/utils/logger";
 
 interface BusinessVerificationStepProps {
@@ -168,8 +167,11 @@ export const BusinessVerificationStep = ({
       </Button>
 
       {isVerifying && (
-        <div className="mt-2 flex justify-center">
-          <WelpLoadingIcon size={40} showText={true} text="Processing your business registration..." />
+        <div className="mt-2 text-center text-sm text-gray-600">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-welp-red mr-2"></div>
+            Processing your business registration...
+          </div>
         </div>
       )}
     </form>

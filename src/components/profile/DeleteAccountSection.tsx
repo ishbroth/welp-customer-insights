@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { useAccountDeletion } from "@/hooks/useAccountDeletion";
 import AccountDeletionSuccessPopup from "./AccountDeletionSuccessPopup";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const DeleteAccountSection = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -71,10 +70,10 @@ const DeleteAccountSection = () => {
                       className="bg-red-600 hover:bg-red-700"
                     >
                       {isDeleting ? (
-                        <span className="flex items-center">
-                          <WelpLoadingIcon size={16} className="mr-2" />
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           Deleting Account...
-                        </span>
+                        </>
                       ) : (
                         <>
                           <Trash2 className="h-4 w-4 mr-2" />

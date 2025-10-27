@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 import { logger } from '@/utils/logger';
 
 const AdminVerifyBusiness = () => {
@@ -112,12 +111,13 @@ const AdminVerifyBusiness = () => {
 
   if (isVerifying) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-welp-primary p-4">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <WelpLoadingIcon size={100} showText={true} text="Verifying Business..." />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
+            <CardTitle className="text-2xl">Verifying Business</CardTitle>
             <CardDescription>Please wait while we verify your business and update your account...</CardDescription>
           </CardHeader>
         </Card>

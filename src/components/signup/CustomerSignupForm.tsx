@@ -247,12 +247,10 @@ const CustomerSignupForm = () => {
           <Input
             id="email"
             type="email"
-            name="signup-email"
             placeholder="john@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="welp-input"
-            autoComplete="new-password"
             required
           />
           <p className="text-sm text-gray-500 mt-1">This will be used as your login username and for verification</p>

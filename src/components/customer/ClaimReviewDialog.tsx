@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import ClaimReviewBusinessInfo from "./ClaimReviewBusinessInfo";
 import { useClaimReviewDialog } from "@/hooks/useClaimReviewDialog";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 import { logger } from '@/utils/logger';
 
 interface ClaimReviewDialogProps {
@@ -93,7 +92,8 @@ const ClaimReviewDialog: React.FC<ClaimReviewDialogProps> = ({
         <div className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-6">
-              <WelpLoadingIcon size={60} />
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-sm text-gray-600">Loading business information...</span>
             </div>
           ) : (
             <ClaimReviewBusinessInfo

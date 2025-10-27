@@ -11,3 +11,42 @@
     opacity: 1;
   }
 }
+
+@keyframes clockwise-highlight {
+  0%, 80% { 
+    fill: white; 
+  }
+  20%, 60% { 
+    fill: #3b82f6; 
+  }
+}
+
+.arm-right {
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
+  animation-delay: 0s;
+  animation-fill-mode: forwards;
+}
+
+.arm-bottom-right {
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
+  animation-delay: 0.1s;
+  animation-fill-mode: forwards;
+}
+
+.arm-bottom-left {
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
+  animation-delay: 0.2s;
+  animation-fill-mode: forwards;
+}
+
+.arm-top-left {
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
+  animation-delay: 0.3s;
+  animation-fill-mode: forwards;
+}
+
+.period {
+  animation: clockwise-highlight 0.5s ease-in-out infinite;
+  animation-delay: 0.4s;
+  animation-fill-mode: forwards;
+}

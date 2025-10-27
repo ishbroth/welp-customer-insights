@@ -9,7 +9,6 @@ import AssociatesDisplay from "@/components/reviews/AssociatesDisplay";
 import { logger } from "@/utils/logger";
 import { getInitials, truncateText } from "@/utils/stringUtils";
 import { formatDate } from "@/utils/dateUtils";
-import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const ReviewCarousel = () => {
   const componentLogger = logger.withContext('ReviewCarousel');
@@ -231,10 +230,10 @@ const ReviewCarousel = () => {
 
   if (loading) {
     return (
-      <section className="py-3 bg-welp-primary">
+      <section className="py-3 bg-welp-dark">
         <div className="container mx-auto px-3 md:px-4">
           <div className="flex justify-center">
-            <WelpLoadingIcon size={60} />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#ea384c]"></div>
           </div>
         </div>
       </section>
