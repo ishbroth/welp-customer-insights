@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
 import { logger } from "@/utils/logger";
 
@@ -19,6 +19,7 @@ const CreditsBalanceCard = () => {
   const { subscriptionData } = useBillingData(currentUser);
   const [searchParams, setSearchParams] = useSearchParams();
   const { openCheckout } = useStripeCheckout();
+  const navigate = useNavigate();
   
 
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -65,7 +66,7 @@ const CreditsBalanceCard = () => {
   }, [searchParams, setSearchParams, loadCreditsData]);
 
 
-  const handleBuyCredits = async () => {
+  const handleBuyCredits = () => {
     componentLogger.info("Buy Credits button clicked!");
 
     if (isSubscribed) {
@@ -79,34 +80,9 @@ const CreditsBalanceCard = () => {
       return;
     }
 
-    try {
-      componentLogger.debug("About to call create-credit-payment function...");
-      const { data, error } = await supabase.functions.invoke('create-credit-payment', {
-        body: {}
-      });
-
-      componentLogger.debug("Function response:", { data, error });
-
-      if (error) {
-        componentLogger.error("Error creating payment session:", error);
-        toast.error("Failed to create payment session");
-        return;
-      }
-
-      if (data?.url) {
-        componentLogger.info("Opening Stripe checkout URL:", data.url);
-        openCheckout(data.url);
-
-        toast.success("Redirecting to Stripe checkout...");
-      } else {
-        componentLogger.error("No URL returned from payment session");
-        componentLogger.error("Full response data:", data);
-        toast.error("Failed to create payment session");
-      }
-    } catch (error) {
-      componentLogger.error("Error in handleBuyCredits:", error);
-      toast.error("An error occurred while processing your request");
-    }
+    // Navigate to buy credits page for both iOS and web
+    // This provides better UX with quantity selection and handles IAP on iOS
+    navigate('/buy-credits');
   };
 
   return (

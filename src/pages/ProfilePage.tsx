@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle } from "lucide-react";
+import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from "@/services/iapService";
 import { logger } from '@/utils/logger';
 
 const ProfilePage = () => {
@@ -65,35 +66,10 @@ const ProfilePage = () => {
     }
   }, [location.state]);
 
-  const handleBuyCredits = async () => {
-    if (!currentUser) {
-      toast.error("Please log in to purchase credits");
-      return;
-    }
-
-    try {
-      pageLogger.debug("Creating credit payment session...");
-      const { data, error } = await supabase.functions.invoke('create-credit-payment', {
-        body: {} // Remove the specific credit amount and total cost parameters
-      });
-
-      if (error) {
-        pageLogger.error("Error creating payment session:", error);
-        toast.error("Failed to create payment session");
-        return;
-      }
-
-      if (data?.url) {
-        pageLogger.debug("Opening Stripe checkout...");
-        window.open(data.url, '_blank');
-      } else {
-        pageLogger.error("No URL returned from payment session");
-        toast.error("Failed to create payment session");
-      }
-    } catch (error) {
-      pageLogger.error("Error in handleBuyCredits:", error);
-      toast.error("An error occurred while processing your request");
-    }
+  const handleBuyCredits = () => {
+    // Navigate to buy credits page for both iOS and web
+    // This provides better UX with quantity selection
+    navigate('/buy-credits');
   };
 
   if (!currentUser) {
