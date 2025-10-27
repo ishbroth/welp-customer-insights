@@ -11,6 +11,7 @@ import { handleSubscription } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
 import { useCredits } from "@/hooks/useCredits";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from "@/services/iapService";
 import { Shield, Zap, Users, Clock } from "lucide-react";
 import { logger } from '@/utils/logger';
 
@@ -78,6 +79,52 @@ const Subscription = () => {
 
     setIsProcessing(true);
 
+    // Check if running on iOS native - use Apple IAP
+    if (isIOSNative()) {
+      pageLogger.info("iOS detected - using Apple IAP for lifetime");
+
+      try {
+        toast({
+          title: "Opening App Store",
+          description: "Processing your lifetime purchase through Apple...",
+        });
+
+        const result = await purchaseSubscription(PACKAGE_IDS.LIFETIME);
+
+        if (result.success) {
+          toast({
+            title: "Lifetime Access Activated!",
+            description: "You now have lifetime access to all features!",
+          });
+          setIsSubscribed(true);
+        } else if (result.error === 'Purchase cancelled') {
+          toast({
+            title: "Purchase Cancelled",
+            description: "You cancelled the purchase. You can try again when you're ready.",
+          });
+        } else {
+          toast({
+            title: "Purchase Failed",
+            description: result.error || "Failed to complete purchase. Please try again.",
+            variant: "destructive"
+          });
+        }
+
+        setIsProcessing(false);
+        return;
+      } catch (error) {
+        pageLogger.error("❌ IAP error:", error);
+        toast({
+          title: "Purchase Error",
+          description: "An error occurred. Please try again.",
+          variant: "destructive"
+        });
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    // Web/Android - use Stripe
     try {
       pageLogger.debug("📞 About to call create-legacy-payment");
       const { data, error } = await supabase.functions.invoke("create-legacy-payment", {
@@ -97,12 +144,12 @@ const Subscription = () => {
 
       if (data?.url) {
         pageLogger.debug("🚀 Legacy - Opening Stripe checkout:", data.url);
-        
+
         const creditValue = creditBalance * 3;
-        const discountMessage = creditBalance > 0 
+        const discountMessage = creditBalance > 0
           ? ` Your ${creditBalance} credit${creditBalance === 1 ? '' : 's'} ($${creditValue}) have been applied as a discount.`
           : '';
-        
+
         // Use device-appropriate checkout method
         if (isMobile) {
           window.location.href = data.url;
@@ -112,7 +159,7 @@ const Subscription = () => {
           });
         } else {
           const newWindow = window.open(data.url, '_blank');
-          
+
           if (newWindow) {
             toast({
               title: "Checkout Opened",
@@ -126,7 +173,7 @@ const Subscription = () => {
             });
           }
         }
-        
+
         // Reset processing state since user will complete checkout in new tab
         setIsProcessing(false);
       } else {

@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import Purchases, { PurchasesPackage, CustomerInfo } from '@revenuecat/purchases-capacitor';
+import { Purchases, PurchasesPackage, CustomerInfo } from '@revenuecat/purchases-capacitor';
 import { logger } from '@/utils/logger';
 
 const iapLogger = logger.withContext('IAP');
