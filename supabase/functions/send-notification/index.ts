@@ -47,6 +47,29 @@ serve(async (req) => {
         content: reportContent,
         footerText: 'This is an automated report from Welp.',
       });
+    } else if (type === 'review_deleted') {
+      subject = `Review Deleted - Credit Refund Issued`
+      const deletionContent = `
+        <h2>Review Deleted</h2>
+        <p>A review you had unlocked has been deleted by the business owner.</p>
+
+        <p><strong>Review ID:</strong> ${data.reviewId}</p>
+        <p><strong>Business:</strong> ${data.businessName || 'Not available'}</p>
+        <p><strong>Deleted on:</strong> ${new Date().toLocaleString()}</p>
+
+        ${data.refundAmount ? `
+          <p><strong>Credit Refund:</strong> ${data.refundAmount} credit${data.refundAmount > 1 ? 's' : ''} have been refunded to your account.</p>
+        ` : ''}
+
+        <p>If you have any questions about this deletion, please contact our support team.</p>
+      `;
+
+      htmlContent = createBaseEmail({
+        title: 'Review Deleted',
+        previewText: 'A review has been deleted and credits refunded',
+        content: deletionContent,
+        footerText: 'This is an automated notification from Welp.',
+      });
     }
 
     // Use unified notification system

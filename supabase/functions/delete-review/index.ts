@@ -321,14 +321,75 @@ Deno.serve(async (req) => {
 
     console.log('✅ Review and all associated data successfully deleted');
 
+    // Send email notifications to users who were refunded
+    console.log('📧 Sending deletion notifications to affected users...');
+    try {
+      // Get business name from user profile for notifications
+      const serviceClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+
+      const { data: businessProfile } = await serviceClient
+        .from('business_profiles')
+        .select('business_name')
+        .eq('user_id', user.id)
+        .single();
+
+      const businessName = businessProfile?.business_name || 'A business';
+
+      // Send notifications to all users who received successful refunds
+      const successfulRefunds = refundResults.filter(r => r.status === 'success');
+
+      if (successfulRefunds.length > 0) {
+        console.log(`📧 Sending ${successfulRefunds.length} deletion notification(s)...`);
+
+        for (const refund of successfulRefunds) {
+          try {
+            // Get user email
+            const { data: userData } = await serviceClient
+              .from('users')
+              .select('email')
+              .eq('id', refund.userId)
+              .single();
+
+            if (userData?.email) {
+              await supabase.functions.invoke('send-notification', {
+                body: {
+                  type: 'review_deleted',
+                  recipientEmail: userData.email,
+                  data: {
+                    reviewId,
+                    businessName,
+                    refundAmount: refund.amount,
+                  }
+                }
+              });
+              console.log(`✅ Notification sent to user ${refund.userId}`);
+            }
+          } catch (notifError) {
+            console.error(`⚠️ Failed to send notification to user ${refund.userId}:`, notifError);
+            // Don't fail the entire deletion if notification fails
+          }
+        }
+        console.log('✅ Deletion notifications sent');
+      } else {
+        console.log('ℹ️ No successful refunds to notify about');
+      }
+    } catch (notifError) {
+      console.error('⚠️ Error sending deletion notifications:', notifError);
+      // Don't fail the deletion if notifications fail
+    }
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Review and all associated data deleted successfully' 
+      JSON.stringify({
+        success: true,
+        message: 'Review and all associated data deleted successfully'
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
