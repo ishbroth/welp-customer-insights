@@ -10,6 +10,12 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (7.0.1):
     - Capacitor
+  - PurchasesHybridCommon (17.11.0):
+    - RevenueCat (= 5.44.1)
+  - RevenueCat (5.44.1)
+  - RevenuecatPurchasesCapacitor (11.2.8):
+    - Capacitor
+    - PurchasesHybridCommon (= 17.11.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -18,6 +24,12 @@ DEPENDENCIES:
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
+
+SPEC REPOS:
+  trunk:
+    - PurchasesHybridCommon
+    - RevenueCat
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -32,6 +44,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/share"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
+  RevenuecatPurchasesCapacitor:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor"
 
 SPEC CHECKSUMS:
   Capacitor: 10feab36396883c55373328124a677f118cd4b5f
@@ -40,7 +54,10 @@ SPEC CHECKSUMS:
   CapacitorKeyboard: 09fd91dcde4f8a37313e7f11bde553ad1ed52036
   CapacitorShare: e573823f511f260f598d0423c33b1e3d7bbe5fd1
   CapacitorStatusBar: 6e7af040d8fc4dd655999819625cae9c2d74c36f
+  PurchasesHybridCommon: d820837b12781f2af5dbb5faba428811a59b6743
+  RevenueCat: c63342889404269918c1196708246d7c21cf8e6d
+  RevenuecatPurchasesCapacitor: 25ff15bb4d4d46a80f44fe21c367c6f33ffcc83f
 
-PODFILE CHECKSUM: 621756869d5b1fb7cb11f77430f63a6b3adc8052
+PODFILE CHECKSUM: 18945fef687f5ffe76132bef77a96ad979faf1cf
 
 COCOAPODS: 1.16.2

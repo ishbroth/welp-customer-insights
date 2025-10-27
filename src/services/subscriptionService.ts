@@ -2,6 +2,7 @@ import { logger } from '@/utils/logger';
 
 import { supabase } from "@/integrations/supabase/client";
 import { openStripeCheckout } from "@/utils/stripeCheckout";
+import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from './iapService';
 
 const serviceLogger = logger.withContext('Subscription');
 
@@ -71,6 +72,54 @@ export const handleSubscription = async (
 
   setIsProcessing(true);
 
+  // Check if running on iOS native - use Apple IAP
+  if (isIOSNative()) {
+    serviceLogger.info("iOS detected - using Apple IAP");
+
+    try {
+      const packageId = isCustomer ? PACKAGE_IDS.CUSTOMER_MONTHLY : PACKAGE_IDS.BUSINESS_MONTHLY;
+
+      toast({
+        title: "Opening App Store",
+        description: "Processing your subscription through Apple...",
+      });
+
+      const result = await purchaseSubscription(packageId);
+
+      if (result.success) {
+        toast({
+          title: "Subscription Activated!",
+          description: "Your subscription is now active. Enjoy unlimited access!",
+        });
+        setIsSubscribed(true);
+      } else if (result.error === 'Purchase cancelled') {
+        toast({
+          title: "Purchase Cancelled",
+          description: "You cancelled the purchase. You can try again when you're ready.",
+        });
+      } else {
+        toast({
+          title: "Purchase Failed",
+          description: result.error || "Failed to complete purchase. Please try again.",
+          variant: "destructive"
+        });
+      }
+
+      setIsProcessing(false);
+      return;
+    } catch (error) {
+      serviceLogger.error("IAP error:", error);
+      toast({
+        title: "Purchase Error",
+        description: "An error occurred. Please try again.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+      return;
+    }
+  }
+
+  // Web/Android - use Stripe
   try {
     serviceLogger.debug("About to call create-checkout");
     const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -90,20 +139,20 @@ export const handleSubscription = async (
 
     if (data?.url) {
       serviceLogger.info("Opening Stripe checkout:", data.url);
-      
+
       // Use same-tab navigation to avoid popup blockers
       openStripeCheckout(data.url);
-      
+
       const creditValue = creditBalance * 3;
-      const refundMessage = creditBalance > 0 
+      const refundMessage = creditBalance > 0
         ? ` After payment, you'll receive a $${Math.min(creditValue, 11.99).toFixed(2)} refund for your ${creditBalance} credit${creditBalance === 1 ? '' : 's'}.`
         : '';
-      
+
       toast({
         title: "Redirecting to Checkout",
         description: `Redirecting to Stripe checkout. Complete your payment and you'll be returned to this page.${refundMessage}`,
       });
-      
+
       // Reset processing state since user will complete checkout in new tab
       setIsProcessing(false);
     } else {

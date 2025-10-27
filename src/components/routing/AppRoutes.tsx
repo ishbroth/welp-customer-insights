@@ -39,6 +39,7 @@ import DebugAccount from "@/pages/DebugAccount";
 import CustomerProfile from "@/pages/CustomerProfile";
 import BusinessProfile from "@/pages/BusinessProfile";
 import Contact from "@/pages/Contact";
+import BuyCredits from "@/pages/BuyCredits";
 
 const AppRoutes = () => {
   const { loading } = useAuth();
@@ -82,6 +83,7 @@ const AppRoutes = () => {
             <Route path="/success-stories" element={<SuccessStories />} />
             <Route path="/search" element={<SearchResults />} />
             <Route path="/subscription" element={<Subscription />} />
+            <Route path="/buy-credits" element={<BuyCredits />} />
             <Route path="/about" element={<About />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/faq" element={<FAQ />} />
