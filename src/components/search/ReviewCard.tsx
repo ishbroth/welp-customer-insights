@@ -72,6 +72,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
   const { isReviewClaimedByUser } = useReviewClaims();
   const [isClaimedByCurrentUser, setIsClaimedByCurrentUser] = React.useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = React.useState<boolean>(false);
 
   // Check if current user has claimed this review
   React.useEffect(() => {
@@ -239,14 +240,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   return (
-    <Card className="mb-4">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
+    <Card className="mb-2 md:mb-4">
+      <CardContent className="p-2 md:p-4">
+        <div className="flex items-start justify-between mb-2 md:mb-3">
           {/* Business info - left side */}
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <Avatar className="h-8 w-8 md:h-10 md:w-10">
               {!review.is_anonymous && <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />}
-              <AvatarFallback className={review.is_anonymous ? "bg-purple-100 text-purple-800 text-xl" : "bg-blue-100 text-blue-800"}>
+              <AvatarFallback className={review.is_anonymous ? "bg-purple-100 text-purple-800 text-base md:text-xl" : "bg-blue-100 text-blue-800"}>
                 {review.is_anonymous ? "🕵️" : getNameInitials(review.reviewerName)}
               </AvatarFallback>
             </Avatar>
@@ -254,8 +255,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <div className="flex items-center gap-1">
                 <h4
                   className={review.is_anonymous
-                    ? "font-medium text-gray-700"
-                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                    ? "font-medium text-gray-700 text-sm md:text-base"
+                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors text-sm md:text-base"
                   }
                   onClick={review.is_anonymous ? undefined : handleBusinessNameClick}
                 >
@@ -263,12 +264,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 </h4>
                 {review.reviewerVerified && <VerifiedBadge size="sm" />}
               </div>
-              <p className="text-sm text-gray-500">Business</p>
+              <p className="text-xs md:text-sm text-gray-500">Business</p>
             </div>
           </div>
 
-          {/* Customer info - right side (minimal display) */}
-          <div className="text-right">
+          {/* Customer info - desktop (hidden on mobile) */}
+          <div className="hidden md:block text-right">
             <CustomerInfoDisplay
               customerInfo={customerInfo}
               onCustomerClick={customerInfo.isClaimed && canViewFullContent ? handleCustomerNameClick : undefined}
@@ -280,8 +281,54 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           </div>
         </div>
 
+        {/* Customer info - mobile only (name top-left, avatar below, contact to right) */}
+        <div className="md:hidden mb-2">
+          <div className="flex flex-col">
+            {/* Customer name at top */}
+            <div className="mb-1">
+              {customerInfo.isClaimed && canViewFullContent ? (
+                <h4
+                  className="text-xs font-medium cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline"
+                  onClick={handleCustomerNameClick}
+                >
+                  {customerInfo.name}
+                </h4>
+              ) : (
+                <h4 className="text-xs font-medium">
+                  {customerInfo.name}
+                </h4>
+              )}
+            </div>
+
+            {/* Avatar and contact info side by side */}
+            <div className="flex items-start space-x-2">
+              <Avatar className="h-6 w-6 flex-shrink-0">
+                {customerInfo.isClaimed && customerInfo.avatar ? (
+                  <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+                ) : null}
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                  {getNameInitials(customerInfo.name)}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Contact info to the right of avatar */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500">Customer</p>
+                {customerInfo.phone && (
+                  <p className="text-xs text-gray-500 truncate">{customerInfo.phone}</p>
+                )}
+                {(customerInfo.address || customerInfo.city) && (
+                  <p className="text-xs text-gray-500 truncate">
+                    {[customerInfo.address, customerInfo.city, customerInfo.zipCode].filter(Boolean).join(', ')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Rating and Date */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 md:mb-3">
           <div className="flex items-center gap-2">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
@@ -307,18 +354,38 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         </div>
 
         {/* Review Content */}
-        <div className="mb-4">
+        <div className="mb-2 md:mb-4">
           {canViewFullContent ? (
-            <p className="text-gray-700 leading-relaxed md:text-base text-sm">{review.content}</p>
+            <div>
+              <p className={`text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base ${!isExpanded ? 'line-clamp-5' : ''}`}>
+                {review.content}
+              </p>
+              {!isExpanded && review.content.length > 200 && (
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm mt-1 font-medium"
+                >
+                  see more
+                </button>
+              )}
+              {isExpanded && (
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm mt-1 font-medium"
+                >
+                  see less
+                </button>
+              )}
+            </div>
           ) : (
             <div className="relative inline-block w-full">
               {/* Clear first 2 characters */}
-              <span className="text-gray-700 leading-relaxed md:text-base text-sm">
+              <span className="text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base">
                 {review.content.substring(0, 2)}
               </span>
               {/* 3rd letter - halfway between clear and blurry */}
               <span
-                className="text-gray-900 leading-relaxed md:text-base text-sm"
+                className="text-gray-900 leading-relaxed text-xs sm:text-sm md:text-base"
                 style={{
                   filter: 'blur(2.5px)',
                   WebkitFilter: 'blur(2.5px)',
@@ -328,7 +395,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               </span>
               {/* 4th letter - more blur */}
               <span
-                className="text-gray-900 leading-relaxed md:text-base text-sm"
+                className="text-gray-900 leading-relaxed text-xs sm:text-sm md:text-base"
                 style={{
                   filter: 'blur(4px)',
                   WebkitFilter: 'blur(4px)',
@@ -338,7 +405,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               </span>
               {/* Fully blurred remaining text */}
               <span
-                className="text-gray-900 leading-relaxed md:text-base text-sm"
+                className="text-gray-900 leading-relaxed text-xs sm:text-sm md:text-base"
                 style={{
                   filter: 'blur(5px)',
                   WebkitFilter: 'blur(5px)',
@@ -355,10 +422,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
         {/* Associate Match Indicator - show when this result came from searching for an associate */}
         {review.isAssociateMatch && review.associateData && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="mb-2 md:mb-4 p-2 md:p-3 bg-blue-50 border border-blue-200 rounded-md">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">
+              <Users className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
+              <span className="text-xs md:text-sm font-medium text-blue-800">
                 Found via associate: {`${review.associateData.firstName} ${review.associateData.lastName}`.trim()}
               </span>
             </div>
@@ -367,7 +434,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
         {/* Associates and Business Display - split layout (similar to BusinessReviewCard) */}
         {((review.associates && review.associates.length > 0) || review.customer_business_name) && !review.isAssociateMatch && (
-          <div className="flex flex-row gap-2 sm:gap-4 mb-4">
+          <div className="flex flex-row gap-2 sm:gap-4 mb-2 md:mb-4">
             {/* Associates on the left */}
             {(review.associates && review.associates.length > 0) && (
               <div className="flex-1 min-w-0">
@@ -406,12 +473,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
         {/* Lock/Unlock UI for non-accessible content */}
         {!canViewFullContent && (
-          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+          <div className="mb-2 md:mb-4 p-2 md:p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div className="flex items-center text-gray-600 mb-2">
-              <Lock className="h-4 w-4 mr-2" />
-              <span className="text-sm">Full review locked</span>
+              <Lock className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+              <span className="text-xs md:text-sm">Full review locked</span>
             </div>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-gray-500 mb-2 md:mb-3">
               Customers may track their own reviews only.
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -451,17 +518,17 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           isBusinessUser={currentUser?.type === 'business'}
           isCustomerBeingReviewed={currentUser?.id === review.customerId}
           customerId={review.customerId}
-          className="mt-4"
+          className="mt-2 md:mt-4"
         />
 
         {/* Conversation Access Prompt - Show when review content is visible but conversation participation needs unlock */}
         {canViewFullContent && !canParticipateInConversationFinal && (
-          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+          <div className="mt-2 md:mt-4 p-2 md:p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div className="flex items-center text-gray-600 mb-2">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              <span className="text-sm">Unlock conversation to participate</span>
+              <MessageCircle className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+              <span className="text-xs md:text-sm">Unlock conversation to participate</span>
             </div>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-gray-500 mb-2 md:mb-3">
               {!reviewerCanParticipate && isReviewAuthor
                 ? "Anonymous reviewers cannot participate in conversations. Edit your review to uncheck the anonymous option to participate."
                 : isReviewAuthor
