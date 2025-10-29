@@ -1,4 +1,4 @@
-package com.welp.customerinsights;
+package com.mywelp.dev;
 
 import com.getcapacitor.BridgeActivity;
 
