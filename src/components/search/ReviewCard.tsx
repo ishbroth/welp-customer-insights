@@ -358,10 +358,10 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         <div className="mb-2 md:mb-4">
           {canViewFullContent ? (
             <div>
-              <p className={`text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base ${!isExpanded ? 'line-clamp-5' : ''}`}>
+              <p className={`text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base ${!isExpanded ? 'line-clamp-3' : ''}`}>
                 {review.content}
               </p>
-              {!isExpanded && review.content.length > 200 && (
+              {!isExpanded && review.content.length > 300 && (
                 <button
                   onClick={() => setIsExpanded(true)}
                   className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm mt-1 font-medium"
