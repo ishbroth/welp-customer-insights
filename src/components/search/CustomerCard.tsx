@@ -98,13 +98,28 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={customer.avatar} alt={`${customer.firstName} ${customer.lastName}`} />
+              <AvatarImage src={customer.avatar} alt={
+                customer.isAssociateMatch && customer.associateData
+                  ? `${customer.associateData.firstName} ${customer.associateData.lastName}`
+                  : `${customer.firstName} ${customer.lastName}`
+              } />
               <AvatarFallback className="bg-blue-100 text-blue-800">
-                {getInitials(`${customer.firstName} ${customer.lastName}`)}
+                {customer.isAssociateMatch && customer.associateData
+                  ? getInitials(`${customer.associateData.firstName} ${customer.associateData.lastName}`)
+                  : getInitials(`${customer.firstName} ${customer.lastName}`)
+                }
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1">
+              {customer.isAssociateMatch && (
+                <div className="mb-1">
+                  <Badge variant="secondary" className="text-xs">
+                    Associate Match
+                  </Badge>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 mb-1">
                 <h3
                   className={`font-semibold text-lg ${
@@ -114,19 +129,17 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
                   }`}
                   onClick={hasViewableProfile() ? handleViewProfile : undefined}
                 >
-                  {customer.firstName} {customer.lastName}
+                  {customer.isAssociateMatch && customer.associateData
+                    ? `${customer.associateData.firstName} ${customer.associateData.lastName}`
+                    : `${customer.firstName} ${customer.lastName}`
+                  }
                 </h3>
                 {customer.verified && <VerifiedBadge size="sm" />}
-                {customer.isAssociateMatch && (
-                  <Badge variant="secondary" className="text-xs">
-                    Associate Match
-                  </Badge>
-                )}
               </div>
 
               {customer.isAssociateMatch && customer.originalCustomerInfo && (
                 <div className="text-xs text-gray-500 mb-2">
-                  Found as associate of: {customer.originalCustomerInfo.name}
+                  Associate of: {customer.originalCustomerInfo.name}
                 </div>
               )}
               
