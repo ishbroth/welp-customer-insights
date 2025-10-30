@@ -93,7 +93,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
   const alreadyReviewed = hasAlreadyReviewed();
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-none">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
