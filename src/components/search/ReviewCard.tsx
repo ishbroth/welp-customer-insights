@@ -240,7 +240,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-none border-x-0">
       <CardContent className="p-2 md:p-4">
         <div className="flex items-start justify-between mb-2 md:mb-3">
           {/* Business info - left side */}
