@@ -98,9 +98,16 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={customer.avatar} alt={`${customer.firstName} ${customer.lastName}`} />
+              <AvatarImage src={customer.avatar} alt={
+                customer.isAssociateMatch && customer.associateData
+                  ? `${customer.associateData.firstName} ${customer.associateData.lastName}`
+                  : `${customer.firstName} ${customer.lastName}`
+              } />
               <AvatarFallback className="bg-blue-100 text-blue-800">
-                {getInitials(`${customer.firstName} ${customer.lastName}`)}
+                {customer.isAssociateMatch && customer.associateData
+                  ? getInitials(`${customer.associateData.firstName} ${customer.associateData.lastName}`)
+                  : getInitials(`${customer.firstName} ${customer.lastName}`)
+                }
               </AvatarFallback>
             </Avatar>
 
@@ -122,14 +129,17 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
                   }`}
                   onClick={hasViewableProfile() ? handleViewProfile : undefined}
                 >
-                  {customer.firstName} {customer.lastName}
+                  {customer.isAssociateMatch && customer.associateData
+                    ? `${customer.associateData.firstName} ${customer.associateData.lastName}`
+                    : `${customer.firstName} ${customer.lastName}`
+                  }
                 </h3>
                 {customer.verified && <VerifiedBadge size="sm" />}
               </div>
 
-              {customer.isAssociateMatch && customer.associateData && (
+              {customer.isAssociateMatch && (
                 <div className="text-xs text-gray-500 mb-2">
-                  Associate of: {customer.associateData.firstName} {customer.associateData.lastName}
+                  Associate of: {customer.firstName} {customer.lastName}
                 </div>
               )}
               
