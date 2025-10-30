@@ -172,7 +172,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-0">
         {customer.reviews && customer.reviews.length > 0 ? (
           <div>
             <ReviewsList
@@ -181,9 +181,9 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
               customerData={customer}
               onReviewUpdate={onReviewUpdate}
             />
-            
+
             {hasMoreReviews && !showAllReviews && (
-              <div className="text-center mt-4">
+              <div className="text-center mt-4 px-6">
                 <Button
                   variant="outline"
                   onClick={() => setShowAllReviews(true)}
@@ -194,7 +194,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             )}
           </div>
         ) : (
-          <div className="text-center py-6 text-gray-500">
+          <div className="text-center py-6 px-6 text-gray-500">
             <div className="mb-2">
               <User className="h-8 w-8 mx-auto text-gray-400" />
             </div>
