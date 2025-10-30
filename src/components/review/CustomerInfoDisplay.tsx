@@ -113,19 +113,10 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
 
   return (
     <div className="flex items-center space-x-2">
-      <Avatar className={sizeClasses.avatar}>
-        {enhancedCustomerInfo.isClaimed && enhancedCustomerInfo.avatar ? (
-          <AvatarImage src={enhancedCustomerInfo.avatar} alt={enhancedCustomerInfo.name} />
-        ) : null}
-        <AvatarFallback className="bg-gray-100 text-gray-600">
-          {getNameInitials(enhancedCustomerInfo.name)}
-        </AvatarFallback>
-      </Avatar>
-      
-      <div className="text-right">
-        <div className="flex items-center gap-1 justify-end">
+      <div className="text-left flex-1">
+        <div className="flex items-center gap-1">
           {isClickable ? (
-            <h4 
+            <h4
               className={`${sizeClasses.name} cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline`}
               onClick={onCustomerClick}
             >
@@ -137,17 +128,17 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
             </h4>
           )}
         </div>
-        
+
         {/* Show match quality score for unclaimed reviews */}
         {!hideMatchScore && !enhancedCustomerInfo.isClaimed && enhancedCustomerInfo.matchScore && enhancedCustomerInfo.matchScore > 5 && enhancedCustomerInfo.matchType && (
-          <div className="flex justify-end mb-1">
-            <ReviewMatchQualityScore 
+          <div className="flex mb-1">
+            <ReviewMatchQualityScore
               matchScore={enhancedCustomerInfo.matchScore}
               matchType={enhancedCustomerInfo.matchType}
             />
           </div>
         )}
-        
+
         {showContactInfo && (
           <div className={sizeClasses.details}>
             {enhancedCustomerInfo.isClaimed ? (
@@ -162,9 +153,18 @@ const CustomerInfoDisplay: React.FC<CustomerInfoDisplayProps> = ({
             )}
           </div>
         )}
-        
+
         <p className={sizeClasses.details}>Customer</p>
       </div>
+
+      <Avatar className={sizeClasses.avatar}>
+        {enhancedCustomerInfo.isClaimed && enhancedCustomerInfo.avatar ? (
+          <AvatarImage src={enhancedCustomerInfo.avatar} alt={enhancedCustomerInfo.name} />
+        ) : null}
+        <AvatarFallback className="bg-gray-100 text-gray-600">
+          {getNameInitials(enhancedCustomerInfo.name)}
+        </AvatarFallback>
+      </Avatar>
     </div>
   );
 };

@@ -240,7 +240,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   return (
-    <Card className="mb-2 md:mb-4">
+    <Card className="w-full">
       <CardContent className="p-2 md:p-4">
         <div className="flex items-start justify-between mb-2 md:mb-3">
           {/* Business info - left side */}
@@ -255,8 +255,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <div className="flex items-center gap-1">
                 <h4
                   className={review.is_anonymous
-                    ? "font-medium text-gray-700 text-sm md:text-base"
-                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors text-sm md:text-base"
+                    ? "font-medium text-gray-700 text-xs md:text-sm"
+                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors text-xs md:text-sm"
                   }
                   onClick={review.is_anonymous ? undefined : handleBusinessNameClick}
                 >
@@ -301,17 +301,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             </div>
 
             {/* Avatar and contact info side by side */}
-            <div className="flex items-start space-x-2">
-              <Avatar className="h-6 w-6 flex-shrink-0">
-                {customerInfo.isClaimed && customerInfo.avatar ? (
-                  <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-                ) : null}
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {getNameInitials(customerInfo.name)}
-                </AvatarFallback>
-              </Avatar>
-
-              {/* Contact info to the right of avatar */}
+            <div className="flex items-start justify-between space-x-2">
+              {/* Contact info on the left */}
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500">Customer</p>
                 {customerInfo.phone && (
@@ -323,6 +314,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                   </p>
                 )}
               </div>
+
+              {/* Avatar on the right */}
+              <Avatar className="h-6 w-6 flex-shrink-0">
+                {customerInfo.isClaimed && customerInfo.avatar ? (
+                  <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+                ) : null}
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                  {getNameInitials(customerInfo.name)}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </div>
         </div>
