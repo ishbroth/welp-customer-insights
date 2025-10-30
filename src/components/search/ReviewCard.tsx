@@ -241,7 +241,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
   return (
     <Card className="w-full rounded-none border-x-0">
-      <CardContent className="p-2 md:p-4">
+      <CardContent className="py-2 px-1 md:py-4 md:px-2">
         <div className="flex items-start justify-between mb-2 md:mb-3">
           {/* Business info - left side */}
           <div className="flex items-center space-x-2 md:space-x-3">
