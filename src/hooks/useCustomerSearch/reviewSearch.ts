@@ -114,7 +114,10 @@ const searchAssociatesInReviews = async (searchParams: SearchParams, mainSearchR
             associateReviews.push({
               ...associateReview,
               isAssociateMatch: true,
-              associateData: associate,
+              associateData: {
+                firstName: firstName || '',
+                lastName: lastName || ''
+              },
               original_customer_name: originalCustomerName, // The person who was searched for
             });
           }

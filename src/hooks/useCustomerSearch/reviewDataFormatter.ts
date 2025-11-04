@@ -4,15 +4,14 @@ export const formatReviewData = (review: any) => {
   const businessProfile = review.profiles || {};
   const customerProfile = review.customer_profile || {};
 
-  // For associate matches, use original customer name for display
-  const displayCustomerName = review.isAssociateMatch && review.original_customer_name
-    ? review.original_customer_name
-    : review.customer_name;
+  // Always use the actual customer name from the review
+  // For associate matches, this is the associate's name (the person being reviewed)
+  // The associateData field contains the search target's name for "Found via associate:" display
 
   return {
     id: review.id,
     customer_name: review.customer_name, // Keep original for search/scoring
-    customerName: displayCustomerName,   // Use for UI display
+    customerName: review.customer_name,  // Use for UI display - always the actual customer being reviewed
     customer_nickname: review.customer_nickname, // Include nickname
     customer_business_name: review.customer_business_name, // Include business name
     customer_address: review.customer_address,

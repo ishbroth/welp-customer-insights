@@ -26,6 +26,7 @@ import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle } from "lucide-react";
 import { logger } from '@/utils/logger';
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const ProfilePage = () => {
   const pageLogger = logger.withContext('ProfilePage');
@@ -75,8 +76,8 @@ const ProfilePage = () => {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <main className="flex-grow flex items-center justify-center bg-[#ea384c]">
+          <WelpLoadingIcon size={120} />
         </main>
         <Footer />
       </div>

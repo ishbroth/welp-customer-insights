@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { logger } from '@/utils/logger';
+import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
 
 const Login = () => {
   const pageLogger = logger.withContext('Login');
@@ -64,13 +65,12 @@ const Login = () => {
   // Show loading spinner if auth is loading or we're submitting
   if (loading || isSubmitting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-gray-600">
-            {isSubmitting ? "Signing you in..." : "Loading..."}
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[#ea384c]">
+        <WelpLoadingIcon
+          size={120}
+          showText={true}
+          text={isSubmitting ? "Signing you in..." : "Loading..."}
+        />
       </div>
     );
   }

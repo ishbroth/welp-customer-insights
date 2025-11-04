@@ -197,8 +197,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       }
 
       if (data?.url) {
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
+        // Navigate to Stripe checkout (works on all platforms including iOS)
+        window.location.href = data.url;
       }
     } catch (error) {
       componentLogger.error("Error:", error);
