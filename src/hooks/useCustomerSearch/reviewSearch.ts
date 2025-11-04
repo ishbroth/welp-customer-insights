@@ -12,11 +12,13 @@ import { logger } from '@/utils/logger';
 const hookLogger = logger.withContext('reviewSearch');
 
 // Search for associates within reviews and return transformed results
-const searchAssociatesInReviews = async (searchParams: SearchParams) => {
+// This function finds reviews where the CUSTOMER name matches the search,
+// then extracts associates from those reviews to create associate match results
+const searchAssociatesInReviews = async (searchParams: SearchParams, mainSearchReviews: any[]) => {
   const { firstName, lastName } = searchParams;
 
   hookLogger.debug("=== ASSOCIATE SEARCH START ===");
-  hookLogger.debug("Searching for associates:", { firstName, lastName });
+  hookLogger.debug("Searching for associates in reviews about:", { firstName, lastName });
 
   // If no name provided, skip associate search
   if (!firstName && !lastName) {
@@ -24,103 +26,108 @@ const searchAssociatesInReviews = async (searchParams: SearchParams) => {
     return [];
   }
 
-  const fullName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
-  hookLogger.debug("Full name for associate search:", fullName);
+  const searchFullName = [firstName, lastName].filter(Boolean).join(' ').toLowerCase();
+  hookLogger.debug("Full name being searched:", searchFullName);
 
   try {
-    // Use a simpler approach - get all reviews with associates and filter in JavaScript
-    // This avoids complex JSONB query syntax issues
-    hookLogger.debug("Fetching all reviews with associates for JavaScript filtering...");
+    // Find reviews where the CUSTOMER matches the search criteria
+    // These are the main search results - we'll extract associates from them
+    hookLogger.debug(`Checking ${mainSearchReviews.length} main search result reviews for associates...`);
 
-    const { data: associateReviews, error } = await supabase
-      .from('reviews')
-      .select(`
-        id,
-        customer_name,
-        customer_nickname,
-        customer_business_name,
-        customer_address,
-        customer_city,
-        customer_zipcode,
-        customer_phone,
-        rating,
-        content,
-        created_at,
-        business_id,
-        associates,
-        is_anonymous
-      `)
-      .not('associates', 'is', null)
-      .neq('associates', '[]')
-      .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
+    // Step 1: Collect all unique associates from the filtered reviews
+    const uniqueAssociates = new Map<string, { associate: any, originalCustomerName: string }>();
 
-    if (error) {
-      hookLogger.error("Associate search error:", error);
-      return [];
-    }
-
-    if (!associateReviews || associateReviews.length === 0) {
-      hookLogger.debug("No reviews found with matching associates");
-      return [];
-    }
-
-    hookLogger.debug(`Found ${associateReviews.length} reviews with potential associate matches`);
-
-    // Transform each review for each matching associate
-    const transformedReviews = [];
-
-    for (const review of associateReviews) {
-      if (!review.associates || !Array.isArray(review.associates)) {
+    for (const review of mainSearchReviews) {
+      if (!review.associates || !Array.isArray(review.associates) || review.associates.length === 0) {
         continue;
       }
 
-      // Find matching associates in this review
-      const matchingAssociates = review.associates.filter(associate => {
-        if (!associate || typeof associate !== 'object') return false;
+      const customerName = review.customer_name || '';
+      hookLogger.debug(`Review ${review.id} about customer "${customerName}" has ${review.associates.length} associate(s)`);
 
-        const associateFirstName = (associate.firstName || '').toLowerCase();
-        const associateLastName = (associate.lastName || '').toLowerCase();
-        const associateFullName = `${associateFirstName} ${associateLastName}`.trim();
+      for (const associate of review.associates) {
+        if (!associate || typeof associate !== 'object') continue;
 
-        // Check for matches
-        const firstNameMatch = !firstName || associateFirstName.includes(firstName.toLowerCase());
-        const lastNameMatch = !lastName || associateLastName.includes(lastName.toLowerCase());
-        const fullNameMatch = associateFullName.includes(fullName);
+        const associateName = `${associate.firstName || ''} ${associate.lastName || ''}`.trim();
+        const associateNameLower = associateName.toLowerCase();
 
-        return firstNameMatch && lastNameMatch || fullNameMatch;
-      });
+        // Skip if the associate's name matches the search criteria
+        const firstNameMatch = firstName && associateNameLower.includes(firstName.toLowerCase());
+        const lastNameMatch = lastName && associateNameLower.includes(lastName.toLowerCase());
+        if ((firstName && lastName && firstNameMatch && lastNameMatch) ||
+            associateNameLower === searchFullName) {
+          hookLogger.debug(`Skipping associate ${associateName} - matches search criteria for ${searchFullName}`);
+          continue;
+        }
 
-      // Create a transformed review for each matching associate
-      for (const matchingAssociate of matchingAssociates) {
-        const associateName = `${matchingAssociate.firstName || ''} ${matchingAssociate.lastName || ''}`.trim();
-
-        const transformedReview = {
-          ...review,
-          // Replace customer data with associate data
-          customer_name: associateName,
-          // Keep original customer data for reference
-          original_customer_name: review.customer_name,
-          original_customer_address: review.customer_address,
-          original_customer_city: review.customer_city,
-          original_customer_zipcode: review.customer_zipcode,
-          original_customer_phone: review.customer_phone,
-          // Mark as associate match
-          isAssociateMatch: true,
-          associateData: matchingAssociate,
-          // Use associate name for location data if main customer location not available
-          customer_address: review.customer_address,
-          customer_city: review.customer_city,
-          customer_zipcode: review.customer_zipcode,
-          customer_phone: review.customer_phone,
-        };
-
-        transformedReviews.push(transformedReview);
-        hookLogger.debug(`Created associate match: ${associateName} from review ${review.id}`);
+        // Add to unique associates (using lowercase name as key to deduplicate)
+        if (!uniqueAssociates.has(associateNameLower)) {
+          uniqueAssociates.set(associateNameLower, {
+            associate,
+            originalCustomerName: customerName
+          });
+          hookLogger.debug(`Found unique associate: ${associateName} (associate of ${customerName})`);
+        }
       }
     }
 
-    hookLogger.debug(`=== ASSOCIATE SEARCH COMPLETE: ${transformedReviews.length} matches ===`);
-    return transformedReviews;
+    hookLogger.debug(`Found ${uniqueAssociates.size} unique associate(s)`);
+
+    // Step 2: For each unique associate, find actual reviews where THEY are the customer
+    const associateReviews = [];
+
+    for (const [associateNameLower, { associate, originalCustomerName }] of uniqueAssociates.entries()) {
+      const associateName = `${associate.firstName || ''} ${associate.lastName || ''}`.trim();
+
+      hookLogger.debug(`Looking up reviews where ${associateName} is the customer...`);
+
+      try {
+        // Query for reviews where this associate is the main customer
+        const { data: reviewsAboutAssociate, error: lookupError } = await supabase
+          .from('reviews')
+          .select(`
+            id,
+            customer_name,
+            customer_nickname,
+            customer_business_name,
+            customer_address,
+            customer_city,
+            customer_zipcode,
+            customer_phone,
+            rating,
+            content,
+            created_at,
+            business_id,
+            associates,
+            is_anonymous
+          `)
+          .ilike('customer_name', `%${associateName}%`)
+          .limit(10);
+
+        if (lookupError) {
+          hookLogger.error(`Error looking up reviews for associate ${associateName}:`, lookupError);
+        } else if (reviewsAboutAssociate && reviewsAboutAssociate.length > 0) {
+          hookLogger.debug(`Found ${reviewsAboutAssociate.length} review(s) about ${associateName}`);
+
+          // Mark each review as an associate match
+          for (const associateReview of reviewsAboutAssociate) {
+            associateReviews.push({
+              ...associateReview,
+              isAssociateMatch: true,
+              associateData: associate,
+              original_customer_name: originalCustomerName, // The person who was searched for
+            });
+          }
+        } else {
+          hookLogger.debug(`No reviews found where ${associateName} is the customer`);
+        }
+      } catch (error) {
+        hookLogger.error(`Exception looking up reviews for associate ${associateName}:`, error);
+      }
+    }
+
+    hookLogger.debug(`=== ASSOCIATE SEARCH COMPLETE: ${associateReviews.length} associate reviews found ===`);
+    return associateReviews;
 
   } catch (error) {
     hookLogger.error("Error in associate search:", error);
@@ -327,11 +334,40 @@ export const searchReviews = async (
   // Wait for all scoring to complete
   const scoredReviews = await Promise.all(scoringPromises);
 
+  // IMPORTANT: Filter the direct match reviews FIRST before extracting associates
+  // We only want to show associates from reviews that actually matched the search
+  const searchContext = {
+    hasName: Boolean(firstName || lastName),
+    hasLocation: Boolean(address || city || zipCode),
+    hasPhone: Boolean(phone),
+    hasAddress: Boolean(address),
+    isNameFocused: Boolean(firstName || lastName) && Boolean(address || city || zipCode || phone),
+    isLocationOnly: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address || city || zipCode),
+    isPhoneOnly: !Boolean(firstName || lastName) && Boolean(phone) && !Boolean(address || city || zipCode),
+    isPhoneWithLocation: !Boolean(firstName || lastName) && Boolean(phone) && Boolean(address || city || zipCode),
+    isAddressWithState: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address) && Boolean(state)
+  };
+
+  const filteredDirectMatches = isSingleFieldSearch
+    ? scoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
+    : filterAndSortReviews(scoredReviews, isSingleFieldSearch, searchContext, unlockedReviews, {
+        firstName,
+        lastName,
+        phone,
+        address,
+        city,
+        state,
+        zipCode
+      });
+
+  hookLogger.debug(`🔍 Filtered ${scoredReviews.length} reviews down to ${filteredDirectMatches.length} that match search criteria`);
+
   // Search for associate matches if name provided
+  // ONLY extract associates from reviews that passed filtering (actual search results)
   let associateMatches = [];
   if (firstName || lastName) {
     hookLogger.debug("🔍 Starting associate search for:", { firstName, lastName });
-    const rawAssociateMatches = await searchAssociatesInReviews(searchParams);
+    const rawAssociateMatches = await searchAssociatesInReviews(searchParams, filteredDirectMatches);
     hookLogger.debug("🔍 Raw associate matches found:", rawAssociateMatches.length);
 
     // Process associate matches through the same business profile enrichment and scoring
@@ -397,12 +433,12 @@ export const searchReviews = async (
     hookLogger.debug(`🔍 Processed ${associateMatches.length} associate matches`);
   }
 
-  // Combine regular reviews and associate matches
-  // Allow both direct and associate matches to coexist - they represent different search perspectives
-  const allScoredReviews = [...scoredReviews, ...associateMatches];
+  // Combine filtered direct matches with associate matches
+  // Direct matches are already filtered, associate matches bypass filtering
+  let filteredReviews = [...filteredDirectMatches, ...associateMatches];
 
-  hookLogger.debug(`🔍 SEARCH DEBUG: Combined results for search`);
-  hookLogger.debug(`🔍 Direct matches (${scoredReviews.length}):`, scoredReviews.map(r => ({
+  hookLogger.debug(`🔍 SEARCH DEBUG: Combined final results`);
+  hookLogger.debug(`🔍 Filtered direct matches (${filteredDirectMatches.length}):`, filteredDirectMatches.map(r => ({
     id: r.id,
     name: r.customer_name,
     score: r.searchScore,
@@ -414,56 +450,12 @@ export const searchReviews = async (
     score: r.searchScore,
     isAssociate: r.isAssociateMatch
   })));
-  hookLogger.debug(`🔍 Total combined: ${allScoredReviews.length}`);
-
-  // Debug: Log all CA reviews after business profile enrichment
-  const caReviews = allScoredReviews.filter(review => {
-    const businessProfile = businessProfilesMap.get(review.business_id);
-    const businessState = businessProfile?.business_state || businessProfile?.state;
-    const normalizedState = businessState ? normalizeState(businessState) : null;
-    return normalizedState === 'CA';
-  });
-  hookLogger.debug(`🔍 Found ${caReviews.length} reviews with CA business state after enrichment (including associates):`, caReviews.map(r => ({
-    id: r.id,
-    name: r.customer_name,
-    city: r.customer_city,
-    business_id: r.business_id,
-    business_state: businessProfilesMap.get(r.business_id)?.business_state,
-    score: r.searchScore,
-    matches: r.matchCount,
-    isAssociate: r.isAssociateMatch || false
-  })));
-
-  // Detect search context for filtering
-  const searchContext = {
-    hasName: Boolean(firstName || lastName),
-    hasLocation: Boolean(address || city || zipCode),
-    hasPhone: Boolean(phone),
-    hasAddress: Boolean(address),
-    isNameFocused: Boolean(firstName || lastName) && Boolean(address || city || zipCode || phone),
-    isLocationOnly: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address || city || zipCode),
-    isPhoneOnly: !Boolean(firstName || lastName) && Boolean(phone) && !Boolean(address || city || zipCode),
-    isPhoneWithLocation: !Boolean(firstName || lastName) && Boolean(phone) && Boolean(address || city || zipCode),
-    isAddressWithState: !Boolean(firstName || lastName) && !Boolean(phone) && Boolean(address) && Boolean(state)
-  };
-
-  // Filter and sort the results (now includes associate matches)
-  let filteredReviews = isSingleFieldSearch
-    ? allScoredReviews.filter(review => review.searchScore > 0 || review.matchCount > 0)
-    : filterAndSortReviews(allScoredReviews, isSingleFieldSearch, searchContext, unlockedReviews, {
-        firstName,
-        lastName,
-        phone,
-        address,
-        city,
-        state,
-        zipCode
-      });
+  hookLogger.debug(`🔍 Total combined: ${filteredReviews.length}`);
 
   // ALWAYS include reviews claimed by the current user, even if they didn't match the search criteria
   // This ensures that once a customer claims a review, it's always visible in their searches
   if (claimedReviewIds && claimedReviewIds.length > 0) {
-    const claimedReviewsNotInResults = allScoredReviews.filter(
+    const claimedReviewsNotInResults = scoredReviews.filter(
       review =>
         claimedReviewIds.includes(review.id) &&
         !filteredReviews.some(filtered => filtered.id === review.id)

@@ -37,9 +37,48 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     const address = review.customer_address?.toLowerCase().trim() || '';
     const city = review.customer_city?.toLowerCase().trim() || '';
 
+    hookLogger.debug(`Processing review ${review.id}: name="${name}", isAssociateMatch=${review.isAssociateMatch}, phone="${phone}", address="${address}"`);
+
+    // IMPORTANT: Associate matches should NEVER be grouped with non-associate reviews
+    // BUT associate match reviews about the same person should be grouped together
+    if (review.isAssociateMatch) {
+      // Check if we already have an associate match group for this person
+      let foundExistingAssociateGroup = false;
+      for (const [existingKey, existingReviews] of customerGroups.entries()) {
+        // Only check other associate match groups
+        if (!existingKey.startsWith('associate-')) continue;
+
+        const existingReview = existingReviews[0];
+        const existingName = existingReview.customer_name?.toLowerCase().trim();
+        const existingPhone = existingReview.customer_phone?.replace(/\D/g, '') || '';
+        const existingAddress = existingReview.customer_address?.toLowerCase().trim() || '';
+
+        // Group associate matches using same logic as regular reviews
+        const phoneMatch = phone && existingPhone && phone === existingPhone;
+        const addressMatch = address && existingAddress && address === existingAddress;
+
+        if (existingName === name && (phoneMatch || addressMatch || (!phone && !existingPhone && !address && !existingAddress))) {
+          customerGroups.get(existingKey)!.push(review);
+          foundExistingAssociateGroup = true;
+          hookLogger.debug(`Adding associate match ${name} to existing group`);
+          break;
+        }
+      }
+
+      if (!foundExistingAssociateGroup) {
+        hookLogger.debug(`Creating new group for associate match: ${name}`);
+        const groupKey = `associate-${name}-${phone || address || Math.random()}`;
+        customerGroups.set(groupKey, [review]);
+      }
+      return; // Skip the normal grouping logic for associate matches
+    }
+
     // Check if we already have a group with this exact name
     let foundExistingGroup = false;
     for (const [existingKey, existingReviews] of customerGroups.entries()) {
+      // Skip associate match groups when looking for existing groups
+      if (existingKey.startsWith('associate-')) continue;
+
       const existingName = existingReviews[0].customer_name.toLowerCase().trim();
 
       // If names match exactly, check if we should group them together
@@ -127,13 +166,10 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
     });
 
     if (isAssociateMatch && mostCompleteReview.associateData) {
-      // Use associate name for display
-      finalFirstName = mostCompleteReview.associateData.firstName || "";
-      finalLastName = mostCompleteReview.associateData.lastName || "";
-
-      // For associate matches, we keep the original customer location data
-      // since the associate doesn't have their own location data
-      hookLogger.debug(`Associate match: Using ${finalFirstName} ${finalLastName} with original customer location`);
+      // For associate matches, we already have the actual reviews about the associate
+      // So firstName/lastName are already correct from the review's customer_name
+      // We just need to preserve the originalCustomerInfo for the "Associate of:" display
+      hookLogger.debug(`Associate match: ${finalFirstName} ${finalLastName} (associate of ${mostCompleteReview.original_customer_name})`);
     }
 
     // Create customer with enhanced review data that includes ALL customer info

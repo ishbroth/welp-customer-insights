@@ -112,7 +112,7 @@ export const filterAndSortReviews = (
   const filteredReviews = scoredReviews
     .filter(review => {
       hookLogger.debug(`Review ${review.id}: score=${review.searchScore}, matches=${review.matchCount}, name="${review.customer_name}", city="${review.customer_city}", state="${review.customer_state}"`);
-      
+
       // Special handling for address+state searches
       if (searchContext?.isAddressWithState) {
         // For address+state searches, require substantial address matches
