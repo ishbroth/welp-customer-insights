@@ -11,7 +11,6 @@ import { handleSubscription } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
 import { useCredits } from "@/hooks/useCredits";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from "@/services/iapService";
 import { Shield, Zap, Users, Clock } from "lucide-react";
 import { logger } from '@/utils/logger';
 
@@ -79,52 +78,7 @@ const Subscription = () => {
 
     setIsProcessing(true);
 
-    // Check if running on iOS native - use Apple IAP
-    if (isIOSNative()) {
-      pageLogger.info("iOS detected - using Apple IAP for lifetime");
-
-      try {
-        toast({
-          title: "Opening App Store",
-          description: "Processing your lifetime purchase through Apple...",
-        });
-
-        const result = await purchaseSubscription(PACKAGE_IDS.LIFETIME);
-
-        if (result.success) {
-          toast({
-            title: "Lifetime Access Activated!",
-            description: "You now have lifetime access to all features!",
-          });
-          setIsSubscribed(true);
-        } else if (result.error === 'Purchase cancelled') {
-          toast({
-            title: "Purchase Cancelled",
-            description: "You cancelled the purchase. You can try again when you're ready.",
-          });
-        } else {
-          toast({
-            title: "Purchase Failed",
-            description: result.error || "Failed to complete purchase. Please try again.",
-            variant: "destructive"
-          });
-        }
-
-        setIsProcessing(false);
-        return;
-      } catch (error) {
-        pageLogger.error("❌ IAP error:", error);
-        toast({
-          title: "Purchase Error",
-          description: "An error occurred. Please try again.",
-          variant: "destructive"
-        });
-        setIsProcessing(false);
-        return;
-      }
-    }
-
-    // Web/Android - use Stripe
+    // Use Stripe for all platforms
     try {
       pageLogger.debug("📞 About to call create-legacy-payment");
       const { data, error } = await supabase.functions.invoke("create-legacy-payment", {

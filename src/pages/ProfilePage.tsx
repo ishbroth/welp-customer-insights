@@ -25,7 +25,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle } from "lucide-react";
-import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from "@/services/iapService";
 import { logger } from '@/utils/logger';
 
 const ProfilePage = () => {

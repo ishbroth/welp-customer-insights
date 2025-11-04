@@ -14,7 +14,6 @@ import { toast } from "@/components/ui/sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
-import { isIOSNative, purchaseSubscription, PACKAGE_IDS } from "@/services/iapService";
 import { logger } from '@/utils/logger';
 
 const BuyCredits = () => {
@@ -115,53 +114,7 @@ const BuyCredits = () => {
 
     setIsLoading(true);
 
-    // Check if running on iOS native - use Apple IAP
-    if (isIOSNative()) {
-      pageLogger.info("iOS detected - using Apple IAP for credits");
-
-      // Apple IAP only supports purchasing 1 credit at a time with current setup
-      if (creditAmount > 1) {
-        pageLogger.warn("iOS IAP: Multiple credits requested but only single credit purchases supported");
-        toast.error("On iOS, please purchase credits one at a time, or consider our subscription for unlimited access.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        toast.success("Opening App Store", {
-          description: "Processing your credit purchase through Apple...",
-        });
-
-        const result = await purchaseSubscription(PACKAGE_IDS.CREDIT);
-
-        if (result.success) {
-          toast.success("Credit Purchased!", {
-            description: "Your credit has been added to your account!",
-          });
-          await loadCreditsData(); // Refresh balance
-        } else if (result.error === 'Purchase cancelled') {
-          toast.info("Purchase Cancelled", {
-            description: "You cancelled the purchase. You can try again when you're ready.",
-          });
-        } else {
-          toast.error("Purchase Failed", {
-            description: result.error || "Failed to complete purchase. Please try again.",
-          });
-        }
-
-        setIsLoading(false);
-        return;
-      } catch (error) {
-        pageLogger.error("❌ IAP error:", error);
-        toast.error("Purchase Error", {
-          description: "An error occurred. Please try again.",
-        });
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    // Web/Android - use Stripe
+    // Use Stripe for all platforms
     try {
       pageLogger.debug("📞 About to call create-credit-payment function...");
       pageLogger.debug("Request parameters:", { creditAmount, totalCost });

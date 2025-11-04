@@ -1,36 +1,11 @@
-import React, { useEffect } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { initializeIAP, isIOSNative } from '@/services/iapService';
-import { logger } from '@/utils/logger';
-
-const initLogger = logger.withContext('MobileInitializer');
+import React from 'react';
 
 /**
- * Wrapper component to initialize mobile features that depend on auth context
- * - Initializes RevenueCat IAP for iOS
+ * Wrapper component for mobile initialization
+ * Previously used for RevenueCat IAP - now disabled in favor of web-based Stripe payments
  */
 const MobileInitializer: React.FC = () => {
-  const { currentUser } = useAuth();
-
-  useEffect(() => {
-    // Initialize IAP when user is logged in on iOS
-    if (currentUser && isIOSNative()) {
-      initLogger.info('Initializing IAP for user:', currentUser.id);
-      initializeIAP(currentUser.id)
-        .then(success => {
-          if (success) {
-            initLogger.info('IAP initialized successfully');
-          } else {
-            initLogger.warn('IAP initialization returned false');
-          }
-        })
-        .catch(error => {
-          initLogger.error('IAP initialization error:', error);
-        });
-    }
-  }, [currentUser]);
-
-  // This component doesn't render anything visible
+  // No mobile-specific initialization needed - all payments go through web Stripe
   return null;
 };
 
