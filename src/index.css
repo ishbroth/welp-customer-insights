@@ -104,7 +104,7 @@
   }
   
   .welp-input {
-    @apply border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ea384c] focus:border-transparent min-h-[44px] touch-manipulation;
+    @apply border-2 border-gray-300 rounded-md px-2 py-1.5 md:px-3 md:py-2 focus:outline-none focus:ring-2 focus:ring-[#ea384c] focus:border-transparent min-h-[40px] md:min-h-[44px] text-sm md:text-base touch-manipulation;
   }
   
   .welp-card {
