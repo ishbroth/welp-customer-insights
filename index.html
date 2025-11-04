@@ -147,6 +147,23 @@
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+
+    <!-- GitHub Pages SPA redirect handler -->
+    <script>
+      // Check if we were redirected from 404.html
+      (function() {
+        var redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          var data = JSON.parse(redirect);
+          // Construct the full path
+          var path = data.path + (data.search || '') + (data.hash || '');
+          // Replace current history entry to avoid back button loop
+          history.replaceState(null, '', path);
+        }
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
 
     <script>

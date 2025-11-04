@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA redirect solution
+      // Store the current path and redirect to index.html
+      sessionStorage.setItem('redirect', JSON.stringify({
+        path: location.pathname,
+        search: location.search,
+        hash: location.hash
+      }));
+
+      // Redirect to index.html (which will be served successfully)
+      location.replace(location.origin + '/');
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=/">
+    </noscript>
+  </body>
+</html>
