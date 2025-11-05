@@ -148,28 +148,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           onAddressComponentsExtracted={handleAddressComponentsExtracted}
         />
 
-        {/* Anonymous Review Option */}
-        <div className="bg-gray-50 p-4 rounded-lg border">
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="anonymous"
-              checked={isAnonymous}
-              onCheckedChange={setIsAnonymous}
-              className="mt-1"
-            />
-            <div className="flex-1">
-              <Label htmlFor="anonymous" className="text-sm font-medium cursor-pointer">
-                Review Anonymously
-              </Label>
-              <p className="text-xs text-gray-600 mt-1">
-                Your review will show your business type instead of your business name.
-                <br />
-                <strong>Note:</strong> Anonymous reviewers cannot participate in conversations until they uncheck this option in the edit review form.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Rating */}
         <RatingInput 
           rating={rating}
@@ -195,6 +173,28 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           associates={associates}
           setAssociates={setAssociates}
         />
+
+        {/* Anonymous Review Option */}
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="anonymous"
+              checked={isAnonymous}
+              onCheckedChange={setIsAnonymous}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <Label htmlFor="anonymous" className="text-sm font-medium cursor-pointer">
+                Review Anonymously
+              </Label>
+              <p className="text-xs text-gray-600 mt-1">
+                Your review will show your business type instead of your business name.
+                <br />
+                <strong>Note:</strong> Anonymous reviewers cannot participate in conversations until they uncheck this option in the edit review form.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="pt-4 space-y-3">
           <Button

@@ -38,9 +38,8 @@ const ReviewsList = ({ reviews, hasFullAccess, customerData, onReviewUpdate }: R
           willUseOriginal: review.isAssociateMatch && review.original_customer_name
         });
 
-        const finalCustomerName = review.isAssociateMatch && review.original_customer_name
-          ? review.original_customer_name
-          : (review.customerName || review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer');
+        // Always use the actual customer name (the person being reviewed), not the search target
+        const finalCustomerName = review.customerName || review.customer_name || customerData.firstName + ' ' + customerData.lastName || 'Unknown Customer';
 
         componentLogger.debug("Final customer name set to:", finalCustomerName);
         componentLogger.debug("Passing to ReviewCard:", {
