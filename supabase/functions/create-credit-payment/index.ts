@@ -75,8 +75,15 @@ serve(async (req) => {
     }
 
     // Get credit amount from request body
-    const { creditAmount = 1 } = await req.json();
-    logStep("Request data", { creditAmount });
+    const requestBody = await req.json();
+    const creditAmount = parseInt(requestBody.creditAmount) || 1;
+
+    // Validate credit amount
+    if (creditAmount < 1 || creditAmount > 50) {
+      throw new Error(`Invalid credit amount: ${creditAmount}. Must be between 1 and 50.`);
+    }
+
+    logStep("Request data", { creditAmount, requestBody });
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
@@ -90,6 +97,12 @@ serve(async (req) => {
     const cancelUrl = `${origin}/profile/billing?canceled=true`;
 
     // Create a one-time payment checkout session for credits with quantity adjustment enabled
+    logStep("Creating Stripe checkout session", {
+      creditAmount,
+      unitAmount: 300,
+      totalAmount: creditAmount * 300
+    });
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -97,12 +110,12 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "Credits",
-              description: "Purchase credits at $3.00 each for accessing premium features"
+              name: "Welp Credits",
+              description: `Each credit costs $3.00 and unlocks one full review with response capabilities`
             },
             unit_amount: 300, // $3.00 per credit in cents
           },
-          quantity: creditAmount || 1, // Use the amount from frontend
+          quantity: creditAmount, // Quantity from frontend (validated above)
           adjustable_quantity: {
             enabled: true,
             minimum: 1,
@@ -115,11 +128,16 @@ serve(async (req) => {
       cancel_url: cancelUrl,
       metadata: {
         user_id: user.id,
-        type: "credit_purchase"
+        type: "credit_purchase",
+        credit_amount: creditAmount.toString()
       }
     });
 
-    logStep("Created credit payment session", { sessionId: session.id });
+    logStep("Created credit payment session", {
+      sessionId: session.id,
+      sessionUrl: session.url,
+      quantity: creditAmount
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
