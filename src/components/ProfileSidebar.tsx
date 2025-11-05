@@ -3,15 +3,16 @@ import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { 
-  CreditCard, 
-  Settings, 
-  User, 
-  FileText, 
+import {
+  CreditCard,
+  Settings,
+  User,
+  FileText,
   Bell,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Search
 } from "lucide-react";
 
 interface ProfileSidebarProps {
@@ -96,8 +97,33 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
           {/* Navigation Container */}
           <div className="py-4">
             <nav className={`space-y-1 ${isMobile && !isOpen ? "px-1" : "px-4"}`}>
-              <Link 
-                to="/profile" 
+              <Link
+                to="/search"
+                onClick={isMobile && isOpen ? toggle : undefined}
+                className={`flex items-center rounded-md hover:bg-gray-100 transition-colors ${
+                  isMobile && !isOpen
+                    ? "px-1 py-2 justify-center"
+                    : isMobile
+                      ? "px-4 py-4 text-base"
+                      : "px-2 py-2 text-sm"
+                } ${
+                  location.pathname === "/search"
+                  ? "bg-gray-100 text-primary"
+                  : "text-gray-700"
+                }`}
+              >
+                <Search className={`text-gray-500 ${
+                  isMobile && !isOpen
+                    ? "h-5 w-5"
+                    : isMobile
+                      ? "mr-4 h-6 w-6"
+                      : "mr-3 h-5 w-5"
+                }`} />
+                {(!isMobile || isOpen) && "Search"}
+              </Link>
+
+              <Link
+                to="/profile"
                 onClick={isMobile && isOpen ? toggle : undefined}
                 className={`flex items-center rounded-md hover:bg-gray-100 transition-colors ${
                   isMobile && !isOpen 
