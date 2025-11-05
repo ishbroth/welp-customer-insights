@@ -44,3 +44,4 @@ ios/App/build/
 *.njsproj
 *.sln
 *.sw?
+supabase/.temp/
