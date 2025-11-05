@@ -5,19 +5,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { logger } from '@/utils/logger';
 import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
+import {
+  getSavedCredentials,
+  saveCredentials,
+  clearSavedCredentials,
+  setRememberMePreference,
+  getRememberMePreference
+} from "@/utils/authStorage";
+import { isNativeApp } from "@/utils/platform";
 
 const Login = () => {
   const pageLogger = logger.withContext('Login');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, currentUser, session, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Load saved credentials on mount (if Remember Me was previously checked)
+  useEffect(() => {
+    // Don't show saved credentials on native apps (they stay logged in)
+    if (isNativeApp()) return;
+
+    const savedCredentials = getSavedCredentials();
+    const savedRememberMe = getRememberMePreference();
+
+    if (savedCredentials && savedRememberMe) {
+      pageLogger.debug("Loading saved credentials for autofill");
+      setEmail(savedCredentials.email);
+      setPassword(savedCredentials.password);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Handle navigation when auth state changes
   useEffect(() => {
@@ -48,6 +74,22 @@ const Login = () => {
 
       if (result.success) {
         pageLogger.debug("🔐 Login call successful");
+
+        // Handle Remember Me preference (only on web browsers, not native apps)
+        if (!isNativeApp()) {
+          if (rememberMe) {
+            // Save credentials for autofill next time
+            saveCredentials(email, password);
+            setRememberMePreference(true);
+            pageLogger.debug("✅ Credentials saved for autofill (Remember Me checked)");
+          } else {
+            // Clear any previously saved credentials
+            clearSavedCredentials();
+            setRememberMePreference(false);
+            pageLogger.debug("🗑️ Credentials cleared (Remember Me unchecked)");
+          }
+        }
+
         // Don't navigate here - let the useEffect handle it based on auth state
         toast.success("Login successful!");
       } else {
@@ -110,6 +152,24 @@ const Login = () => {
                 autoComplete="current-password"
               />
             </div>
+
+            {/* Remember Me checkbox - only shown on web browsers, not native apps */}
+            {!isNativeApp() && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember-me"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <Label
+                  htmlFor="remember-me"
+                  className="text-sm font-normal cursor-pointer text-gray-700"
+                >
+                  Remember me
+                </Label>
+              </div>
+            )}
+
             <Button type="submit" className="w-full">
               Sign In
             </Button>

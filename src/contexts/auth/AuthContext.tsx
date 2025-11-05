@@ -8,6 +8,9 @@ import { useSecureAuth } from "./hooks/useSecureAuth";
 import { logSecurityEvent } from "@/utils/rateLimiting";
 import { AuthContextType, LoginResult, SignupData } from "./types";
 import { logger } from '@/utils/logger';
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
+import { getRememberMePreference } from "@/utils/authStorage";
+import { isNativeApp } from "@/utils/platform";
 
 const authLogger = logger.withContext('AuthContext');
 
@@ -30,6 +33,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const { initUserData } = useUserInitialization();
   const { secureLogin, secureSignup, securePasswordReset } = useSecureAuth();
+
+  // Logout function (defined early so it can be used in inactivity timeout)
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        await logSecurityEvent('logout_error', 'Error during logout', currentUser?.id, { error: error.message });
+        throw error;
+      }
+
+      setCurrentUser(null);
+      setSession(null);
+      setOneTimeAccessResources([]);
+      await logSecurityEvent('logout_success', 'User logged out successfully', currentUser?.id);
+    } catch (error) {
+      authLogger.error("Logout error:", error);
+      throw error;
+    }
+  };
+
+  // Inactivity timeout - only enabled when Remember Me is unchecked on web browsers
+  const rememberMe = getRememberMePreference();
+  const shouldEnableInactivityTimeout = !isNativeApp() && !rememberMe && !!session;
+
+  useInactivityTimeout({
+    enabled: shouldEnableInactivityTimeout,
+    onTimeout: async () => {
+      authLogger.info('Logging out due to inactivity (Remember Me unchecked)');
+      await logout();
+    }
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -111,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (data: SignupData) => {
     try {
       const result = await secureSignup(data.email, data.password, data);
-      
+
       if (result.success) {
         return { success: true };
       } else {
@@ -120,24 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       authLogger.error("Signup error:", error);
       return { success: false, error: "An unexpected error occurred during signup" };
-    }
-  };
-
-  const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        await logSecurityEvent('logout_error', 'Error during logout', currentUser?.id, { error: error.message });
-        throw error;
-      }
-      
-      setCurrentUser(null);
-      setSession(null);
-      setOneTimeAccessResources([]);
-      await logSecurityEvent('logout_success', 'User logged out successfully', currentUser?.id);
-    } catch (error) {
-      authLogger.error("Logout error:", error);
-      throw error;
     }
   };
 
