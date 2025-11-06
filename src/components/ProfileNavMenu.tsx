@@ -9,6 +9,7 @@ import {
   FileText,
   Bell,
   LogOut,
+  Search,
 } from "lucide-react";
 
 interface ProfileNavMenuProps {
@@ -74,25 +75,41 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
         {/* Navigation Links */}
         <div className="flex-1 py-4">
           <nav className="space-y-1 px-4">
-            <Link 
-              to="/profile" 
+            {/* Business users - show search for customers */}
+            {isBusinessAccount && (
+              <Link
+                to="/search"
+                onClick={handleLinkClick}
+                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
+                  location.pathname === "/search"
+                  ? "bg-gray-100 text-primary"
+                  : "text-gray-700"
+                }`}
+              >
+                <Search className="mr-4 h-6 w-6 text-gray-500" />
+                Search
+              </Link>
+            )}
+
+            <Link
+              to="/profile"
               onClick={handleLinkClick}
               className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
-                location.pathname === "/profile" 
-                ? "bg-gray-100 text-primary" 
+                location.pathname === "/profile"
+                ? "bg-gray-100 text-primary"
                 : "text-gray-700"
               }`}
             >
               <User className="mr-4 h-6 w-6 text-gray-500" />
               Profile
             </Link>
-            
-            <Link 
-              to="/profile/edit" 
+
+            <Link
+              to="/profile/edit"
               onClick={handleLinkClick}
               className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
-                location.pathname === "/profile/edit" 
-                ? "bg-gray-100 text-primary" 
+                location.pathname === "/profile/edit"
+                ? "bg-gray-100 text-primary"
                 : "text-gray-700"
               }`}
             >

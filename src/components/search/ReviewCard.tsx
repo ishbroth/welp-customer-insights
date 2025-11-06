@@ -242,89 +242,68 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   return (
     <Card className="w-full rounded-none border-x-0">
       <CardContent className="py-2 px-1 md:py-4 md:px-2">
-        <div className="flex items-start justify-between mb-2 md:mb-3">
+        <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
           {/* Business info - left side */}
-          <div className="flex items-center space-x-2 md:space-x-3">
-            <Avatar className="h-8 w-8 md:h-10 md:w-10">
+          <div className="flex items-start space-x-2 md:space-x-3 min-w-0 flex-1">
+            <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
               {!review.is_anonymous && <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />}
               <AvatarFallback className={review.is_anonymous ? "bg-purple-100 text-purple-800 text-base md:text-xl" : "bg-blue-100 text-blue-800"}>
                 {review.is_anonymous ? "🕵️" : getNameInitials(review.reviewerName)}
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1">
                 <h4
                   className={review.is_anonymous
-                    ? "font-medium text-gray-700 text-xs md:text-sm"
-                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors text-xs md:text-sm"
+                    ? "font-medium text-gray-700 text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)] truncate"
+                    : "font-medium cursor-pointer hover:text-blue-600 transition-colors text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)] truncate"
                   }
                   onClick={review.is_anonymous ? undefined : handleBusinessNameClick}
+                  style={{ maxWidth: '15ch' }}
                 >
-                  {displayReviewerName}
+                  {displayReviewerName.length > 15 ? displayReviewerName.substring(0, 15) + '...' : displayReviewerName}
                 </h4>
-                {review.reviewerVerified && <VerifiedBadge size="sm" />}
+                {review.reviewerVerified && !review.is_anonymous && <VerifiedBadge size="sm" />}
               </div>
-              <p className="text-xs md:text-sm text-gray-500">Business</p>
+              <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500">{review.reviewerBusinessCategory || 'Business'}</p>
             </div>
           </div>
 
-          {/* Customer info - desktop (hidden on mobile) */}
-          <div className="hidden md:block text-right">
-            <CustomerInfoDisplay
-              customerInfo={customerInfo}
-              onCustomerClick={customerInfo.isClaimed && canViewFullContent ? handleCustomerNameClick : undefined}
-              size="small"
-              showContactInfo={false}
-              hideMatchScore={true}
-              reviewCustomerId={review.customerId}
-            />
-          </div>
-        </div>
-
-        {/* Customer info - mobile only (name top-left, avatar below, contact to right) */}
-        <div className="md:hidden mb-2">
-          <div className="flex flex-col">
-            {/* Customer name at top */}
-            <div className="mb-1">
+          {/* Customer info - right side (all screen sizes) */}
+          <div className="flex items-start gap-1 md:gap-2 flex-shrink-0">
+            <div className="flex flex-col items-end text-right">
               {customerInfo.isClaimed && canViewFullContent ? (
                 <h4
-                  className="text-xs font-medium cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline"
+                  className="text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)] font-medium cursor-pointer hover:text-blue-600 transition-colors text-blue-600 hover:underline whitespace-nowrap"
                   onClick={handleCustomerNameClick}
                 >
                   {customerInfo.name}
                 </h4>
               ) : (
-                <h4 className="text-xs font-medium">
+                <h4 className="text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)] font-medium whitespace-nowrap">
                   {customerInfo.name}
                 </h4>
               )}
+              {customerInfo.phone && (
+                <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500 whitespace-nowrap">{customerInfo.phone}</p>
+              )}
+              {customerInfo.address && (
+                <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500 whitespace-nowrap">{customerInfo.address}</p>
+              )}
+              {(customerInfo.city || review.state || customerInfo.zipCode) && (
+                <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500 whitespace-nowrap">
+                  {[customerInfo.city, review.state, customerInfo.zipCode].filter(Boolean).join(', ')}
+                </p>
+              )}
             </div>
-
-            {/* Avatar and contact info side by side */}
-            <div className="flex items-start justify-between space-x-2">
-              {/* Contact info on the left */}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">Customer</p>
-                {customerInfo.phone && (
-                  <p className="text-xs text-gray-500 truncate">{customerInfo.phone}</p>
-                )}
-                {(customerInfo.address || customerInfo.city) && (
-                  <p className="text-xs text-gray-500 truncate">
-                    {[customerInfo.address, customerInfo.city, customerInfo.zipCode].filter(Boolean).join(', ')}
-                  </p>
-                )}
-              </div>
-
-              {/* Avatar on the right */}
-              <Avatar className="h-6 w-6 flex-shrink-0">
-                {customerInfo.isClaimed && customerInfo.avatar ? (
-                  <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
-                ) : null}
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {getNameInitials(customerInfo.name)}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+            <Avatar className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
+              {customerInfo.isClaimed && customerInfo.avatar ? (
+                <AvatarImage src={customerInfo.avatar} alt={customerInfo.name} />
+              ) : null}
+              <AvatarFallback className="bg-gray-100 text-gray-600 text-xs md:text-base">
+                {getNameInitials(customerInfo.name)}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </div>
 
@@ -358,7 +337,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
         <div className="mb-2 md:mb-4">
           {canViewFullContent ? (
             <div>
-              <p className={`text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base ${!isExpanded ? 'line-clamp-3' : ''}`}>
+              <p className={`text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base ${!isExpanded ? 'line-clamp-5' : ''}`}>
                 {review.content}
               </p>
               {!isExpanded && review.content.length > 300 && (
@@ -379,41 +358,43 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               )}
             </div>
           ) : (
-            <div className="relative inline-block w-full">
-              {/* Clear first 2 characters */}
-              <span className="text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base">
-                {review.content.substring(0, 2)}
-              </span>
-              {/* 3rd letter - halfway between clear and blurry */}
-              <span
-                className="text-gray-900 leading-relaxed text-xs sm:text-sm md:text-base"
-                style={{
-                  filter: 'blur(2.5px)',
-                  WebkitFilter: 'blur(2.5px)',
-                }}
-              >
-                {review.content.substring(2, 3)}
-              </span>
-              {/* 4th letter - more blur */}
-              <span
-                className="text-gray-900 leading-relaxed text-xs sm:text-sm md:text-base"
-                style={{
-                  filter: 'blur(4px)',
-                  WebkitFilter: 'blur(4px)',
-                }}
-              >
-                {review.content.substring(3, 4)}
-              </span>
-              {/* Fully blurred remaining text */}
-              <span
-                className="text-gray-900 leading-relaxed text-xs sm:text-sm md:text-base"
-                style={{
-                  filter: 'blur(5px)',
-                  WebkitFilter: 'blur(5px)',
-                }}
-              >
-                {review.content.substring(4)}
-              </span>
+            <div className="relative w-full">
+              <p className="line-clamp-5 text-gray-700 leading-relaxed text-xs sm:text-sm md:text-base">
+                {/* Clear first 2 characters */}
+                <span className="text-gray-700">
+                  {review.content.substring(0, 2)}
+                </span>
+                {/* 3rd letter - halfway between clear and blurry */}
+                <span
+                  className="text-gray-900"
+                  style={{
+                    filter: 'blur(2.5px)',
+                    WebkitFilter: 'blur(2.5px)',
+                  }}
+                >
+                  {review.content.substring(2, 3)}
+                </span>
+                {/* 4th letter - more blur */}
+                <span
+                  className="text-gray-900"
+                  style={{
+                    filter: 'blur(4px)',
+                    WebkitFilter: 'blur(4px)',
+                  }}
+                >
+                  {review.content.substring(3, 4)}
+                </span>
+                {/* Fully blurred remaining text */}
+                <span
+                  className="text-gray-900"
+                  style={{
+                    filter: 'blur(5px)',
+                    WebkitFilter: 'blur(5px)',
+                  }}
+                >
+                  {review.content.substring(4)}
+                </span>
+              </p>
             </div>
           )}
         </div>
@@ -479,9 +460,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <Lock className="h-3 w-3 md:h-4 md:w-4 mr-2" />
               <span className="text-xs md:text-sm">Full review locked</span>
             </div>
-            <p className="text-xs text-gray-500 mb-2 md:mb-3">
-              Customers may track their own reviews only.
-            </p>
+            {currentUser?.type === 'customer' && (
+              <p className="text-xs text-gray-500 mb-2 md:mb-3">
+                Customers may track their own reviews only.
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-2">
               {customerCanAccessReview && (
                 <>
@@ -503,7 +486,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                   </Button>
                 </>
               )}
-              {!customerCanAccessReview && (
+              {currentUser?.type === 'customer' && !customerCanAccessReview && (
                 <p className="text-xs text-gray-500 italic">
                   This review does not match your profile information
                 </p>

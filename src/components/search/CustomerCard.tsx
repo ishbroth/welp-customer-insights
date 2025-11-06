@@ -97,9 +97,9 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12">
+            <Avatar className="h-9 w-9 md:h-12 md:w-12">
               <AvatarImage src={customer.avatar} alt={`${customer.firstName} ${customer.lastName}`} />
-              <AvatarFallback className="bg-blue-100 text-blue-800">
+              <AvatarFallback className="bg-blue-100 text-blue-800 text-xs md:text-base">
                 {getInitials(`${customer.firstName} ${customer.lastName}`)}
               </AvatarFallback>
             </Avatar>
@@ -107,7 +107,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             <div className="flex-1">
               {customer.isAssociateMatch && (
                 <div className="mb-1">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-[10px] md:text-xs">
                     Associate Match
                   </Badge>
                 </div>
@@ -115,7 +115,7 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
 
               <div className="flex items-center gap-2 mb-1">
                 <h3
-                  className={`font-semibold text-lg ${
+                  className={`font-semibold text-sm md:text-[clamp(1rem,1.4vw,1.25rem)] ${
                     hasViewableProfile()
                       ? "cursor-pointer hover:text-blue-600 transition-colors"
                       : "text-gray-400"
@@ -128,25 +128,38 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
               </div>
 
               {customer.isAssociateMatch && customer.associateData && (
-                <div className="text-xs text-gray-500 mb-2">
+                <div className="text-[9px] md:text-[clamp(0.7rem,0.9vw,0.8rem)] text-gray-500 mb-2">
                   Associate of: {customer.associateData.firstName} {customer.associateData.lastName}
                 </div>
               )}
-              
-              <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+
+              <div className="flex flex-col gap-0.5 text-[11px] md:text-[clamp(0.8rem,1.1vw,0.95rem)] text-gray-600">
                 {customer.phone && (
                   <div className="flex items-center gap-1">
-                    <Phone className="h-3 w-3" />
+                    <Phone className="h-3 w-3 flex-shrink-0" />
                     <span>{customer.phone}</span>
                   </div>
                 )}
-                
-                {(customer.address || customer.city || customer.state) && (
+
+                {customer.address && (
+                  <div className="flex items-start gap-1">
+                    <MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                    <div className="flex flex-col">
+                      <span>{customer.address}</span>
+                      {(customer.city || customer.state || customer.zipCode) && (
+                        <span>
+                          {[customer.city, customer.state, customer.zipCode].filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {!customer.address && (customer.city || customer.state || customer.zipCode) && (
                   <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
                     <span>
-                      {[customer.address, customer.city, customer.state].filter(Boolean).join(', ')}
-                      {customer.zipCode && ` ${customer.zipCode}`}
+                      {[customer.city, customer.state, customer.zipCode].filter(Boolean).join(', ')}
                     </span>
                   </div>
                 )}
@@ -201,11 +214,11 @@ const CustomerCard = ({ customer, hasFullAccess, onReviewUpdate }: CustomerCardP
             <div className="mb-2">
               <User className="h-8 w-8 mx-auto text-gray-400" />
             </div>
-            <p className="text-sm">No reviews yet</p>
-            <p className="text-xs text-gray-400 mb-3">Be the first to review this customer</p>
+            <p className="text-[11px] md:text-[clamp(0.8rem,1.1vw,0.95rem)]">No reviews yet</p>
+            <p className="text-[9px] md:text-[clamp(0.7rem,0.9vw,0.8rem)] text-gray-400 mb-3">Be the first to review this customer</p>
             {showWriteReviewButton && (
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant={alreadyReviewed ? "outline" : "default"}
                 disabled={alreadyReviewed}
                 onClick={handleWriteReview}

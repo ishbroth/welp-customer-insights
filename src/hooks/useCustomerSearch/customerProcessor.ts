@@ -2,6 +2,9 @@
 import { Customer } from "@/types/search";
 import { ReviewData } from "./types";
 import { logger } from '@/utils/logger';
+import { calculateNameSimilarity } from '@/utils/stringSimilarity';
+import { compareAddresses } from '@/utils/addressNormalization';
+import { arePhonesEquivalent } from '@/utils/phoneUtils';
 
 const hookLogger = logger.withContext('CustomerProcessor');
 
@@ -50,17 +53,26 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
 
         const existingReview = existingReviews[0];
         const existingName = existingReview.customer_name?.toLowerCase().trim();
-        const existingPhone = existingReview.customer_phone?.replace(/\D/g, '') || '';
-        const existingAddress = existingReview.customer_address?.toLowerCase().trim() || '';
+        const existingNickname = existingReview.customer_nickname?.toLowerCase().trim() || '';
+        const nickname = review.customer_nickname?.toLowerCase().trim() || '';
 
-        // Group associate matches using same logic as regular reviews
-        const phoneMatch = phone && existingPhone && phone === existingPhone;
-        const addressMatch = address && existingAddress && address === existingAddress;
+        // Use fuzzy name matching for associate reviews too
+        const nameSimilarity = calculateNameSimilarity(name, existingName);
+        const nameMatchesNickname = nickname && calculateNameSimilarity(nickname, existingName) >= 0.87;
+        const existingNameMatchesNickname = existingNickname && calculateNameSimilarity(name, existingNickname) >= 0.87;
+        const nicknameBothMatch = nickname && existingNickname && calculateNameSimilarity(nickname, existingNickname) >= 0.87;
+        const namesAreSimilar = nameSimilarity >= 0.87 || nameMatchesNickname || existingNameMatchesNickname || nicknameBothMatch;
 
-        if (existingName === name && (phoneMatch || addressMatch || (!phone && !existingPhone && !address && !existingAddress))) {
+        // Group associate matches using fuzzy logic
+        const phoneMatch = arePhonesEquivalent(review.customer_phone, existingReview.customer_phone);
+        const addressMatch = address && existingReview.customer_address &&
+                            compareAddresses(address, existingReview.customer_address, 0.87);
+        const bothMissingInfo = !phone && !existingReview.customer_phone && !address && !existingReview.customer_address;
+
+        if (namesAreSimilar && (phoneMatch || addressMatch || bothMissingInfo)) {
           customerGroups.get(existingKey)!.push(review);
           foundExistingAssociateGroup = true;
-          hookLogger.debug(`Adding associate match ${name} to existing group`);
+          hookLogger.debug(`Adding associate match ${name} to existing group (name sim: ${nameSimilarity.toFixed(2)})`);
           break;
         }
       }
@@ -73,29 +85,57 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
       return; // Skip the normal grouping logic for associate matches
     }
 
-    // Check if we already have a group with this exact name
+    // Check if we already have a group with a similar name (fuzzy matching)
     let foundExistingGroup = false;
     for (const [existingKey, existingReviews] of customerGroups.entries()) {
       // Skip associate match groups when looking for existing groups
       if (existingKey.startsWith('associate-')) continue;
 
-      const existingName = existingReviews[0].customer_name.toLowerCase().trim();
+      const existingReview = existingReviews[0];
+      const existingName = existingReview.customer_name.toLowerCase().trim();
+      const existingNickname = existingReview.customer_nickname?.toLowerCase().trim() || '';
+      const nickname = review.customer_nickname?.toLowerCase().trim() || '';
 
-      // If names match exactly, check if we should group them together
-      if (existingName === name) {
-        const existingPhone = existingReviews[0].customer_phone?.replace(/\D/g, '') || '';
-        const existingAddress = existingReviews[0].customer_address?.toLowerCase().trim() || '';
-        const existingCity = existingReviews[0].customer_city?.toLowerCase().trim() || '';
+      // Check if names are similar using fuzzy matching (threshold 0.87)
+      // Also check nicknames if available
+      const nameSimilarity = calculateNameSimilarity(name, existingName);
+      const nameMatchesNickname = nickname && calculateNameSimilarity(nickname, existingName) >= 0.87;
+      const existingNameMatchesNickname = existingNickname && calculateNameSimilarity(name, existingNickname) >= 0.87;
+      const nicknameBothMatch = nickname && existingNickname && calculateNameSimilarity(nickname, existingNickname) >= 0.87;
 
-        // Group together if: same phone, OR same address+city, OR both have no phone/address
-        const phoneMatch = phone && existingPhone && phone === existingPhone;
-        const addressMatch = address && existingAddress && city && existingCity &&
-                           address === existingAddress && city === existingCity;
-        const bothMissingInfo = !phone && !existingPhone && !address && !existingAddress;
+      const namesAreSimilar = nameSimilarity >= 0.87 || nameMatchesNickname || existingNameMatchesNickname || nicknameBothMatch;
 
-        if (phoneMatch || addressMatch || bothMissingInfo) {
+      // If names are similar, check if we should group them together
+      if (namesAreSimilar) {
+        // Phone equivalence check (exact match or last 7 digits)
+        const phoneMatch = arePhonesEquivalent(review.customer_phone, existingReview.customer_phone);
+
+        // Address fuzzy matching (threshold 0.87)
+        const addressMatch = address && existingReview.customer_address &&
+                            compareAddresses(address, existingReview.customer_address, 0.87);
+
+        // City similarity
+        const existingCity = existingReview.customer_city?.toLowerCase().trim() || '';
+        const citySimilarity = city && existingCity ? calculateNameSimilarity(city, existingCity) : 0;
+        const cityMatch = citySimilarity >= 0.87;
+
+        // Zipcode match
+        const existingZip = existingReview.customer_zipcode?.replace(/\D/g, '') || '';
+        const zip = review.customer_zipcode?.replace(/\D/g, '') || '';
+        const zipMatch = zip && existingZip && zip === existingZip;
+
+        // Both missing contact info (fallback)
+        const bothMissingInfo = !phone && !existingReview.customer_phone && !address && !existingReview.customer_address;
+
+        // Group together if:
+        // - Phone matches (strongest signal), OR
+        // - Address matches (strong signal), OR
+        // - City + Zip both match (medium signal), OR
+        // - Both have no contact info (weak fallback)
+        if (phoneMatch || addressMatch || (cityMatch && zipMatch) || bothMissingInfo) {
           customerGroups.get(existingKey)!.push(review);
           foundExistingGroup = true;
+          hookLogger.debug(`Grouped review ${review.id} with existing group ${existingKey} (name sim: ${nameSimilarity.toFixed(2)}, phone: ${phoneMatch}, address: ${addressMatch}, city+zip: ${cityMatch && zipMatch})`);
           break;
         }
       }
