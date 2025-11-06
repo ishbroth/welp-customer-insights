@@ -30,7 +30,6 @@ interface ReviewCardProps {
     reviewerName: string;
     reviewerAvatar?: string;
     reviewerVerified?: boolean;
-    reviewerBusinessCategory?: string;
     reviewerCity?: string;
     reviewerState?: string;
     rating: number;
@@ -69,6 +68,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     associates: review.associates,
     isAssociateMatch: review.isAssociateMatch
   });
+
   const navigate = useNavigate();
   const { currentUser, isSubscribed } = useAuth();
   const { balance, useCredits: useCreditsFn, loadCreditsData } = useCredits();
@@ -247,8 +247,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   return (
-    <Card className="w-full rounded-none border-x-0">
-      <CardContent className="py-2 px-1 md:py-4 md:px-2">
+    <Card className="w-full rounded-none border-x-0 overflow-hidden break-words">
+      <CardContent className="py-2 px-1 md:py-4 md:px-2 break-words">
         <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
           {/* Business info - left side */}
           <div className="flex items-start space-x-2 md:space-x-3 min-w-0 flex-1">
@@ -275,10 +275,20 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 </h4>
                 {review.reviewerVerified && !review.is_anonymous && <VerifiedBadge size="sm" />}
               </div>
-              <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500">
-                {review.reviewerCity && review.reviewerState
-                  ? `${review.reviewerCity}, ${review.reviewerState}`
-                  : review.reviewerCity || review.reviewerState || 'Business'}
+              {/* DEBUG: Check city/state values */}
+              {(() => {
+                console.log(`🏙️ CITY/STATE DEBUG for ${review.reviewerName}:`, {
+                  reviewerCity: review.reviewerCity,
+                  reviewerState: review.reviewerState,
+                  hasCity: !!review.reviewerCity,
+                  hasState: !!review.reviewerState,
+                  willDisplay: !!(review.reviewerCity && review.reviewerState)
+                });
+                return null;
+              })()}
+              {/* TEMPORARY: Always display to debug - remove conditional */}
+              <p className="text-[10px] md:text-xs text-gray-500 mt-0.5">
+                {review.reviewerCity || '[NO CITY]'}, {review.reviewerState || '[NO STATE]'}
               </p>
             </div>
           </div>

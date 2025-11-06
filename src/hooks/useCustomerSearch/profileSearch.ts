@@ -9,24 +9,101 @@ const hookLogger = logger.withContext('ProfileSearch');
 export const searchProfiles = async (searchParams: SearchParams) => {
   const { firstName, lastName, phone, address, city, state, zipCode } = searchParams;
 
-  hookLogger.debug("Searching profiles table with flexible matching...");
-  
-  // Start with a broader query - we'll filter more intelligently in JavaScript
-  let profileQuery = supabase
-    .from('profiles')
-    .select('id, first_name, last_name, phone, address, city, state, zipcode')
-    .eq('type', 'customer')
-    .limit(500); // Increased limit for broader search
+  hookLogger.debug("Searching profiles table with combined OR filtering...");
 
-  // For state searches, use a simpler and more reliable approach
-  if (state && state.trim() !== '') {
-    hookLogger.debug(`Searching for state: ${state}`);
-    
-    // Use a simpler ilike query for state - this should be more reliable
-    profileQuery = profileQuery.ilike('state', `%${state}%`);
+  // COMBINED OR FILTERING STRATEGY
+  // Build a single query using ALL provided fields with OR logic
+  // This casts a wide net, then client-side fuzzy matching validates precisely
+  // All provided fields are included to maximize chances of finding relevant records
+
+  const baseSelect = 'id, first_name, last_name, phone, address, city, state, zipcode';
+
+  // Build array of OR conditions based on provided fields
+  const orConditions: string[] = [];
+  const appliedFilters: string[] = [];
+
+  // Add phone condition if provided
+  if (phone && phone.trim() !== '') {
+    const cleanPhone = phone.replace(/\D/g, '');
+    orConditions.push(`phone.ilike.%${cleanPhone}%`);
+    appliedFilters.push(`phone: ${cleanPhone}`);
   }
 
-  const { data: allProfiles, error } = await profileQuery;
+  // Add address condition if provided
+  if (address && address.trim() !== '') {
+    orConditions.push(`address.ilike.%${address}%`);
+    appliedFilters.push(`address: ${address}`);
+  }
+
+  // Add name conditions if provided
+  if (firstName && firstName.trim() !== '') {
+    orConditions.push(`first_name.ilike.%${firstName}%`);
+    appliedFilters.push(`firstName: ${firstName}`);
+  }
+  if (lastName && lastName.trim() !== '') {
+    orConditions.push(`last_name.ilike.%${lastName}%`);
+    appliedFilters.push(`lastName: ${lastName}`);
+  }
+
+  // Add city condition if provided
+  if (city && city.trim() !== '') {
+    orConditions.push(`city.ilike.%${city}%`);
+    appliedFilters.push(`city: ${city}`);
+  }
+
+  // Add state condition if provided
+  if (state && state.trim() !== '') {
+    orConditions.push(`state.ilike.%${state}%`);
+    appliedFilters.push(`state: ${state}`);
+  }
+
+  // Add zipcode condition if provided
+  if (zipCode && zipCode.trim() !== '') {
+    const cleanZip = zipCode.replace(/\D/g, '');
+    orConditions.push(`zipcode.ilike.%${cleanZip}%`);
+    appliedFilters.push(`zipcode: ${cleanZip}`);
+  }
+
+  let allProfiles: any[] = [];
+  let error = null;
+
+  // Execute query with OR conditions
+  if (orConditions.length > 0) {
+    hookLogger.debug(`🔍 Building combined OR query with ${orConditions.length} conditions: ${appliedFilters.join(', ')}`);
+
+    const { data, error: queryError } = await supabase
+      .from('profiles')
+      .select(baseSelect)
+      .eq('type', 'customer')
+      .or(orConditions.join(','))
+      .limit(500);
+
+    if (queryError) {
+      error = queryError;
+      hookLogger.error('Query error:', queryError);
+    } else {
+      allProfiles = data || [];
+      hookLogger.debug(`✅ Combined OR query returned ${allProfiles.length} results`);
+    }
+  } else {
+    // No search criteria provided - fetch first 500 records
+    hookLogger.debug(`🔍 No search criteria provided, fetching first 500 records`);
+
+    const { data, error: fallbackError } = await supabase
+      .from('profiles')
+      .select(baseSelect)
+      .eq('type', 'customer')
+      .limit(500);
+
+    if (fallbackError) {
+      error = fallbackError;
+    } else {
+      allProfiles = data || [];
+      hookLogger.debug(`📊 Fallback fetch: ${allProfiles.length} records`);
+    }
+  }
+
+  hookLogger.debug(`🎯 Database query complete: ${allProfiles.length} profiles fetched`);
   
   if (error) {
     hookLogger.error("Profile search error:", error);

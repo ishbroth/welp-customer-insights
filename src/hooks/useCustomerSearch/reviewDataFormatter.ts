@@ -29,8 +29,7 @@ export const formatReviewData = (review: any) => {
     reviewerName: businessProfile?.business_name || businessProfile?.name || "Anonymous Business",
     reviewerAvatar: businessProfile?.avatar || "", // Include avatar from profile
     reviewerVerified: businessProfile?.verified || false, // Get verified status from profile
-    reviewerBusinessCategory: businessProfile?.business_category || "", // Include business category
-    reviewerCity: businessProfile?.city || "", // Include business city
+    reviewerCity: businessProfile?.city || "", // Include business city from profiles table
     reviewerState: businessProfile?.business_state || businessProfile?.state || "", // Include business state
     customerVerified: customerProfile?.verified || false,
     searchScore: 0,

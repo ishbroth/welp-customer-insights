@@ -69,7 +69,7 @@ export const fetchCustomerReviewsFromDB = async (currentUser: any) => {
       // Fetch business profiles
       const { data: businessProfiles, error: profileError } = await supabase
         .from('profiles')
-        .select('*, business_category')
+        .select('*')
         .in('id', businessIds)
         .eq('type', 'business');
 

@@ -29,6 +29,19 @@ export const processProfileCustomers = async (profilesData: any[]): Promise<Cust
 export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] => {
   hookLogger.debug("Processing review customers:", reviewsData.length);
 
+  // DEBUG: Log the first review's complete data to see what we're receiving
+  if (reviewsData.length > 0) {
+    console.log("🔍 CUSTOMER PROCESSOR INPUT - First review data:", {
+      id: reviewsData[0].id,
+      reviewerName: reviewsData[0].reviewerName,
+      reviewerCity: reviewsData[0].reviewerCity,
+      reviewerState: reviewsData[0].reviewerState,
+      hasReviewerCity: !!reviewsData[0].reviewerCity,
+      hasReviewerState: !!reviewsData[0].reviewerState,
+      allKeys: Object.keys(reviewsData[0])
+    });
+  }
+
   // Group reviews by customer identity - prioritize exact name matches
   const customerGroups = new Map<string, ReviewData[]>();
 
@@ -244,6 +257,8 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
         content: review.content || "",
         date: review.created_at || "",
         reviewerVerified: review.reviewerVerified || false,
+        reviewerCity: review.reviewerCity || "",
+        reviewerState: review.reviewerState || "",
         is_anonymous: review.is_anonymous || false,
         // CRITICAL: Include ALL customer information in each review
         // This ensures it's visible in search results regardless of auth status
@@ -274,7 +289,11 @@ export const processReviewCustomers = (reviewsData: ReviewData[]): Customer[] =>
       firstReviewData: customer.reviews[0] ? {
         associates: customer.reviews[0].associates,
         customer_business_name: customer.reviews[0].customer_business_name,
-        customer_nickname: customer.reviews[0].customer_nickname
+        customer_nickname: customer.reviews[0].customer_nickname,
+        reviewerCity: customer.reviews[0].reviewerCity,
+        reviewerState: customer.reviews[0].reviewerState,
+        hasReviewerCity: !!customer.reviews[0].reviewerCity,
+        hasReviewerState: !!customer.reviews[0].reviewerState
       } : null
     });
 

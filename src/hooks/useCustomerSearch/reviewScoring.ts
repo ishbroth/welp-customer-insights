@@ -314,16 +314,23 @@ export const scoreReview = async (
     let bestSimilarity = 0;
     
     // Test individual name components for better matching
+    // Track individual name component matches for detailed filtering
+    let firstNameSimilarity = 0;
+    let lastNameSimilarity = 0;
+    let nicknameSimilarity = 0;
+
     if (firstName) {
       const firstSim = calculateNameSimilarity(firstName, review.customer_name);
       hookLogger.debug(`[NAME_SCORING] First name: "${firstName}" vs "${review.customer_name}" = ${firstSim.toFixed(3)}`);
 
       let bestFirstSim = firstSim;
+      firstNameSimilarity = firstSim;
 
       // Also check nickname if available
       if (review.customer_nickname) {
         const nicknameSim = calculateNameSimilarity(firstName, review.customer_nickname);
         hookLogger.debug(`[NAME_SCORING] Nickname: "${firstName}" vs "${review.customer_nickname}" = ${nicknameSim.toFixed(3)}`);
+        nicknameSimilarity = nicknameSim;
         if (nicknameSim > bestFirstSim) {
           bestFirstSim = nicknameSim;
           hookLogger.debug(`[NAME_SCORING] Using nickname similarity: ${nicknameSim.toFixed(3)}`);
@@ -338,6 +345,7 @@ export const scoreReview = async (
     if (lastName) {
       const lastSim = calculateNameSimilarity(lastName, review.customer_name);
       hookLogger.debug(`[NAME_SCORING] Last name: "${lastName}" vs "${review.customer_name}" = ${lastSim.toFixed(3)}`);
+      lastNameSimilarity = lastSim;
       if (lastSim > bestSimilarity) {
         bestSimilarity = lastSim;
       }
@@ -432,6 +440,37 @@ export const scoreReview = async (
       }
 
       hookLogger.debug(`[NAME_SCORING] Review ${review.id} name score: ${namePoints.toFixed(1)} (similarity: ${finalSimilarity.toFixed(3)})`);
+
+      // Add individual name component matches for strict filtering
+      if (firstName && firstNameSimilarity > 0) {
+        detailedMatches.push({
+          field: 'First Name',
+          reviewValue: review.customer_name,
+          searchValue: firstName,
+          similarity: firstNameSimilarity,
+          matchType: firstNameSimilarity >= 0.8 ? 'exact' : firstNameSimilarity >= 0.6 ? 'partial' : 'fuzzy'
+        });
+      }
+
+      if (lastName && lastNameSimilarity > 0) {
+        detailedMatches.push({
+          field: 'Last Name',
+          reviewValue: review.customer_name,
+          searchValue: lastName,
+          similarity: lastNameSimilarity,
+          matchType: lastNameSimilarity >= 0.8 ? 'exact' : lastNameSimilarity >= 0.6 ? 'partial' : 'fuzzy'
+        });
+      }
+
+      if (review.customer_nickname && nicknameSimilarity > 0) {
+        detailedMatches.push({
+          field: 'Nickname',
+          reviewValue: review.customer_nickname,
+          searchValue: firstName || '',
+          similarity: nicknameSimilarity,
+          matchType: nicknameSimilarity >= 0.8 ? 'exact' : nicknameSimilarity >= 0.6 ? 'partial' : 'fuzzy'
+        });
+      }
 
       detailedMatches.push({
         field: 'Name',

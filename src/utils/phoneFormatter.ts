@@ -7,22 +7,25 @@ const utilLogger = logger.withContext('phoneFormatter');
  */
 export const formatPhoneNumber = (phone: string | undefined | null): string => {
   if (!phone) return '';
-  
+
   // Decode URL-encoded characters first
   const decoded = decodeURIComponent(phone);
-  
+
   // Remove all non-digits
   const cleaned = decoded.replace(/\D/g, '');
-  
+
   // Format progressively as user types
+  // Only add formatting when we have enough digits to make it meaningful
   if (cleaned.length >= 6) {
+    // Full formatting: (XXX) XXX-XXXX
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
   } else if (cleaned.length >= 3) {
+    // Partial formatting: (XXX) XXX
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-  } else if (cleaned.length > 0) {
-    return `(${cleaned}`;
   }
-  
+
+  // For 1-2 digits, return raw digits without formatting
+  // This allows backspacing freely without the opening parenthesis getting in the way
   return cleaned;
 };
 

@@ -38,18 +38,18 @@ const ProfileReviews = () => {
   const isCustomerAccount = currentUser.type === "customer";
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-x-hidden max-w-[100vw]">
       <AvatarBackground avatarUrl={currentUser?.avatar} />
       <Header />
       <ProfileMobileMenu />
-      <div className="flex relative z-10">
+      <div className="flex relative z-10 overflow-x-hidden max-w-full">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:block">
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
-        <main className="flex-1 px-3 py-6 md:px-4">
+        <main className="flex-1 px-3 py-6 md:px-4 overflow-x-hidden max-w-full">
           <MobileScaleWrapper>
-            <div className="w-full">
+            <div className="w-full overflow-x-hidden">
               <ProfileReviewsHeader
                 title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
                 description={

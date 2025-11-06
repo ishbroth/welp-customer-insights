@@ -154,7 +154,7 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
           </Avatar>
           <div>
             <div className="flex items-center gap-2">
-              <h4 
+              <h4
                 className={`font-medium text-sm ${shouldBusinessNameBeClickable ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
                 onClick={shouldBusinessNameBeClickable ? onBusinessNameClick : undefined}
               >
@@ -162,11 +162,11 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
               </h4>
               {businessInfo.verified && <VerifiedBadge size="xs" />}
             </div>
-            <p className="text-xs text-gray-500">
-              {businessInfo.city && businessInfo.state
-                ? `${businessInfo.city}, ${businessInfo.state}`
-                : businessInfo.city || businessInfo.state || 'Business'}
-            </p>
+            {businessInfo.city && businessInfo.state && (
+              <p className="text-xs text-gray-500">
+                {businessInfo.city}, {businessInfo.state}
+              </p>
+            )}
           </div>
         </div>
       </div>

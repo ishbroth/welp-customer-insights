@@ -148,30 +148,113 @@ export const searchReviews = async (
   hookLogger.debug("=== REVIEW SEARCH START ===");
   hookLogger.debug("Search parameters:", searchParams);
   hookLogger.debug("Claimed review IDs to always include:", claimedReviewIds?.length || 0);
-  
+
   // Initialize geocoding for the search
   initializeGeocodingForSearch();
-  
-  // Get all reviews
-  const { data: allReviews, error } = await supabase
-    .from('reviews')
-    .select(`
-      id,
-      customer_name,
-      customer_nickname,
-      customer_business_name,
-      customer_address,
-      customer_city,
-      customer_zipcode,
-      customer_phone,
-      rating,
-      content,
-      created_at,
-      business_id,
-      associates,
-      is_anonymous
-    `)
-    .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
+
+  // COMBINED OR FILTERING STRATEGY
+  // Build a single query using ALL provided fields with OR logic
+  // This casts a wide net, then client-side fuzzy matching validates precisely
+  // All provided fields are included to maximize chances of finding relevant records
+
+  const baseSelect = `
+    id,
+    customer_name,
+    customer_nickname,
+    customer_business_name,
+    customer_address,
+    customer_city,
+    customer_zipcode,
+    customer_phone,
+    rating,
+    content,
+    created_at,
+    business_id,
+    associates,
+    is_anonymous
+  `;
+
+  // Build array of OR conditions based on provided fields
+  const orConditions: string[] = [];
+  const appliedFilters: string[] = [];
+
+  // Add phone condition if provided
+  if (phone && phone.trim() !== '') {
+    const cleanPhone = phone.replace(/\D/g, '');
+    orConditions.push(`customer_phone.ilike.%${cleanPhone}%`);
+    appliedFilters.push(`phone: ${cleanPhone}`);
+  }
+
+  // Add address condition if provided
+  if (address && address.trim() !== '') {
+    orConditions.push(`customer_address.ilike.%${address}%`);
+    appliedFilters.push(`address: ${address}`);
+  }
+
+  // Add name conditions if provided
+  if (firstName && firstName.trim() !== '') {
+    orConditions.push(`customer_name.ilike.%${firstName}%`);
+    appliedFilters.push(`firstName: ${firstName}`);
+  }
+  if (lastName && lastName.trim() !== '') {
+    orConditions.push(`customer_name.ilike.%${lastName}%`);
+    appliedFilters.push(`lastName: ${lastName}`);
+  }
+
+  // Add city condition if provided
+  if (city && city.trim() !== '') {
+    orConditions.push(`customer_city.ilike.%${city}%`);
+    appliedFilters.push(`city: ${city}`);
+  }
+
+  // Add zipcode condition if provided
+  if (zipCode && zipCode.trim() !== '') {
+    const cleanZip = zipCode.replace(/\D/g, '');
+    orConditions.push(`customer_zipcode.ilike.%${cleanZip}%`);
+    appliedFilters.push(`zipcode: ${cleanZip}`);
+  }
+
+  let allReviews: any[] = [];
+  let error = null;
+
+  // Execute query with OR conditions
+  if (orConditions.length > 0) {
+    hookLogger.debug(`🔍 Building combined OR query with ${orConditions.length} conditions: ${appliedFilters.join(', ')}`);
+
+    const { data, error: queryError } = await supabase
+      .from('reviews')
+      .select(baseSelect)
+      .or(orConditions.join(','))
+      .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
+
+    if (queryError) {
+      error = queryError;
+      hookLogger.error('Query error:', queryError);
+    } else {
+      allReviews = data || [];
+      hookLogger.debug(`✅ Combined OR query returned ${allReviews.length} results`);
+    }
+  } else {
+    // No search criteria provided - fetch first 500 records
+    hookLogger.debug(`🔍 No search criteria provided, fetching first 500 records`);
+
+    const { data, error: fallbackError } = await supabase
+      .from('reviews')
+      .select(baseSelect)
+      .limit(REVIEW_SEARCH_CONFIG.INITIAL_LIMIT);
+
+    if (fallbackError) {
+      error = fallbackError;
+    } else {
+      allReviews = data || [];
+      hookLogger.debug(`📊 Fallback fetch: ${allReviews.length} records`);
+    }
+  }
+
+  // Note: State filter is applied during scoring phase since reviews don't have customer_state
+  if (state && state.trim() !== '') {
+    hookLogger.debug(`📝 State filter (${state}) will be validated during client-side scoring`);
+  }
 
   if (error) {
     hookLogger.error("Review search error:", error);
@@ -220,7 +303,7 @@ export const searchReviews = async (
     // Fetch business profiles
     const { data: businessProfiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, avatar, type, state, city, business_category')
+      .select('id, name, avatar, type, state, city')
       .in('id', businessIds)
       .eq('type', 'business');
 
@@ -237,7 +320,7 @@ export const searchReviews = async (
     // Fetch business verification status and state information
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
-      .select('id, verified, business_name, license_state, city')
+      .select('id, verified, business_name, license_state')
       .in('id', businessIds);
 
     if (businessError) {
@@ -249,14 +332,13 @@ export const searchReviews = async (
         businessVerificationMap.set(business.id, isVerified);
         hookLogger.debug(`✅ VERIFICATION MAPPED: Business ID ${business.id} -> verified: ${isVerified}`);
         
-        // Enhance existing profile with verification status, city, and state
+        // Enhance existing profile with verification status, state, and city
         if (businessProfilesMap.has(business.id)) {
           const existingProfile = businessProfilesMap.get(business.id);
           existingProfile.verified = isVerified;
           existingProfile.business_name = business.business_name;
 
-          // Add city from business_info (prioritize business_info.city over profile.city)
-          existingProfile.city = business.city || existingProfile.city;
+          // City comes from profiles table (already in existingProfile.city)
 
           // Prioritize profile.state over license_state, normalize both
           const profileState = existingProfile.state ? normalizeState(existingProfile.state) : null;
@@ -287,16 +369,38 @@ export const searchReviews = async (
     hookLogger.debug(`🔍 Business Profile found:`, {
       hasProfile: !!businessProfile,
       name: businessProfile?.name || businessProfile?.business_name,
-      verified: businessProfile?.verified
+      verified: businessProfile?.verified,
+      city: businessProfile?.city,
+      state: businessProfile?.state,
+      business_state: businessProfile?.business_state
     });
-    
+
+    // DEBUG: Log city/state specifically
+    console.log(`🏙️ REVIEW SEARCH - Business profile city/state for ${businessProfile?.name}:`, {
+      businessId: review.business_id,
+      city: businessProfile?.city,
+      state: businessProfile?.state,
+      business_state: businessProfile?.business_state,
+      hasCity: !!businessProfile?.city,
+      hasState: !!(businessProfile?.state || businessProfile?.business_state)
+    });
+
     const reviewWithProfile = {
       ...review,
       profiles: businessProfile || null
     };
     
     const formattedReview = formatReviewData(reviewWithProfile);
-    
+
+    // DEBUG: Log formatted review city/state
+    console.log(`🏙️ FORMATTED REVIEW - After formatting for ${formattedReview.reviewerName}:`, {
+      reviewId: formattedReview.id,
+      reviewerCity: formattedReview.reviewerCity,
+      reviewerState: formattedReview.reviewerState,
+      hasReviewerCity: !!formattedReview.reviewerCity,
+      hasReviewerState: !!formattedReview.reviewerState
+    });
+
     // Set verification status properly
     const verificationStatus = businessProfile?.verified || businessVerificationMap.get(review.business_id) || false;
     hookLogger.debug(`✅ VERIFICATION FINAL: Business ID ${review.business_id}, verified: ${verificationStatus}`);

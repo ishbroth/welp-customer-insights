@@ -197,27 +197,6 @@ export const useProfileReviewsFetching = () => {
                 hookLogger.warn('This means the profile does not exist in the database.');
               }
 
-              // Then try to enhance with business_profiles data if available
-              const { data: businessProfiles, error: businessError } = await supabase
-                .from('business_profiles')
-                .select('id, name, avatar, verified, business_category')
-                .in('id', uniqueBusinessIds);
-
-              if (businessError) {
-                hookLogger.debug('No business_profiles found (this is normal):', businessError.message);
-              } else if (businessProfiles) {
-                // Enhance existing profiles with business_profiles data
-                businessProfiles.forEach(businessProfile => {
-                  const existing = businessProfilesMap.get(businessProfile.id);
-                  if (existing) {
-                    businessProfilesMap.set(businessProfile.id, {
-                      ...existing,
-                      ...businessProfile // Override with business_profiles data if available
-                    });
-                  }
-                });
-              }
-
               hookLogger.debug('Final business profiles map:', Array.from(businessProfilesMap.entries()));
             } catch (error) {
               hookLogger.error('Error in batch profile fetch:', error);

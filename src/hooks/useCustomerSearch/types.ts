@@ -42,6 +42,8 @@ export interface ReviewData {
   reviewerName?: string;
   reviewerAvatar?: string;
   reviewerVerified?: boolean;
+  reviewerCity?: string;
+  reviewerState?: string;
   associates?: Array<{ firstName: string; lastName: string }>;
   is_anonymous?: boolean;
   // Associate match metadata

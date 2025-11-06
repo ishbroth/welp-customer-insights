@@ -15,8 +15,8 @@ const MobileScaleWrapper = ({ children, className = '', forceScale = false }: Mo
   }
 
   return (
-    <div 
-      className={`overflow-x-auto ${className}`}
+    <div
+      className={`overflow-x-hidden ${className}`}
       style={{
         width: containerWidth,
         transformOrigin: 'top left'

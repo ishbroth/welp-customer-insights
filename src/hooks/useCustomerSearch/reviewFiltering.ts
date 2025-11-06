@@ -188,20 +188,55 @@ export const filterAndSortReviews = (
       }
       
       // Additional validation for name + location only searches
-      if (searchContext?.hasName && searchContext?.hasLocation && 
-          !searchContext?.hasPhone && !searchContext?.hasAddress && 
+      if (searchContext?.hasName && searchContext?.hasLocation &&
+          !searchContext?.hasPhone && !searchContext?.hasAddress &&
           searchParams.city) {
-        
-        // For name + city + state searches, require city match if city was searched for
-        const hasCityMatch = review.detailedMatches?.some(match => 
-          match.field === 'City' && (match.similarity >= 0.3 || match.matchType === 'proximity')
+
+        // STRICT NAME REQUIREMENT: Require at least one strong name match (first, last, or nickname)
+        // This prevents false positives like "Isaac Wiley" matching "Pamela Haberlin" just because they're both in La Mesa
+        const hasStrongNameMatch = review.detailedMatches?.some(match =>
+          (match.field === 'First Name' || match.field === 'Last Name' || match.field === 'Nickname') &&
+          match.similarity >= 0.7  // 70%+ similarity (allows misspellings like "Pamla" vs "Pamela")
         );
 
+        if (!hasStrongNameMatch) {
+          console.log('🔍 REJECTED REVIEW (No Strong Name Match):', {
+            id: review.id,
+            customerName: review.customer_name,
+            detailedMatches: review.detailedMatches?.map(m => ({
+              field: m.field,
+              similarity: m.similarity,
+              reviewValue: m.reviewValue
+            })),
+            searchParams: {
+              firstName: searchParams.firstName,
+              lastName: searchParams.lastName,
+              city: searchParams.city,
+              state: searchParams.state
+            }
+          });
+          hookLogger.debug(`Review ${review.id} rejected - Name+Location search requires strong name match (>=70% similarity), found no matching first/last/nickname`);
+          return false;
+        }
+
+        // For name + city + state searches, require city match if city was searched for
+        const hasCityMatch = review.detailedMatches?.some(match =>
+          match.field === 'City' && (match.similarity >= 0.3 || match.matchType === 'proximity')
+        );
 
         if (!hasCityMatch) {
           hookLogger.debug(`Review ${review.id} rejected - City "${searchParams.city}" required but not matched`);
           return false;
         }
+
+        console.log('✅ PASSED NAME+LOCATION FILTER:', {
+          id: review.id,
+          customerName: review.customer_name,
+          score: review.searchScore,
+          nameMatches: review.detailedMatches?.filter(m =>
+            m.field === 'First Name' || m.field === 'Last Name' || m.field === 'Nickname'
+          )
+        });
       }
       
       // For name-focused and multi-field searches, require both minimum score AND minimum matches

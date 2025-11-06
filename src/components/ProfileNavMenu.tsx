@@ -10,6 +10,7 @@ import {
   Bell,
   LogOut,
   Search,
+  Edit,
 } from "lucide-react";
 
 interface ProfileNavMenuProps {
@@ -91,6 +92,38 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
               </Link>
             )}
 
+            {/* Post Review - business users only */}
+            {isBusinessAccount && (
+              <Link
+                to="/review/new"
+                onClick={handleLinkClick}
+                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
+                  location.pathname === "/review/new"
+                  ? "bg-gray-100 text-primary"
+                  : "text-gray-700"
+                }`}
+              >
+                <Edit className="mr-4 h-6 w-6 text-gray-500" />
+                Post Review
+              </Link>
+            )}
+
+            {/* Business users - show reviews they've written about customers */}
+            {isBusinessAccount && (
+              <Link
+                to="/profile/business-reviews"
+                onClick={handleLinkClick}
+                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
+                  location.pathname === "/profile/business-reviews"
+                  ? "bg-gray-100 text-primary"
+                  : "text-gray-700"
+                }`}
+              >
+                <FileText className="mr-4 h-6 w-6 text-gray-500" />
+                My Customer Reviews
+              </Link>
+            )}
+
             <Link
               to="/profile"
               onClick={handleLinkClick}
@@ -116,23 +149,7 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
               <Settings className="mr-4 h-6 w-6 text-gray-500" />
               Edit Profile
             </Link>
-            
-            {/* Business users - show reviews they've written about customers */}
-            {isBusinessAccount && (
-              <Link 
-                to="/profile/business-reviews" 
-                onClick={handleLinkClick}
-                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
-                  location.pathname === "/profile/business-reviews" 
-                  ? "bg-gray-100 text-primary" 
-                  : "text-gray-700"
-                }`}
-              >
-                <FileText className="mr-4 h-6 w-6 text-gray-500" />
-                My Customer Reviews
-              </Link>
-            )}
-            
+
             {/* Customer users - show reviews written about them by businesses */}
             {isCustomerAccount && (
               <Link 

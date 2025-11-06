@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  Search
+  Search,
+  Edit
 } from "lucide-react";
 
 interface ProfileSidebarProps {
@@ -122,6 +123,62 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 {(!isMobile || isOpen) && "Search"}
               </Link>
 
+              {/* Post Review - business users only */}
+              {isBusinessAccount && (
+                <Link
+                  to="/review/new"
+                  onClick={isMobile && isOpen ? toggle : undefined}
+                  className={`flex items-center rounded-md hover:bg-gray-100 transition-colors ${
+                    isMobile && !isOpen
+                      ? "px-1 py-2 justify-center"
+                      : isMobile
+                        ? "px-4 py-4 text-base"
+                        : "px-2 py-2 text-sm"
+                  } ${
+                    location.pathname === "/review/new"
+                    ? "bg-gray-100 text-primary"
+                    : "text-gray-700"
+                  }`}
+                >
+                  <Edit className={`text-gray-500 ${
+                    isMobile && !isOpen
+                      ? "h-5 w-5"
+                      : isMobile
+                        ? "mr-4 h-6 w-6"
+                        : "mr-3 h-5 w-5"
+                  }`} />
+                  {(!isMobile || isOpen) && "Post Review"}
+                </Link>
+              )}
+
+              {/* Business users - show reviews they've written about customers */}
+              {isBusinessAccount && (
+                <Link
+                  to="/profile/business-reviews"
+                  onClick={isMobile && isOpen ? toggle : undefined}
+                  className={`flex items-center rounded-md hover:bg-gray-100 transition-colors ${
+                    isMobile && !isOpen
+                      ? "px-1 py-2 justify-center"
+                      : isMobile
+                        ? "px-4 py-4 text-base"
+                        : "px-2 py-2 text-sm"
+                  } ${
+                    location.pathname === "/profile/business-reviews"
+                    ? "bg-gray-100 text-primary"
+                    : "text-gray-700"
+                  }`}
+                >
+                  <FileText className={`text-gray-500 ${
+                    isMobile && !isOpen
+                      ? "h-5 w-5"
+                      : isMobile
+                        ? "mr-4 h-6 w-6"
+                        : "mr-3 h-5 w-5"
+                  }`} />
+                  {(!isMobile || isOpen) && "My Customer Reviews"}
+                </Link>
+              )}
+
               <Link
                 to="/profile"
                 onClick={isMobile && isOpen ? toggle : undefined}
@@ -171,35 +228,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                 }`} />
                 {(!isMobile || isOpen) && "Edit Profile"}
               </Link>
-              
-              {/* Business users - show reviews they've written about customers */}
-              {isBusinessAccount && (
-                <Link 
-                  to="/profile/business-reviews" 
-                  onClick={isMobile && isOpen ? toggle : undefined}
-                  className={`flex items-center rounded-md hover:bg-gray-100 transition-colors ${
-                    isMobile && !isOpen 
-                      ? "px-1 py-2 justify-center" 
-                      : isMobile 
-                        ? "px-4 py-4 text-base" 
-                        : "px-2 py-2 text-sm"
-                  } ${
-                    location.pathname === "/profile/business-reviews" 
-                    ? "bg-gray-100 text-primary" 
-                    : "text-gray-700"
-                  }`}
-                >
-                  <FileText className={`text-gray-500 ${
-                    isMobile && !isOpen 
-                      ? "h-5 w-5" 
-                      : isMobile 
-                        ? "mr-4 h-6 w-6" 
-                        : "mr-3 h-5 w-5"
-                  }`} />
-                  {(!isMobile || isOpen) && "My Customer Reviews"}
-                </Link>
-              )}
-              
+
               {/* Customer users - show reviews written about them by businesses */}
               {isCustomerAccount && (
                 <Link 

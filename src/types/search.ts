@@ -10,6 +10,7 @@ export interface Customer {
   zipCode?: string;
   avatar?: string;
   verified?: boolean; // Add verification status
+  relevancyScore?: number; // Relevancy score for search result sorting
   // Associate match metadata
   isAssociateMatch?: boolean;
   associateData?: { firstName: string; lastName: string };
@@ -28,6 +29,8 @@ export interface Customer {
     content: string;
     date: string;
     reviewerVerified?: boolean;
+    reviewerCity?: string;
+    reviewerState?: string;
     customerId?: string;
   }>;
 }

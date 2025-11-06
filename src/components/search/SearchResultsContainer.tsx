@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import SearchResultsList from "./SearchResultsList";
 import EmptySearchResults from "./EmptySearchResults";
 import SearchLoadingState from "./SearchLoadingState";
+import PinchToZoom from "@/components/PinchToZoom";
 
 interface SearchResultsContainerProps {
   customers: Customer[];
@@ -35,11 +36,13 @@ const SearchResultsContainer = React.memo(({ customers, isLoading, onRefresh }: 
 
   return (
     <div className="space-y-4">
-      <SearchResultsList 
-        customers={displayedCustomers}
-        isLoading={false}
-        onRefresh={onRefresh}
-      />
+      <PinchToZoom maxScale={1.5}>
+        <SearchResultsList
+          customers={displayedCustomers}
+          isLoading={false}
+          onRefresh={onRefresh}
+        />
+      </PinchToZoom>
     </div>
   );
 });

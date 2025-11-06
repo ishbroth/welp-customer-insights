@@ -176,16 +176,21 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
                 {customerDisplayName}
               </h3>
               <p className="text-sm text-gray-500">
-                Review written on {formatDate(review.date)}
+                Written on {formatDate(review.date)}
               </p>
               {customerPhone && (
                 <p className="text-sm text-gray-600">
                   Phone: {customerPhone}
                 </p>
               )}
-              {formatAddress() && (
+              {customerAddress && (
                 <p className="text-sm text-gray-600">
-                  Address: {formatAddress()}
+                  Address: {customerAddress}
+                </p>
+              )}
+              {(customerCity || customerZipcode) && (
+                <p className="text-sm text-gray-600">
+                  {customerCity}{customerCity && customerZipcode ? ', ' : ''}{customerZipcode}
                 </p>
               )}
             </div>
@@ -243,16 +248,21 @@ const BusinessReviewCardHeader: React.FC<BusinessReviewCardHeaderProps> = ({
                 {customerDisplayName}
               </h3>
               <p className="text-sm text-gray-500">
-                Review written on {formatDate(review.date)}
+                Written on {formatDate(review.date)}
               </p>
               {customerPhone && (
                 <p className="text-sm text-gray-600">
                   Phone: {customerPhone}
                 </p>
               )}
-              {formatAddress() && (
+              {customerAddress && (
                 <p className="text-sm text-gray-600">
-                  Address: {formatAddress()}
+                  Address: {customerAddress}
+                </p>
+              )}
+              {(customerCity || customerZipcode) && (
+                <p className="text-sm text-gray-600">
+                  {customerCity}{customerCity && customerZipcode ? ', ' : ''}{customerZipcode}
                 </p>
               )}
             </div>

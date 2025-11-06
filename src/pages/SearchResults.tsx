@@ -9,6 +9,8 @@ import { usePostAuthRedirect } from "@/hooks/usePostAuthRedirect";
 import { useSearchParams } from "react-router-dom";
 // Import debug utility for testing associate functionality
 import "@/utils/testAssociateData";
+// Import diagnostic utility for checking business city/state data
+import "@/utils/checkBusinessCityState";
 import { logger } from '@/utils/logger';
 
 const SearchResults = () => {

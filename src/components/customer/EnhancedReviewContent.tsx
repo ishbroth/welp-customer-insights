@@ -109,12 +109,12 @@ const EnhancedReviewContent: React.FC<EnhancedReviewContentProps> = ({
   return (
     <div className="space-y-4">
       {/* Review Content */}
-      <div>
+      <div className="break-words overflow-wrap-anywhere">
         {shouldShowFullReview ? (
-          <p className="text-gray-700 leading-relaxed md:text-base text-sm">{content}</p>
+          <p className="text-gray-700 leading-relaxed md:text-base text-sm break-words">{content}</p>
         ) : (
-          <div className="space-y-4">
-            <div className="relative inline-block w-full">
+          <div className="space-y-4 break-words">
+            <div className="relative w-full break-words">
               {/* Clear first 2 characters */}
               <span className="text-gray-700 leading-relaxed md:text-base text-sm">
                 {content.substring(0, 2)}

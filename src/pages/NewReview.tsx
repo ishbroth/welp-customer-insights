@@ -1,9 +1,11 @@
 
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import ContentRejectionDialog from "@/components/moderation/ContentRejectionDialog";
 import DuplicateReviewHandler from "@/components/reviews/DuplicateReviewHandler";
 import ReviewForm from "@/components/reviews/ReviewForm";
@@ -19,6 +21,7 @@ import { logger } from '@/utils/logger';
 const NewReview = () => {
   const pageLogger = logger.withContext('NewReview');
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const formState = useReviewFormState();
   const { 
     isSubmitting, 
@@ -93,6 +96,15 @@ const NewReview = () => {
       <main className="flex-grow py-8 relative">
         <NewReviewBackground />
         <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-2xl mx-auto mb-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-sm text-white hover:text-gray-200 transition-colors py-1"
+            >
+              <ArrowLeft className="h-3 w-3 mr-1" />
+              Back
+            </button>
+          </div>
           <Card className="max-w-2xl mx-auto p-6">
             <h1 className="text-3xl font-bold mb-6">
               {formState.isEditing ? "Edit Customer Review" : "Write a Customer Review"}

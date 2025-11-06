@@ -241,12 +241,23 @@ export const useBusinessReviews = (onRefresh?: () => void) => {
 
     // Remove from local state immediately since it's been hard deleted
     setWorkingReviews(prev => prev.filter(review => review.id !== reviewId));
-    
+
     toast({
       title: "Review deleted",
       description: "Your review and all associated data have been permanently deleted.",
     });
-    
+
+    // Clear the review cache to force fresh data fetch
+    if (currentUser) {
+      const cacheKey = `profileReviews_${currentUser.id}`;
+      try {
+        sessionStorage.removeItem(cacheKey);
+        hookLogger.debug("Cleared review cache after deletion");
+      } catch (error) {
+        hookLogger.error("Error clearing cache:", error);
+      }
+    }
+
     // Trigger data refresh if callback provided
     if (onRefresh) {
       onRefresh();
