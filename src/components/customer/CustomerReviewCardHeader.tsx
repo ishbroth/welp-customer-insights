@@ -45,7 +45,10 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
     });
   };
 
-  const truncateBusinessName = (name: string, maxLength: number = 10) => {
+  const truncateBusinessName = (name: string, maxLength: number = 20) => {
+    // Don't truncate anonymous business names (show full "Anonymous Business" or category)
+    if (isAnonymous) return name;
+    // Truncate non-anonymous business names at maxLength
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength) + '...';
   };

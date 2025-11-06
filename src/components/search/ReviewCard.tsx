@@ -260,13 +260,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <div className="flex items-center gap-1">
                 <h4
                   className={review.is_anonymous
-                    ? "font-medium text-gray-700 text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)] truncate"
+                    ? "font-medium text-gray-700 text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)]"
                     : "font-medium cursor-pointer hover:text-blue-600 transition-colors text-xs md:text-[clamp(0.875rem,1.2vw,0.95rem)] truncate"
                   }
                   onClick={review.is_anonymous ? undefined : handleBusinessNameClick}
-                  style={{ maxWidth: '15ch' }}
+                  style={{ maxWidth: review.is_anonymous ? 'none' : '20ch' }}
                 >
-                  {displayReviewerName.length > 15 ? displayReviewerName.substring(0, 15) + '...' : displayReviewerName}
+                  {review.is_anonymous
+                    ? displayReviewerName
+                    : (displayReviewerName.length > 20 ? displayReviewerName.substring(0, 20) + '...' : displayReviewerName)
+                  }
                 </h4>
                 {review.reviewerVerified && !review.is_anonymous && <VerifiedBadge size="sm" />}
               </div>
