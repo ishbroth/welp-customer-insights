@@ -7,6 +7,8 @@ interface BusinessInfo {
   name: string;
   avatar: string;
   verified: boolean;
+  city?: string;
+  state?: string;
 }
 
 interface CustomerInfo {
@@ -160,7 +162,11 @@ const CustomerReviewCardHeader: React.FC<CustomerReviewCardHeaderProps> = ({
               </h4>
               {businessInfo.verified && <VerifiedBadge size="xs" />}
             </div>
-            <p className="text-xs text-gray-500">Business</p>
+            <p className="text-xs text-gray-500">
+              {businessInfo.city && businessInfo.state
+                ? `${businessInfo.city}, ${businessInfo.state}`
+                : businessInfo.city || businessInfo.state || 'Business'}
+            </p>
           </div>
         </div>
       </div>

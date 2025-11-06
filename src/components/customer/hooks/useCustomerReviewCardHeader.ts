@@ -59,7 +59,9 @@ export const useCustomerReviewCardHeader = (
     name: businessDisplayName,
     avatar: finalBusinessAvatar,
     initials: getInitials(businessDisplayName),
-    verified: businessProfile?.verified || false
+    verified: businessProfile?.verified || false,
+    city: businessProfile?.city || review.reviewerCity || '',
+    state: businessProfile?.business_state || businessProfile?.state || review.reviewerState || ''
   };
 
   const handleCustomerClick = () => {

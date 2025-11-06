@@ -31,6 +31,8 @@ interface ReviewCardProps {
     reviewerAvatar?: string;
     reviewerVerified?: boolean;
     reviewerBusinessCategory?: string;
+    reviewerCity?: string;
+    reviewerState?: string;
     rating: number;
     content: string;
     date: string;
@@ -273,7 +275,11 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 </h4>
                 {review.reviewerVerified && !review.is_anonymous && <VerifiedBadge size="sm" />}
               </div>
-              <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500">{review.reviewerBusinessCategory || 'Business'}</p>
+              <p className="text-[10px] md:text-[clamp(0.75rem,1vw,0.85rem)] text-gray-500">
+                {review.reviewerCity && review.reviewerState
+                  ? `${review.reviewerCity}, ${review.reviewerState}`
+                  : review.reviewerCity || review.reviewerState || 'Business'}
+              </p>
             </div>
           </div>
 

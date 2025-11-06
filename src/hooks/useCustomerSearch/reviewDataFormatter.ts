@@ -30,6 +30,8 @@ export const formatReviewData = (review: any) => {
     reviewerAvatar: businessProfile?.avatar || "", // Include avatar from profile
     reviewerVerified: businessProfile?.verified || false, // Get verified status from profile
     reviewerBusinessCategory: businessProfile?.business_category || "", // Include business category
+    reviewerCity: businessProfile?.city || "", // Include business city
+    reviewerState: businessProfile?.business_state || businessProfile?.state || "", // Include business state
     customerVerified: customerProfile?.verified || false,
     searchScore: 0,
     matchCount: 0,

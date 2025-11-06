@@ -220,7 +220,7 @@ export const searchReviews = async (
     // Fetch business profiles
     const { data: businessProfiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, name, avatar, type, state')
+      .select('id, name, avatar, type, state, city, business_category')
       .in('id', businessIds)
       .eq('type', 'business');
 
