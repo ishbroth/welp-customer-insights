@@ -14,6 +14,7 @@ import { toast } from "@/components/ui/sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from '@/utils/logger';
 
 const BuyCredits = () => {
@@ -27,6 +28,7 @@ const BuyCredits = () => {
   const { balance, loadCreditsData } = useCredits();
   const { subscriptionData } = useBillingData(currentUser);
   const { openCheckout } = useStripeCheckout();
+  const isMobile = useIsMobile();
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -117,10 +119,10 @@ const BuyCredits = () => {
     // Use Stripe for all platforms
     try {
       pageLogger.debug("📞 About to call create-credit-payment function...");
-      pageLogger.debug("Request parameters:", { creditAmount, totalCost });
+      pageLogger.debug("Request parameters:", { creditAmount, totalCost, isMobile });
 
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
-        body: { creditAmount, totalCost }
+        body: { creditAmount, totalCost, isMobile }
       });
 
       pageLogger.debug("🔍 Function response:", { data, error });

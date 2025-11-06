@@ -26,6 +26,10 @@ const config: CapacitorConfig = {
     },
     Camera: {
       permissions: ["camera", "photos"]
+    },
+    App: {
+      deepLinkingEnabled: true,
+      customScheme: "welpapp"
     }
   }
 };

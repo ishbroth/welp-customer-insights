@@ -77,15 +77,17 @@ serve(async (req) => {
     // Get credit amount from request body
     const requestBody = await req.json();
     const creditAmount = parseInt(requestBody.creditAmount) || 1;
+    const isMobile = requestBody.isMobile || false;
 
     // Validate credit amount
     if (creditAmount < 1 || creditAmount > 50) {
       throw new Error(`Invalid credit amount: ${creditAmount}. Must be between 1 and 50.`);
     }
 
-    logStep("Request data", { creditAmount, requestBody });
+    logStep("Request data", { creditAmount, isMobile, requestBody });
 
-    const origin = req.headers.get("origin") || "http://localhost:5173";
+    // Use custom URL scheme for mobile apps, web origin for web
+    const origin = isMobile ? "welpapp://" : (req.headers.get("origin") || "http://localhost:5173");
 
     // Prepare success URL with parameters to identify what was purchased
     const successParams = new URLSearchParams();
@@ -93,8 +95,12 @@ serve(async (req) => {
     successParams.append("success", "true");
     successParams.append("session_id", "{CHECKOUT_SESSION_ID}");
 
-    const successUrl = `${origin}/profile/billing?${successParams.toString()}`;
-    const cancelUrl = `${origin}/profile/billing?canceled=true`;
+    const successUrl = isMobile
+      ? `${origin}buy-credits?${successParams.toString()}`
+      : `${origin}/buy-credits?${successParams.toString()}`;
+    const cancelUrl = isMobile
+      ? `${origin}buy-credits?canceled=true`
+      : `${origin}/buy-credits?canceled=true`;
 
     // Create a one-time payment checkout session for credits with quantity adjustment enabled
     logStep("Creating Stripe checkout session", {

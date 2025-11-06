@@ -47,8 +47,8 @@ serve(async (req) => {
       });
     }
 
-    const { customerId, reviewId, amount = 300 } = requestData;
-    logStep("Request data extracted", { customerId, reviewId, amount });
+    const { customerId, reviewId, amount = 300, isMobile = false } = requestData;
+    logStep("Request data extracted", { customerId, reviewId, amount, isMobile });
 
     // Initialize Stripe
     let stripe;
@@ -127,17 +127,22 @@ serve(async (req) => {
       });
     }
 
-    const origin = req.headers.get("origin") || "https://www.mywelp.com";
-    
+    // Use custom URL scheme for mobile apps, web origin for web
+    const origin = isMobile ? "welpapp://" : (req.headers.get("origin") || "https://www.mywelp.com");
+
     // Prepare success URL with parameters
     const successParams = new URLSearchParams();
     if (customerId) successParams.append("customerId", customerId);
     if (reviewId) successParams.append("reviewId", reviewId);
     successParams.append("success", "true");
     successParams.append("session_id", "{CHECKOUT_SESSION_ID}");
-    
-    const successUrl = `${origin}/profile?${successParams.toString()}`;
-    const cancelUrl = `${origin}/profile?canceled=true`;
+
+    const successUrl = isMobile
+      ? `${origin}profile?${successParams.toString()}`
+      : `${origin}/profile?${successParams.toString()}`;
+    const cancelUrl = isMobile
+      ? `${origin}profile?canceled=true`
+      : `${origin}/profile?canceled=true`;
     
     logStep("URLs prepared", { successUrl, cancelUrl, origin });
     

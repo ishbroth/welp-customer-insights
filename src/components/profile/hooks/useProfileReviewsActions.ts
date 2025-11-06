@@ -5,6 +5,7 @@ import { Review } from "@/types";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from "@/utils/logger";
 
 export const useProfileReviewsActions = (
@@ -18,6 +19,7 @@ export const useProfileReviewsActions = (
   const navigate = useNavigate();
   const { isReviewUnlocked: isCreditUnlocked } = useReviewAccess();
   const { openCheckout } = useStripeCheckout();
+  const isMobile = useIsMobile();
 
   const handlePurchaseReview = async (reviewId: string) => {
     if (!currentUser) {
@@ -30,7 +32,9 @@ export const useProfileReviewsActions = (
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-credit-payment');
+      const { data, error } = await supabase.functions.invoke('create-credit-payment', {
+        body: { creditAmount: 1, totalCost: 300, isMobile }
+      });
 
       if (error) {
         hookLogger.error('Error creating payment session:', error);

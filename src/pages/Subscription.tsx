@@ -82,7 +82,10 @@ const Subscription = () => {
     try {
       pageLogger.debug("📞 About to call create-legacy-payment");
       const { data, error } = await supabase.functions.invoke("create-legacy-payment", {
-        body: { userType: isCustomer ? "customer" : "business" }
+        body: {
+          userType: isCustomer ? "customer" : "business",
+          isMobile: isMobile
+        }
       });
 
       if (error) {

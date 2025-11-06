@@ -50,8 +50,8 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Request body contains info like user type
-    const { userType = "customer" } = await req.json();
-    logStep("Request data", { userType });
+    const { userType = "customer", isMobile = false } = await req.json();
+    logStep("Request data", { userType, isMobile });
 
     // Get user's credit balance for metadata only (no consumption here)
     const { data: creditsData, error: creditsError } = await supabaseClient
@@ -93,9 +93,17 @@ serve(async (req) => {
     const baseAmount = 25000;  // $250 in cents
     
     logStep("Pricing calculation", { baseAmount, creditBalance });
-    
-    const origin = req.headers.get("origin") || "http://localhost:5173";
-    
+
+    // Use custom URL scheme for mobile apps, web origin for web
+    const origin = isMobile ? "welpapp://" : (req.headers.get("origin") || "http://localhost:5173");
+
+    const successUrl = isMobile
+      ? `${origin}profile?legacy=true&session_id={CHECKOUT_SESSION_ID}`
+      : `${origin}/profile?legacy=true&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = isMobile
+      ? `${origin}subscription?canceled=true`
+      : `${origin}/subscription?canceled=true`;
+
     // Create a one-time payment session for Legacy plan
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -105,8 +113,8 @@ serve(async (req) => {
             currency: "usd",
             product_data: {
               name: userType === "business" ? "Business Legacy Plan" : "Customer Legacy Plan",
-              description: userType === "business" 
-                ? "Lifetime access to all customer reviews and business tools - never expires!" 
+              description: userType === "business"
+                ? "Lifetime access to all customer reviews and business tools - never expires!"
                 : "Lifetime access to all reviews about you and response capabilities - never expires!"
             },
             unit_amount: baseAmount,
@@ -115,8 +123,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/profile?legacy=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/subscription?canceled=true`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         user_id: user.id,
         user_type: userType,

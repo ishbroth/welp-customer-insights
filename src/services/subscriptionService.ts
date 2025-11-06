@@ -73,9 +73,12 @@ export const handleSubscription = async (
 
   // Use Stripe for all platforms
   try {
-    serviceLogger.debug("About to call create-checkout");
+    serviceLogger.debug("About to call create-checkout", { isMobile });
     const { data, error } = await supabase.functions.invoke("create-checkout", {
-      body: { userType: isCustomer ? "customer" : "business" }
+      body: {
+        userType: isCustomer ? "customer" : "business",
+        isMobile: isMobile
+      }
     });
 
     if (error) {

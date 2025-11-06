@@ -49,5 +49,16 @@
 	<string>Welp needs access to your photo library so you can add photos to your reviews.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Welp needs access to your camera so you can take photos for your reviews.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.mywelp.dev</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>welpapp</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

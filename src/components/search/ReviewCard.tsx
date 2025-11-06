@@ -11,6 +11,7 @@ import { useCustomerInfo } from "@/hooks/useCustomerInfo";
 import ReviewConversationSection from "@/components/conversation/ReviewConversationSection";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
 import { useCredits } from "@/hooks/useCredits";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { doesReviewMatchUser } from "@/utils/reviewMatching";
@@ -71,6 +72,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   const { balance, useCredits: useCreditsFn, loadCreditsData } = useCredits();
   const { isReviewUnlocked, addUnlockedReview } = useReviewAccess();
   const { isReviewClaimedByUser } = useReviewClaims();
+  const isMobile = useIsMobile();
   const [isClaimedByCurrentUser, setIsClaimedByCurrentUser] = React.useState<boolean>(false);
   const [isExpanded, setIsExpanded] = React.useState<boolean>(false);
 
@@ -186,6 +188,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       componentLogger.info("Creating credit payment session...");
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: {
+          creditAmount: 1,
+          totalCost: 300,
+          isMobile: isMobile,
           returnUrl: window.location.href // Return to current search page
         }
       });
