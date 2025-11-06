@@ -237,7 +237,7 @@ export const searchReviews = async (
     // Fetch business verification status and state information
     const { data: businessInfos, error: businessError } = await supabase
       .from('business_info')
-      .select('id, verified, business_name, license_state')
+      .select('id, verified, business_name, license_state, city')
       .in('id', businessIds);
 
     if (businessError) {
@@ -249,19 +249,22 @@ export const searchReviews = async (
         businessVerificationMap.set(business.id, isVerified);
         hookLogger.debug(`✅ VERIFICATION MAPPED: Business ID ${business.id} -> verified: ${isVerified}`);
         
-        // Enhance existing profile with verification status and state
+        // Enhance existing profile with verification status, city, and state
         if (businessProfilesMap.has(business.id)) {
           const existingProfile = businessProfilesMap.get(business.id);
           existingProfile.verified = isVerified;
           existingProfile.business_name = business.business_name;
-          
+
+          // Add city from business_info (prioritize business_info.city over profile.city)
+          existingProfile.city = business.city || existingProfile.city;
+
           // Prioritize profile.state over license_state, normalize both
           const profileState = existingProfile.state ? normalizeState(existingProfile.state) : null;
           const licenseState = business.license_state ? normalizeState(business.license_state) : null;
           existingProfile.business_state = profileState || licenseState;
-          
-          hookLogger.debug(`[STATE_MAPPING] Business ${business.id}: profile.state="${existingProfile.state}" -> normalized: "${profileState}", license_state="${business.license_state}" -> normalized: "${licenseState}", final: "${existingProfile.business_state}"`);
-          
+
+          hookLogger.debug(`[STATE_MAPPING] Business ${business.id}: profile.state="${existingProfile.state}" -> normalized: "${profileState}", license_state="${business.license_state}" -> normalized: "${licenseState}", final: "${existingProfile.business_state}", city: "${existingProfile.city}"`);
+
           businessProfilesMap.set(business.id, existingProfile);
         }
       });
