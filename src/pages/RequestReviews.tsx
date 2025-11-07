@@ -116,11 +116,31 @@ const RequestReviews = () => {
     // Send review request
     setIsSubmitting(true);
     try {
+      // Handle first/last name - split from full name if needed
+      let firstName = currentUser.first_name;
+      let lastName = currentUser.last_name;
+
+      if (!firstName || !lastName) {
+        // If first/last name not available, try splitting full name
+        const nameParts = (currentUser.name || '').trim().split(' ');
+        if (nameParts.length >= 2) {
+          firstName = firstName || nameParts[0];
+          lastName = lastName || nameParts.slice(1).join(' ');
+        } else if (nameParts.length === 1) {
+          firstName = firstName || nameParts[0];
+          lastName = lastName || nameParts[0];
+        }
+      }
+
+      // Final fallback: use "Customer" if still no name
+      const finalFirstName = firstName || 'Customer';
+      const finalLastName = lastName || 'Customer';
+
       const result = await reviewRequestsService.sendReviewRequest({
         businessEmail: email,
         customerEmail: currentUser.email || '',
-        customerFirstName: currentUser.first_name || '',
-        customerLastName: currentUser.last_name || '',
+        customerFirstName: finalFirstName,
+        customerLastName: finalLastName,
         customerId: currentUser.id,
       });
 
