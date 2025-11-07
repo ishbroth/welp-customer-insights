@@ -290,6 +290,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
               <p className="text-[10px] md:text-xs text-gray-500 mt-0.5">
                 {review.reviewerCity || '[NO CITY]'}, {review.reviewerState || '[NO STATE]'}
               </p>
+              <p className="text-[10px] md:text-xs text-gray-500 mt-0.5">
+                {formatDate(review.date)}
+              </p>
             </div>
           </div>
 
@@ -331,30 +334,25 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           </div>
         </div>
 
-        {/* Rating and Date */}
-        <div className="flex items-center justify-between mb-2 md:mb-3">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    canViewFullContent && i < review.rating
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
-                  }`}
-                />
-              ))}
-            </div>
-            {canViewFullContent && (
-              <span className="text-sm text-gray-600">
-                {review.rating}/5
-              </span>
-            )}
+        {/* Rating */}
+        <div className="flex items-center gap-2 mb-2 md:mb-3">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-4 w-4 ${
+                  canViewFullContent && i < review.rating
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-300"
+                }`}
+              />
+            ))}
           </div>
-          <span className="text-sm text-gray-500">
-            {formatDate(review.date)}
-          </span>
+          {canViewFullContent && (
+            <span className="text-sm text-gray-600">
+              {review.rating}/5
+            </span>
+          )}
         </div>
 
         {/* Review Content */}
