@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 class MyViewController: CAPBridgeViewController {
     override func webViewConfiguration(for instanceConfiguration: InstanceConfiguration) -> WKWebViewConfiguration {
