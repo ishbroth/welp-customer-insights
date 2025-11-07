@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import React from "react";
 import { useAuth } from "@/contexts/auth";
 import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -11,20 +10,13 @@ import MobileScaleWrapper from "@/components/MobileScaleWrapper";
 import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import ProfileReviewsHeader from "@/components/profile/ProfileReviewsHeader";
 import ProfileReviewsSubscriptionStatus from "@/components/profile/ProfileReviewsSubscriptionStatus";
-import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
+import { useProfileReviewsQuery } from "@/hooks/useProfileReviewsQuery";
 import AvatarBackground from "@/components/AvatarBackground";
 
 const ProfileReviews = () => {
   const { currentUser, loading, isSubscribed } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { customerReviews, isLoading, fetchCustomerReviews } = useProfileReviewsFetching();
-
-  // Force refresh on mount to clear cache
-  React.useEffect(() => {
-    if (currentUser) {
-      fetchCustomerReviews(true); // Force refresh
-    }
-  }, []);
+  const { customerReviews, isLoading, refetch } = useProfileReviewsQuery();
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -57,7 +49,7 @@ const ProfileReviews = () => {
                     ? "Reviews that businesses have written about you"
                     : "Reviews you've written about your customers"
                 }
-                onRefresh={fetchCustomerReviews}
+                onRefresh={() => refetch()}
                 isLoading={isLoading}
               />
 
@@ -67,7 +59,7 @@ const ProfileReviews = () => {
                 customerReviews={customerReviews}
                 isLoading={isLoading}
                 hasSubscription={isSubscribed}
-                onRefresh={fetchCustomerReviews}
+                onRefresh={() => refetch()}
               />
             </div>
           </MobileScaleWrapper>

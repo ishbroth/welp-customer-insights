@@ -8,6 +8,8 @@ import EmptyReviewsMessage from "@/components/reviews/EmptyReviewsMessage";
 import ReviewPagination from "@/components/reviews/ReviewPagination";
 import EnhancedCustomerReviewCard from "@/components/customer/EnhancedCustomerReviewCard";
 import WelpLoadingIcon from "@/components/ui/WelpLoadingIcon";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 import { useSessionTracking } from "@/hooks/useSessionTracking";
 import { useBusinessReviews } from "@/hooks/useBusinessReviews";
@@ -123,11 +125,25 @@ const ProfileReviewsContent = ({
       })}
       
       {totalPages > 1 && (
-        <ReviewPagination 
+        <ReviewPagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
+      )}
+
+      {/* Refresh Reviews Button - only shown when reviews exist */}
+      {sortedReviews.length > 0 && onRefresh && (
+        <div className="flex justify-center pt-4 pb-2">
+          <Button
+            variant="outline"
+            onClick={() => onRefresh()}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh Reviews
+          </Button>
+        </div>
       )}
     </div>
   );

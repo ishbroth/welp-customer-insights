@@ -13,7 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Edit, User, Phone, Mail, MapPin, Building, CreditCard, Star, ShoppingCart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import StarRating from "@/components/StarRating";
-import { useProfileReviewsFetching } from "@/hooks/useProfileReviewsFetching";
+import { useProfileReviewsQuery } from "@/hooks/useProfileReviewsQuery";
 import { useProfileReviewsData } from "@/components/profile/hooks/useProfileReviewsData";
 import { useCustomerAverageRating } from "@/hooks/useCustomerAverageRating";
 import { useReviewAccess } from "@/hooks/useReviewAccess";
@@ -39,8 +39,8 @@ const ProfilePage = () => {
   const { balance } = useCredits();
   const navigate = useNavigate();
 
-  // Customer reviews data for average rating (customer accounts only)
-  const { customerReviews, isLoading: isLoadingReviews } = useProfileReviewsFetching();
+  // Customer reviews data for average rating (customer accounts only) - now using React Query with persistent cache
+  const { customerReviews, isLoading: isLoadingReviews } = useProfileReviewsQuery();
   const { sortedReviews } = useProfileReviewsData(customerReviews, currentUser);
   const { isReviewUnlocked } = useReviewAccess();
   
