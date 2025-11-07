@@ -1,6 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 import { extractAddressComponents, AddressComponents } from "@/utils/addressExtraction";
 import { logger } from "@/utils/logger";
@@ -133,12 +134,21 @@ export const BusinessAddressSection = ({
           <label htmlFor="businessCity" className="block text-sm font-medium mb-1">
             City <span className="text-red-500">*</span>
           </label>
-          <Input
+          <CityAutocomplete
             id="businessCity"
-            type="text"
-            placeholder="City"
+            placeholder="Start typing city name..."
             value={businessCity}
-            onChange={(e) => setBusinessCity(e.target.value)}
+            onCitySelect={(city, state) => {
+              componentLogger.debug('City autocomplete selected:', { city, state });
+              setBusinessCity(city);
+              if (state) {
+                setBusinessState(state);
+              }
+            }}
+            onCityChange={(city) => {
+              componentLogger.debug('Manual city change:', city);
+              setBusinessCity(city);
+            }}
             className="welp-input"
             required
           />

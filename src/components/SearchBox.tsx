@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import SearchField from "@/components/search/SearchField";
 import StateSelect from "@/components/search/StateSelect";
 import SearchButton from "@/components/search/SearchButton";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { useSearchForm } from "@/hooks/useSearchForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { logger } from '@/utils/logger';
@@ -99,12 +100,19 @@ const SearchBox = React.memo(({
             required={false}
           />
 
-          <SearchField
+          <CityAutocomplete
             placeholder="City"
             value={formValues.city}
-            onChange={(e) => {
-              componentLogger.debug('Manual city change:', e.target.value);
-              setters.setCity(e.target.value);
+            onCitySelect={(city, state) => {
+              componentLogger.debug('City autocomplete selected:', { city, state });
+              setters.setCity(city);
+              if (state) {
+                setters.setState(state);
+              }
+            }}
+            onCityChange={(city) => {
+              componentLogger.debug('Manual city change:', city);
+              setters.setCity(city);
             }}
             required={false}
           />

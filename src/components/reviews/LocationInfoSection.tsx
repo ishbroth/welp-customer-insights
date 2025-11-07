@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import StateSelect from "@/components/search/StateSelect";
 
 interface LocationInfoSectionProps {
@@ -30,10 +31,16 @@ const LocationInfoSection: React.FC<LocationInfoSectionProps> = ({
         <label htmlFor="customerCity" className="block text-sm font-medium mb-1">
           City <span className="text-red-500">*</span>
         </label>
-        <Input
+        <CityAutocomplete
           id="customerCity"
           value={customerCity}
-          onChange={(e) => setCustomerCity(e.target.value)}
+          onCitySelect={(city, state) => {
+            setCustomerCity(city);
+            if (state) {
+              setCustomerState(state);
+            }
+          }}
+          onCityChange={(city) => setCustomerCity(city)}
           className="welp-input"
           disabled={!isNewCustomer && !!customer}
           required

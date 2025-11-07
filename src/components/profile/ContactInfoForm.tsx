@@ -3,6 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./types";
 import StateSelect from "@/components/search/StateSelect";
@@ -138,7 +139,21 @@ const ContactInfoForm = ({ form }: ContactInfoFormProps) => {
           <FormItem>
             <FormLabel>City</FormLabel>
             <FormControl>
-              <Input placeholder="Your city" {...field} />
+              <CityAutocomplete
+                placeholder="Start typing city name..."
+                value={field.value || ""}
+                onCitySelect={(city, state) => {
+                  componentLogger.debug('City autocomplete selected:', { city, state });
+                  form.setValue('city', city);
+                  if (state) {
+                    form.setValue('state', state);
+                  }
+                }}
+                onCityChange={(city) => {
+                  componentLogger.debug('Manual city change:', city);
+                  form.setValue('city', city);
+                }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
