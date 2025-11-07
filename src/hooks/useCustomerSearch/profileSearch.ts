@@ -299,33 +299,44 @@ export const searchProfiles = async (searchParams: SearchParams) => {
       }
     }
     
-    return { ...profile, searchScore: score, matchCount: matches };
+    return { ...profile, searchScore: score, matchCount: matches, nameMatch };
   });
   
   // Apply stricter filtering for multi-field searches
   let minScore = isSingleFieldSearch ? 1.0 : 3.0; // Increased minimum scores
   let minMatches = isSingleFieldSearch ? 1 : 2;
-  
+
   if (isStateOnlySearch) {
     minScore = 0;
     minMatches = 1;
   }
-  
+
   hookLogger.debug(`Filtering with minScore: ${minScore}, minMatches: ${minMatches}, isSingleField: ${isSingleFieldSearch}`);
-  
+
+  // Check if this is a name + location search (without phone/address specifics)
+  const isNameLocationSearch = (firstName || lastName) && (city || state || zipCode) && !phone && !address;
+
   const filteredProfiles = scoredProfiles
     .filter(profile => {
-      hookLogger.debug(`Profile ${profile.first_name} ${profile.last_name}: score=${profile.searchScore}, matches=${profile.matchCount}`);
-      
+      hookLogger.debug(`Profile ${profile.first_name} ${profile.last_name}: score=${profile.searchScore}, matches=${profile.matchCount}, nameMatch=${profile.nameMatch}`);
+
       if (isStateOnlySearch) {
         return profile.matchCount > 0;
       }
-      
+
+      // STRICT NAME REQUIREMENT for name + location searches
+      // This prevents false positives like "Isaac Wiley" appearing when searching for "Sal Sardina in La Mesa"
+      // Even if the city matches, the name must also match strongly
+      if (isNameLocationSearch && !profile.nameMatch) {
+        hookLogger.debug(`❌ Profile ${profile.first_name} ${profile.last_name} rejected - Name+Location search requires name match`);
+        return false;
+      }
+
       // For multi-field searches, require both minimum score AND minimum matches
       if (!isSingleFieldSearch) {
         return profile.searchScore >= minScore && profile.matchCount >= minMatches;
       }
-      
+
       // For single field searches, be more lenient
       return profile.searchScore >= minScore || profile.matchCount >= minMatches;
     })
