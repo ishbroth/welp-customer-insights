@@ -92,6 +92,22 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
               </Link>
             )}
 
+            {/* Customer users - show reviews written about them by businesses - TOP OF CUSTOMER MENU */}
+            {isCustomerAccount && (
+              <Link
+                to="/profile/reviews"
+                onClick={handleLinkClick}
+                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
+                  location.pathname === "/profile/reviews"
+                  ? "bg-gray-100 text-primary"
+                  : "text-gray-700"
+                }`}
+              >
+                <FileText className="mr-4 h-6 w-6 text-gray-500" />
+                Reviews About Me
+              </Link>
+            )}
+
             {/* Post Review - business users only */}
             {isBusinessAccount && (
               <Link
@@ -150,22 +166,6 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
               Edit Profile
             </Link>
 
-            {/* Customer users - show reviews written about them by businesses */}
-            {isCustomerAccount && (
-              <Link 
-                to="/profile/reviews" 
-                onClick={handleLinkClick}
-                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
-                  location.pathname === "/profile/reviews" 
-                  ? "bg-gray-100 text-primary" 
-                  : "text-gray-700"
-                }`}
-              >
-                <FileText className="mr-4 h-6 w-6 text-gray-500" />
-                Reviews About Me
-              </Link>
-            )}
-            
             <Link 
               to="/profile/billing" 
               onClick={handleLinkClick}
