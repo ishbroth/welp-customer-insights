@@ -131,7 +131,9 @@ echo "Checking node_modules location (should be at ../../node_modules):"
 ls -la ../../node_modules/@capacitor/ || echo "ERROR: node_modules not found at expected location!"
 echo ""
 
-if ! pod install --repo-update --verbose; then
+# Use pod install without --repo-update to avoid CocoaPods CDN issues in Xcode Cloud
+# The Podfile.lock specifies exact versions, so repo update is not needed
+if ! pod install --verbose; then
     echo "ERROR: pod install failed!"
     echo "Contents of ios/App directory after failed install:"
     ls -la
