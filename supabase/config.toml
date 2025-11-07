@@ -56,6 +56,9 @@ verify_jwt = true
 [functions.geocode-city]
 verify_jwt = false
 
+[functions.send-review-request]
+verify_jwt = true
+
 [db]
 port = 54322
 shadow_port = 54320
