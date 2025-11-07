@@ -11,6 +11,7 @@ import {
   LogOut,
   Search,
   Edit,
+  Mail,
 } from "lucide-react";
 
 interface ProfileNavMenuProps {
@@ -105,6 +106,22 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
               >
                 <FileText className="mr-4 h-6 w-6 text-gray-500" />
                 Reviews About Me
+              </Link>
+            )}
+
+            {/* Request Reviews - customer users only */}
+            {isCustomerAccount && (
+              <Link
+                to="/profile/request-reviews"
+                onClick={handleLinkClick}
+                className={`flex items-center px-4 py-4 text-base rounded-md hover:bg-gray-100 transition-colors ${
+                  location.pathname === "/profile/request-reviews"
+                  ? "bg-gray-100 text-primary"
+                  : "text-gray-700"
+                }`}
+              >
+                <Mail className="mr-4 h-6 w-6 text-gray-500" />
+                Request Reviews
               </Link>
             )}
 

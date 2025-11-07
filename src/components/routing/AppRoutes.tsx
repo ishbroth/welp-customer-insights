@@ -22,6 +22,7 @@ import ProfilePage from "@/pages/ProfilePage";
 const BillingPage = lazy(() => import("@/pages/BillingPage"));
 const ProfileEdit = lazy(() => import("@/pages/ProfileEdit"));
 const ProfileReviews = lazy(() => import("@/pages/ProfileReviews"));
+const RequestReviews = lazy(() => import("@/pages/RequestReviews"));
 const CustomerBenefits = lazy(() => import("@/pages/CustomerBenefits"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const Subscription = lazy(() => import("@/pages/Subscription"));
@@ -38,6 +39,7 @@ const Support = lazy(() => import("@/pages/Support"));
 const AgeSuitability = lazy(() => import("@/pages/AgeSuitability"));
 const VerifyLicense = lazy(() => import("@/pages/VerifyLicense"));
 const NewReview = lazy(() => import("@/pages/NewReview"));
+const ReviewFromRequest = lazy(() => import("@/pages/ReviewFromRequest"));
 const DebugAccount = lazy(() => import("@/pages/DebugAccount"));
 const CustomerProfile = lazy(() => import("@/pages/CustomerProfile"));
 const BusinessProfile = lazy(() => import("@/pages/BusinessProfile"));
@@ -108,6 +110,8 @@ const AppRoutes = () => {
                 </PrivateRoute>
               } />
 
+              <Route path="/review/request" element={<ReviewFromRequest />} />
+
               <Route path="/profile" element={
                 <PrivateRoute>
                   <ProfilePage />
@@ -123,6 +127,12 @@ const AppRoutes = () => {
               <Route path="/profile/reviews" element={
                 <PrivateRoute>
                   <ProfileReviews />
+                </PrivateRoute>
+              } />
+
+              <Route path="/profile/request-reviews" element={
+                <PrivateRoute>
+                  <RequestReviews />
                 </PrivateRoute>
               } />
 
