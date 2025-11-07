@@ -10,7 +10,6 @@ import MobileStatusBar from "@/components/mobile/MobileStatusBar";
 import MobilePerformanceMonitor from "@/components/mobile/MobilePerformanceMonitor";
 import MobileKeyboard from "@/components/mobile/MobileKeyboard";
 import MobileInitializer from "@/components/mobile/MobileInitializer";
-import { useViewportReset } from "@/hooks/useViewportReset";
 
 const queryClient = new QueryClient();
 
@@ -21,9 +20,6 @@ const QueryClientWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 function AppContent() {
-  // Reset viewport zoom on navigation (iOS only)
-  useViewportReset();
-
   return (
     <>
       <MobileInitializer />
