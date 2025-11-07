@@ -40,7 +40,7 @@ export function createReviewRequestEmail(props: ReviewRequestEmailProps): string
     });
   } else {
     // Email for non-registered businesses (invite to join Welp)
-    const signupUrl = `${emailUrls.dashboard}/signup?type=business&ref=customer-request`;
+    const signupUrl = `${emailUrls.app}/signup?type=business&ref=customer-request`;
 
     return createBaseEmail({
       title: `${customerFullName} wants to be reviewed on Welp!`,
@@ -64,7 +64,7 @@ export function createReviewRequestEmail(props: ReviewRequestEmailProps): string
 
         <a href="${signupUrl}" class="button">Join Welp</a>
 
-        <p style="margin-top:24px;color:#9ca3af;font-size:13px">Or visit: ${emailUrls.dashboard}</p>
+        <p style="margin-top:24px;color:#9ca3af;font-size:13px">Or visit: ${signupUrl}</p>
       `,
       footerText: `Invitation to join Welp from ${customerFullName}`,
     });

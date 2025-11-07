@@ -22,6 +22,7 @@ export const useReviewFormState = () => {
   const searchParamCity = searchParams.get("city") || "";
   const searchParamState = searchParams.get("state") || "";
   const searchParamZipCode = searchParams.get("zipCode") || "";
+  const searchParamCustomerEmail = searchParams.get("customerEmail") || "";
   
   const reviewData = location.state?.reviewData;
   
@@ -239,14 +240,44 @@ export const useReviewFormState = () => {
           hookLogger.error("Error fetching review data:", error);
         }
       } else {
-        // Pre-fill form with search parameters from URL if not editing
-        setCustomerFirstName(searchParamFirstName);
-        setCustomerLastName(searchParamLastName);
-        setCustomerPhone(searchParamPhone);
-        setCustomerAddress(searchParamAddress);
-        setCustomerCity(searchParamCity);
-        setCustomerState(searchParamState);
-        setCustomerZipCode(searchParamZipCode);
+        // If customerEmail is provided, fetch customer profile data
+        if (searchParamCustomerEmail) {
+          hookLogger.debug("Fetching customer profile for email:", searchParamCustomerEmail);
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('id, name, first_name, last_name, phone, address, city, state, zipcode')
+              .eq('email', searchParamCustomerEmail)
+              .maybeSingle();
+
+            if (error) {
+              hookLogger.error("Error fetching customer profile:", error);
+            } else if (profile) {
+              hookLogger.debug("Found customer profile:", profile);
+              // Pre-fill form with customer data
+              setCustomerFirstName(profile.first_name || "");
+              setCustomerLastName(profile.last_name || "");
+              setCustomerPhone(profile.phone || "");
+              setCustomerAddress(profile.address || "");
+              setCustomerCity(profile.city || "");
+              setCustomerState(profile.state || "");
+              setCustomerZipCode(profile.zipcode || "");
+            } else {
+              hookLogger.warn("No profile found for email:", searchParamCustomerEmail);
+            }
+          } catch (error) {
+            hookLogger.error("Error loading customer profile:", error);
+          }
+        } else {
+          // Pre-fill form with search parameters from URL if not editing
+          setCustomerFirstName(searchParamFirstName);
+          setCustomerLastName(searchParamLastName);
+          setCustomerPhone(searchParamPhone);
+          setCustomerAddress(searchParamAddress);
+          setCustomerCity(searchParamCity);
+          setCustomerState(searchParamState);
+          setCustomerZipCode(searchParamZipCode);
+        }
       }
       
       if (customerId) {
@@ -263,17 +294,18 @@ export const useReviewFormState = () => {
 
     initializeForm();
   }, [
-    customerId, 
-    isEditing, 
-    reviewData, 
+    customerId,
+    isEditing,
+    reviewData,
     reviewId,
-    searchParamFirstName, 
-    searchParamLastName, 
-    searchParamPhone, 
-    searchParamAddress, 
-    searchParamCity, 
+    searchParamFirstName,
+    searchParamLastName,
+    searchParamPhone,
+    searchParamAddress,
+    searchParamCity,
     searchParamState,
-    searchParamZipCode
+    searchParamZipCode,
+    searchParamCustomerEmail
   ]);
 
   return {

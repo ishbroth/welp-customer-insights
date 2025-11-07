@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ import { isNativeApp } from "@/utils/platform";
 
 const Login = () => {
   const pageLogger = logger.withContext('Login');
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -56,10 +57,14 @@ const Login = () => {
 
     // Only navigate if we're not loading and have both session and user
     if (!loading && session && currentUser) {
-      pageLogger.debug("✅ Auth complete, navigating to profile");
-      navigate("/profile");
+      // Check for redirect parameter
+      const redirectUrl = searchParams.get('redirect');
+      const destination = redirectUrl ? decodeURIComponent(redirectUrl) : "/profile";
+
+      pageLogger.debug("✅ Auth complete, navigating to:", destination);
+      navigate(destination);
     }
-  }, [loading, session, currentUser, navigate]);
+  }, [loading, session, currentUser, navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

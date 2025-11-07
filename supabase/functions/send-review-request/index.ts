@@ -75,12 +75,40 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if business email exists and is a business account
-    const { data: businessProfile } = await supabase
-      .from("profiles")
-      .select("id, email, name, type")
-      .eq("email", businessEmail.toLowerCase())
-      .eq("type", "business")
-      .single();
+    // Use auth.users lookup first (more reliable) then check profile type
+    console.log("=== BUSINESS PROFILE LOOKUP DEBUG ===");
+    console.log("Looking for business email:", businessEmail.toLowerCase());
+
+    // Look up user by email in auth.users
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+
+    let businessProfile = null;
+
+    if (!authError && authUsers?.users) {
+      const authUser = authUsers.users.find(u => u.email?.toLowerCase() === businessEmail.toLowerCase());
+
+      if (authUser) {
+        console.log("Found auth user with ID:", authUser.id);
+
+        // Now check if this user's profile is a business account
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, email, name, type")
+          .eq("id", authUser.id)
+          .single();
+
+        console.log("Profile for this user:", profile);
+
+        if (profile && profile.type === "business") {
+          businessProfile = profile;
+        }
+      } else {
+        console.log("No auth user found with this email");
+      }
+    }
+
+    console.log("Final businessProfile result:", businessProfile);
+    console.log("=== END BUSINESS PROFILE LOOKUP DEBUG ===");
 
     const isExistingBusiness = !!businessProfile;
     let reviewUrl: string | undefined;
@@ -90,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Format: /review/request?token=base64(customerId|customerEmail|timestamp)
       const tokenData = `${customerId}|${customerEmail}|${Date.now()}`;
       const token = btoa(tokenData);
-      reviewUrl = `${Deno.env.get("SUPABASE_URL")?.replace("/rest/v1", "")}/review/request?token=${token}`;
+      reviewUrl = `https://mywelp.com/review/request?token=${token}`;
     }
 
     // Send email using the template
