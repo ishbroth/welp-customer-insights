@@ -465,8 +465,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                   <div className="flex items-start gap-2">
                     <span className="text-gray-500 mt-0.5">🏢</span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-600 mb-2">Business or Employment:</p>
-                      <span className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium break-words">
+                      <p className="text-xs md:text-sm text-gray-600 mb-2">Business or Employment:</p>
+                      <span className="text-xs md:text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded-md font-medium break-words">
                         🏢 {review.customer_business_name}
                       </span>
                     </div>

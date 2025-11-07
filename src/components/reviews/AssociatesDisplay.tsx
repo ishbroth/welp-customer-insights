@@ -72,9 +72,9 @@ const AssociatesDisplay: React.FC<AssociatesDisplayProps> = ({
   return (
     <div className="mt-3">
       <div className="flex items-start gap-2">
-        <Users className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+        <Users className="h-3 w-3 md:h-4 md:w-4 text-gray-500 mt-0.5 flex-shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-gray-600 mb-2">
+          <p className="text-xs md:text-sm text-gray-600 mb-2">
             {hasBusinessName && filteredAssociates.length > 0
               ? "Business & Associates:"
               : hasBusinessName
@@ -86,7 +86,7 @@ const AssociatesDisplay: React.FC<AssociatesDisplayProps> = ({
             {hasBusinessName && (
               <button
                 onClick={handleBusinessNameClick}
-                className="text-sm text-purple-600 hover:text-purple-800 hover:underline bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-md transition-colors duration-200 font-medium"
+                className="text-xs md:text-sm text-purple-600 hover:text-purple-800 hover:underline bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-md transition-colors duration-200 font-medium"
               >
                 🏢 {businessName}
               </button>
@@ -95,7 +95,7 @@ const AssociatesDisplay: React.FC<AssociatesDisplayProps> = ({
               <button
                 key={index}
                 onClick={() => handleAssociateClick(associate)}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors duration-200 font-medium"
+                className="text-xs md:text-sm text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors duration-200 font-medium"
               >
                 {`${associate.firstName} ${associate.lastName}`.trim()}
               </button>
