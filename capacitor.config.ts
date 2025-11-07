@@ -14,6 +14,12 @@ const config: CapacitorConfig = {
       cleartext: true
     }
   }),
+  ios: {
+    // Enable viewport scaling/zooming
+    contentInset: 'never',
+    // Respect viewport meta tag for user scaling
+    webContentsDebuggingEnabled: isDev
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,
