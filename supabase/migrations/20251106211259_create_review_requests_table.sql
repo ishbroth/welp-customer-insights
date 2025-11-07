@@ -7,12 +7,7 @@ CREATE TABLE IF NOT EXISTS public.review_requests (
   business_name TEXT,
   sent_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-
-  -- Ensure customer_id references a customer account
-  CONSTRAINT review_requests_customer_type CHECK (
-    (SELECT type FROM public.profiles WHERE id = customer_id) = 'customer'
-  )
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Create indexes for efficient querying
@@ -54,4 +49,3 @@ CREATE TRIGGER review_requests_updated_at
 
 -- Grant necessary permissions
 GRANT SELECT, INSERT ON public.review_requests TO authenticated;
-GRANT USAGE ON SEQUENCE review_requests_id_seq TO authenticated;
