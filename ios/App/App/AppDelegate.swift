@@ -8,6 +8,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+
+        // Set window background color to match splash screen (prevents white flash)
+        // #ea384c = RGB(234, 56, 76) = RGB(0.918, 0.220, 0.298) in 0-1 scale
+        if let window = window {
+            window.backgroundColor = UIColor(red: 0.918, green: 0.220, blue: 0.298, alpha: 1.0)
+        }
+
         return true
     }
 

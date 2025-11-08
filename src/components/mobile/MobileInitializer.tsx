@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/utils/logger';
 
@@ -10,6 +11,22 @@ import { logger } from '@/utils/logger';
 const MobileInitializer: React.FC = () => {
   const navigate = useNavigate();
   const componentLogger = logger.withContext('MobileInitializer');
+
+  // Hide splash screen when app is ready
+  useEffect(() => {
+    const hideSplash = async () => {
+      try {
+        // Wait a brief moment for the app to be fully loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await SplashScreen.hide();
+        componentLogger.debug('Splash screen hidden');
+      } catch (error) {
+        componentLogger.error('Error hiding splash screen:', error);
+      }
+    };
+
+    hideSplash();
+  }, []);
 
   useEffect(() => {
     // Listen for app URL open events (deep links)

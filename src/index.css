@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure red background on mobile app during launch to prevent white flash */
+body {
+  background-color: #ea384c !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
