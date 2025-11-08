@@ -5,7 +5,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileMobileMenu from "@/components/ProfileMobileMenu";
-import MobileScaleWrapper from "@/components/MobileScaleWrapper";
 import AvatarBackground from "@/components/AvatarBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -197,8 +196,7 @@ const RequestReviews = () => {
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
         <main className="flex-1 px-3 py-6 md:px-4 overflow-x-hidden max-w-full">
-          <MobileScaleWrapper>
-            <div className="w-full overflow-x-hidden max-w-4xl mx-auto">
+          <div className="w-full overflow-x-hidden max-w-4xl mx-auto">
               {/* Page Header */}
               <div className="mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
@@ -318,7 +316,6 @@ const RequestReviews = () => {
                 )}
               </div>
             </div>
-          </MobileScaleWrapper>
         </main>
       </div>
       <Footer className="mt-0" />

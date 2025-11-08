@@ -38,7 +38,7 @@ const AssociatesInput: React.FC<AssociatesInputProps> = ({
               placeholder={`Associate ${index + 1} First Name`}
               value={associates[index]?.firstName || ""}
               onChange={(e) => handleAssociateChange(index, 'firstName', e.target.value)}
-              className="text-sm h-8"
+              className="h-10"
             />
             <Input
               id={`associate-${index}-last`}
@@ -46,7 +46,7 @@ const AssociatesInput: React.FC<AssociatesInputProps> = ({
               placeholder={`Associate ${index + 1} Last Name`}
               value={associates[index]?.lastName || ""}
               onChange={(e) => handleAssociateChange(index, 'lastName', e.target.value)}
-              className="text-sm h-8"
+              className="h-10"
             />
           </div>
         ))}

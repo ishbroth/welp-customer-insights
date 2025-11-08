@@ -15,9 +15,9 @@ const config: CapacitorConfig = {
     }
   }),
   ios: {
-    // Enable viewport scaling/zooming
+    // Disable automatic safe area insets
     contentInset: 'never',
-    // Respect viewport meta tag for user scaling
+    // Enable web debugging in development
     webContentsDebuggingEnabled: isDev
   },
   plugins: {

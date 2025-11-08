@@ -6,7 +6,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileSidebar from "@/components/ProfileSidebar";
 import ProfileMobileMenu from "@/components/ProfileMobileMenu";
-import MobileScaleWrapper from "@/components/MobileScaleWrapper";
 import ProfileReviewsContent from "@/components/profile/ProfileReviewsContent";
 import ProfileReviewsHeader from "@/components/profile/ProfileReviewsHeader";
 import ProfileReviewsSubscriptionStatus from "@/components/profile/ProfileReviewsSubscriptionStatus";
@@ -40,29 +39,27 @@ const ProfileReviews = () => {
           <ProfileSidebar isOpen={true} toggle={() => {}} />
         </div>
         <main className="flex-1 px-3 py-6 md:px-4 overflow-x-hidden max-w-full">
-          <MobileScaleWrapper>
-            <div className="w-full overflow-x-hidden">
-              <ProfileReviewsHeader
-                title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
-                description={
-                  isCustomerAccount
-                    ? "Reviews that businesses have written about you"
-                    : "Reviews you've written about your customers"
-                }
-                onRefresh={() => refetch()}
-                isLoading={isLoading}
-              />
+          <div className="w-full overflow-x-hidden">
+            <ProfileReviewsHeader
+              title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
+              description={
+                isCustomerAccount
+                  ? "Reviews that businesses have written about you"
+                  : "Reviews you've written about your customers"
+              }
+              onRefresh={() => refetch()}
+              isLoading={isLoading}
+            />
 
-              <ProfileReviewsSubscriptionStatus hasSubscription={isSubscribed} />
+            <ProfileReviewsSubscriptionStatus hasSubscription={isSubscribed} />
 
-              <ProfileReviewsContent
-                customerReviews={customerReviews}
-                isLoading={isLoading}
-                hasSubscription={isSubscribed}
-                onRefresh={() => refetch()}
-              />
-            </div>
-          </MobileScaleWrapper>
+            <ProfileReviewsContent
+              customerReviews={customerReviews}
+              isLoading={isLoading}
+              hasSubscription={isSubscribed}
+              onRefresh={() => refetch()}
+            />
+          </div>
         </main>
       </div>
       <Footer className="mt-0" />
