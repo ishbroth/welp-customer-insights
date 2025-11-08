@@ -12,6 +12,11 @@ const MobileInitializer: React.FC = () => {
   const navigate = useNavigate();
   const componentLogger = logger.withContext('MobileInitializer');
 
+  // Add app-launching class to body on mount
+  useEffect(() => {
+    document.body.classList.add('app-launching');
+  }, []);
+
   // Hide splash screen when app is ready
   useEffect(() => {
     const hideSplash = async () => {
@@ -19,6 +24,8 @@ const MobileInitializer: React.FC = () => {
         // Wait a brief moment for the app to be fully loaded
         await new Promise(resolve => setTimeout(resolve, 100));
         await SplashScreen.hide();
+        // Remove app-launching class to restore normal backgrounds
+        document.body.classList.remove('app-launching');
         componentLogger.debug('Splash screen hidden');
       } catch (error) {
         componentLogger.error('Error hiding splash screen:', error);

@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 /* Ensure red background on mobile app during launch to prevent white flash */
-body {
+body.app-launching {
   background-color: #ea384c !important;
 }
 
