@@ -543,25 +543,25 @@ export const searchReviews = async (
     hookLogger.debug(`🔍 Processed ${associateMatches.length} associate matches`);
   }
 
-  // Deduplicate: Remove reviews from direct matches that also appear in associate matches
-  // This prevents the same review from appearing twice when clicking through associates
-  const associateReviewIds = new Set(associateMatches.map(r => r.id));
-  const deduplicatedDirectMatches = filteredDirectMatches.filter(r => !associateReviewIds.has(r.id));
+  // Deduplicate: Direct matches have priority, remove duplicates from associate matches
+  // This ensures reviews appear in the correct section (direct over associate)
+  const directReviewIds = new Set(filteredDirectMatches.map(r => r.id));
+  const deduplicatedAssociateMatches = associateMatches.filter(r => !directReviewIds.has(r.id));
 
-  hookLogger.debug(`🔍 DEDUPLICATION: Removed ${filteredDirectMatches.length - deduplicatedDirectMatches.length} duplicate reviews from direct matches`);
+  hookLogger.debug(`🔍 DEDUPLICATION: Removed ${associateMatches.length - deduplicatedAssociateMatches.length} duplicate reviews from associate matches`);
 
-  // Combine deduplicated direct matches with associate matches
+  // Combine direct matches with deduplicated associate matches
   // Direct matches are already filtered, associate matches bypass filtering
-  let filteredReviews = [...deduplicatedDirectMatches, ...associateMatches];
+  let filteredReviews = [...filteredDirectMatches, ...deduplicatedAssociateMatches];
 
   hookLogger.debug(`🔍 SEARCH DEBUG: Combined final results`);
-  hookLogger.debug(`🔍 Deduplicated direct matches (${deduplicatedDirectMatches.length}):`, deduplicatedDirectMatches.map(r => ({
+  hookLogger.debug(`🔍 Direct matches (${filteredDirectMatches.length}):`, filteredDirectMatches.map(r => ({
     id: r.id,
     name: r.customer_name,
     score: r.searchScore,
     isAssociate: r.isAssociateMatch
   })));
-  hookLogger.debug(`🔍 Associate matches (${associateMatches.length}):`, associateMatches.map(r => ({
+  hookLogger.debug(`🔍 Deduplicated associate matches (${deduplicatedAssociateMatches.length}):`, deduplicatedAssociateMatches.map(r => ({
     id: r.id,
     name: r.customer_name,
     score: r.searchScore,

@@ -252,6 +252,20 @@ export const useCustomerSearch = () => {
           }
         }
 
+        // SEMANTIC BONUSES: Multi-field matches indicate stronger identity match
+        // Check if name matched
+        const nameMatched = (searchParameters.firstName || searchParameters.lastName) &&
+          customer.firstName && customer.lastName;
+        // Check if address/location matched
+        const addressMatched = (searchParameters.address && customer.address) ||
+          (searchParameters.city && customer.city);
+
+        // Name + Address/Location = very strong identity match
+        if (nameMatched && addressMatched) {
+          relevancyScore += 150; // Strong bonus for name+location combo
+          hookLogger.debug(`  → Applied name+location bonus: +150`);
+        }
+
         customer.relevancyScore = relevancyScore;
         hookLogger.debug(`Customer ${customer.firstName} ${customer.lastName} (${customer.city}) relevancy score: ${relevancyScore}`);
       });
