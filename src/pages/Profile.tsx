@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import MobileScaleWrapper from "@/components/MobileScaleWrapper";
 import {
   User,
   Mail,
@@ -137,7 +136,7 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Profile Content */}
-      <MobileScaleWrapper className="px-3 py-6 md:px-4">
+      <div className="px-3 py-6 md:px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Profile Overview */}
           <Card className="md:col-span-1">
@@ -280,7 +279,7 @@ const Profile: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </MobileScaleWrapper>
+      </div>
     </div>
   );
 };
