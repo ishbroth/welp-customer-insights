@@ -155,20 +155,28 @@ export const usePlacesAutocomplete = ({
         autocompleteRef.current = null;
       }
 
-      // Create new autocomplete instance
+      // Create new autocomplete instance with error handling
       hookLogger.debug('Creating new autocomplete instance');
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address', 'address_components', 'geometry']
-      });
+      try {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+          types: ['address'],
+          componentRestrictions: { country: 'us' },
+          fields: ['formatted_address', 'address_components', 'geometry']
+        });
 
-      hookLogger.info('Google Places Autocomplete initialized successfully');
+        hookLogger.info('Google Places Autocomplete initialized successfully');
 
-      // Add the place changed listener
-      hookLogger.debug('Adding place_changed listener');
-      listenerRef.current = autocompleteRef.current.addListener('place_changed', handlePlaceChanged);
-      hookLogger.debug('place_changed listener added successfully');
+        // Add the place changed listener
+        hookLogger.debug('Adding place_changed listener');
+        listenerRef.current = autocompleteRef.current.addListener('place_changed', handlePlaceChanged);
+        hookLogger.debug('place_changed listener added successfully');
+      } catch (autocompleteError) {
+        hookLogger.error('Failed to create Autocomplete instance:', autocompleteError);
+        // Clear refs on error
+        autocompleteRef.current = null;
+        listenerRef.current = null;
+        throw autocompleteError; // Re-throw to be caught by outer try-catch
+      }
 
     } catch (error) {
       hookLogger.error('Error initializing Google Places Autocomplete:', error);

@@ -13,7 +13,7 @@ export const useGoogleMapsInit = () => {
   useEffect(() => {
     let mounted = true;
     let timeoutId: NodeJS.Timeout;
-    
+
     const initializeGoogle = async () => {
       try {
         hookLogger.info('Initializing Google Maps...');
@@ -25,6 +25,25 @@ export const useGoogleMapsInit = () => {
             setIsGoogleReady(true);
             setGoogleMapsStatus('ready');
           }
+          return;
+        }
+
+        // Check if script is already being loaded
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) {
+          hookLogger.info('Google Maps script already present, waiting for it to load...');
+          // Wait for existing script to finish loading
+          const checkReady = () => {
+            if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.Autocomplete) {
+              if (mounted) {
+                setIsGoogleReady(true);
+                setGoogleMapsStatus('ready');
+              }
+            } else if (mounted) {
+              timeoutId = setTimeout(checkReady, 100);
+            }
+          };
+          checkReady();
           return;
         }
 
@@ -52,9 +71,11 @@ export const useGoogleMapsInit = () => {
 
         hookLogger.debug('Loading Google Maps script...');
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places&loading=async&callback=initGoogleMaps`;
+        // Use v=weekly to get latest stable version and explicitly request places library
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.secret}&libraries=places&v=weekly&callback=initGoogleMaps`;
         script.async = true;
         script.defer = true;
+        script.id = 'google-maps-script'; // Add ID to easily identify
         
         // Create a global callback that will be called when Google Maps is ready
         (window as any).initGoogleMaps = () => {
