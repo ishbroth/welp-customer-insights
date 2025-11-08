@@ -543,12 +543,19 @@ export const searchReviews = async (
     hookLogger.debug(`🔍 Processed ${associateMatches.length} associate matches`);
   }
 
-  // Combine filtered direct matches with associate matches
+  // Deduplicate: Remove reviews from direct matches that also appear in associate matches
+  // This prevents the same review from appearing twice when clicking through associates
+  const associateReviewIds = new Set(associateMatches.map(r => r.id));
+  const deduplicatedDirectMatches = filteredDirectMatches.filter(r => !associateReviewIds.has(r.id));
+
+  hookLogger.debug(`🔍 DEDUPLICATION: Removed ${filteredDirectMatches.length - deduplicatedDirectMatches.length} duplicate reviews from direct matches`);
+
+  // Combine deduplicated direct matches with associate matches
   // Direct matches are already filtered, associate matches bypass filtering
-  let filteredReviews = [...filteredDirectMatches, ...associateMatches];
+  let filteredReviews = [...deduplicatedDirectMatches, ...associateMatches];
 
   hookLogger.debug(`🔍 SEARCH DEBUG: Combined final results`);
-  hookLogger.debug(`🔍 Filtered direct matches (${filteredDirectMatches.length}):`, filteredDirectMatches.map(r => ({
+  hookLogger.debug(`🔍 Deduplicated direct matches (${deduplicatedDirectMatches.length}):`, deduplicatedDirectMatches.map(r => ({
     id: r.id,
     name: r.customer_name,
     score: r.searchScore,

@@ -41,15 +41,11 @@ const AssociatesDisplay: React.FC<AssociatesDisplayProps> = ({
   }
 
   const handleAssociateClick = (associate: { firstName: string; lastName: string }) => {
-    // Navigate to search page with pre-filled associate name and review data
+    // Navigate to search page with only the associate's name
+    // Don't pass contact info to avoid false matches with the original customer
     const params = new URLSearchParams({
       firstName: associate.firstName,
-      lastName: associate.lastName,
-      phone: reviewData?.phone || '',
-      address: reviewData?.address || '',
-      city: reviewData?.city || '',
-      state: reviewData?.state || '',
-      zipCode: reviewData?.zipCode || ''
+      lastName: associate.lastName
     });
 
     navigate(`/search?${params.toString()}`);
