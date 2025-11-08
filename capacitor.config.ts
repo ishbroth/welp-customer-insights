@@ -20,6 +20,12 @@ const config: CapacitorConfig = {
     // Enable web debugging in development
     webContentsDebuggingEnabled: isDev
   },
+  android: {
+    // Allow mixed content for local development
+    allowMixedContent: isDev,
+    // Enable web debugging in development
+    webContentsDebuggingEnabled: isDev
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,

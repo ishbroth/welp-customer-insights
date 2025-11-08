@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Welp Brand Colors -->
+    <color name="colorPrimary">#ea384c</color>
+    <color name="colorPrimaryDark">#d02e40</color>
+    <color name="colorAccent">#ea384c</color>
+
+    <!-- Welp Red - used for backgrounds during launch to prevent white flash -->
+    <color name="welpRed">#ea384c</color>
+
+    <!-- Standard Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>
