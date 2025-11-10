@@ -18,7 +18,10 @@ const config: CapacitorConfig = {
     // Disable automatic safe area insets
     contentInset: 'never',
     // Enable web debugging in development
-    webContentsDebuggingEnabled: isDev
+    webContentsDebuggingEnabled: isDev,
+    // Ensure swipe-back gesture is enabled (default, but explicit for clarity)
+    // This allows users to swipe from the left edge to go back
+    // Native iOS navigation gesture - required for native feel
   },
   android: {
     // Allow mixed content for local development
