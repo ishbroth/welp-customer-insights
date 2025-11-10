@@ -15,6 +15,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { useBillingData } from "@/hooks/useBillingData";
 import { useStripeCheckout } from "@/utils/stripeCheckout";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useHaptics } from "@/hooks/useHaptics";
 import { logger } from '@/utils/logger';
 
 const BuyCredits = () => {
@@ -29,6 +30,7 @@ const BuyCredits = () => {
   const { subscriptionData } = useBillingData(currentUser);
   const { openCheckout } = useStripeCheckout();
   const isMobile = useIsMobile();
+  const haptics = useHaptics();
 
   const totalCost = creditAmount * 300; // $3 per credit in cents
   const isSubscribed = subscriptionData?.subscribed || false;
@@ -90,7 +92,11 @@ const BuyCredits = () => {
   const handlePurchase = async () => {
     pageLogger.debug("🔥 Purchase button clicked!");
 
+    // Medium haptic on button press
+    haptics.medium();
+
     if (!currentUser) {
+      haptics.warning();
       pageLogger.debug("❌ No current user");
       toast.error("Please log in to purchase credits");
       navigate("/login", {
@@ -103,12 +109,14 @@ const BuyCredits = () => {
     }
 
     if (isSubscribed) {
+      haptics.warning();
       pageLogger.debug("❌ User already subscribed");
       toast.error("You already have unlimited access with your subscription");
       return;
     }
 
     if (creditAmount < 1) {
+      haptics.warning();
       pageLogger.debug("❌ Invalid credit amount:", creditAmount);
       toast.error("Please select at least 1 credit");
       return;
@@ -128,22 +136,26 @@ const BuyCredits = () => {
       pageLogger.debug("🔍 Function response:", { data, error });
 
       if (error) {
+        haptics.error();
         pageLogger.error("❌ Error from create-credit-payment:", error);
         toast.error("Failed to create payment session. Please try again.");
         return;
       }
 
       if (data?.url) {
+        haptics.success();
         pageLogger.debug("🚀 Opening Stripe checkout URL:", data.url);
         openCheckout(data.url);
 
         toast.success("Redirecting to Stripe checkout...");
       } else {
+        haptics.error();
         pageLogger.error("❌ No checkout URL received from function");
         pageLogger.error("Full response data:", data);
         toast.error("Failed to create payment session. Please try again.");
       }
     } catch (error) {
+      haptics.error();
       pageLogger.error("❌ Unexpected error in handlePurchase:", error);
       toast.error("An error occurred. Please try again.");
     } finally {

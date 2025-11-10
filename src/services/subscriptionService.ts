@@ -18,8 +18,8 @@ export const openCustomerPortal = async () => {
 
     if (data?.url) {
       serviceLogger.info("Redirecting to customer portal:", data.url);
-      // Customer portal always opens in new tab for security
-      window.open(data.url, '_blank');
+      // Customer portal opens in external browser (Safari on iOS, Chrome on Android)
+      openStripeCheckout(data.url);
     } else {
       throw new Error("No portal URL received");
     }

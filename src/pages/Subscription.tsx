@@ -11,6 +11,7 @@ import { handleSubscription } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
 import { useCredits } from "@/hooks/useCredits";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useStripeCheckout } from "@/utils/stripeCheckout";
 import { Shield, Zap, Users, Clock } from "lucide-react";
 import { logger } from '@/utils/logger';
 
@@ -23,6 +24,7 @@ const Subscription = () => {
   const { balance: creditBalance } = useCredits();
   const isCustomer = currentUser?.type === "customer";
   const isMobile = useIsMobile();
+  const { openCheckout } = useStripeCheckout();
 
   // Determine if we came from a specific review
   const [fromReviewId, setFromReviewId] = useState<string | null>(null);
@@ -107,29 +109,13 @@ const Subscription = () => {
           ? ` Your ${creditBalance} credit${creditBalance === 1 ? '' : 's'} ($${creditValue}) have been applied as a discount.`
           : '';
 
-        // Use device-appropriate checkout method
-        if (isMobile) {
-          window.location.href = data.url;
-          toast({
-            title: "Redirecting to Checkout",
-            description: `Redirecting to Stripe checkout. Complete your payment and you'll be returned to this page.${discountMessage}`,
-          });
-        } else {
-          const newWindow = window.open(data.url, '_blank');
+        // Use standardized checkout method (opens external browser on mobile)
+        openCheckout(data.url);
 
-          if (newWindow) {
-            toast({
-              title: "Checkout Opened",
-              description: `Stripe checkout has opened in a new tab. Complete your payment there and return to this page.${discountMessage}`,
-            });
-          } else {
-            toast({
-              title: "Popup Blocked",
-              description: "Please allow popups for this site and try again, or copy this URL to complete your payment: " + data.url,
-              variant: "destructive"
-            });
-          }
-        }
+        toast({
+          title: "Redirecting to Checkout",
+          description: `Opening Stripe checkout. Complete your payment and you'll be returned to the app.${discountMessage}`,
+        });
 
         // Reset processing state since user will complete checkout in new tab
         setIsProcessing(false);

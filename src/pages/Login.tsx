@@ -19,6 +19,7 @@ import {
   getRememberMePreference
 } from "@/utils/authStorage";
 import { isNativeApp } from "@/utils/platform";
+import { useHaptics } from "@/hooks/useHaptics";
 
 const Login = () => {
   const pageLogger = logger.withContext('Login');
@@ -29,6 +30,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, currentUser, session, loading } = useAuth();
   const navigate = useNavigate();
+  const haptics = useHaptics();
 
   // Load saved credentials on mount (if Remember Me was previously checked)
   useEffect(() => {
@@ -71,6 +73,9 @@ const Login = () => {
 
     if (isSubmitting) return;
 
+    // Medium haptic feedback on button press
+    haptics.medium();
+
     setIsSubmitting(true);
     pageLogger.debug("🔐 Starting login process");
 
@@ -79,6 +84,9 @@ const Login = () => {
 
       if (result.success) {
         pageLogger.debug("🔐 Login call successful");
+
+        // Success haptic feedback
+        haptics.success();
 
         // Handle Remember Me preference (only on web browsers, not native apps)
         if (!isNativeApp()) {
@@ -98,11 +106,15 @@ const Login = () => {
         // Don't navigate here - let the useEffect handle it based on auth state
         toast.success("Login successful!");
       } else {
+        // Error haptic feedback
+        haptics.error();
         pageLogger.error("❌ Login failed:", result.error);
         toast.error(result.error || "Login failed");
         setIsSubmitting(false);
       }
     } catch (error) {
+      // Error haptic feedback
+      haptics.error();
       pageLogger.error("❌ Login error:", error);
       toast.error("An unexpected error occurred");
       setIsSubmitting(false);
