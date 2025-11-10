@@ -20,6 +20,8 @@ import {
 } from "@/utils/authStorage";
 import { isNativeApp } from "@/utils/platform";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { Fingerprint } from "lucide-react";
 
 const Login = () => {
   const pageLogger = logger.withContext('Login');
@@ -31,6 +33,7 @@ const Login = () => {
   const { login, currentUser, session, loading } = useAuth();
   const navigate = useNavigate();
   const haptics = useHaptics();
+  const biometric = useBiometricAuth();
 
   // Load saved credentials on mount (if Remember Me was previously checked)
   useEffect(() => {
@@ -68,6 +71,57 @@ const Login = () => {
     }
   }, [loading, session, currentUser, navigate, searchParams]);
 
+  const handleBiometricLogin = async () => {
+    if (!biometric.isAvailable) {
+      toast.error("Biometric authentication not available");
+      return;
+    }
+
+    // Check if we have saved credentials
+    const savedCredentials = getSavedCredentials();
+    if (!savedCredentials) {
+      toast.error("No saved credentials. Please log in with email and password first.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    pageLogger.debug("🔐 Starting biometric login");
+
+    // Authenticate with biometrics
+    const authResult = await biometric.authenticate(`Sign in to Welp with ${biometric.biometryName}`);
+
+    if (!authResult.success) {
+      haptics.error();
+      pageLogger.error("❌ Biometric authentication failed:", authResult.error);
+      toast.error(authResult.error || "Biometric authentication failed");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Biometric auth succeeded, now log in with saved credentials
+    haptics.success();
+    pageLogger.debug("✅ Biometric authentication successful, logging in...");
+
+    try {
+      const result = await login(savedCredentials.email, savedCredentials.password);
+
+      if (result.success) {
+        pageLogger.debug("🔐 Login successful via biometrics");
+        toast.success("Login successful!");
+      } else {
+        haptics.error();
+        pageLogger.error("❌ Login failed after biometric auth:", result.error);
+        toast.error(result.error || "Login failed");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      haptics.error();
+      pageLogger.error("❌ Login error:", error);
+      toast.error("An unexpected error occurred");
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -101,6 +155,12 @@ const Login = () => {
             setRememberMePreference(false);
             pageLogger.debug("🗑️ Credentials cleared (Remember Me unchecked)");
           }
+        }
+
+        // Save credentials for biometric login on native apps
+        if (isNativeApp() && biometric.isAvailable) {
+          saveCredentials(email, password);
+          pageLogger.debug("✅ Credentials saved for biometric login");
         }
 
         // Don't navigate here - let the useEffect handle it based on auth state
@@ -144,6 +204,29 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Biometric Login Button - only shown on native apps with saved credentials */}
+          {biometric.isAvailable && getSavedCredentials() && (
+            <div className="mb-4">
+              <Button
+                type="button"
+                onClick={handleBiometricLogin}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <Fingerprint className="h-5 w-5" />
+                Sign in with {biometric.biometryName}
+              </Button>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or sign in with email</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
