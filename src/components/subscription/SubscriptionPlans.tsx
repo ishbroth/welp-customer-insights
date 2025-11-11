@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, X, Star } from "lucide-react";
+import { Check, X, Star, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { logger } from "@/utils/logger";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SubscriptionPlanProps {
   type: "customer" | "business";
@@ -14,6 +15,7 @@ interface SubscriptionPlanProps {
 
 const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance = 0 }: Omit<SubscriptionPlanProps, "type">) => {
   const componentLogger = logger.withContext('CustomerSubscriptionPlans');
+  const isMobile = useIsMobile();
 
   const handlePremiumClick = () => {
     componentLogger.debug("Premium button clicked! isProcessing:", isProcessing);
@@ -121,13 +123,25 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
           </li>
         </ul>
         
-        <Button 
+        <Button
           onClick={handlePremiumClick}
           className="welp-button w-full"
           disabled={isProcessing}
         >
           {isProcessing ? "Processing..." : "Subscribe Now"}
         </Button>
+
+        <div className="mt-3 space-y-1">
+          <p className="text-xs text-gray-500 text-center">
+            <Lock className="inline h-3 w-3 mr-1" />
+            Secure payment via Stripe
+          </p>
+          {isMobile && (
+            <p className="text-xs text-gray-400 text-center">
+              Opens in external browser
+            </p>
+          )}
+        </div>
       </Card>
 
       {/* Legacy Plan */}
@@ -194,6 +208,7 @@ const CustomerSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
 
 const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacySubscribe, creditBalance = 0 }: Omit<SubscriptionPlanProps, "type">) => {
   const componentLogger = logger.withContext('BusinessSubscriptionPlans');
+  const isMobile = useIsMobile();
 
   const handlePremiumClick = () => {
     componentLogger.debug("Premium button clicked! isProcessing:", isProcessing);
@@ -305,13 +320,25 @@ const BusinessSubscriptionPlans = ({ isProcessing, handleSubscribe, handleLegacy
           </li>
         </ul>
         
-        <Button 
+        <Button
           onClick={handlePremiumClick}
           className="welp-button w-full"
           disabled={isProcessing}
         >
           {isProcessing ? "Processing..." : "Subscribe Now"}
         </Button>
+
+        <div className="mt-3 space-y-1">
+          <p className="text-xs text-gray-500 text-center">
+            <Lock className="inline h-3 w-3 mr-1" />
+            Secure payment via Stripe
+          </p>
+          {isMobile && (
+            <p className="text-xs text-gray-400 text-center">
+              Opens in external browser
+            </p>
+          )}
+        </div>
       </Card>
 
       {/* Legacy Plan */}

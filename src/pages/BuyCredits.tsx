@@ -275,22 +275,30 @@ const BuyCredits = () => {
                   </div>
                 </div>
 
-                <Button 
+                <Button
                   onClick={handlePurchase}
                   disabled={isLoading || isSubscribed}
                   className="w-full bg-[#ea384c] hover:bg-[#d63384] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubscribed 
-                    ? "Already Subscribed - No Credits Needed" 
-                    : isLoading 
-                      ? "Processing..." 
+                  {isSubscribed
+                    ? "Already Subscribed - No Credits Needed"
+                    : isLoading
+                      ? "Processing..."
                       : `Purchase ${creditAmount} Credit${creditAmount > 1 ? 's' : ''}`
                   }
                 </Button>
 
-                <p className="text-sm text-gray-500 text-center">
-                  Secure payment processing through Stripe
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500 text-center">
+                    <Lock className="inline h-3 w-3 mr-1" />
+                    Secure payment processing via Stripe
+                  </p>
+                  {isMobile && (
+                    <p className="text-xs text-gray-400 text-center">
+                      Opens in external browser for secure checkout
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 

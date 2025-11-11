@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.mywelp.dev"
+    namespace "com.mywelp.welp"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.mywelp.dev"
+        applicationId "com.mywelp.welp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,10 +16,22 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    // Release signing configuration
+    signingConfigs {
+        release {
+            storeFile file('welp-release.keystore')
+            storePassword 'WelpRelease2025!'
+            keyAlias 'welp-key'
+            keyPassword 'WelpRelease2025!'
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
