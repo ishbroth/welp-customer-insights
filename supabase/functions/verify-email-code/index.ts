@@ -165,7 +165,7 @@ serve(async (req) => {
       zipcode: userData.zipCode,
       first_name: userData.firstName,
       last_name: userData.lastName,
-      verified: accountType === 'customer' // Customer accounts are verified after email verification
+      verified: false  // Customers start unverified; verify via review interaction (credit usage or conversation response). Business accounts use separate license verification.
     };
 
     const { error: profileError } = await supabaseAdmin

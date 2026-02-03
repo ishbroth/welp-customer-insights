@@ -2,7 +2,6 @@
 import { useAuth } from "@/contexts/auth";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { useVerifiedStatus } from "@/hooks/useVerifiedStatus";
-import { useCustomerVerificationFix } from "@/hooks/useCustomerVerificationFix";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/utils/logger";
@@ -11,9 +10,6 @@ const WelcomeSection = () => {
   const componentLogger = logger.withContext('WelcomeSection');
   const { currentUser } = useAuth();
   const { isVerified: isBusinessVerified } = useVerifiedStatus(currentUser?.id);
-
-  // Apply the verification fix for existing customer accounts
-  useCustomerVerificationFix();
 
   // Fetch customer verification status from profiles table
   const { data: customerProfile } = useQuery({
@@ -46,14 +42,14 @@ const WelcomeSection = () => {
     return "Good evening";
   };
 
-  // For customers, show verified badge if they have a verified profile (should be true by default)
+  // For customers, show verified badge if they have a verified profile (verified on first review interaction)
   // For businesses, show verified badge if they are verified in business_info
   const shouldShowVerifiedBadge = () => {
     if (currentUser.type === 'business') {
       return isBusinessVerified;
     } else if (currentUser.type === 'customer') {
-      // Customers should be verified by default since they complete phone verification during signup
-      return customerProfile?.verified ?? true;
+      // Customers are verified on first meaningful review interaction (credit usage or conversation response)
+      return customerProfile?.verified ?? false;
     }
     return false;
   };
@@ -69,9 +65,9 @@ const WelcomeSection = () => {
         )}
       </div>
       <p className="text-gray-600">
-        {currentUser.type === 'business' 
+        {currentUser.type === 'business'
           ? `Welcome to your business dashboard${isBusinessVerified ? ' - Your business is verified!' : ''}.`
-          : `Welcome to your customer dashboard${customerProfile?.verified ?? true ? ' - Your account is verified!' : ''}.`
+          : `Welcome to your customer dashboard${customerProfile?.verified ? ' - Your account is verified!' : ''}.`
         }
       </p>
     </div>

@@ -122,6 +122,19 @@ export const useCredits = () => {
         return { success: false };
       }
 
+      // Verify customer on first credit usage (customers start unverified after email confirmation)
+      if (currentUser.type === 'customer' && !currentUser.verified) {
+        const { error: verifyError } = await supabase.rpc('verify_customer_on_interaction', {
+          p_customer_id: currentUser.id
+        });
+        if (verifyError) {
+          hookLogger.error("Error verifying customer on credit usage:", verifyError);
+          // Don't fail the credit usage, just log the error
+        } else {
+          hookLogger.info("Customer verified on first credit usage");
+        }
+      }
+
       // Get the transaction ID of the credit usage
       const { data: transaction, error: transactionError } = await supabase
         .from('credit_transactions')
