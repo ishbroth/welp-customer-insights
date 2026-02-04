@@ -41,11 +41,11 @@ const ProfileReviews = () => {
         <main className="flex-1 px-3 py-6 md:px-4 overflow-x-hidden max-w-full">
           <div className="w-full overflow-x-hidden">
             <ProfileReviewsHeader
-              title={isCustomerAccount ? "Reviews About Me" : "My Customer Reviews"}
+              title={isCustomerAccount ? "Reviews About Me" : "My Customers"}
               description={
                 isCustomerAccount
                   ? "Reviews that businesses have written about you"
-                  : "Reviews you've written about your customers"
+                  : "Your customer pool and reviews"
               }
               onRefresh={() => refetch()}
               isLoading={isLoading}

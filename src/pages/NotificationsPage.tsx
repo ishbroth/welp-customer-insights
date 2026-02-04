@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, BellRing, Loader2 } from "lucide-react";
 import NotificationTypes from "@/components/notifications/NotificationTypes";
 import NotificationChannels from "@/components/notifications/NotificationChannels";
+import PromotionPreferences from "@/components/notifications/PromotionPreferences";
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 
 const NotificationsPage = () => {
@@ -82,6 +83,15 @@ const NotificationsPage = () => {
                 handleToggleChange={handleToggleChange}
                 userEmail={currentUser?.email}
               />
+
+              {/* Yitch Promotions - customer accounts only */}
+              {currentUser?.type === "customer" && (
+                <PromotionPreferences
+                  allowYitchPromotions={notificationPrefs.allowYitchPromotions}
+                  allowClaimedBusinessPromotions={notificationPrefs.allowClaimedBusinessPromotions}
+                  onToggleChange={handleToggleChange}
+                />
+              )}
 
               <div className="flex justify-end">
                 <Button

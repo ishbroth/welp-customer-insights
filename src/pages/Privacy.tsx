@@ -83,6 +83,7 @@ const Privacy = () => {
                 <li>Provide customer support</li>
                 <li>Send administrative messages and updates</li>
                 <li>Send promotional communications (with your consent)</li>
+                <li><strong>Business promotional emails:</strong> With your consent, businesses registered on Welp may send you promotional emails through Welp's secure email system. Your email address is never directly shared with or visible to businesses — they can only see the number of recipients, not individual email addresses. All promotional emails are sent by Welp on behalf of the business. You can control these communications through your notification preferences.</li>
               </ul>
 
               <h3 className="text-xl font-semibold mt-6 mb-3">2.3 To Improve and Protect Our Services</h3>

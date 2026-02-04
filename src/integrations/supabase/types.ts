@@ -603,6 +603,8 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          allow_claimed_business_promotions: boolean
+          allow_yitch_promotions: boolean
           created_at: string
           customer_responses: boolean
           email_notifications: boolean
@@ -615,6 +617,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          allow_claimed_business_promotions?: boolean
+          allow_yitch_promotions?: boolean
           created_at?: string
           customer_responses?: boolean
           email_notifications?: boolean
@@ -627,6 +631,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          allow_claimed_business_promotions?: boolean
+          allow_yitch_promotions?: boolean
           created_at?: string
           customer_responses?: boolean
           email_notifications?: boolean
@@ -639,6 +645,95 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      customer_promotion_preferences: {
+        Row: {
+          allow_all_promotions: boolean
+          allow_claimed_business_promotions: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_all_promotions?: boolean
+          allow_claimed_business_promotions?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_all_promotions?: boolean
+          allow_claimed_business_promotions?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_promotion_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      yitch_promotion_log: {
+        Row: {
+          business_id: string
+          campaign_id: string | null
+          created_at: string
+          id: string
+          location_filter: Json | null
+          max_rating: number | null
+          min_rating: number | null
+          recipient_count: number | null
+          sent_at: string
+          target_type: string
+        }
+        Insert: {
+          business_id: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          location_filter?: Json | null
+          max_rating?: number | null
+          min_rating?: number | null
+          recipient_count?: number | null
+          sent_at?: string
+          target_type: string
+        }
+        Update: {
+          business_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          location_filter?: Json | null
+          max_rating?: number | null
+          min_rating?: number | null
+          recipient_count?: number | null
+          sent_at?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "yitch_promotion_log_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "yitch_promotion_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promotional_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications_log: {
         Row: {
@@ -746,6 +841,8 @@ export type Database = {
           created_at: string | null
           email_content: string
           id: string
+          image_urls: string[] | null
+          location_filter: Json | null
           max_rating: number
           min_rating: number
           scheduled_at: string | null
@@ -754,6 +851,7 @@ export type Database = {
           status: string
           subject_line: string
           target_count: number | null
+          target_type: string | null
           updated_at: string | null
         }
         Insert: {
@@ -762,6 +860,8 @@ export type Database = {
           created_at?: string | null
           email_content: string
           id?: string
+          image_urls?: string[] | null
+          location_filter?: Json | null
           max_rating?: number
           min_rating?: number
           scheduled_at?: string | null
@@ -770,6 +870,7 @@ export type Database = {
           status?: string
           subject_line: string
           target_count?: number | null
+          target_type?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -778,6 +879,8 @@ export type Database = {
           created_at?: string | null
           email_content?: string
           id?: string
+          image_urls?: string[] | null
+          location_filter?: Json | null
           max_rating?: number
           min_rating?: number
           scheduled_at?: string | null
@@ -786,6 +889,7 @@ export type Database = {
           status?: string
           subject_line?: string
           target_count?: number | null
+          target_type?: string | null
           updated_at?: string | null
         }
         Relationships: [

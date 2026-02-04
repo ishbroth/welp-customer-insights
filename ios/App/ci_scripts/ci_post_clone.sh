@@ -85,7 +85,13 @@ echo "✓ Environment configured"
 
 # Install Node.js dependencies
 echo "Installing npm dependencies..."
-npm ci
+npm cache clean --force
+npm ci || {
+  echo "npm ci failed, retrying after cache clean..."
+  rm -rf node_modules
+  npm cache clean --force
+  npm ci
+}
 
 # Build the web application
 echo "Building web application..."

@@ -12,6 +12,8 @@ interface NotificationPrefs {
   reviewResponses: boolean;
   emailNotifications: boolean;
   pushNotifications: boolean;
+  allowYitchPromotions: boolean;
+  allowClaimedBusinessPromotions: boolean;
 }
 
 export const useNotificationPreferences = () => {
@@ -24,6 +26,8 @@ export const useNotificationPreferences = () => {
     reviewResponses: true,
     emailNotifications: true,
     pushNotifications: false,
+    allowYitchPromotions: true,
+    allowClaimedBusinessPromotions: true,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +66,8 @@ export const useNotificationPreferences = () => {
           reviewResponses: data.review_responses,
           emailNotifications: data.email_notifications,
           pushNotifications: data.push_notifications,
+          allowYitchPromotions: data.allow_yitch_promotions ?? true,
+          allowClaimedBusinessPromotions: data.allow_claimed_business_promotions ?? true,
         });
       } else {
         hookLogger.debug("No notification preferences found, using defaults");
@@ -94,6 +100,8 @@ export const useNotificationPreferences = () => {
           review_responses: newPrefs.reviewResponses,
           email_notifications: newPrefs.emailNotifications,
           push_notifications: newPrefs.pushNotifications,
+          allow_yitch_promotions: newPrefs.allowYitchPromotions,
+          allow_claimed_business_promotions: newPrefs.allowClaimedBusinessPromotions,
           updated_at: new Date().toISOString(),
         });
 

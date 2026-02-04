@@ -11,6 +11,7 @@ import ResendEmailCodeButton from "@/components/verification/ResendEmailCodeButt
 import { CustomerValidationAlerts } from "./CustomerValidationAlerts";
 import { DuplicateCustomerDialog } from "./DuplicateCustomerDialog";
 import { CustomerAddressSection } from "./CustomerAddressSection";
+import { PromotionConsentSection } from "./PromotionConsentSection";
 import { sendEmailVerificationCode } from "@/utils/emailUtils";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { logger } from "@/utils/logger";
@@ -29,6 +30,8 @@ const CustomerSignupForm = () => {
   const [zipCode, setZipCode] = useState("");
   const [step, setStep] = useState(1); // 1: form, 2: verification
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allowYitchPromotions, setAllowYitchPromotions] = useState(true);
+  const [allowClaimedBusinessPromotions, setAllowClaimedBusinessPromotions] = useState(true);
 
   const { toast } = useToast();
 
@@ -306,6 +309,14 @@ const CustomerSignupForm = () => {
             />
           </div>
         </div>
+
+        {/* Promotion consent toggles */}
+        <PromotionConsentSection
+          allowYitchPromotions={allowYitchPromotions}
+          setAllowYitchPromotions={setAllowYitchPromotions}
+          allowClaimedBusinessPromotions={allowClaimedBusinessPromotions}
+          setAllowClaimedBusinessPromotions={setAllowClaimedBusinessPromotions}
+        />
 
         {/* Validation alerts */}
         <CustomerValidationAlerts

@@ -235,7 +235,7 @@ const ProfileSidebar = ({ isOpen, toggle }: ProfileSidebarProps) => {
                         ? "mr-4 h-6 w-6"
                         : "mr-3 h-5 w-5"
                   }`} />
-                  {(!isMobile || isOpen) && "My Customer Reviews"}
+                  {(!isMobile || isOpen) && "My Customers"}
                 </Link>
               )}
 

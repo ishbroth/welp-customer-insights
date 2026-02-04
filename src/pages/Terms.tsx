@@ -69,8 +69,11 @@ const Terms = () => {
             <p className="mb-3">
               Your Consumer Account is for your personal, non-commercial use only, and you may not create or use a Consumer Account for anyone other than yourself. We ask that you provide complete and accurate information about yourself when creating an Account in order to bolster your credibility as a contributor to the Service. You may not impersonate someone else, provide an email address other than your own, create multiple Accounts, or transfer your Consumer Account to another person without Welp's prior approval.
             </p>
-            <p>
+            <p className="mb-3">
               <strong>Communications from Welp and Others.</strong> By accessing or using the Service, you consent to receive communications from other users and Welp through the Service, or through any other means such as emails, push notifications, text messages (including SMS and MMS), and phone calls. These communications may promote Welp or businesses listed on Welp, and may be initiated by Welp, businesses listed on Welp, or other users. You further understand that communications may be sent using an automatic telephone dialing system, and that you may be charged by your phone carrier for certain communications such as SMS messages or phone calls. You agree to notify us immediately if the phone number(s) you have provided to us have been changed or disconnected. Please note that any communications, including phone calls, with Welp or made through the Service may be monitored and recorded for quality purposes. You can opt-out of certain communications here.
+            </p>
+            <p>
+              <strong>Promotional Communications from Businesses.</strong> By creating a Customer Account and enabling promotional email preferences, you consent to receive promotional emails from businesses registered on Welp. These emails are sent through Welp's email system — your email address is never directly shared with businesses. Businesses may send promotional messages to customers in their service area or to customers they have previously reviewed. You can manage these preferences in your account notification settings at any time. Disabling promotional email preferences will exclude you from receiving business promotional communications through the Service.
             </p>
           </section>
           

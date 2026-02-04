@@ -153,7 +153,7 @@ const ProfileNavMenu = ({ isOpen, onClose }: ProfileNavMenuProps) => {
                 }`}
               >
                 <FileText className="mr-4 h-6 w-6 text-gray-500" />
-                My Customer Reviews
+                My Customers
               </Link>
             )}
 
